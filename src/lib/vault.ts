@@ -3,10 +3,11 @@ import path from "node:path"
 import { execFileSync } from "node:child_process"
 import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
 import { site, type Lang } from "../site.config"
-import { langPrefix } from "./i18n"
+import { langPrefix, t } from "./i18n"
 import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
 import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
+import { flashcards, isDeck } from "./flashcards"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -402,7 +403,9 @@ function buildVault(version: number): Vault {
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
-      const pre = preprocess(filterLanguage(s.raw, lang), {
+      const body = filterLanguage(s.raw, lang)
+      const deck = isDeck(tags, body, site.conventions.flashcardTags)
+      const pre = preprocess(deck ? flashcards(body, t(lang).showAnswer) : body, {
         lang,
         dir: s.dir,
         resolveNote,

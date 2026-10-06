@@ -101,7 +101,12 @@ describe("publishing rules and conventions", () => {
     const c = resolveConfig({}, "/v")
     expect(c.publish).toBe("explicit")
     expect(c.home).toBe("index.md")
-    expect(c.conventions).toEqual({ typePrefix: "type/", blogTags: ["type/blog", "blog"], mapTags: ["type/moc", "moc"] })
+    expect(c.conventions).toEqual({
+      typePrefix: "type/",
+      blogTags: ["type/blog", "blog"],
+      mapTags: ["type/moc", "moc"],
+      flashcardTags: ["flashcards"],
+    })
   })
 
   test("conventions can be partially overridden", () => {

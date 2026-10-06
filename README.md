@@ -55,6 +55,7 @@ conventions:
   typePrefix: type/           # tags like type/book become chips on the note
   blogTags: [type/blog, blog] # listed as posts on the home page
   mapTags: [type/moc, moc]    # listed as maps of content
+  flashcardTags: [flashcards] # decks: Q::A, Q:::A and ?-separated cards flip open
 
 stages:                       # top-level folders shown as note maturity
   Inbox: fleeting             # presets: fleeting, literature, atomic,
@@ -106,6 +107,7 @@ An invalid file stops the build with the path of every problem, e.g.
   `![[embeds]]` of notes, sections, images and PDFs, callouts (`> [!tip]-` folds),
   `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
 - `![](https://…)` embeds YouTube (privacy-enhanced, `t=` kept), Vimeo, tweets from twitter.com or x.com, and remote video or audio files; `![Title|640](…)` sets the width, as in Obsidian. Printed pages show the link instead.
+- Flashcards in the Spaced Repetition plugin's syntax, in notes tagged `#flashcards`: `Question::Answer`, `Word:::Translation` (both ways), and multi-line cards with a `?` (or `??`) line between question and answer. They flip open on click; cloze deletions are not converted.
 - Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
 - Frontmatter: `title`, `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.

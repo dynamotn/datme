@@ -96,9 +96,16 @@ const schema = z
         blogTags: z.array(z.string()).default(["type/blog", "blog"]),
         /** Notes with one of these tags are listed as maps of content. */
         mapTags: z.array(z.string()).default(["type/moc", "moc"]),
+        /** Notes with one of these tags turn `Q::A` and `?` cards into flashcards. */
+        flashcardTags: z.array(z.string()).default(["flashcards"]),
       })
       .strict()
-      .default({ typePrefix: "type/", blogTags: ["type/blog", "blog"], mapTags: ["type/moc", "moc"] }),
+      .default({
+        typePrefix: "type/",
+        blogTags: ["type/blog", "blog"],
+        mapTags: ["type/moc", "moc"],
+        flashcardTags: ["flashcards"],
+      }),
     footer: z.record(z.string(), z.string()).default({}),
     /** Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs. */
     nav: z
