@@ -61,6 +61,12 @@ describe("zero-config build", () => {
     expect(read("index.html")).toMatch(/class="nb-hero-side"[\s\S]*Projects/)
   })
 
+  test("no analytics, comments or CNAME unless configured", () => {
+    expect(read("index.html")).not.toMatch(/googletagmanager|plausible|umami|goatcounter/)
+    expect(read("Hello/index.html")).not.toContain('class="comments"')
+    expect(exists("CNAME")).toBe(false)
+  })
+
   test("the logo comes from the vault name", () => {
     expect(read("favicon.svg")).toContain(">M</text>")
   })

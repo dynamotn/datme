@@ -115,6 +115,24 @@ describe("static build", () => {
     expect(read("tags/theme/pkm/index.html")).toContain('class="index-card"')
   })
 
+  test("analytics load on every page and report client-side navigations", () => {
+    const home = read("index.html")
+    expect(home).toContain("https://www.googletagmanager.com/gtag/js?id=G-TEST123")
+    expect(home).toContain('"page_view"')
+  })
+
+  test("note pages carry the comment widget, other pages do not", () => {
+    const note = read("03_Atomic/Zettelkasten/index.html")
+    expect(note).toContain('src="https://giscus.app/client.js"')
+    expect(note).toContain('data-repo="example/garden"')
+    expect(note).toContain('data-lang="vi"')
+    expect(read("tags/index.html")).not.toContain("giscus")
+  })
+
+  test("CNAME holds the host of site.url", () => {
+    expect(read("CNAME")).toBe("notes.dynamotn.dev\n")
+  })
+
   test("favicon and robots.txt come from the config", () => {
     expect(read("favicon.svg")).toContain(">K</text>")
     expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")

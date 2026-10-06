@@ -35,3 +35,13 @@ appearance:
   classic: [07_Project]
 encryption:
   iterations: 100000
+analytics:
+  provider: google
+  id: G-TEST123
+comments:
+  provider: giscus
+  repo: example/garden
+  repoId: R_test
+  category: Comments
+  categoryId: DIC_test
+cname: true

@@ -32,6 +32,10 @@ document.addEventListener("click", (e) => {
     root.dataset.theme = next
     store("theme", next)
     document.dispatchEvent(new Event("themechange"))
+    // giscus lives in an iframe and only hears about theme changes by message.
+    document
+      .querySelector<HTMLIFrameElement>("iframe.giscus-frame")
+      ?.contentWindow?.postMessage({ giscus: { setConfig: { theme: next } } }, "https://giscus.app")
     renderMermaid(true)
   } else if (target.closest("[data-reader-toggle]")) {
     const on = root.classList.toggle("reader")

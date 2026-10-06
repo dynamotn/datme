@@ -11,6 +11,7 @@ import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
 import Toc from "../Toc.astro"
 import LocalGraph from "../LocalGraph.astro"
+import Comments from "../Comments.astro"
 
 interface Props {
   note: Note
@@ -87,6 +88,7 @@ const payload =
       )
     }
   </section>
+  <Comments lang={note.lang} />
   <Fragment slot="rail">
     <Toc headings={r.headings} lang={note.lang} />
     <LocalGraph lang={note.lang} current={note.url} />

@@ -3,11 +3,17 @@ import fs from "node:fs"
 import path from "node:path"
 import { site } from "../site.config"
 
-/** Rebuilds the vault index in dev whenever a note changes, then reloads the browser. */
+/**
+ * datme's Astro integration: in dev it rebuilds the vault index whenever a note
+ * changes and reloads the browser; after a build it writes the CNAME file.
+ */
 export default function vaultWatcher(): AstroIntegration {
   return {
-    name: "datme:vault-watcher",
+    name: "datme",
     hooks: {
+      "astro:build:done": ({ dir }) => {
+        if (site.cname && site.url) fs.writeFileSync(new URL("CNAME", dir), new URL(site.url).host + "\n")
+      },
       "astro:server:setup": ({ server }) => {
         // Watch top-level entries one by one so .git and other ignored trees stay unwatched.
         for (const entry of fs.readdirSync(site.vault)) {

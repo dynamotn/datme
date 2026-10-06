@@ -8,6 +8,7 @@ import { slugToUrl } from "~/lib/slug"
 import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
 import { navLinks } from "~/lib/nav"
+import Analytics from "~/components/Analytics.astro"
 
 interface Props {
   lang: Lang
@@ -76,6 +77,7 @@ const year = new Date().getFullYear()
       })()
     </script>
     <ClientRouter fallback="swap" />
+    <Analytics />
   </head>
   <body data-copy={s.copy} data-copied={s.copied}>
     <header class="site-header">

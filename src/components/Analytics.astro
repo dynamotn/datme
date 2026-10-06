@@ -1,0 +1,45 @@
+---
+import { site } from "~/site.config"
+
+// Page views after client-side navigation are reported on astro:page-load.
+const a = site.analytics
+const domain = site.url ? new URL(site.url).host : undefined
+---
+
+{
+  a?.provider === "google" && (
+    <>
+      <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${a.id}`} />
+      <script is:inline define:vars={{ id: a.id }}>
+        window.dataLayer = window.dataLayer || []
+        window.gtag = function () {
+          dataLayer.push(arguments)
+        }
+        gtag("js", new Date())
+        gtag("config", id, { send_page_view: false })
+        document.addEventListener("astro:page-load", () =>
+          gtag("event", "page_view", { page_location: location.href, page_title: document.title }),
+        )
+      </script>
+    </>
+  )
+}
+{
+  a?.provider === "plausible" && (
+    <script is:inline defer data-domain={domain} src={`https://${a.host ?? "plausible.io"}/js/script.js`} />
+  )
+}
+{a?.provider === "umami" && <script is:inline defer src={`${a.host.replace(/\/+$/, "")}/script.js`} data-website-id={a.id} />}
+{
+  a?.provider === "goatcounter" && (
+    <>
+      <script is:inline data-goatcounter={`https://${a.id}.goatcounter.com/count`} data-goatcounter-settings='{"no_onload": true}' async src="https://gc.zgo.at/count.js" />
+      <script is:inline>
+        document.addEventListener("astro:page-load", function count() {
+          if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: location.pathname })
+          else setTimeout(count, 300)
+        })
+      </script>
+    </>
+  )
+}

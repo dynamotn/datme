@@ -68,6 +68,16 @@ appearance:
 footer:
   GitHub: https://github.com/me
 
+analytics:                    # google { id }, plausible { host? }, umami { id, host }, goatcounter { id }
+  provider: plausible
+comments:                     # giscus { repo, repoId, category, categoryId } or commento { host? }
+  provider: giscus
+  repo: me/garden
+  repoId: R_xxx
+  category: Comments
+  categoryId: DIC_xxx
+cname: true                   # write CNAME with the host of site.url
+
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }
 ```

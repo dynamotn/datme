@@ -1689,3 +1689,9 @@ dialog.graph-modal {
   color: var(--clay);
   font-size: 14px;
 }
+
+/* ---------- comments ---------- */
+.comments {
+  max-width: var(--measure);
+  margin: 48px auto 0;
+}

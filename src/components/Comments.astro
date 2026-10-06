@@ -1,0 +1,42 @@
+---
+import { site, type Lang } from "~/site.config"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const c = site.comments
+---
+
+{
+  c && (
+    <section class="comments">
+      {c.provider === "giscus" && (
+        <script
+          is:inline
+          data-astro-rerun
+          src="https://giscus.app/client.js"
+          data-repo={c.repo}
+          data-repo-id={c.repoId}
+          data-category={c.category}
+          data-category-id={c.categoryId}
+          data-mapping={c.mapping}
+          data-strict="1"
+          data-reactions-enabled={c.reactions ? "1" : "0"}
+          data-input-position="top"
+          data-theme="preferred_color_scheme"
+          data-lang={lang.split("-")[0]}
+          data-loading="lazy"
+          crossorigin="anonymous"
+          async
+        />
+      )}
+      {c.provider === "commento" && (
+        <>
+          <div id="commento" />
+          <script is:inline data-astro-rerun defer src={`${c.host.replace(/\/+$/, "")}/js/commento.js`} />
+        </>
+      )}
+    </section>
+  )
+}

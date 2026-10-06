@@ -138,3 +138,33 @@ describe("menu and appearance", () => {
     expect(() => resolveConfig({ appearance: { style: "neon" } }, "/v")).toThrow(ConfigError)
   })
 })
+
+describe("analytics, comments and CNAME", () => {
+  test("all are off by default", () => {
+    const c = resolveConfig({}, "/v")
+    expect(c.analytics).toBeUndefined()
+    expect(c.comments).toBeUndefined()
+    expect(c.cname).toBe(false)
+  })
+
+  test("each provider checks its own fields", () => {
+    expect(resolveConfig({ analytics: { provider: "plausible" } }, "/v").analytics).toEqual({ provider: "plausible" })
+    expect(() => resolveConfig({ analytics: { provider: "google" } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ analytics: { provider: "matomo", id: "1" } }, "/v")).toThrow(ConfigError)
+    expect(() =>
+      resolveConfig({ comments: { provider: "giscus", repo: "nope", repoId: "a", category: "b", categoryId: "c" } }, "/v"),
+    ).toThrow("expected owner/name")
+  })
+
+  test("giscus maps by pathname and commento uses the hosted service unless told otherwise", () => {
+    const g = resolveConfig(
+      { comments: { provider: "giscus", repo: "a/b", repoId: "r", category: "c", categoryId: "i" } },
+      "/v",
+    ).comments
+    expect(g).toMatchObject({ mapping: "pathname", reactions: true })
+    expect(resolveConfig({ comments: { provider: "commento" } }, "/v").comments).toEqual({
+      provider: "commento",
+      host: "https://cdn.commento.io",
+    })
+  })
+})

@@ -82,6 +82,32 @@ const schema = z
         ]),
       )
       .default(["home", "tags"]),
+    analytics: z
+      .discriminatedUnion("provider", [
+        z.object({ provider: z.literal("google"), id: z.string().min(1) }).strict(),
+        z.object({ provider: z.literal("plausible"), host: z.string().optional() }).strict(),
+        z.object({ provider: z.literal("umami"), id: z.string().min(1), host: z.string().min(1) }).strict(),
+        z.object({ provider: z.literal("goatcounter"), id: z.string().min(1) }).strict(),
+      ])
+      .optional(),
+    comments: z
+      .discriminatedUnion("provider", [
+        z
+          .object({
+            provider: z.literal("giscus"),
+            repo: z.string().regex(/^[^/\s]+\/[^/\s]+$/, "expected owner/name"),
+            repoId: z.string().min(1),
+            category: z.string().min(1),
+            categoryId: z.string().min(1),
+            mapping: z.enum(["pathname", "url", "title", "og:title"]).default("pathname"),
+            reactions: z.boolean().default(true),
+          })
+          .strict(),
+        z.object({ provider: z.literal("commento"), host: z.string().default("https://cdn.commento.io") }).strict(),
+      ])
+      .optional(),
+    /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
+    cname: z.boolean().default(false),
     encryption: z
       .object({
         /** PBKDF2 rounds for notes with a `password`; higher is slower to unlock and to brute-force. */
@@ -181,6 +207,9 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
           : { kind: "url", target: item.url, label: localize(item.label, langs, item.url) },
     ),
     encryption: c.encryption,
+    analytics: c.analytics,
+    comments: c.comments,
+    cname: c.cname,
     appearance: {
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
