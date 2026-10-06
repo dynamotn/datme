@@ -9,6 +9,8 @@ import {
   publishOutput,
   starterConfig,
   run,
+  inPackage,
+  PACKAGE_ROOT,
   CliError,
   USAGE,
 } from "../src/cli";
@@ -87,6 +89,20 @@ describe("resolveVault", () => {
     expect(() => resolveVault("missing", {}, tmp)).toThrow(
       "is not a directory",
     );
+  });
+});
+
+describe("inPackage", () => {
+  test("runs in the package root and restores the working directory", async () => {
+    const before = process.cwd();
+    expect(await inPackage(async () => process.cwd())).toBe(fs.realpathSync(PACKAGE_ROOT));
+    expect(process.cwd()).toBe(before);
+  });
+
+  test("restores the working directory when the build fails", async () => {
+    const before = process.cwd();
+    await expect(inPackage(() => Promise.reject(new Error("boom")))).rejects.toThrow("boom");
+    expect(process.cwd()).toBe(before);
   });
 });
 

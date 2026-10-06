@@ -39,12 +39,12 @@
   },
   "scripts": {
     "datme": "bun bin/datme.ts",
+    "prepack": "bun build bin/datme.ts --target=node --packages external --outfile=bin/datme.js",
     "dev": "bun bin/datme.ts dev",
     "build": "bun bin/datme.ts build",
     "preview": "bun bin/datme.ts preview",
     "check": "astro check",
-    "test": "bun test",
-    "prepack": "bun build bin/datme.ts --target=node --packages external --outfile=bin/datme.js"
+    "test": "bun test"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",

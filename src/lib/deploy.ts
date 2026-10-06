@@ -21,7 +21,7 @@ export interface DeployOpts {
 const arg = (s: string) => (/^[\w./-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`)
 
 /** The build command, with the cache kept where CI can save it between runs. */
-const build = (o: DeployOpts, out: string) => `bunx datme build ${arg(o.vault)} --out ${out}`
+const build = (o: DeployOpts, out: string) => `bunx @dynamotn/datme build ${arg(o.vault)} --out ${out}`
 
 const githubCache = `      # Rendered notes and social cards from the previous run make the build incremental.
       - uses: actions/cache@v4

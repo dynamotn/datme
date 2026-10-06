@@ -14,7 +14,7 @@ describe("deployFiles", () => {
   test("every host gets a valid configuration that builds the vault on its branch", () => {
     for (const target of TARGETS) {
       const [file] = deployFiles(target, opts)
-      expect(file.content).toContain("bunx datme build 'notes/My Vault' --out")
+      expect(file.content).toContain("bunx @dynamotn/datme build 'notes/My Vault' --out")
       expect(file.content).toContain("trunk")
       if (file.path.endsWith(".yml")) expect(() => loadYaml(file.content)).not.toThrow()
       else expect(() => Bun.TOML.parse(file.content)).not.toThrow()
@@ -64,7 +64,7 @@ describe("datme deploy", () => {
     Bun.spawnSync(["git", "init", "-q", "-b", "garden", repo])
     await run({ command: "deploy", target: "github", vault: path.join(repo, "vault") }, {}, tmp)
     const wf = fs.readFileSync(path.join(repo, ".github/workflows/datme.yml"), "utf8")
-    expect(wf).toContain("bunx datme build vault --out _site")
+    expect(wf).toContain("bunx @dynamotn/datme build vault --out _site")
     expect(wf).toContain("branches: [garden]")
     const again = await run({ command: "deploy", target: "github", vault: path.join(repo, "vault") }, {}, tmp).catch((e) => e)
     expect(again).toBeInstanceOf(CliError)
