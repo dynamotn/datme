@@ -42,6 +42,10 @@ const payload =
     ? await encrypt((await renderSecret(note)).html, password, site.encryption.iterations)
     : undefined
 const image = note.banner ?? ogPath(note.slug)
+// Pagefind filters match the folder and type selects of the search dialog; commas would split a value.
+const pagefindFilters = [`folder:${note.dir.split("/")[0]}`, ...note.types.map((ty) => `type:${ty}`)]
+  .map((f) => f.replace(/,/g, " "))
+  .join(", ")
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 ---
 
@@ -49,6 +53,8 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
+    data-pagefind-body={site.search.engine === "pagefind" && !note.protected ? "" : undefined}
+    data-pagefind-filter={site.search.engine === "pagefind" ? pagefindFilters : undefined}
     class:list={["note", { "is-blog": note.isBlog }, ...note.cssclasses]}
     data-key={note.key}
     transition:name="note"

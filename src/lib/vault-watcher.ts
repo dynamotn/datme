@@ -20,11 +20,20 @@ export default function vaultWatcher(): AstroIntegration {
   return {
     name: "datme",
     hooks: {
-      "astro:build:done": ({ dir }) => {
+      "astro:build:done": async ({ dir }) => {
         if (site.cname && site.url) fs.writeFileSync(new URL("CNAME", dir), new URL(site.url).host + "\n")
         if (site.redirects) {
           const lines = redirectsFile()
           if (lines) fs.writeFileSync(new URL("_redirects", dir), lines)
+        }
+        if (site.search.engine === "pagefind") {
+          // Notes mark their body for Pagefind; every other page is left out of the index.
+          const pagefind = await import("pagefind")
+          const { index } = await pagefind.createIndex({})
+          if (!index) throw new Error("Pagefind could not start")
+          await index.addDirectory({ path: dir.pathname })
+          await index.writeFiles({ outputPath: path.join(dir.pathname, "pagefind") })
+          await pagefind.close()
         }
         if (site.headers) {
           // The CSP allows the inline scripts the pages actually hold, by hash.

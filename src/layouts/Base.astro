@@ -246,7 +246,7 @@ const year = new Date().getFullYear()
       <aside class="sidebar sidebar-left" transition:persist={`explorer-${lang}`} data-sidebar>
         <Explorer lang={lang} />
       </aside>
-      <main class="main" data-pagefind-body>
+      <main class="main">
         <slot />
         <footer class="site-footer">
           <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
@@ -270,7 +270,7 @@ const year = new Date().getFullYear()
       }
     </div>
 
-    <dialog class="modal" data-search-dialog data-lang={lang} transition:persist={`search-${lang}`}>
+    <dialog class="modal" data-search-dialog data-lang={lang} data-engine={site.search.engine} transition:persist={`search-${lang}`}>
       <div class="search-input-row">
         <Icon name="search" />
         <input type="search" placeholder={s.searchPlaceholder} aria-label={s.search} autocomplete="off" spellcheck="false" />

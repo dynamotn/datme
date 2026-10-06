@@ -27,7 +27,8 @@ export const GET: APIRoute = async ({ params }) => {
         d: r.description,
         // Day the note was planted, for the graph's time slider.
         k: n.created ? Math.floor(n.created.getTime() / 86_400_000) : null,
-        c: r.text.slice(0, 6000),
+        // Pagefind searches the pages themselves; the graph and filters only need the rest.
+        c: site.search.engine === "pagefind" ? "" : r.text.slice(0, 6000),
       }
     }),
   )

@@ -37,8 +37,53 @@ function select(list: HTMLElement, i: number) {
   items[selected].scrollIntoView({ block: "nearest" })
 }
 
+interface PagefindResult {
+  url: string
+  excerpt: string
+  meta: { title?: string }
+}
+interface Pagefind {
+  search(q: string | null, opts?: { filters?: Record<string, string> }): Promise<{ results: { data(): Promise<PagefindResult> }[] }>
+}
+let pagefind: Promise<Pagefind> | undefined
+
+/** Pagefind's own script, written next to the site by the build; only the parts a query needs load. */
+function loadPagefind(): Promise<Pagefind> {
+  pagefind ??= import(/* @vite-ignore */ `${location.origin}/pagefind/pagefind.js`) as Promise<Pagefind>
+  return pagefind
+}
+
+async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: string) {
+  const filter = readFilters(dialog)
+  const filters: Record<string, string> = {}
+  if (filter.folder) filters.folder = filter.folder
+  if (filter.type) filters.type = filter.type
+  if (!q && !Object.keys(filters).length) {
+    list.innerHTML = ""
+    return
+  }
+  const pf = await loadPagefind()
+  const found = await pf.search(q || null, { filters })
+  const hits = await Promise.all(found.results.slice(0, 30).map((r) => r.data()))
+  if (!hits.length) {
+    list.innerHTML = `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`
+    return
+  }
+  // Pagefind's excerpts are page text with <mark> around the matches.
+  list.innerHTML = hits
+    .map(
+      (h) => `<li><a href="${esc(h.url)}" role="option">
+        <div class="r-title"><span>📝</span>${esc(h.meta.title ?? h.url)}</div>
+        <div class="r-snippet">${h.excerpt}</div>
+      </a></li>`,
+    )
+    .join("")
+  select(list, 0)
+}
+
 async function run(dialog: HTMLDialogElement, query: string) {
   const list = dialog.querySelector<HTMLElement>(".search-results")!
+  if (dialog.dataset.engine === "pagefind") return runPagefind(dialog, list, query.trim())
   const { ms, notes } = await engine(dialog.dataset.lang ?? currentLang())
   const q = query.trim()
   const filter = readFilters(dialog)
@@ -77,7 +122,8 @@ export function openSearch() {
   const input = dialog.querySelector("input")!
   dialog.showModal()
   input.select()
-  void engine(dialog.dataset.lang ?? currentLang())
+  if (dialog.dataset.engine === "pagefind") void loadPagefind()
+  else void engine(dialog.dataset.lang ?? currentLang())
 }
 
 export function setupSearch() {
