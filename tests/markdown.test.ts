@@ -178,6 +178,14 @@ describe("dataview", () => {
     expect(block).not.toContain("Read")
   })
 
+  test("a query block lists matching published notes with the line that matched", async () => {
+    const { html } = await queries
+    const block = html.match(/<ul class="dataview query-results">[\s\S]*?<\/ul>/)![0]
+    expect(block).toContain('<a class="internal" href="/03_Atomic/Zettelkasten" data-key="03_Atomic/Zettelkasten">Zettelkasten</a>')
+    expect(block).toMatch(/<p class="query-snippet">.*<mark>slip box<\/mark>/)
+    expect(block).not.toMatch(/Private|Secret/)
+  })
+
   test("DataviewJS shows a notice instead of code", async () => {
     const { html } = await queries
     expect(html).toContain("(DataviewJS)")

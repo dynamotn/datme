@@ -4,6 +4,8 @@ import { formatDate, t } from "./i18n"
 import { escapeAttr } from "./obsidian"
 import { parseQuery, runQuery, extractTasks, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
 import { parseTasksQuery, runTasksQuery, groupOf, TasksQueryError, type TaskItem } from "./tasks-query"
+import { parseSearch, search, highlight, SearchQueryError, type Searchable } from "./search-query"
+import { listed } from "./vault"
 
 const engines = new Map<string, Engine>()
 
@@ -131,6 +133,36 @@ export function renderTasksBlock(source: string, lang: Lang): string | { markdow
     return { markdown: `<div class="dataview dv-tasks tasks-query">\n\n${parts.join("\n\n")}\n\n</div>` }
   } catch (e) {
     if (e instanceof TasksQueryError) return `<p class="dataview dv-error">Tasks: ${escapeAttr(e.message)}</p>`
+    throw e
+  }
+}
+
+/** A ```query block: Obsidian's search over the published notes, with the line that matched. */
+export function renderSearchBlock(source: string, lang: Lang): string {
+  const s = t(lang)
+  try {
+    const query = parseSearch(source)
+    if (!query) return ""
+    const notes = listed(lang).filter((n) => !n.protected)
+    const docs: (Searchable & { url: string; key: string })[] = notes.map((n) => ({
+      title: n.title,
+      path: n.key + ".md",
+      tags: n.tags,
+      // Links are already HTML here; their text is what a reader sees.
+      text: n.md.replace(/<[^>]+>/g, ""),
+      url: n.url,
+      key: n.key,
+    }))
+    const hits = search(query, docs)
+    if (!hits.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
+    const items = hits.map((h) => {
+      const d = h.doc as (typeof docs)[number]
+      const snippet = h.snippet ? `<p class="query-snippet">${highlight(h.snippet.slice(0, 240), h.words)}</p>` : ""
+      return `<li><a class="internal" href="${escapeAttr(d.url)}" data-key="${escapeAttr(d.key)}">${escapeAttr(d.title)}</a>${snippet}</li>`
+    })
+    return `<ul class="dataview query-results">${items.join("")}</ul>`
+  } catch (e) {
+    if (e instanceof SearchQueryError) return `<p class="dataview dv-error">Query: ${escapeAttr(e.message)}</p>`
     throw e
   }
 }

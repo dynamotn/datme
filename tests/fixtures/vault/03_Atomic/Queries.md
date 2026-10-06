@@ -25,6 +25,10 @@ not done
 path includes Atomic
 ```
 
+```query
+"slip box" -tag:#theme/nothing
+```
+
 ```dataviewjs
 dv.list(dv.pages().file.name)
 ```

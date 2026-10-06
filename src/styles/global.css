@@ -1759,6 +1759,14 @@ dialog.graph-modal {
   margin: 48px auto 0;
 }
 
+.prose .query-results li {
+  margin-bottom: 0.4em;
+}
+.prose .query-snippet {
+  margin: 0.1em 0 0;
+  font-size: 0.88em;
+  color: var(--ink-2);
+}
 .prose .task-note {
   margin-left: 0.4em;
   font-size: 0.82em;

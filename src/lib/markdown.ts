@@ -24,7 +24,7 @@ import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
-import { renderDataview, renderDataviewJs, renderTasksBlock } from "./dataview-render"
+import { renderDataview, renderDataviewJs, renderTasksBlock, renderSearchBlock } from "./dataview-render"
 import { renderBaseView } from "./base-render"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
@@ -163,6 +163,7 @@ const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, k
         return index + root.children.length
       }
     } else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
+    else if (node.lang === "query") parent.children[index] = { type: "html", value: renderSearchBlock(node.value, lang) }
   })
 }
 
@@ -503,7 +504,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
  * protected note, whose content must not reach the disk unencrypted.
  */
 function isSelfContained(note: Note): boolean {
-  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks)/im.test(note.md)
+  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query)/im.test(note.md)
 }
 
 type Parts = Omit<Rendered, "description"> & { description?: string }
