@@ -1,0 +1,63 @@
+---
+import type { Lang } from "~/site.config"
+import { listed } from "~/lib/vault"
+import { activityWeeks, activeYears } from "~/lib/calendar"
+import { formatDate, t } from "~/lib/i18n"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const notes = listed(lang).filter((n) => !n.isHome)
+const calendars = activeYears(notes).map((year) => {
+  const weeks = activityWeeks(notes, year)
+  // A month name above the first week that starts in it.
+  const months = weeks.map((w, i) => {
+    const m = w[0].date.getMonth()
+    return i === 0 || weeks[i - 1][0].date.getMonth() !== m ? w[0].date.toLocaleDateString(lang, { month: "numeric" }) : ""
+  })
+  const total = weeks.flat().reduce((acc, d) => acc + d.created.length + d.updated.length, 0)
+  return { year, weeks, months, total }
+})
+---
+
+{
+  calendars.length > 0 && (
+    <section class="activity" aria-label={s.activity}>
+      <p class="panel-title">{s.activity}</p>
+      {calendars.map(({ year, weeks, months, total }, i) => (
+        <details class="activity-year" open={i === 0}>
+          <summary>
+            <b>{year}</b> <span>{s.activityCount(total)}</span>
+          </summary>
+          <div class="activity-scroll">
+            <div class="activity-months" style={`grid-template-columns: repeat(${weeks.length}, 1fr)`}>
+              {months.map((m) => (
+                <span>{m}</span>
+              ))}
+            </div>
+            <div class="activity-grid" style={`grid-template-columns: repeat(${weeks.length}, 1fr)`}>
+              {weeks.flat().map((d) => {
+                if (d.outside) return <span class="day out" />
+                const label = `${formatDate(d.date, lang)}: ${
+                  [
+                    d.created.length ? `${s.created} ${d.created.join(", ")}` : "",
+                    d.updated.length ? `${s.updated} ${d.updated.join(", ")}` : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "–"
+                }`
+                return d.created.length ? (
+                  <a class={`day l${d.level}`} href={`#d${d.key}`} title={label} aria-label={label} />
+                ) : (
+                  <span class={`day l${d.level}`} title={label} />
+                )
+              })}
+            </div>
+          </div>
+        </details>
+      ))}
+    </section>
+  )
+}

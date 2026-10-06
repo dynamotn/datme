@@ -110,6 +110,9 @@ describe("static build", () => {
     expect(years).toEqual([...years].sort().reverse())
     expect(html).toContain('<a class="internal" href="/07_Project/Blog-post">')
     expect(exists("en-US/archive/index.html")).toBe(true)
+    expect(html).toContain('class="activity-grid"')
+    const link = html.match(/<a class="day l\d" href="#(d[\d-]+)"/)![1]
+    expect(html).toContain(`<li id="${link}">`)
   })
 
   test("aliases redirect to their note", () => {

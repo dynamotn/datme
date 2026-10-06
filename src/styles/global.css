@@ -2104,3 +2104,70 @@ dialog.graph-modal {
     gap: 2px;
   }
 }
+
+/* ---------- activity calendar ---------- */
+.activity {
+  margin: 0 0 36px;
+}
+.activity .panel-title span {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.activity-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.activity-months,
+.activity-grid {
+  display: grid;
+  gap: 3px;
+  min-width: 720px;
+}
+.activity-months {
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.activity-grid {
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+}
+.activity .day {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface-3);
+}
+.activity .day.l1 {
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface-3));
+}
+.activity .day.l2 {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface-3));
+}
+.activity .day.l3 {
+  background: color-mix(in srgb, var(--accent) 78%, var(--surface-3));
+}
+.activity .day.l4 {
+  background: var(--accent);
+}
+.activity a.day:hover {
+  outline: 2px solid var(--clay);
+}
+.archive-list li:target {
+  background: var(--accent-soft);
+}
+.activity-year {
+  margin-bottom: 10px;
+}
+.activity-year summary {
+  cursor: pointer;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.activity-year summary span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.activity .day.out {
+  visibility: hidden;
+}

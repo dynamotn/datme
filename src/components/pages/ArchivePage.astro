@@ -6,6 +6,8 @@ import { slugToUrl } from "~/lib/slug"
 import { typeInfo } from "~/lib/types"
 import { getVault } from "~/lib/vault"
 import Base from "~/layouts/Base.astro"
+import ActivityCalendar from "../ActivityCalendar.astro"
+import { dayKey } from "~/lib/calendar"
 
 interface Props {
   lang: Lang
@@ -29,7 +31,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
       <h1>{s.archive}</h1>
       <p>{s.archiveLead} · {s.notesCount(notes.length)}</p>
     </header>
-    <slot />
+    <ActivityCalendar lang={lang} />
     {
       [...years].map(([year, list]) => (
         <section class="archive-year">
@@ -37,8 +39,8 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
             {year} <small>{list.length}</small>
           </h2>
           <ol class="archive-list">
-            {list.map((n) => (
-              <li>
+            {list.map((n, i) => (
+              <li id={i === list.findIndex((m) => dayKey(m.created!) === dayKey(n.created!)) ? `d${dayKey(n.created!)}` : undefined}>
                 <time datetime={n.created!.toISOString()}>{formatDate(n.created, lang)}</time>
                 <a class="internal" href={n.url}>
                   {n.title}

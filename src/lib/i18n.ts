@@ -50,6 +50,8 @@ const builtin = {
     seeAll: "Xem tất cả",
     featured: "Nổi bật",
     archive: "Lưu trữ",
+    activity: "Hoạt động",
+    activityCount: "{n} lần gieo hoặc tưới",
     archiveLead: "Mọi ghi chú, theo năm được gieo.",
     canvasFit: "Vừa khung",
     notPublished: "Chưa xuất bản",
@@ -120,6 +122,8 @@ const builtin = {
     seeAll: "See all",
     featured: "Featured",
     archive: "Archive",
+    activity: "Activity",
+    activityCount: "{n} notes planted or watered",
     archiveLead: "Every note, by the year it was planted.",
     canvasFit: "Fit to view",
     notPublished: "Not published",
@@ -145,7 +149,7 @@ const builtin = {
 } satisfies Record<string, Record<string, string>>
 
 export type StringKey = keyof (typeof builtin)["en"]
-const COUNTED = ["readingTime", "words", "notesCount"] as const
+const COUNTED = ["readingTime", "words", "notesCount", "activityCount"] as const
 type Counted = (typeof COUNTED)[number]
 export type Strings = Record<Exclude<StringKey, Counted>, string> & Record<Counted, (n: number) => string>
 
