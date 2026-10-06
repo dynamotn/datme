@@ -23,7 +23,7 @@
   },
   "type": "module",
   "bin": {
-    "datme": "bin/datme.ts"
+    "datme": "bin/datme.js"
   },
   "files": [
     "bin",
@@ -43,7 +43,8 @@
     "build": "bun bin/datme.ts build",
     "preview": "bun bin/datme.ts preview",
     "check": "astro check",
-    "test": "bun test"
+    "test": "bun test",
+    "prepack": "bun build bin/datme.ts --target=node --external astro --outfile=bin/datme.js"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
