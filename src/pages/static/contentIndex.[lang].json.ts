@@ -22,6 +22,8 @@ export const GET: APIRoute = async ({ params }) => {
         g: n.tags,
         s: n.stage ? site.stages[n.stage].icon : null,
         f: folders.get(n.dir)?.name ?? "",
+        p: n.dir.split("/")[0],
+        y: n.types,
         d: r.description,
         c: r.text.slice(0, 6000),
       }

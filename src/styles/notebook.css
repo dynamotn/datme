@@ -1047,3 +1047,15 @@
   background: rgb(255 232 0 / 0.18);
   box-shadow: inset 4px 0 0 #ffe800;
 }
+
+/* ---------- filters ---------- */
+[data-look="notebook"] .search-input-row + .filters {
+  border-bottom: var(--bw) solid var(--ink);
+}
+[data-look="notebook"] .filters select {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  box-shadow: 2px 2px 0 var(--ink);
+}

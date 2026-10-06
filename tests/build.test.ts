@@ -87,9 +87,22 @@ describe("static build", () => {
     expect(exists("assets/_assets/draw/Flow.excalidraw.md")).toBe(false)
   })
 
+  test("search filters by folder and type, the graph by folder and tag", () => {
+    const home = read("index.html")
+    const search = home.match(/<div class="filters" data-filters="search">[\s\S]*?<\/div>/)![0]
+    expect(search).toContain('data-filter="folder"')
+    expect(search).toContain('<option value="03_Atomic">⚛️ Nguyên tử (2)</option>')
+    expect(search).toContain('<option value="notion">notion (1)</option>')
+    const graph = home.match(/<div class="filters" data-filters="graph">[\s\S]*?<\/div>/)![0]
+    expect(graph).toContain('data-filter="tag"')
+    expect(graph).toContain('<option value="theme/pkm">#theme/pkm (1)</option>')
+    expect(graph).not.toContain("type/")
+  })
+
   test("the content index links notes for search and the graph", () => {
     const index = JSON.parse(read("static/contentIndex.en-US.json"))
     expect(index.notes.map((n: { t: string }) => n.t)).toContain("Zettelkasten method")
+    expect(index.notes.find((n: { t: string }) => n.t === "Zettelkasten method")).toMatchObject({ p: "03_Atomic", y: ["notion"] })
     expect(index.links.length).toBeGreaterThan(0)
   })
 

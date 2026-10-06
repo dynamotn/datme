@@ -1,0 +1,64 @@
+---
+import { site, type Lang } from "~/site.config"
+import { getVault, listed, countNotes } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+
+interface Props {
+  lang: Lang
+  /** Which selects to show. */
+  kinds: ("folder" | "type" | "tag")[]
+  /** Prefix of the data attributes the client script looks for. */
+  scope: "search" | "graph"
+}
+const { lang, kinds, scope } = Astro.props
+const s = t(lang)
+const vault = getVault()
+const folders = vault.trees[lang].folders.map((f) => ({
+  value: f.segment,
+  label: site.stages[f.segment] ? `${site.stages[f.segment].icon} ${site.stages[f.segment].label[lang]}` : f.name,
+  count: countNotes(f),
+}))
+const typeCounts = new Map<string, number>()
+for (const n of listed(lang)) for (const ty of n.types) typeCounts.set(ty, (typeCounts.get(ty) ?? 0) + 1)
+const types = [...typeCounts].sort(([a], [b]) => a.localeCompare(b))
+const tags = [...vault.tags[lang]].filter(([tag]) => !tag.startsWith(site.conventions.typePrefix))
+---
+
+<div class="filters" data-filters={scope}>
+  {
+    kinds.includes("folder") && folders.length > 0 && (
+      <select data-filter="folder" aria-label={s.folder}>
+        <option value="">{s.allFolders}</option>
+        {folders.map((f) => (
+          <option value={f.value}>
+            {f.label} ({f.count})
+          </option>
+        ))}
+      </select>
+    )
+  }
+  {
+    kinds.includes("type") && types.length > 0 && (
+      <select data-filter="type" aria-label={s.tag}>
+        <option value="">{s.allTypes}</option>
+        {types.map(([ty, count]) => (
+          <option value={ty}>
+            {ty} ({count})
+          </option>
+        ))}
+      </select>
+    )
+  }
+  {
+    kinds.includes("tag") && tags.length > 0 && (
+      <select data-filter="tag" aria-label={s.tags}>
+        <option value="">{s.allTagsFilter}</option>
+        {tags.map(([tag, list]) => (
+          <option value={tag}>
+            #{tag} ({list.length})
+          </option>
+        ))}
+      </select>
+    )
+  }
+</div>

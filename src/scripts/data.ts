@@ -3,6 +3,10 @@ export interface IndexNote {
   t: string
   a: string[]
   g: string[]
+  /** Top-level folder of the note, "" at the vault root. */
+  p: string
+  /** Types from tags like type/book. */
+  y: string[]
   /** Icon of the note's stage, if any. */
   s: string | null
   f: string
@@ -39,3 +43,23 @@ export function samePath(a: string, b: string): boolean {
 }
 
 export const currentLang = () => document.documentElement.dataset.lang ?? "vi-VN"
+
+export interface NoteFilter {
+  folder?: string
+  type?: string
+  tag?: string
+}
+
+/** Whether a note passes every set filter; a tag also matches its nested tags. */
+export function matchesFilter(n: IndexNote, f: NoteFilter): boolean {
+  if (f.folder && n.p !== f.folder) return false
+  if (f.type && !n.y.includes(f.type)) return false
+  if (f.tag && !n.g.some((g) => g === f.tag || g.startsWith(f.tag + "/"))) return false
+  return true
+}
+
+/** Current values of the filter selects of a dialog. */
+export function readFilters(root: ParentNode): NoteFilter {
+  const value = (kind: string) => root.querySelector<HTMLSelectElement>(`select[data-filter="${kind}"]`)?.value || undefined
+  return { folder: value("folder"), type: value("type"), tag: value("tag") }
+}

@@ -8,7 +8,7 @@ import {
   type SimulationNodeDatum,
 } from "d3-force"
 import { navigate } from "astro:transitions/client"
-import { loadIndex, samePath } from "./data"
+import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
 
 interface GNode extends SimulationNodeDatum {
   i: number
@@ -43,7 +43,7 @@ function palette() {
   }
 }
 
-export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "global") {
+export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "global", filter: NoteFilter = {}) {
   const lang = canvas.dataset.lang!
   const current = canvas.dataset.current ?? location.pathname
   const data = await loadIndex(lang)
@@ -53,7 +53,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   for (const [a, b] of data.links) (all[a].deg++, all[b].deg++)
   const cur = all.find((n) => samePath(n.u, current))
 
-  let keep = new Set(all.map((n) => n.i))
+  let keep = new Set(all.filter((n) => matchesFilter(data.notes[n.i], filter)).map((n) => n.i))
   if (mode === "local") {
     keep = new Set(cur ? [cur.i] : [])
     for (let depth = 0; depth < 2; depth++) {
@@ -150,7 +150,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     ctx.font = `${12 / view.k}px Inter Variable, sans-serif`
     ctx.textAlign = "center"
     for (const n of nodes) {
-      const show = n === cur || n === hover || lit?.has(n) || view.k > 1.6 || (mode === "local" && nodes.length < 14)
+      const show = n === cur || n === hover || lit?.has(n) || view.k > 1.6 || nodes.length < (mode === "local" ? 14 : 30)
       if (!show) continue
       ctx.globalAlpha = hover && n !== hover && !lit?.has(n) ? 0.3 : 0.95
       const label = n.t.length > 32 ? n.t.slice(0, 30) + "…" : n.t
@@ -254,12 +254,26 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   return stop
 }
 
+let stopGlobal: (() => void) | undefined
+
+/** (Re)draw the global graph with the filters currently chosen in its dialog. */
+async function drawGlobal(dialog: HTMLDialogElement) {
+  stopGlobal?.()
+  const canvas = dialog.querySelector<HTMLCanvasElement>("canvas")!
+  stopGlobal = await mountGraph(canvas, "global", readFilters(dialog))
+}
+
 export function openGraph() {
   const dialog = document.querySelector<HTMLDialogElement>("[data-graph-dialog]")
   if (!dialog || dialog.open) return
   dialog.showModal()
-  const canvas = dialog.querySelector<HTMLCanvasElement>("canvas")!
-  void mountGraph(canvas, "global").then((stop) => {
-    dialog.addEventListener("close", () => stop?.(), { once: true })
-  })
+  if (!dialog.dataset.bound) {
+    dialog.dataset.bound = "1"
+    dialog.querySelectorAll("select[data-filter]").forEach((sel) => sel.addEventListener("change", () => drawGlobal(dialog)))
+    dialog.addEventListener("close", () => {
+      stopGlobal?.()
+      stopGlobal = undefined
+    })
+  }
+  void drawGlobal(dialog)
 }

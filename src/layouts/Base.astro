@@ -10,6 +10,7 @@ import Explorer from "~/components/Explorer.astro"
 import { navLinks } from "~/lib/nav"
 import { ogPath } from "~/lib/og-url"
 import Analytics from "~/components/Analytics.astro"
+import Filters from "~/components/Filters.astro"
 
 interface Props {
   lang: Lang
@@ -167,6 +168,7 @@ const year = new Date().getFullYear()
         <input type="search" placeholder={s.searchPlaceholder} aria-label={s.search} autocomplete="off" spellcheck="false" />
         <kbd>Esc</kbd>
       </div>
+      <Filters lang={lang} kinds={["folder", "type"]} scope="search" />
       <ul class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
       <div class="modal-foot">
         <span><kbd>↑</kbd> <kbd>↓</kbd> {s.navigate}</span>
@@ -178,6 +180,7 @@ const year = new Date().getFullYear()
     <dialog class="modal graph-modal" data-graph-dialog>
       <div class="modal-head">
         <span>{s.globalGraph}</span>
+        <Filters lang={lang} kinds={["folder", "tag"]} scope="graph" />
         <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>
           <Icon name="close" />
         </button>

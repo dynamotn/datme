@@ -1779,3 +1779,29 @@ dialog.graph-modal {
   opacity: 1;
   filter: none;
 }
+
+/* ---------- filters ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.search-input-row + .filters {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head .filters {
+  margin-left: auto;
+  margin-right: 8px;
+}
+.filters select {
+  height: 32px;
+  max-width: 220px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}

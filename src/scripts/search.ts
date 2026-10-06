@@ -1,6 +1,6 @@
 import MiniSearch from "minisearch"
 import { navigate } from "astro:transitions/client"
-import { loadIndex, currentLang, type IndexNote } from "./data"
+import { loadIndex, currentLang, matchesFilter, readFilters, type IndexNote } from "./data"
 import { fold, esc, highlight, snippet } from "./text"
 
 const engines = new Map<string, Promise<{ ms: MiniSearch<IndexNote & { id: number }>; notes: IndexNote[] }>>()
@@ -41,15 +41,18 @@ async function run(dialog: HTMLDialogElement, query: string) {
   const list = dialog.querySelector<HTMLElement>(".search-results")!
   const { ms, notes } = await engine(dialog.dataset.lang ?? currentLang())
   const q = query.trim()
-  if (!q) {
+  const filter = readFilters(dialog)
+  const filtering = Boolean(filter.folder || filter.type)
+  if (!q && !filtering) {
     list.innerHTML = ""
     return
   }
   const terms = fold(q).split(/\s+/).filter(Boolean)
   const tagQuery = q.startsWith("#") ? fold(q.slice(1)) : null
-  const hits = tagQuery
-    ? notes.map((_, id) => ({ id })).filter(({ id }) => notes[id].g.some((g) => fold(g).startsWith(tagQuery)))
-    : ms.search(q).slice(0, 30)
+  const all = notes.map((_, id) => ({ id }))
+  // With filters but no query, browse every matching note.
+  const found = !q ? all : tagQuery ? all.filter(({ id }) => notes[id].g.some((g) => fold(g).startsWith(tagQuery))) : ms.search(q)
+  const hits = found.filter(({ id }) => matchesFilter(notes[id as number], filter)).slice(0, q ? 30 : 100)
   if (!hits.length) {
     list.innerHTML = `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`
     return
@@ -96,6 +99,7 @@ export function setupSearch() {
       if (a) (e.preventDefault(), dialog.close(), navigate(a.getAttribute("href")!))
     }
   })
+  dialog.querySelectorAll("select[data-filter]").forEach((sel) => sel.addEventListener("change", () => run(dialog, input.value)))
   list.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).closest("a")) dialog.close()
   })

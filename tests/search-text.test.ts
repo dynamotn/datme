@@ -43,3 +43,24 @@ describe("samePath", () => {
     expect(samePath("/a", "/b")).toBe(false)
   })
 })
+
+describe("matchesFilter", () => {
+  const { matchesFilter } = require("../src/scripts/data") as typeof import("../src/scripts/data")
+  const note = { u: "/x", t: "X", a: [], g: ["theme/pkm", "type/book"], s: null, f: "Reference", p: "06_Reference", y: ["book"], d: "", c: "" }
+
+  test("no filter keeps every note", () => {
+    expect(matchesFilter(note, {})).toBe(true)
+  })
+
+  test("folder, type and tag must all match", () => {
+    expect(matchesFilter(note, { folder: "06_Reference", type: "book" })).toBe(true)
+    expect(matchesFilter(note, { folder: "03_Atomic" })).toBe(false)
+    expect(matchesFilter(note, { type: "person" })).toBe(false)
+  })
+
+  test("a tag matches itself and its children, not lookalikes", () => {
+    expect(matchesFilter(note, { tag: "theme" })).toBe(true)
+    expect(matchesFilter(note, { tag: "theme/pkm" })).toBe(true)
+    expect(matchesFilter(note, { tag: "them" })).toBe(false)
+  })
+})

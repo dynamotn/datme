@@ -98,6 +98,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …
   `<!--lang:en-US-->` … `<!--lang:*-->`, and give `title` one value per language.
 - Excalidraw drawings (`![[Plan.excalidraw]]`) use the SVG or PNG the Obsidian Excalidraw plugin exports next to them; with both `.light.svg` and `.dark.svg` the drawing follows the site theme.
+- Search (`Ctrl K`) narrows by folder and note type, or by tag with `#tag`; the global graph (`Ctrl G`) filters by folder and tag.
 - A note named after its folder (`Books/Books.md`) introduces that folder's page.
 - Only assets referenced by a published note are copied to the site.
 
