@@ -136,8 +136,8 @@ An invalid file stops the build with the path of every problem, e.g.
 
 `datme build` writes a plain static site, so any static host works.
 `datme deploy github|gitlab|netlify|cloudflare` writes a pipeline into the
-vault's repository that runs the published package with `bunx datme`. Pipelines
-that build from a checkout of datme instead live in `examples/deploy/`:
+vault's repository that runs the published package with
+`bunx @dynamotn/datme`. Hand-written equivalents live in `examples/deploy/`:
 
 - `gitlab-pages.yml`: copy to `.gitlab-ci.yml` to publish on GitLab Pages.
 - `github-pages.yml`: copy to `.github/workflows/` and choose "GitHub Actions"
