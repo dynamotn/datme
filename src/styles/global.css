@@ -1871,3 +1871,28 @@ dialog.graph-modal {
 .properties a {
   color: var(--accent);
 }
+
+/* ---------- dataview ---------- */
+.prose table.dataview {
+  display: block;
+  overflow-x: auto;
+  margin: 0 0 1.1em;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.prose .dv-note,
+.prose .dv-empty,
+.prose .dv-error {
+  padding: 10px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.8em;
+}
+.prose .dv-error {
+  color: var(--clay);
+}
+.prose .dv-null {
+  color: var(--muted);
+}

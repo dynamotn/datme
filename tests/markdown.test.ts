@@ -123,3 +123,31 @@ describe("code blocks", () => {
     expect(html).not.toContain("[!code")
   })
 })
+
+describe("dataview", () => {
+  const queries = renderNote(vi.get("03_Atomic/Queries")!)
+
+  test("queries render as tables of published notes", async () => {
+    const { html } = await queries
+    expect(html).toContain('<table class="dataview dv-table"><thead><tr><th>Ghi chú</th><th>Name</th></tr></thead>')
+    expect(html).toContain('<a href="/06_Reference/Niklas-Luhmann" class="internal" data-key="06_Reference/Niklas Luhmann">Niklas Luhmann</a></td><td>Niklas Luhmann</td>')
+  })
+
+  test("queries never see unpublished or protected notes", async () => {
+    const { html } = await queries
+    expect(html).toContain("dv-empty")
+    expect(html).not.toMatch(/Private|Secret/)
+  })
+
+  test("empty blocks render nothing", async () => {
+    const { html } = await queries
+    expect(html).not.toContain("dv-error")
+  })
+
+  test("GROUP BY and DataviewJS show a notice instead of code", async () => {
+    const { html } = await queries
+    expect(html).toContain("(GROUP BY)")
+    expect(html).toContain("(DataviewJS)")
+    expect(html).not.toContain("dv.list")
+  })
+})

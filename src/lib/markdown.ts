@@ -24,6 +24,7 @@ import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
+import { renderDataview, renderDataviewJs } from "./dataview-render"
 
 export interface Heading {
   depth: number
@@ -116,6 +117,15 @@ const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
         ...(fold === "+" ? { open: true } : {}),
       },
     }
+  })
+}
+
+/** ```dataview queries run over the published notes; DataviewJS only gets a notice. */
+const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, key }) => (tree) => {
+  visit(tree, "code", (node: Code, index, parent) => {
+    if (!parent || index == null) return
+    if (node.lang === "dataview") parent.children[index] = { type: "html", value: renderDataview(node.value, lang, key) }
+    else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
   })
 }
 
@@ -322,6 +332,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>) {
     .use(remarkGfm)
     .use(remarkMath)
     .use(remarkCallouts)
+    .use(remarkDataview, { lang, key: stack[stack.length - 1] })
     .use(remarkMermaid)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)

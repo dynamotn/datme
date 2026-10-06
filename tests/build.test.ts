@@ -99,7 +99,7 @@ describe("static build", () => {
     const home = read("index.html")
     const search = home.match(/<div class="filters" data-filters="search">[\s\S]*?<\/div>/)![0]
     expect(search).toContain('data-filter="folder"')
-    expect(search).toContain('<option value="03_Atomic">⚛️ Nguyên tử (2)</option>')
+    expect(search).toContain('<option value="03_Atomic">⚛️ Nguyên tử (3)</option>')
     expect(search).toContain('<option value="notion">notion (1)</option>')
     const graph = home.match(/<div class="filters" data-filters="graph">[\s\S]*?<\/div>/)![0]
     expect(graph).toContain('data-filter="tag"')

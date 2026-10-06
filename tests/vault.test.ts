@@ -10,6 +10,7 @@ describe("publishing rules", () => {
     expect([...vault.sources.keys()].sort()).toEqual([
       "01_Fleeting/01_Fleeting",
       "03_Atomic/Code",
+      "03_Atomic/Queries",
       "03_Atomic/Zettelkasten",
       "06_Reference/Niklas Luhmann",
       "06_Reference/Secret",
