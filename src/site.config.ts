@@ -168,6 +168,15 @@ const schema = z
       })
       .strict()
       .default({ all: false, types: [], folders: [] }),
+    related: z
+      .object({
+        /** How many related notes to suggest under each note; 0 turns them off. */
+        count: z.number().int().min(0).default(5),
+        /** List notes that name this one without linking to it. */
+        mentions: z.boolean().default(true),
+      })
+      .strict()
+      .default({ count: 5, mentions: true }),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
     /** Make the site installable and keep the pages a reader opened available offline. */
@@ -291,6 +300,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ogImages: c.ogImages,
     offline: c.offline,
     stackedPages: c.stackedPages,
+    related: c.related,
     lineBreaks: { ...c.lineBreaks, folders: c.lineBreaks.folders.map((p) => p.replace(/^\/+|\/+$/g, "")) },
     properties: c.properties,
     types: Object.fromEntries(

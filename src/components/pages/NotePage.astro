@@ -6,6 +6,7 @@ import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t, langMeta } from "~/lib/i18n"
 import { lookOf } from "~/lib/nav"
+import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
 import Base from "~/layouts/Base.astro"
@@ -30,6 +31,8 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.byKey[l].g
 const original = note.translated ? undefined : vault.byKey[note.sourceLang]?.get(note.key)
 const translatedIn = site.langs.filter((l) => vault.byKey[l].get(note.key)?.translated)
 const s = t(note.lang)
+const related = relatedNotes(note)
+const mentions = unlinkedMentions(note)
 // A protected page ships only its ciphertext; the browser decrypts it with the password.
 const password = vault.sources.get(note.key)?.password
 const payload =
@@ -109,6 +112,40 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       )
     }
   </section>
+  {
+    related.length > 0 && (
+      <section class="backlinks related">
+        <h2>{s.related}</h2>
+        <div class="backlink-grid">
+          {related.map((r) => (
+            <a class="backlink internal" href={r.note.url}>
+              <strong>{r.note.title}</strong>
+              <p>{[...r.tags.map((x) => "#" + x), r.links ? s.sharedLinks(r.links) : ""].filter(Boolean).join(" · ")}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+  {
+    mentions.length > 0 && (
+      <details class="backlinks mentions">
+        <summary>
+          <h2>
+            {s.unlinkedMentions} <span class="count">{mentions.length}</span>
+          </h2>
+        </summary>
+        <div class="backlink-grid">
+          {mentions.map((m) => (
+            <a class="backlink internal" href={m.note.url}>
+              <strong>{m.note.title}</strong>
+              <p>{m.context}</p>
+            </a>
+          ))}
+        </div>
+      </details>
+    )
+  }
   </div>
   </div>
   <Webmentions lang={note.lang} url={note.url} />

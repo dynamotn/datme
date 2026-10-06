@@ -2381,3 +2381,25 @@ li > .flashcard {
   border-radius: 4px;
   font-size: 10px;
 }
+
+/* ---------- related notes and mentions ---------- */
+.backlinks.related,
+.backlinks.mentions {
+  margin-top: 28px;
+  padding-top: 20px;
+}
+.backlinks.mentions summary {
+  list-style: none;
+  cursor: pointer;
+}
+.backlinks.mentions summary::-webkit-details-marker {
+  display: none;
+}
+.backlinks.mentions summary h2::after {
+  content: "›";
+  margin-left: 4px;
+  transition: transform 0.15s;
+}
+.backlinks.mentions[open] summary h2::after {
+  transform: rotate(90deg);
+}

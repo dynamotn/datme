@@ -1,5 +1,6 @@
 ---
 publish: true
+tags: [theme/pkm]
 ---
 ```ts title="app.ts" {2}
 const a = 1

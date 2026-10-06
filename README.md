@@ -99,6 +99,9 @@ cname: true                   # write CNAME with the host of site.url
 offline: true                 # installable app; pages a reader opened stay readable offline
 ogImages: true                # social cards for the home page and notes without a banner
 stackedPages: true            # a header button to open linked notes side by side
+related:                      # under each note: notes sharing tags or links,
+  count: 5                    # and notes naming it without a link
+  mentions: true
 lineBreaks:                   # keep single line breaks, as Obsidian does (poems, lyrics)
   types: [composition]        # also: all: true, folders: [Poems]; frontmatter lineBreaks overrides
 properties:

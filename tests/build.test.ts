@@ -151,6 +151,13 @@ describe("static build", () => {
     )
   })
 
+  test("note pages suggest related notes and list unlinked mentions", () => {
+    const zk = read("03_Atomic/Zettelkasten/index.html")
+    expect(zk).toMatch(/<section class="backlinks related">[\s\S]*?href="\/03_Atomic\/Code"[\s\S]*?#theme\/pkm/)
+    const luhmann = read("06_Reference/Niklas-Luhmann/index.html")
+    expect(luhmann).toMatch(/<details class="backlinks mentions">[\s\S]*?href="\/01_Fleeting\/01_Fleeting"/)
+  })
+
   test("referenced assets are copied, nothing else", () => {
     expect(exists("assets/_assets/images/diagram.png")).toBe(true)
     expect(fs.readdirSync(path.join(out, "assets/_assets")).sort()).toEqual(["draw", "images"])
@@ -165,7 +172,7 @@ describe("static build", () => {
     expect(search).toContain('<option value="notion">notion (1)</option>')
     const graph = home.match(/<div class="filters" data-filters="graph">[\s\S]*?<\/div>/)![0]
     expect(graph).toContain('data-filter="tag"')
-    expect(graph).toContain('<option value="theme/pkm">#theme/pkm (1)</option>')
+    expect(graph).toContain('<option value="theme/pkm">#theme/pkm (2)</option>')
     expect(graph).not.toContain("type/")
   })
 
