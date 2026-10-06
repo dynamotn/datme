@@ -35,6 +35,8 @@ Links: [[Missing note]], [[Private]], [[#Definition|jump]], #inline/tag and [the
 
 ![[diagram.png|300]]
 
+![[Flow.excalidraw]]
+
 ```js
 const fake = "[[not a link]] ==not highlighted== #notatag"
 ```

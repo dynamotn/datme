@@ -116,3 +116,35 @@ describe("anchorOf", () => {
     expect(anchorOf("")).toBe("")
   })
 })
+
+describe("excalidraw", () => {
+  const drawings: Record<string, string> = {
+    "Flow.excalidraw.light.svg": "_assets/draw/Flow.excalidraw.light.svg",
+    "Flow.excalidraw.dark.svg": "_assets/draw/Flow.excalidraw.dark.svg",
+    "Sketch.excalidraw.png": "_assets/draw/Sketch.excalidraw.png",
+  }
+  const draw = (src: string) =>
+    preprocess(src, {
+      lang: "vi-VN",
+      dir: "",
+      resolveNote: () => undefined,
+      resolveAsset: (t) => drawings[t.split("/").pop()!],
+    })
+
+  test("light and dark exports follow the site theme", () => {
+    const { md, assets: used } = draw("![[Flow.excalidraw]]")
+    expect(md).toContain('class="drawing-light" src="/assets/_assets/draw/Flow.excalidraw.light.svg"')
+    expect(md).toContain('class="drawing-dark" src="/assets/_assets/draw/Flow.excalidraw.dark.svg"')
+    expect(used).toHaveLength(2)
+  })
+
+  test("a single export, the .md suffix and a width are understood", () => {
+    expect(draw("![[Sketch.excalidraw.md|400]]").md).toBe(
+      '<span class="drawing" style="max-width:400px"><img class="" src="/assets/_assets/draw/Sketch.excalidraw.png" alt="Sketch" loading="lazy"></span>',
+    )
+  })
+
+  test("drawings that were never exported explain how to publish them", () => {
+    expect(draw("![[Nope.excalidraw]]").md).toContain('class="drawing-missing"')
+  })
+})

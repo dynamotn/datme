@@ -24,6 +24,7 @@ const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
 const AUDIO = /\.(mp3|wav|ogg|m4a|flac|webm)$/i
 const VIDEO = /\.(mp4|webm|mov|mkv|ogv)$/i
 const PDF = /\.pdf$/i
+const EXCALIDRAW = /\.excalidraw(\.md)?$/i
 
 /** Placeholder for a note URL; replaced once every slug of the language is known. */
 export const urlPlaceholder = (key: string) => `\u0001URL:${key}\u0001`
@@ -100,6 +101,25 @@ export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[
     return `<a href="${url}" class="attachment">${escapeAttr(alias ?? rel.split("/").pop()!)}</a>`
   }
 
+  // Excalidraw drawings are shown through the SVG/PNG the Obsidian plugin exports next to them.
+  const embedDrawing = (file: string, alias: string | undefined): string => {
+    const base = file.replace(/\.md$/i, "")
+    const find = (suffix: string) => ctx.resolveAsset(base + suffix, ctx.dir)
+    const light = find(".light.svg") ?? find(".svg") ?? find(".light.png") ?? find(".png")
+    const dark = find(".dark.svg") ?? find(".dark.png")
+    const name = escapeAttr(base.split("/").pop()!.replace(EXCALIDRAW, ""))
+    if (!light && !dark) {
+      return `<span class="drawing-missing">✏️ ${name}: export the drawing as SVG in the Excalidraw plugin to publish it</span>`
+    }
+    const img = (rel: string, cls: string) => {
+      assets.push(rel)
+      return `<img class="${cls}" src="${assetUrl(rel)}" alt="${name}" loading="lazy">`
+    }
+    const width = alias?.match(/^\d+$/) ? ` style="max-width:${alias}px"` : ""
+    const pics = light && dark ? img(light, "drawing-light") + img(dark, "drawing-dark") : img((light ?? dark)!, "")
+    return `<span class="drawing"${width}>${pics}</span>`
+  }
+
   // Wikilinks and embeds: [[target#fragment|alias]] and ![[...]]; tables escape the pipe as \|.
   md = md.replace(/(!?)\[\[([^[\]\n]+?)\]\]/g, (_m, bang: string, inner: string, offset: number) => {
     const raw = inner.replace(/\\\|/g, "|")
@@ -110,6 +130,7 @@ export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[
     const file = (hash >= 0 ? target.slice(0, hash) : target).trim()
     const fragment = hash >= 0 ? target.slice(hash + 1).trim() : ""
 
+    if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias)
     if (bang) {
       const note = file ? ctx.resolveNote(file, ctx.dir) : undefined
       if (note && !IMAGE.test(file)) {

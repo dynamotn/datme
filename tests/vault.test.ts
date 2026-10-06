@@ -96,7 +96,11 @@ describe("metadata", () => {
   })
 
   test("only referenced assets are exported", () => {
-    expect([...vault.assets]).toEqual(["_assets/images/diagram.png"])
+    expect([...vault.assets].sort()).toEqual([
+      "_assets/draw/Flow.excalidraw.dark.svg",
+      "_assets/draw/Flow.excalidraw.light.svg",
+      "_assets/images/diagram.png",
+    ])
   })
 })
 

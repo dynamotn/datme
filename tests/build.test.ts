@@ -83,7 +83,8 @@ describe("static build", () => {
 
   test("referenced assets are copied, nothing else", () => {
     expect(exists("assets/_assets/images/diagram.png")).toBe(true)
-    expect(fs.readdirSync(path.join(out, "assets/_assets"))).toEqual(["images"])
+    expect(fs.readdirSync(path.join(out, "assets/_assets")).sort()).toEqual(["draw", "images"])
+    expect(exists("assets/_assets/draw/Flow.excalidraw.md")).toBe(false)
   })
 
   test("the content index links notes for search and the graph", () => {
