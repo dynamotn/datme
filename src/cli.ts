@@ -301,6 +301,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   const astro = await import("astro")
   const server = { port: args.port, host: args.host }
   if (args.command === "dev") {
+    env.DATME_DEV = "1"
     await astro.dev({ root: PACKAGE_ROOT, server })
     return
   }

@@ -6,8 +6,8 @@ interface Props {
   file?: string
 }
 const { file } = Astro.props
-// Only `datme dev` shows these: they help the writer, a reader has nothing to do with them.
-const problems = import.meta.env.DEV ? getVault().problems.filter((p) => p.level !== "info") : []
+// Only `datme dev` shows these, whatever NODE_ENV says: they help the writer, not the reader.
+const problems = process.env.DATME_DEV ? getVault().problems.filter((p) => p.level !== "info") : []
 const mine = file ? problems.filter((p) => p.file === file) : []
 ---
 

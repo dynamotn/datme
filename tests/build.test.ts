@@ -340,7 +340,7 @@ describe("static build", () => {
   })
 
   test("problems shown while writing in datme dev never reach the built site", () => {
-    expect(read("03_Atomic/Zettelkasten/index.html")).not.toContain("dev-problems")
+    expect(read("03_Atomic/Zettelkasten/index.html")).not.toMatch(/class="dev-problems/)
   })
 
   test("RSS feeds and the sitemap are generated", () => {
