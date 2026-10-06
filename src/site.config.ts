@@ -72,6 +72,25 @@ const schema = z
       .strict()
       .default({ typePrefix: "type/", blogTags: ["type/blog", "blog"], mapTags: ["type/moc", "moc"] }),
     footer: z.record(z.string(), z.string()).default({}),
+    /** Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs. */
+    nav: z
+      .array(
+        z.union([
+          z.enum(["home", "tags"]),
+          z.object({ note: z.string().min(1), label: localized.optional() }).strict(),
+          z.object({ url: z.string().min(1), label: localized }).strict(),
+        ]),
+      )
+      .default(["home", "tags"]),
+    appearance: z
+      .object({
+        /** notebook: index cards on dotted paper; classic: the quiet serif blog look. */
+        style: z.enum(["notebook", "classic"]).default("notebook"),
+        /** Folders whose notes use the other style, e.g. long-form writing. */
+        classic: z.array(z.string()).default([]),
+      })
+      .strict()
+      .default({ style: "notebook", classic: [] }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -95,6 +114,13 @@ function localize(v: z.infer<typeof localized> | undefined, langs: Lang[], fallb
     } else out[lang] = fallback
   }
   return out
+}
+
+export interface NavItem {
+  kind: "home" | "tags" | "note" | "url"
+  /** Wikilink target for notes, href for URLs. */
+  target?: string
+  label?: Record<Lang, string>
 }
 
 export class ConfigError extends Error {
@@ -140,6 +166,17 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     home: c.home.replace(/^\/+/, ""),
     conventions: c.conventions,
     footerLinks: c.footer,
+    nav: c.nav.map((item): NavItem =>
+      typeof item === "string"
+        ? { kind: item }
+        : "note" in item
+          ? { kind: "note", target: item.note, label: item.label ? localize(item.label, langs, item.note) : undefined }
+          : { kind: "url", target: item.url, label: localize(item.label, langs, item.url) },
+    ),
+    appearance: {
+      style: c.appearance.style,
+      classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
+    },
     strings: c.strings,
   }
 }

@@ -111,3 +111,30 @@ describe("logo", () => {
     expect(resolveConfig({ site: { logo: "đ" } }, "/v").logo).toBe("đ")
   })
 })
+
+describe("menu and appearance", () => {
+  test("the menu defaults to home and tags, in the notebook style", () => {
+    const c = resolveConfig({}, "/v")
+    expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
+    expect(c.appearance).toEqual({ style: "notebook", classic: [] })
+  })
+
+  test("menu entries can be notes or URLs, with localised labels", () => {
+    const c = resolveConfig(
+      {
+        languages: ["vi-VN", "en-US"],
+        nav: [{ note: "About me", label: { "vi-VN": "Về tôi", "en-US": "About" } }, { url: "/cv.pdf", label: "CV" }],
+        appearance: { classic: ["/Writing/"] },
+      },
+      "/v",
+    )
+    expect(c.nav[0]).toEqual({ kind: "note", target: "About me", label: { "vi-VN": "Về tôi", "en-US": "About" } })
+    expect(c.nav[1]).toEqual({ kind: "url", target: "/cv.pdf", label: { "vi-VN": "CV", "en-US": "CV" } })
+    expect(c.appearance.classic).toEqual(["Writing"])
+  })
+
+  test("URL entries need a label and styles are checked", () => {
+    expect(() => resolveConfig({ nav: [{ url: "/x" }] }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ appearance: { style: "neon" } }, "/v")).toThrow(ConfigError)
+  })
+})

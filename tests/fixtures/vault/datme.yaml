@@ -23,3 +23,13 @@ footer:
 strings:
   en-US:
     blog: Essays
+nav:
+  - home
+  - note: Niklas Luhmann
+    label:
+      vi-VN: Về Luhmann
+      en-US: About Luhmann
+  - tags
+  - note: Missing note
+appearance:
+  classic: [07_Project]
