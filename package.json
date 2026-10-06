@@ -59,6 +59,7 @@
     "@shikijs/rehype": "^4.4.3",
     "@shikijs/transformers": "^4.4.3",
     "astro": "^7.3.5",
+    "chart.js": "^4",
     "d3-force": "^3.0.0",
     "github-slugger": "^2.0.0",
     "hast-util-from-html": "^2.0.3",

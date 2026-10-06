@@ -216,8 +216,13 @@ window.addEventListener("afterprint", () => {
   printOpened = []
 })
 
+document.addEventListener("themechange", () => {
+  if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())
+})
+
 document.addEventListener("astro:before-swap", () => {
   teardownGraphs()
+  if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.teardownCharts())
   if (document.querySelector("[data-map]")) void import("./map").then((m) => m.unmountMap())
   hidePopover()
   root.classList.remove("nav-open")
@@ -290,6 +295,8 @@ document.addEventListener("astro:page-load", () => {
   setupLightbox()
   setupClozes()
   setupPractice()
+  // Chart.js is only fetched on pages with a chart.
+  if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())
   // Leaflet is only fetched on the map page.
   const mapEl = document.querySelector<HTMLElement>("[data-map]")
   if (mapEl) void import("./map").then((m) => m.mountMap(mapEl))

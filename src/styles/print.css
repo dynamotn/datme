@@ -107,6 +107,16 @@
   [data-look="notebook"] .shiki span {
     color: var(--shiki-light) !important;
   }
+  .prose figure.chart canvas {
+    display: none;
+  }
+  .prose .chart-data {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
   .practice-bar {
     display: none !important;
   }

@@ -1759,6 +1759,18 @@ dialog.graph-modal {
   margin: 48px auto 0;
 }
 
+.prose figure.chart {
+  margin: 0 0 1.2em;
+}
+/* The data table is for screen readers and paper; the canvas shows it on screen. */
+.prose .chart-data {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .prose .query-results li {
   margin-bottom: 0.4em;
 }

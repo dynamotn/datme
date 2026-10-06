@@ -26,6 +26,7 @@ import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
 import { renderDataview, renderDataviewJs, renderTasksBlock, renderSearchBlock } from "./dataview-render"
 import { renderBaseView } from "./base-render"
+import { renderChart } from "./charts"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
 
@@ -164,6 +165,7 @@ const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, k
       }
     } else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
     else if (node.lang === "query") parent.children[index] = { type: "html", value: renderSearchBlock(node.value, lang) }
+    else if (node.lang === "chart") parent.children[index] = { type: "html", value: renderChart(node.value) }
   })
 }
 
@@ -233,7 +235,9 @@ const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => 
       }
     }
     if (tag === "img") node.properties.loading = "lazy"
-    if (tag === "table" && parent && index != null) {
+    // A chart's data table is hidden, so it needs no scrolling frame.
+    const chartData = (node.properties.className as string[] | undefined)?.includes("chart-data")
+    if (tag === "table" && !chartData && parent && index != null) {
       parent.children[index] = {
         type: "element",
         tagName: "div",
