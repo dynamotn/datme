@@ -2,7 +2,8 @@ import type { APIRoute, GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
 import { getVault, type Note } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { renderOg } from "~/lib/og"
+import { renderOg, OG_SOURCE } from "~/lib/og"
+import { readCache, writeCache } from "~/lib/render-cache"
 import { formatDate, langPrefix, t } from "~/lib/i18n"
 
 type Props = { lang: Lang; note?: Note }
@@ -33,5 +34,12 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
       logo: site.logo,
     }
   }
-  return new Response(new Uint8Array(await renderOg(card)), { headers: { "content-type": "image/png" } })
+  // Drawing a card is the slowest step of a build; an unchanged card is reused.
+  const key = [JSON.stringify(card)]
+  let png = readCache("og", OG_SOURCE, key)
+  if (!png) {
+    png = await renderOg(card)
+    writeCache("og", OG_SOURCE, key, png)
+  }
+  return new Response(new Uint8Array(png), { headers: { "content-type": "image/png" } })
 }

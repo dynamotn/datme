@@ -26,6 +26,7 @@ import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
 import { renderDataview, renderDataviewJs } from "./dataview-render"
 import { renderBaseView } from "./base-render"
+import { readCache, writeCache } from "./render-cache"
 
 export interface Heading {
   depth: number
@@ -374,21 +375,42 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>) {
     .use(rehypeStringify, { allowDangerousHtml: true })
 }
 
+/**
+ * Whether a note renders the same whatever the rest of the vault holds, so its
+ * HTML can be reused across builds: no embeds, queries or bases, and never a
+ * protected note, whose content must not reach the disk unencrypted.
+ */
+function isSelfContained(note: Note): boolean {
+  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*dataview/im.test(note.md)
+}
+
+type Parts = Omit<Rendered, "description"> & { description?: string }
+
 function renderFull(note: Note, stack: string[]): Promise<Rendered> {
-  const id = `${getVault().version}:${note.lang}:${note.key}:${stack.length > 1 ? "embed" : "page"}`
+  const variant = stack.length > 1 ? "embed" : "page"
+  const id = `${getVault().version}:${note.lang}:${note.key}:${variant}`
   let hit = cache.get(id)
   if (!hit) {
     hit = (async () => {
-      const out: Partial<Rendered> = {}
-      const file = await processorFor(note.lang, stack, out).process(note.md)
-      return {
-        html: String(file),
-        h1: out.h1,
-        headings: out.headings ?? [],
-        text: out.text ?? "",
-        words: out.words ?? 0,
-        description: note.description ?? out.description ?? "",
+      const diskKey = isSelfContained(note) ? [note.lang, variant, note.md] : undefined
+      const cached = diskKey && readCache("notes", import.meta.url, diskKey)
+      let parts: Parts
+      if (cached) parts = JSON.parse(cached.toString("utf8"))
+      else {
+        const out: Partial<Rendered> = {}
+        const file = await processorFor(note.lang, stack, out).process(note.md)
+        parts = {
+          html: String(file),
+          h1: out.h1,
+          headings: out.headings ?? [],
+          text: out.text ?? "",
+          words: out.words ?? 0,
+          description: out.description,
+        }
+        if (diskKey) writeCache("notes", import.meta.url, diskKey, JSON.stringify(parts))
       }
+      // The frontmatter description is not part of the markdown, so it is applied after the cache.
+      return { ...parts, description: note.description ?? parts.description ?? "" }
     })()
     cache.set(id, hit)
   }

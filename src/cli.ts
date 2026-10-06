@@ -9,12 +9,14 @@ export const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..")
 const STAGING = path.join(PACKAGE_ROOT, ".datme", "dist")
 /** Marks a directory as datme output, so a rebuild may replace it. */
 const MARKER = ".datme-build"
+/** Rendered notes and social cards reused by the next build, unless DATME_CACHE says otherwise. */
+const CACHE = path.join(PACKAGE_ROOT, ".datme", "cache")
 
 export const USAGE = `datme: publish an Obsidian vault as a digital garden
 
 Usage:
   datme dev     [vault] [--port 4321] [--host]   live preview, reloads on note changes
-  datme build   [vault] [--out ./dist]           build the static site
+  datme build   [vault] [--out ./dist] [--fresh] build the static site
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose]              report broken links and other problems
   datme init    [vault]                          write a starter datme.yaml
@@ -25,6 +27,7 @@ Options:
   --site <url>   public URL of the site, overrides site.url in datme.yaml
   --port <n>     port of dev and preview
   --host         listen on every network interface
+  --fresh        ignore the cache of rendered notes and social cards
   --strict       fail check and build on warnings too, not only on errors
   --verbose      also list links to unpublished notes
   -h, --help     show this help
@@ -41,6 +44,7 @@ export interface Args {
   host?: boolean
   strict?: boolean
   verbose?: boolean
+  fresh?: boolean
 }
 
 export class CliError extends Error {
@@ -59,6 +63,7 @@ export function parseArgs(argv: string[]): Args {
         port: { type: "string", short: "p" },
         host: { type: "boolean" },
         strict: { type: "boolean" },
+        fresh: { type: "boolean" },
         verbose: { type: "boolean" },
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
@@ -88,6 +93,7 @@ export function parseArgs(argv: string[]): Args {
     host: values.host,
     strict: values.strict,
     verbose: values.verbose,
+    fresh: values.fresh,
   }
 }
 
@@ -120,6 +126,29 @@ export function publishOutput(staging: string, out: string, vault: string): void
   }
   fs.cpSync(staging, resolved, { recursive: true })
   fs.writeFileSync(path.join(resolved, MARKER), "This directory is replaced on every `datme build`.\n")
+}
+
+/**
+ * Delete cache entries the last build did not use, so the cache never grows
+ * past one build. Reads touch entries, so anything older than the build is stale.
+ */
+export function pruneCache(root: string, since: number): void {
+  const walk = (dir: string) => {
+    let entries: fs.Dirent[]
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const e of entries) {
+      const p = path.join(dir, e.name)
+      if (e.isDirectory()) {
+        walk(p)
+        if (!fs.readdirSync(p).length) fs.rmdirSync(p)
+      } else if (fs.statSync(p).mtimeMs < since) fs.rmSync(p)
+    }
+  }
+  walk(root)
 }
 
 /** A commented datme.yaml to start from, named after the vault. */
@@ -205,7 +234,17 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     await astro.dev({ root: PACKAGE_ROOT, server })
     return
   }
+  // An empty DATME_CACHE turns the cache off; a path moves it, e.g. somewhere CI keeps between runs.
+  const cacheDir = env.DATME_CACHE === undefined ? CACHE : env.DATME_CACHE && path.resolve(cwd, env.DATME_CACHE)
+  if (cacheDir) {
+    if (args.fresh) fs.rmSync(cacheDir, { recursive: true, force: true })
+    env.DATME_CACHE = cacheDir
+    env.DATME_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8")).version
+  }
+  // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
+  const started = Date.now() - 1000
   await astro.build({ root: PACKAGE_ROOT, outDir: STAGING })
+  if (cacheDir) pruneCache(cacheDir, started)
   if (args.command === "build") {
     publishOutput(STAGING, out, vault)
     console.log(`Site written to ${out}`)

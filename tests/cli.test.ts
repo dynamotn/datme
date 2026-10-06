@@ -20,6 +20,7 @@ describe("parseArgs", () => {
       host: undefined,
       strict: undefined,
       verbose: undefined,
+      fresh: undefined,
     })
     expect(parseArgs(["check", "--strict", "--verbose"])).toMatchObject({ command: "check", strict: true, verbose: true })
     expect(parseArgs(["dev", "-p", "8080", "--host"])).toMatchObject({ command: "dev", port: 8080, host: true })

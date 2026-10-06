@@ -14,6 +14,8 @@ export interface OgCard {
 }
 
 const require = createRequire(import.meta.url)
+/** The code drawing the cards, so cached cards are redrawn when it changes. */
+export const OG_SOURCE = import.meta.url
 
 type Weight = 400 | 700 | 800
 let fonts: { name: string; data: Buffer; weight: Weight; style: "normal" }[] | undefined

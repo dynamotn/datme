@@ -31,6 +31,13 @@ The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`
 `build` prints a one-line summary of the problems `check` would report;
 `--strict` makes `check` and `build` fail on warnings too, for CI.
 
+Builds are incremental: rendered notes and social cards are cached and reused
+while their content, the config and datme stay the same (a 300-note vault goes
+from about 23 s to 2.5 s). Notes that embed others or run queries are always
+rendered again, and protected notes are never cached. The cache lives in
+datme's `.datme/cache`; `$DATME_CACHE` moves it (handy for CI caches), an
+empty value turns it off, and `--fresh` starts from scratch.
+
 ## Configuration: `datme.yaml`
 
 The file lives at the root of the vault, so the site settings travel with the
