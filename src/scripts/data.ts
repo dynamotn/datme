@@ -12,6 +12,8 @@ export interface IndexNote {
   f: string
   d: string
   c: string
+  /** Day the note was created, in days since 1970; null when unknown. */
+  k?: number | null
 }
 export interface ContentIndex {
   notes: IndexNote[]

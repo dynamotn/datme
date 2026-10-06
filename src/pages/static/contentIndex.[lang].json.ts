@@ -25,6 +25,8 @@ export const GET: APIRoute = async ({ params }) => {
         p: n.dir.split("/")[0],
         y: n.types,
         d: r.description,
+        // Day the note was planted, for the graph's time slider.
+        k: n.created ? Math.floor(n.created.getTime() / 86_400_000) : null,
         c: r.text.slice(0, 6000),
       }
     }),

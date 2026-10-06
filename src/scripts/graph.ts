@@ -9,6 +9,7 @@ import {
 } from "d3-force"
 import { navigate } from "astro:transitions/client"
 import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
+import { groupColors } from "./graph-colors"
 
 interface GNode extends SimulationNodeDatum {
   i: number
@@ -16,7 +17,12 @@ interface GNode extends SimulationNodeDatum {
   t: string
   deg: number
   r: number
+  /** Day the note was created, null when unknown. */
+  k: number | null
+  /** Group it is coloured by: its top folder or its first type. */
+  g: string
 }
+
 interface GLink {
   source: GNode
   target: GNode
@@ -49,7 +55,10 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const data = await loadIndex(lang)
   if (!canvas.isConnected) return
 
-  const all = data.notes.map((n, i) => ({ i, u: n.u, t: n.t, deg: 0, r: 4 }) as GNode)
+  const colorBy = canvas.dataset.colorBy
+  const all = data.notes.map(
+    (n, i) => ({ i, u: n.u, t: n.t, deg: 0, r: 4, k: n.k ?? null, g: colorBy === "type" ? (n.y[0] ?? "") : colorBy === "folder" ? n.p : "" }) as GNode,
+  )
   for (const [a, b] of data.links) (all[a].deg++, all[b].deg++)
   const cur = all.find((n) => samePath(n.u, current))
 
@@ -80,6 +89,12 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
 
   const ctx = canvas.getContext("2d")!
   let colors = palette()
+  const groups = groupColors(nodes.map((n) => n.g))
+  // The time slider hides notes planted after the chosen day; undated notes always show.
+  const shown = (n: GNode) => {
+    const until = Number(canvas.dataset.until)
+    return !canvas.dataset.until || n.k == null || n.k <= until
+  }
   let width = 0
   let height = 0
   const view = { k: mode === "local" ? 1 : 0.8, x: 0, y: 0 }
@@ -121,6 +136,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     ctx.scale(view.k, view.k)
     const lit = hover ? (neighbours.get(hover) ?? new Set()) : undefined
     for (const l of links) {
+      if (!shown(l.source) || !shown(l.target)) continue
       const on = hover && (l.source === hover || l.target === hover)
       ctx.strokeStyle = on ? colors.accent : colors.line
       ctx.globalAlpha = hover && !on ? 0.25 : on ? 0.9 : 0.6
@@ -131,10 +147,11 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
       ctx.stroke()
     }
     for (const n of nodes) {
+      if (!shown(n)) continue
       const isCur = n === cur
       const on = n === hover || lit?.has(n)
       ctx.globalAlpha = hover && !on && n !== hover ? 0.3 : 1
-      ctx.fillStyle = isCur ? colors.current : on ? colors.accent : colors.node
+      ctx.fillStyle = isCur ? colors.current : on ? colors.accent : (groups.get(n.g) ?? colors.node)
       ctx.beginPath()
       ctx.arc(n.x!, n.y!, n.r, 0, Math.PI * 2)
       ctx.fill()
@@ -150,6 +167,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     ctx.font = `${12 / view.k}px Inter Variable, sans-serif`
     ctx.textAlign = "center"
     for (const n of nodes) {
+      if (!shown(n)) continue
       const show = n === cur || n === hover || lit?.has(n) || view.k > 1.6 || nodes.length < (mode === "local" ? 14 : 30)
       if (!show) continue
       ctx.globalAlpha = hover && n !== hover && !lit?.has(n) ? 0.3 : 0.95
@@ -243,6 +261,8 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
 
   const ro = new ResizeObserver(resize)
   ro.observe(canvas)
+  canvas.addEventListener("redraw", draw)
+  legend(canvas, groups)
   const onTheme = () => ((colors = palette()), draw())
   document.addEventListener("themechange", onTheme)
   const stop = () => {
@@ -254,13 +274,51 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   return stop
 }
 
+/** The colours of the groups, under the global graph. */
+function legend(canvas: HTMLCanvasElement, groups: Map<string, string>) {
+  const box = canvas.closest("dialog")?.querySelector<HTMLElement>("[data-graph-legend]")
+  if (!box) return
+  box.replaceChildren(
+    ...[...groups].map(([g, color]) => {
+      const item = document.createElement("span")
+      const dot = document.createElement("i")
+      dot.style.background = color
+      item.append(dot, g)
+      return item
+    }),
+  )
+}
+
 let stopGlobal: (() => void) | undefined
 
 /** (Re)draw the global graph with the filters currently chosen in its dialog. */
 async function drawGlobal(dialog: HTMLDialogElement) {
   stopGlobal?.()
   const canvas = dialog.querySelector<HTMLCanvasElement>("canvas")!
+  canvas.dataset.colorBy = dialog.querySelector<HTMLSelectElement>("[data-graph-color]")?.value ?? ""
   stopGlobal = await mountGraph(canvas, "global", readFilters(dialog))
+  await setupTime(dialog, canvas)
+}
+
+/** The time slider spans the days notes were planted; at its right end every note shows. */
+async function setupTime(dialog: HTMLDialogElement, canvas: HTMLCanvasElement) {
+  const range = dialog.querySelector<HTMLInputElement>("[data-graph-time]")
+  const out = dialog.querySelector<HTMLOutputElement>("[data-graph-time-label]")
+  if (!range || !out) return
+  const days = (await loadIndex(canvas.dataset.lang!)).notes.map((n) => n.k).filter((k): k is number => k != null)
+  if (!days.length) return void (range.hidden = true)
+  range.min = String(Math.min(...days))
+  range.max = String(Math.max(...days))
+  if (!range.dataset.bound) {
+    range.dataset.bound = "1"
+    range.value = range.max
+    range.addEventListener("input", () => {
+      const atEnd = range.value === range.max
+      canvas.dataset.until = atEnd ? "" : range.value
+      out.textContent = atEnd ? "" : new Date(Number(range.value) * 86_400_000).toLocaleDateString(document.documentElement.lang)
+      canvas.dispatchEvent(new Event("redraw"))
+    })
+  }
 }
 
 export function openGraph() {
@@ -269,7 +327,7 @@ export function openGraph() {
   dialog.showModal()
   if (!dialog.dataset.bound) {
     dialog.dataset.bound = "1"
-    dialog.querySelectorAll("select[data-filter]").forEach((sel) => sel.addEventListener("change", () => drawGlobal(dialog)))
+    dialog.querySelectorAll("select[data-filter], select[data-graph-color]").forEach((sel) => sel.addEventListener("change", () => drawGlobal(dialog)))
     dialog.addEventListener("close", () => {
       stopGlobal?.()
       stopGlobal = undefined

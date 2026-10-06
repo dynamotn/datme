@@ -255,12 +255,25 @@ const year = new Date().getFullYear()
       <div class="modal-head">
         <span>{s.globalGraph}</span>
         <Filters lang={lang} kinds={["folder", "tag"]} scope="graph" />
+        <select data-graph-color aria-label={s.graphColorBy}>
+          <option value="">{s.graphColorBy}: {s.graphColorNone}</option>
+          <option value="folder">{s.graphColorBy}: {s.folder}</option>
+          <option value="type">{s.graphColorBy}: {s.graphColorType}</option>
+        </select>
         <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>
           <Icon name="close" />
         </button>
       </div>
       <div class="graph-full">
         <canvas data-graph="global" data-lang={lang}></canvas>
+      </div>
+      <div class="graph-foot">
+        <label class="graph-time">
+          <span>{s.graphTime}</span>
+          <input type="range" data-graph-time step="1" />
+          <output data-graph-time-label></output>
+        </label>
+        <div class="graph-legend" data-graph-legend></div>
       </div>
     </dialog>
 

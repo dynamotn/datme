@@ -2119,6 +2119,39 @@ li > .flashcard {
   margin: 2px 6px 2px 0;
 }
 
+/* ---------- graph: time and colours ---------- */
+.graph-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  font: 12.5px var(--font-ui);
+  color: var(--muted);
+}
+.graph-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.graph-time input {
+  width: min(16rem, 40vw);
+  accent-color: var(--accent);
+}
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.graph-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
 /* ---------- reading progress ---------- */
 .reading-progress-fill {
   position: fixed;
@@ -2483,7 +2516,11 @@ li > .flashcard {
   margin-left: auto;
   margin-right: 8px;
 }
-.filters select {
+.modal-head select[data-graph-color] {
+  margin-right: 8px;
+}
+.filters select,
+.modal-head select[data-graph-color] {
   height: 32px;
   max-width: 220px;
   padding: 0 8px;
