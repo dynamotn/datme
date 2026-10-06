@@ -44,7 +44,7 @@
     "preview": "bun bin/datme.ts preview",
     "check": "astro check",
     "test": "bun test",
-    "prepack": "bun build bin/datme.ts --target=node --external astro --outfile=bin/datme.js"
+    "prepack": "bun build bin/datme.ts --target=node --packages external --outfile=bin/datme.js"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
