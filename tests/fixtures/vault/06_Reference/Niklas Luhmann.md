@@ -1,5 +1,13 @@
 ---
 publish: true
+uid: 20240101000000
+template: Person
+person:
+  fullname: Niklas Luhmann
+  nickname: [""]
+  born: 1927
+related: "[[Zettelkasten|the slip box]]"
+website: https://example.com/luhmann
 tags:
   - type/person
 title:

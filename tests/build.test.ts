@@ -75,6 +75,14 @@ describe("static build", () => {
     expect(html).toContain("/03_Atomic/Zettelkasten")
   })
 
+  test("the properties block shows nested frontmatter and links, not bookkeeping", () => {
+    const html = read("06_Reference/Niklas-Luhmann/index.html")
+    const props = html.match(/<details class="properties">[\s\S]*?<\/details>/)![0]
+    expect(props).toContain("<dt>fullname</dt>")
+    expect(props).toContain('<a href="/03_Atomic/Zettelkasten" class="internal">the slip box</a>')
+    expect(props).not.toMatch(/uid|template|20240101000000/)
+  })
+
   test("the note page shows its backlinks and language alternates", () => {
     const html = read("06_Reference/Niklas-Luhmann/index.html")
     expect(html).toContain('class="backlink internal" href="/03_Atomic/Zettelkasten"')

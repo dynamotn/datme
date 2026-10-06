@@ -1,0 +1,37 @@
+---
+import type { PropValue } from "~/lib/properties"
+
+interface Props {
+  value: PropValue
+}
+const { value } = Astro.props
+---
+
+{
+  value.kind === "text" ? (
+    value.href ? (
+      <a href={value.href} class:list={{ internal: value.href.startsWith("/") }}>
+        {value.text}
+      </a>
+    ) : (
+      <span>{value.text}</span>
+    )
+  ) : value.kind === "list" ? (
+    <span class="prop-list">
+      {value.items.map((item) => (
+        <Astro.self value={item} />
+      ))}
+    </span>
+  ) : (
+    <dl class="prop-map">
+      {value.entries.map(([k, v]) => (
+        <>
+          <dt>{k}</dt>
+          <dd>
+            <Astro.self value={v} />
+          </dd>
+        </>
+      ))}
+    </dl>
+  )
+}

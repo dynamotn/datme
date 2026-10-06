@@ -4,6 +4,8 @@ import { site } from "~/site.config"
 import { t, formatDate, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "./Icon.astro"
+import PropValue from "./PropValue.astro"
+import { noteProperties } from "~/lib/properties"
 
 interface Props {
   note: Note
@@ -14,6 +16,7 @@ const s = t(note.lang)
 const tagUrl = (tag: string) => slugToUrl(langPrefix(note.lang) + "tags/" + tag)
 const minutes = Math.max(1, Math.round(words / 220))
 const stageFolder = note.dir.split("/")[0]
+const props = noteProperties(note)
 ---
 
 <div class="chips">
@@ -73,12 +76,18 @@ const stageFolder = note.dir.split("/")[0]
   )
 }
 {
-  note.aliases.length > 0 && (
+  props.length > 0 && (
     <details class="properties">
       <summary>{s.properties}</summary>
       <dl>
-        <dt>{s.aliases}</dt>
-        <dd>{note.aliases.join(" · ")}</dd>
+        {props.map(([key, value]) => (
+          <>
+            <dt>{key === "aliases" ? s.aliases : key}</dt>
+            <dd>
+              <PropValue value={value} />
+            </dd>
+          </>
+        ))}
       </dl>
     </details>
   )

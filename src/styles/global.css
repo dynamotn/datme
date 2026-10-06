@@ -1805,3 +1805,25 @@ dialog.graph-modal {
   font: inherit;
   font-size: 13px;
 }
+
+/* ---------- properties ---------- */
+.properties dd .prop-list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+.properties dd .prop-list > :not(:last-child)::after {
+  content: "·";
+  margin-left: 6px;
+  color: var(--muted);
+}
+.properties .prop-map {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin: 0;
+  padding: 0;
+}
+.properties a {
+  color: var(--accent);
+}

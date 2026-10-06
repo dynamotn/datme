@@ -78,6 +78,8 @@ comments:                     # giscus { repo, repoId, category, categoryId } or
   categoryId: DIC_xxx
 cname: true                   # write CNAME with the host of site.url
 ogImages: true                # social cards for the home page and notes without a banner
+properties:
+  hide: [rating]              # frontmatter keys left out of the properties block
 
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }
