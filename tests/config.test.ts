@@ -145,6 +145,7 @@ describe("analytics, comments and CNAME", () => {
     expect(c.analytics).toBeUndefined()
     expect(c.comments).toBeUndefined()
     expect(c.cname).toBe(false)
+    expect(c.ogImages).toBe(true)
   })
 
   test("each provider checks its own fields", () => {

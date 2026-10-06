@@ -106,6 +106,8 @@ const schema = z
         z.object({ provider: z.literal("commento"), host: z.string().default("https://cdn.commento.io") }).strict(),
       ])
       .optional(),
+    /** Generate social preview images for the home page and for notes without a banner. */
+    ogImages: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
     cname: z.boolean().default(false),
     encryption: z
@@ -210,6 +212,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     analytics: c.analytics,
     comments: c.comments,
     cname: c.cname,
+    ogImages: c.ogImages,
     appearance: {
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),

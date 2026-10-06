@@ -129,6 +129,22 @@ describe("static build", () => {
     expect(read("tags/index.html")).not.toContain("giscus")
   })
 
+  test("notes without a banner get a generated 1200x630 social card", () => {
+    const html = read("03_Atomic/Zettelkasten/index.html")
+    expect(html).toContain('<meta property="og:image" content="https://notes.dynamotn.dev/og/03_Atomic/Zettelkasten.png"')
+    const png = fs.readFileSync(path.join(out, "og/03_Atomic/Zettelkasten.png"))
+    expect(png.subarray(1, 4).toString()).toBe("PNG")
+    expect(png.readUInt32BE(16)).toBe(1200)
+    expect(png.readUInt32BE(20)).toBe(630)
+  })
+
+  test("notes with a banner keep it, other pages share the home card", () => {
+    expect(read("07_Project/Blog-post/index.html")).toContain('content="https://notes.dynamotn.dev/assets/_assets/images/diagram.png"')
+    expect(exists("og/07_Project/Blog-post.png")).toBe(false)
+    expect(read("tags/index.html")).toContain('content="https://notes.dynamotn.dev/og/index.png"')
+    expect(exists("og/en-US/index.png")).toBe(true)
+  })
+
   test("CNAME holds the host of site.url", () => {
     expect(read("CNAME")).toBe("notes.dynamotn.dev\n")
   })
