@@ -60,6 +60,7 @@ describe("export", () => {
       "03_Atomic/Zettelkasten",
       "06_Reference/Niklas Luhmann",
       "07_Project/Blog post",
+      "07_Project/Poem",
     ])
   })
 
