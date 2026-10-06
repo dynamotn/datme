@@ -111,6 +111,18 @@ An invalid file stops the build with the path of every problem, e.g.
 - A note named after its folder (`Books/Books.md`) introduces that folder's page.
 - Only assets referenced by a published note are copied to the site.
 
+## Deploying
+
+`datme build` writes a plain static site, so any static host works. Ready-made
+pipelines for a vault repository live in `examples/deploy/`:
+
+- `gitlab-pages.yml`: copy to `.gitlab-ci.yml` to publish on GitLab Pages.
+- `github-pages.yml`: copy to `.github/workflows/` and choose "GitHub Actions"
+  as the Pages source.
+
+Both fetch the full git history so notes without `created`/`updated` get their
+real dates. Set `cname: true` when using a custom domain.
+
 ## Development
 
 ```bash

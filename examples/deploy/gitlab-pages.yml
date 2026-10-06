@@ -1,0 +1,16 @@
+# Copy to .gitlab-ci.yml at the root of your vault repository to publish it
+# on GitLab Pages at every push to the default branch.
+pages:
+  image: oven/bun:1
+  variables:
+    ASTRO_TELEMETRY_DISABLED: "1"
+    # Full history gives notes without created/updated frontmatter their real dates.
+    GIT_DEPTH: "0"
+  script:
+    - git clone --depth 1 https://gitlab.com/dynamo-tools/datme.git /tmp/datme
+    - cd /tmp/datme && bun install --frozen-lockfile
+    - bun bin/datme.ts build "$CI_PROJECT_DIR" --out "$CI_PROJECT_DIR/public"
+  artifacts:
+    paths: [public]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

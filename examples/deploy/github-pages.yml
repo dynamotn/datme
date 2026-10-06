@@ -1,0 +1,46 @@
+# Copy to .github/workflows/garden.yml in your vault repository, then set
+# Settings → Pages → Source to "GitHub Actions".
+name: Publish garden
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history gives notes without created/updated frontmatter their real dates.
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - run: git clone --depth 1 https://gitlab.com/dynamo-tools/datme.git "$RUNNER_TEMP/datme"
+      - run: bun install --frozen-lockfile
+        working-directory: ${{ runner.temp }}/datme
+      - run: bun bin/datme.ts build "$GITHUB_WORKSPACE" --out "$RUNNER_TEMP/site"
+        working-directory: ${{ runner.temp }}/datme
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
