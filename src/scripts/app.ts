@@ -37,6 +37,11 @@ document.addEventListener("click", (e) => {
       .querySelector<HTMLIFrameElement>("iframe.giscus-frame")
       ?.contentWindow?.postMessage({ giscus: { setConfig: { theme: next } } }, "https://giscus.app")
     renderMermaid(true)
+  } else if (target.closest("[data-sidebar-toggle]")) {
+    const side = (target.closest("[data-sidebar-toggle]") as HTMLElement).dataset.sidebarToggle!
+    root.classList.toggle(`hide-${side}`)
+    store("sidebars", ["left", "right"].filter((x) => root.classList.contains(`hide-${x}`)).join(","))
+    syncToggles()
   } else if (target.closest("[data-reader-toggle]")) {
     const on = root.classList.toggle("reader")
     store("reader", on ? "1" : "0")
@@ -54,6 +59,9 @@ document.addEventListener("keydown", (e) => {
 })
 
 function syncToggles() {
+  document
+    .querySelectorAll<HTMLElement>("[data-sidebar-toggle]")
+    .forEach((b) => b.setAttribute("aria-pressed", String(!root.classList.contains(`hide-${b.dataset.sidebarToggle}`))))
   document
     .querySelectorAll("[data-reader-toggle]")
     .forEach((b) => b.setAttribute("aria-pressed", String(root.classList.contains("reader"))))

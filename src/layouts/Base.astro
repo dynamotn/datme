@@ -70,13 +70,17 @@ const year = new Date().getFullYear()
         const apply = (doc) => {
           let theme = null
           let reader = null
+          let hidden = ""
           try {
             theme = localStorage.getItem("theme")
             reader = localStorage.getItem("reader")
+            hidden = localStorage.getItem("sidebars") || ""
           } catch {}
           theme ??= matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
           doc.documentElement.dataset.theme = theme
           doc.documentElement.classList.toggle("reader", reader === "1")
+          doc.documentElement.classList.toggle("hide-left", hidden.includes("left"))
+          doc.documentElement.classList.toggle("hide-right", hidden.includes("right"))
         }
         apply(document)
         document.addEventListener("astro:before-swap", (e) => apply(e.newDocument))
@@ -107,6 +111,16 @@ const year = new Date().getFullYear()
       <button class="icon-btn" type="button" data-open-graph aria-label={s.globalGraph} title={`${s.globalGraph} (Ctrl G)`}>
         <Icon name="graph" />
       </button>
+      <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="left" aria-label={s.toggleLeft} title={s.toggleLeft} aria-pressed="false">
+        <Icon name="panelLeft" />
+      </button>
+      {
+        rail && (
+          <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="right" aria-label={s.toggleRight} title={s.toggleRight} aria-pressed="false">
+            <Icon name="panelRight" />
+          </button>
+        )
+      }
       <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
         <Icon name="book" />
       </button>

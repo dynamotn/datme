@@ -307,6 +307,28 @@ kbd {
 :root.reader .note {
   --measure: 42rem;
 }
+/* Each sidebar can be folded away on wide screens. */
+:root.hide-left .sidebar-left,
+:root.hide-right .sidebar-right {
+  display: none;
+}
+:root.hide-left .shell {
+  grid-template-columns: minmax(0, 1fr) var(--right-w);
+}
+:root.hide-left .shell.no-right,
+:root.hide-right .shell.no-right,
+:root.hide-left.hide-right .shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root.hide-right .shell:not(.no-right) {
+  grid-template-columns: var(--left-w) minmax(0, 1fr);
+}
+:root.hide-left.hide-right .shell:not(.no-right) {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root.hide-left:not(.hide-right) .shell.no-right {
+  grid-template-columns: minmax(0, 1fr);
+}
 .panel-title {
   display: flex;
   align-items: center;
@@ -1571,6 +1593,12 @@ dialog.graph-modal {
   .sidebar-right .toc {
     display: none;
   }
+  :root.hide-left .shell:not(.no-right) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root.hide-left .sidebar-right {
+    grid-column: 1;
+  }
 }
 @media (max-width: 900px) {
   .shell,
@@ -1596,6 +1624,22 @@ dialog.graph-modal {
   }
   .menu-btn {
     display: inline-grid;
+  }
+  .sidebar-toggle {
+    display: none;
+  }
+  /* Choices made on a wide screen do not apply to the drawer and the stacked rail. */
+  :root.hide-left .sidebar-left {
+    display: block;
+  }
+  :root.hide-right .sidebar-right {
+    display: grid;
+  }
+  :root.hide-left .shell,
+  :root.hide-right .shell,
+  :root.hide-left .shell:not(.no-right),
+  :root.hide-right .shell:not(.no-right) {
+    grid-template-columns: minmax(0, 1fr);
   }
   .main-nav {
     display: none;

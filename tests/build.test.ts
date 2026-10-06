@@ -139,6 +139,12 @@ describe("static build", () => {
     expect(card).toContain("🧑‍🔬 Nhân vật")
   })
 
+  test("sidebars have their own toggles; the right one only where there is a rail", () => {
+    expect(read("03_Atomic/Zettelkasten/index.html")).toContain('data-sidebar-toggle="right"')
+    expect(read("tags/index.html")).toContain('data-sidebar-toggle="left"')
+    expect(read("tags/index.html")).not.toContain('data-sidebar-toggle="right"')
+  })
+
   test("folder and tag pages list notes as index cards", () => {
     expect(read("06_Reference/index.html")).toContain('class="card-wall"')
     expect(read("tags/theme/pkm/index.html")).toContain('class="index-card"')
