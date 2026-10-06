@@ -27,6 +27,7 @@ Installed globally (`npm i -g @dynamotn/datme`) the command is simply `datme`.
 | `datme preview [vault]` | Builds, then serves the result |
 | `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases and invalid frontmatter; exits 1 on errors. `--verbose` also lists links to unpublished notes; `--external` also checks that links to other websites still answer (404, 410 and unreachable hosts are reported). |
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push: `github` (Pages), `gitlab` (Pages), `netlify` or `cloudflare` (Pages, through GitHub Actions). Goes at the root of the vault's git repository, never overwrites a file, and keeps the build cache between runs. `--branch` picks the branch (default: the current one). |
+| `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or with `--format html` into one self-contained page to print as PDF. Chapters follow the folder tree, links between them stay links, images are packed in; protected notes are left out. `--out`, `--lang` |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
 
 The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`

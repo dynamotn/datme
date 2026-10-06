@@ -24,6 +24,8 @@ Usage:
   datme init    [vault]                          write a starter datme.yaml
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
                                                  hosts: github, gitlab, netlify, cloudflare
+  datme export  <folder> [vault] [--format epub|html] [--out file] [--lang xx]
+                                                 a folder as an EPUB, or one page to print
 
 The vault defaults to $DATME_VAULT, then the current directory.
 Options:
@@ -36,10 +38,12 @@ Options:
   --verbose      also list links to unpublished notes
   --external     also check that links to other websites still answer
   --branch <b>   branch whose pushes publish the site (default: the current one)
+  --format <f>   export as epub (default) or html
+  --lang <l>     language of the export (default: the first one)
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "export" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -47,6 +51,10 @@ export interface Args {
   /** Host of `datme deploy`. */
   target?: Target
   branch?: string
+  /** Folder of `datme export`, relative to the vault; "." for all of it. */
+  folder?: string
+  format?: "epub" | "html"
+  lang?: string
   out?: string
   site?: string
   port?: number
@@ -76,6 +84,8 @@ export function parseArgs(argv: string[]): Args {
         fresh: { type: "boolean" },
         external: { type: "boolean" },
         branch: { type: "string", short: "b" },
+        format: { type: "string", short: "f" },
+        lang: { type: "string" },
         verbose: { type: "boolean" },
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
@@ -88,7 +98,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", ...operands] = positionals
-  if (!["dev", "build", "preview", "check", "init", "deploy", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "deploy", "export", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   let target: Target | undefined
@@ -98,6 +108,14 @@ export function parseArgs(argv: string[]): Args {
       throw new CliError(`${host ? `Unknown host "${host}"` : "Missing host"}; choose one of ${TARGETS.join(", ")}.`)
     }
     target = host as Target
+  }
+  let folder: string | undefined
+  if (command === "export") {
+    folder = operands.shift()
+    if (!folder) throw new CliError('Missing folder to export; use "." for the whole vault.')
+    if (values.format && values.format !== "epub" && values.format !== "html") {
+      throw new CliError(`Unknown format "${values.format}"; choose epub or html.`)
+    }
   }
   const [vault, ...rest] = operands
   if (rest.length) throw new CliError(`Unexpected argument "${rest[0]}".`)
@@ -109,6 +127,7 @@ export function parseArgs(argv: string[]): Args {
     command: command as Command,
     vault,
     ...(target ? { target, branch: values.branch } : {}),
+    ...(folder ? { folder, format: (values.format ?? "epub") as "epub" | "html", lang: values.lang } : {}),
     out: values.out,
     site: values.site,
     port,
@@ -283,6 +302,23 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   const rel = path.relative(vault, out)
   // Output written inside the vault must not be scanned on the next build.
   if (!rel.startsWith("..") && !path.isAbsolute(rel)) env.DATME_IGNORE = rel
+
+  if (args.command === "export") {
+    const { site } = await import("./site.config.ts")
+    const lang = args.lang ?? site.defaultLang
+    if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
+    const { exportEpub, exportHtml } = await import("./lib/export.ts")
+    const name = args.folder === "." ? path.basename(vault) : path.basename(args.folder!.replace(/\/+$/, ""))
+    const out = path.resolve(cwd, args.out ?? `${name}.${args.format}`)
+    if (fs.existsSync(out) && fs.statSync(out).isDirectory()) throw new CliError(`"${out}" is a directory; give a file name with --out.`)
+    try {
+      const data = args.format === "html" ? await exportHtml(args.folder!, lang) : await exportEpub(args.folder!, lang)
+      fs.writeFileSync(out, data)
+    } catch (e) {
+      throw new CliError((e as Error).message)
+    }
+    return void console.log(`Wrote ${out}`)
+  }
 
   if (args.command === "check" || args.command === "build") {
     // Imported only now: the config module reads the vault from the environment set above.
