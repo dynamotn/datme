@@ -1,0 +1,312 @@
+import { unified, type Plugin } from "unified"
+import remarkParse from "remark-parse"
+import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+import remarkRehype from "remark-rehype"
+import rehypeRaw from "rehype-raw"
+import rehypeKatex from "rehype-katex"
+import rehypeSlug from "rehype-slug"
+import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings"
+import rehypeShiki from "@shikijs/rehype"
+import rehypeStringify from "rehype-stringify"
+import { visit, SKIP } from "unist-util-visit"
+import { toString as hastToString } from "hast-util-to-string"
+import { fromHtml } from "hast-util-from-html"
+import type { Root as MdRoot, Blockquote, Paragraph, PhrasingContent, Code } from "mdast"
+import type { Root as HastRoot, Element, ElementContent } from "hast"
+import type { Lang } from "../site.config"
+import { getVault, type Note } from "./vault"
+import { anchorOf, escapeAttr } from "./obsidian"
+import { t } from "./i18n"
+
+export interface Heading {
+  depth: number
+  id: string
+  text: string
+}
+
+export interface Rendered {
+  html: string
+  /** Text of a leading H1, hoisted out of the body to become the page title. */
+  h1?: string
+  headings: Heading[]
+  text: string
+  words: number
+  description: string
+}
+
+const CALLOUT_ALIASES: Record<string, string> = {
+  summary: "abstract",
+  tldr: "abstract",
+  hint: "tip",
+  important: "tip",
+  check: "success",
+  done: "success",
+  help: "question",
+  faq: "question",
+  caution: "warning",
+  attention: "warning",
+  fail: "failure",
+  missing: "failure",
+  error: "danger",
+  cite: "quote",
+}
+
+/** Obsidian callouts: > [!type]± Title, foldable ones become <details>. */
+const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
+  visit(tree, "blockquote", (node: Blockquote) => {
+    const first = node.children[0]
+    if (first?.type !== "paragraph") return
+    const head = first.children[0]
+    if (head?.type !== "text") return
+    const m = head.value.match(/^\[!([\w-]+)\]([+-]?)[^\S\n]*/)
+    if (!m) return
+    const raw = m[1].toLowerCase()
+    const kind = CALLOUT_ALIASES[raw] ?? raw
+    const fold = m[2]
+    head.value = head.value.slice(m[0].length)
+
+    // The callout title is everything on the first line of the first paragraph.
+    const title: PhrasingContent[] = []
+    const rest: PhrasingContent[] = []
+    let inTitle = true
+    for (const child of first.children) {
+      if (!inTitle) {
+        rest.push(child)
+        continue
+      }
+      if (child.type === "text" && child.value.includes("\n")) {
+        const i = child.value.indexOf("\n")
+        if (i > 0) title.push({ type: "text", value: child.value.slice(0, i) })
+        const after = child.value.slice(i + 1)
+        if (after) rest.push({ type: "text", value: after })
+        inTitle = false
+      } else if (child.type === "break") {
+        inTitle = false
+      } else title.push(child)
+    }
+    const hasTitle = title.some((c) => c.type !== "text" || c.value.trim())
+    const titleText = raw.charAt(0).toUpperCase() + raw.slice(1)
+
+    const titleNode: Paragraph = {
+      type: "paragraph",
+      children: hasTitle ? title : [{ type: "text", value: titleText }],
+      data: { hName: fold ? "summary" : "div", hProperties: { className: ["callout-title"] } },
+    }
+    const body = [...(rest.length ? [{ ...first, children: rest }] : []), ...node.children.slice(1)]
+    node.children = [
+      titleNode,
+      {
+        type: "blockquote",
+        children: body,
+        data: { hName: "div", hProperties: { className: ["callout-content"] } },
+      } as Blockquote,
+    ]
+    node.data = {
+      hName: fold ? "details" : "div",
+      hProperties: {
+        className: ["callout"],
+        dataCallout: kind,
+        ...(fold === "+" ? { open: true } : {}),
+      },
+    }
+  })
+}
+
+/** ```mermaid blocks are rendered in the browser. */
+const remarkMermaid: Plugin<[], MdRoot> = () => (tree) => {
+  visit(tree, "code", (node: Code, index, parent) => {
+    if (node.lang !== "mermaid" || !parent || index == null) return
+    parent.children[index] = {
+      type: "html",
+      value: `<pre class="mermaid">${escapeAttr(node.value)}</pre>`,
+    }
+  })
+}
+
+interface DecorateOpts {
+  out: Partial<Rendered>
+}
+
+/** Links, images, tables and headings, plus hoisting of the leading H1. */
+const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => {
+  const firstEl = tree.children.find((c) => c.type === "element") as Element | undefined
+  if (firstEl?.tagName === "h1") {
+    out.h1 = hastToString(firstEl).replace(/#$/, "").trim()
+    tree.children.splice(tree.children.indexOf(firstEl), 1)
+  }
+  const headings: Heading[] = []
+  visit(tree, "element", (node: Element, index, parent) => {
+    const tag = node.tagName
+    if (/^h[2-4]$/.test(tag) && node.properties.id) {
+      headings.push({
+        depth: Number(tag[1]),
+        id: String(node.properties.id),
+        text: hastToString(node).replace(/#$/, "").trim(),
+      })
+    }
+    if (tag === "a") {
+      const href = String(node.properties.href ?? "")
+      if (/^https?:\/\//.test(href)) {
+        node.properties.target = "_blank"
+        node.properties.rel = ["noopener", "noreferrer"]
+        node.properties.className = [...((node.properties.className as string[]) ?? []), "external"]
+      }
+    }
+    if (tag === "img") node.properties.loading = "lazy"
+    if (tag === "table" && parent && index != null) {
+      parent.children[index] = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["table-wrap"] },
+        children: [node],
+      }
+      return SKIP
+    }
+  })
+  out.headings = headings
+  // Searchable text leaves out code blocks (mostly Dataview queries).
+  const prose = { ...tree, children: tree.children.filter((c) => !(c.type === "element" && c.tagName === "pre")) }
+  const text = hastToString(prose).replace(/\s+/g, " ").trim()
+  out.text = text
+  out.words = text ? text.split(" ").length : 0
+  // First paragraph in reading order, including ones inside callouts (often a definition).
+  let firstP: Element | undefined
+  visit(tree, "element", (node: Element) => {
+    if (firstP) return SKIP
+    if (node.tagName === "pre") return SKIP
+    if (node.tagName === "p" && hastToString(node).trim()) firstP = node
+  })
+  const desc = firstP ? hastToString(firstP).replace(/\s+/g, " ").trim() : text
+  out.description = desc.length > 180 ? desc.slice(0, 177).trimEnd() + "…" : desc
+}
+
+/** Section of a rendered note under a heading or a block id. */
+function extractFragment(root: HastRoot, fragment: string): ElementContent[] {
+  if (!fragment) return root.children as ElementContent[]
+  const id = anchorOf(fragment).slice(1)
+  const kids = root.children.filter((c): c is Element => c.type === "element")
+  if (fragment.startsWith("^")) {
+    let found: Element | undefined
+    for (const k of kids) {
+      visit(k, "element", (el: Element) => {
+        if (el.properties.id === id) found = k
+      })
+      if (found) break
+    }
+    return found ? [found] : []
+  }
+  const start = kids.findIndex((k) => /^h[1-6]$/.test(k.tagName) && k.properties.id === id)
+  if (start < 0) return []
+  const level = Number(kids[start].tagName[1])
+  const out: ElementContent[] = [kids[start]]
+  for (const k of kids.slice(start + 1)) {
+    if (/^h[1-6]$/.test(k.tagName) && Number(k.tagName[1]) <= level) break
+    out.push(k)
+  }
+  return out
+}
+
+/** Replace ![[note]] placeholders with the rendered target note. */
+const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
+  ({ lang, stack }) =>
+  async (tree) => {
+    // A paragraph holding only an embed is replaced by the embed, so no <div> lands inside a <p>.
+    visit(tree, "element", (node: Element, index, parent) => {
+      if (node.tagName !== "p" || !parent || index == null) return
+      const kids = node.children.filter((c) => c.type !== "text" || c.value.trim())
+      const only = kids[0]
+      if (kids.length === 1 && only.type === "element" && (only.properties.className as string[] | undefined)?.includes("transclude-ph")) {
+        parent.children[index] = only
+      }
+    })
+    const jobs: Promise<void>[] = []
+    visit(tree, "element", (node: Element, index, parent) => {
+      const cls = node.properties.className as string[] | undefined
+      if (!cls?.includes("transclude-ph") || !parent || index == null) return
+      const key = String(node.properties.dataKey)
+      const fragment = String(node.properties.dataFragment ?? "")
+      const target = getVault().byKey[lang].get(key)
+      jobs.push(
+        (async () => {
+          let children: ElementContent[] = []
+          if (target && !stack.includes(key) && stack.length < 4) {
+            const r = await renderNote(target, [...stack, key])
+            children = extractFragment(fromHtml(r.html, { fragment: true }), fragment)
+          }
+          const href = target ? target.url + anchorOf(fragment) : "#"
+          const embed: Element = {
+            type: "element",
+            tagName: "div",
+            properties: { className: ["transclude"], dataUrl: href },
+            children: [
+              {
+                type: "element",
+                tagName: "a",
+                properties: { className: ["transclude-src", "internal"], href, dataKey: key },
+                children: [
+                  { type: "text", value: `${t(lang).transcludeFrom} ${target?.title ?? key}` },
+                ],
+              },
+              ...children,
+            ],
+          }
+          parent.children[index] = embed
+        })(),
+      )
+    })
+    await Promise.all(jobs)
+  }
+
+const autolink: AutolinkOptions = {
+  behavior: "append",
+  properties: { className: ["heading-anchor"], ariaHidden: "true", tabIndex: -1 },
+  content: { type: "text", value: "#" },
+}
+
+const cache = new Map<string, Promise<Rendered>>()
+
+function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>) {
+  return unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkCallouts)
+    .use(remarkMermaid)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
+    .use(rehypeKatex)
+    .use(rehypeSlug)
+    .use(rehypeAutolinkHeadings, autolink)
+    .use(rehypeDecorate, { out })
+    .use(rehypeShiki, {
+      themes: { light: "github-light", dark: "github-dark" },
+      defaultColor: false,
+      lazy: true,
+      fallbackLanguage: "text",
+      addLanguageClass: true,
+    })
+    .use(rehypeTransclude, { lang, stack })
+    .use(rehypeStringify, { allowDangerousHtml: true })
+}
+
+export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
+  const id = `${getVault().version}:${note.lang}:${note.key}:${stack.length > 1 ? "embed" : "page"}`
+  let hit = cache.get(id)
+  if (!hit) {
+    hit = (async () => {
+      const out: Partial<Rendered> = {}
+      const file = await processorFor(note.lang, stack, out).process(note.md)
+      return {
+        html: String(file),
+        h1: out.h1,
+        headings: out.headings ?? [],
+        text: out.text ?? "",
+        words: out.words ?? 0,
+        description: note.description ?? out.description ?? "",
+      }
+    })()
+    cache.set(id, hit)
+  }
+  return hit
+}
