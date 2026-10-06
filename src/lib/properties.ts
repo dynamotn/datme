@@ -10,6 +10,7 @@ export type PropValue =
 export const HIDDEN_PROPERTIES = [
   "title",
   "lang",
+  "permalink",
   "tags",
   "tag",
   "alias",

@@ -2,6 +2,7 @@ import type { AstroIntegration } from "astro"
 import fs from "node:fs"
 import path from "node:path"
 import { site } from "../site.config"
+import { redirectsFile } from "./routes"
 
 /**
  * datme's Astro integration: in dev it rebuilds the vault index whenever a note
@@ -13,6 +14,10 @@ export default function vaultWatcher(): AstroIntegration {
     hooks: {
       "astro:build:done": ({ dir }) => {
         if (site.cname && site.url) fs.writeFileSync(new URL("CNAME", dir), new URL(site.url).host + "\n")
+        if (site.redirects) {
+          const lines = redirectsFile()
+          if (lines) fs.writeFileSync(new URL("_redirects", dir), lines)
+        }
       },
       "astro:server:setup": ({ server }) => {
         // Watch top-level entries one by one so .git and other ignored trees stay unwatched.

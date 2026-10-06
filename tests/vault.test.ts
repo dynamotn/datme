@@ -20,6 +20,18 @@ describe("publishing rules", () => {
     ])
   })
 
+  test("permalinks replace the URL in every language and remember the old one", () => {
+    expect(vi.get("07_Project/Poem")!.url).toBe("/poems/rain")
+    expect(vi.get("07_Project/Poem")!.formerUrl).toBe("/07_Project/Poem")
+    expect(en.get("07_Project/Poem")!.url).toBe("/en-US/poems/rain")
+  })
+
+  test("a permalink that clashes with another note is ignored", () => {
+    expect(vi.get("03_Atomic/Code")!.url).toBe("/03_Atomic/Code")
+    expect(vi.get("03_Atomic/Code")!.formerUrl).toBeUndefined()
+    expect(vi.get("06_Reference/Niklas Luhmann")!.url).toBe("/06_Reference/Niklas-Luhmann")
+  })
+
   test("a language counts as translated only with its own lang block", () => {
     expect(en.get("03_Atomic/Zettelkasten")!.translated).toBe(true)
     expect(en.get("06_Reference/Niklas Luhmann")!.translated).toBe(false)

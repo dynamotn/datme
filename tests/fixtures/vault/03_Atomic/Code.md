@@ -1,5 +1,7 @@
 ---
 publish: true
+# Clashes with the Luhmann note, so it must be ignored.
+permalink: 06_Reference/Niklas Luhmann
 tags: [theme/pkm]
 ---
 ```ts title="app.ts" {2}

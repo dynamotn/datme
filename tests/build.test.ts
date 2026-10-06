@@ -115,6 +115,19 @@ describe("static build", () => {
     expect(html).toContain(`<li id="${link}">`)
   })
 
+  test("a permalinked note lives at its permalink and its old URL redirects", () => {
+    expect(read("poems/rain/index.html")).toContain("Plain stanza")
+    expect(read("07_Project/Poem/index.html")).toContain('content="0; url=/poems/rain"')
+  })
+
+  test("_redirects lists 301s for aliases and old URLs", () => {
+    const lines = read("_redirects").trim().split("\n")
+    expect(lines).toContain("/03_Atomic/Slip-box /03_Atomic/Zettelkasten 301")
+    expect(lines).toContain("/07_Project/Poem /poems/rain 301")
+    expect(lines).toContain("/en-US/07_Project/Poem /en-US/poems/rain 301")
+    expect(lines.every((l) => /^\/\S* \/\S* 301$/.test(l))).toBe(true)
+  })
+
   test("aliases redirect to their note", () => {
     const html = read("03_Atomic/Slip-box/index.html")
     expect(html).toContain('http-equiv="refresh"')

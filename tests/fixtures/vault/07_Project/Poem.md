@@ -1,5 +1,6 @@
 ---
 publish: true
+permalink: /poems/rain/
 tags:
   - type/composition
 ---

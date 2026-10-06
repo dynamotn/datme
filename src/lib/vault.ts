@@ -30,6 +30,8 @@ export interface Note {
   lang: Lang
   slug: string
   url: string
+  /** URL the note would have without its permalink; it redirects to `url`. */
+  formerUrl?: string
   title: string
   aliases: string[]
   tags: string[]
@@ -387,7 +389,16 @@ function buildVault(version: number): Vault {
       const langTitle = titleMap?.[lang]
       const title = langTitle ?? (typeof titleField === "string" ? titleField : s.stem)
       const slugBase = s.isHome ? "index" : sluggify(path.posix.join(s.dir, langTitle ?? s.stem))
-      const slug = langPrefix(lang) + slugBase
+      // `permalink` (one value, or one per language) replaces the path-based URL; the old one redirects.
+      const permalinkField = s.fm.permalink
+      const permalink =
+        typeof permalinkField === "string"
+          ? permalinkField
+          : permalinkField && typeof permalinkField === "object"
+            ? (permalinkField as Record<string, string>)[lang]
+            : undefined
+      const customSlug = !s.isHome && permalink ? sluggify(String(permalink).replace(/^\/+|\/+$/g, "")) : ""
+      const slug = langPrefix(lang) + (customSlug || slugBase)
       const tags = [...new Set(toArray(s.fm.tags ?? s.fm.tag).map((x) => slugTag(x.replace(/^#/, ""))))]
       const relFile = s.key + ".md"
       const stat = fs.statSync(s.file)
@@ -429,6 +440,7 @@ function buildVault(version: number): Vault {
         lang,
         slug,
         url: slugToUrl(slug),
+        formerUrl: customSlug ? slugToUrl(langPrefix(lang) + slugBase) : undefined,
         title,
         aliases: toArray(s.fm.aliases ?? s.fm.alias),
         tags,
@@ -497,6 +509,23 @@ function buildVault(version: number): Vault {
       }
     }
     docs.set(rel, doc)
+  }
+
+  // A permalink that collides with another note's URL is ignored, so no page is lost.
+  for (const lang of site.langs) {
+    const taken = new Map<string, Note>()
+    for (const n of notes[lang]) if (!n.formerUrl) taken.set(n.url, n)
+    for (const n of notes[lang]) {
+      if (!n.formerUrl) continue
+      const other = taken.get(n.url)
+      if (other) {
+        console.warn(`[datme] permalink of ${n.key} clashes with ${other.key}; keeping ${n.formerUrl}`)
+        n.url = n.formerUrl
+        // formerUrl already carries the language prefix.
+        n.slug = n.formerUrl.replace(/^\//, "").split("/").map(decodeURIComponent).join("/")
+        n.formerUrl = undefined
+      } else taken.set(n.url, n)
+    }
   }
 
   const fillUrls = (md: string, lang: Lang) => md.replace(/\u0001URL:([^\u0001]+)\u0001/g, (_, k) => noteUrl(k, lang))

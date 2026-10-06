@@ -203,6 +203,8 @@ const schema = z
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
+    /** Write a _redirects file (Netlify, Cloudflare Pages) with 301s for aliases and old URLs. */
+    redirects: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
     cname: z.boolean().default(false),
     encryption: z
@@ -317,6 +319,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     analytics: c.analytics,
     comments: c.comments,
     cname: c.cname,
+    redirects: c.redirects,
     ogImages: c.ogImages,
     offline: c.offline,
     stackedPages: c.stackedPages,

@@ -73,6 +73,10 @@ describe("zero-config build", () => {
     expect(home).not.toContain('href="/custom.css"')
   })
 
+  test("no _redirects file when there is nothing to redirect", () => {
+    expect(exists("_redirects")).toBe(false)
+  })
+
   test("the logo comes from the vault name", () => {
     expect(read("favicon.svg")).toContain(">M</text>")
   })
