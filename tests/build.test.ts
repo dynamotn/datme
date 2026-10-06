@@ -104,6 +104,14 @@ describe("static build", () => {
     expect(content).not.toMatch(/Private|Secret/)
   })
 
+  test("the archive lists notes by the year they were created, newest first", () => {
+    const html = read("archive/index.html")
+    const years = [...html.matchAll(/<h2 id="y(\d{4})">/g)].map((m) => m[1])
+    expect(years).toEqual([...years].sort().reverse())
+    expect(html).toContain('<a class="internal" href="/07_Project/Blog-post">')
+    expect(exists("en-US/archive/index.html")).toBe(true)
+  })
+
   test("aliases redirect to their note", () => {
     const html = read("03_Atomic/Slip-box/index.html")
     expect(html).toContain('http-equiv="refresh"')

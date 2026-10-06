@@ -55,7 +55,7 @@ stages:                       # top-level folders shown as note maturity
   Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags
+  - home                      # built-ins: home, tags, archive
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf

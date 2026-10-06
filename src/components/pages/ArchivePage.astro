@@ -1,0 +1,57 @@
+---
+import { site, type Lang } from "~/site.config"
+import { listed, byRecent } from "~/lib/vault"
+import { t, langPrefix, formatDate } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { typeInfo } from "~/lib/types"
+import { getVault } from "~/lib/vault"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const folders = getVault().folders[lang]
+const notes = byRecent(listed(lang).filter((n) => !n.isHome && n.created), "created")
+const years = new Map<number, typeof notes>()
+for (const n of notes) {
+  const y = n.created!.getFullYear()
+  years.set(y, [...(years.get(y) ?? []), n])
+}
+const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "archive")]))
+---
+
+<Base lang={lang} title={s.archive} alternates={alternates}>
+  <div class="note is-wide archive-page">
+    <header class="page-head">
+      <span class="chip type">🗓️ {s.archive}</span>
+      <h1>{s.archive}</h1>
+      <p>{s.archiveLead} · {s.notesCount(notes.length)}</p>
+    </header>
+    <slot />
+    {
+      [...years].map(([year, list]) => (
+        <section class="archive-year">
+          <h2 id={`y${year}`}>
+            {year} <small>{list.length}</small>
+          </h2>
+          <ol class="archive-list">
+            {list.map((n) => (
+              <li>
+                <time datetime={n.created!.toISOString()}>{formatDate(n.created, lang)}</time>
+                <a class="internal" href={n.url}>
+                  {n.title}
+                </a>
+                <span class="archive-where">
+                  {n.stage ? site.stages[n.stage].icon : n.types[0] ? typeInfo(n.types[0], lang).icon : ""}{" "}
+                  {folders.get(n.dir)?.name}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
+</Base>

@@ -133,6 +133,10 @@ describe("menu and appearance", () => {
     expect(c.appearance.classic).toEqual(["Writing"])
   })
 
+  test("the archive is a built-in menu entry", () => {
+    expect(resolveConfig({ nav: ["archive"] }, "/v").nav).toEqual([{ kind: "archive" }])
+  })
+
   test("URL entries need a label and styles are checked", () => {
     expect(() => resolveConfig({ nav: [{ url: "/x" }] }, "/v")).toThrow(ConfigError)
     expect(() => resolveConfig({ appearance: { style: "neon" } }, "/v")).toThrow(ConfigError)

@@ -11,6 +11,7 @@ import TagPage from "~/components/pages/TagPage.astro"
 import AliasRedirect from "~/components/pages/AliasRedirect.astro"
 import CanvasPage from "~/components/pages/CanvasPage.astro"
 import BasePage from "~/components/pages/BasePage.astro"
+import ArchivePage from "~/components/pages/ArchivePage.astro"
 
 
 type Page =
@@ -21,6 +22,7 @@ type Page =
   | { kind: "alias"; lang: Lang; note: Note }
   | { kind: "canvas"; lang: Lang; doc: Doc }
   | { kind: "base"; lang: Lang; doc: Doc }
+  | { kind: "archive"; lang: Lang }
 
 export const getStaticPaths = (() => {
   const vault = getVault()
@@ -38,6 +40,7 @@ export const getStaticPaths = (() => {
       if (folder.dir) claim(prefix + sluggify(folder.dir), { kind: "folder", lang, folder })
     }
     claim(prefix + "tags", { kind: "tag", lang })
+    claim(prefix + "archive", { kind: "archive", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
     for (const doc of vault.docs.values()) {
       claim(prefix + sluggify(doc.rel), { kind: doc.kind, lang, doc })
@@ -61,3 +64,4 @@ const { page } = Astro.props as { page: Page }
 {page.kind === "alias" && <AliasRedirect note={page.note} />}
 {page.kind === "canvas" && <CanvasPage lang={page.lang} doc={page.doc} />}
 {page.kind === "base" && <BasePage lang={page.lang} doc={page.doc} />}
+{page.kind === "archive" && <ArchivePage lang={page.lang} />}

@@ -17,6 +17,7 @@ export function navLinks(lang: Lang): NavLink[] {
   for (const item of site.nav) {
     if (item.kind === "home") out.push({ label: t(lang).home, url: slugToUrl(langPrefix(lang) + "index") })
     else if (item.kind === "tags") out.push({ label: t(lang).tags, url: slugToUrl(langPrefix(lang) + "tags") })
+    else if (item.kind === "archive") out.push({ label: t(lang).archive, url: slugToUrl(langPrefix(lang) + "archive") })
     else if (item.kind === "url") out.push({ label: item.label![lang], url: item.target! })
     else {
       const source = vault.resolveNote(item.target!, "")

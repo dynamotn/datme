@@ -1155,3 +1155,40 @@
   border-radius: 4px;
   box-shadow: var(--shadow-sm);
 }
+
+/* ---------- archive ---------- */
+[data-look="notebook"] .archive-year h2 {
+  display: inline-flex;
+  padding: 4px 16px;
+  background: var(--ink);
+  color: var(--surface);
+  font-family: var(--font-ui);
+  font-weight: 800;
+  transform: skew(-10deg);
+}
+[data-look="notebook"] .archive-year h2 small {
+  color: var(--yellow);
+  font-family: var(--font-mono);
+}
+[data-look="notebook"] .archive-list {
+  border: var(--bw) solid var(--ink);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+[data-look="notebook"] .archive-list li {
+  border-bottom: 2px dashed var(--ink);
+  transition: background 0.15s;
+}
+[data-look="notebook"] .archive-list li:hover {
+  background: var(--yellow);
+  color: #050505;
+}
+[data-look="notebook"] .archive-list time,
+[data-look="notebook"] .archive-where {
+  font-family: var(--font-mono);
+  color: inherit;
+}
+[data-look="notebook"] .archive-list a {
+  font-family: var(--font-ui);
+  font-weight: 800;
+}
