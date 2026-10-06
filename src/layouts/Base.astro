@@ -140,7 +140,7 @@ const year = new Date().getFullYear()
     <ClientRouter fallback="swap" />
     <Analytics />
   </head>
-  <body data-copy={s.copy} data-copied={s.copied}>
+  <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
     {customCssFile() && <link rel="stylesheet" href="/custom.css" />}
     <header class="site-header">

@@ -6,6 +6,7 @@ import { decrypt } from "./decrypt"
 import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
 import { setupWebmentions } from "./webmentions"
+import { setupLightbox } from "./lightbox"
 
 const root = document.documentElement
 
@@ -282,6 +283,7 @@ document.addEventListener("astro:page-load", () => {
   setupPopovers()
   setupLocalGraph()
   setupTweets()
+  setupLightbox()
   void setupWebmentions()
   syncToggles()
   void renderMermaid()
