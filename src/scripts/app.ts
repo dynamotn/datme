@@ -11,6 +11,7 @@ import { setupPractice, setupClozes } from "./practice"
 import { setupShare } from "./share"
 import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
+import { openRandom, step } from "./wander"
 
 const root = document.documentElement
 
@@ -34,6 +35,7 @@ document.addEventListener("click", (e) => {
   const target = e.target as HTMLElement
   if (target.closest("[data-open-search]")) openSearch()
   else if (target.closest("[data-open-graph]")) openGraph()
+  else if (target.closest("[data-random]")) void openRandom()
   else if (target.closest("[data-close-dialog]")) target.closest("dialog")?.close()
   else if (target.closest("[data-theme-toggle]")) {
     const next = root.dataset.theme === "dark" ? "light" : "dark"
@@ -75,6 +77,12 @@ document.addEventListener("keydown", (e) => {
   if (mod && e.key.toLowerCase() === "k") (e.preventDefault(), openSearch())
   else if (mod && e.key.toLowerCase() === "g") (e.preventDefault(), openGraph())
   else if (!typing && e.key === "/") (e.preventDefault(), openSearch())
+  // Single-key shortcuts only without modifiers, so browser shortcuts keep working.
+  else if (!typing && !mod && !e.altKey && !document.querySelector("dialog[open]")) {
+    if (e.key === "j") step(1)
+    else if (e.key === "k") step(-1)
+    else if (e.key === "r") void openRandom()
+  }
 })
 
 function syncToggles() {
