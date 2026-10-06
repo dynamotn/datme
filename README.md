@@ -23,10 +23,13 @@ private leaks by default. Run `bunx datme init ~/MyVault` to write a commented
 | `datme dev [vault]` | Live preview; reloads when a note changes. `--port`, `--host` |
 | `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is only replaced if datme created it. |
 | `datme preview [vault]` | Builds, then serves the result |
+| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases and invalid frontmatter; exits 1 on errors. `--verbose` also lists links to unpublished notes. |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
 
 The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`
 (or `$DATME_SITE_URL`) overrides the public URL, handy for preview deploys.
+`build` prints a one-line summary of the problems `check` would report;
+`--strict` makes `check` and `build` fail on warnings too, for CI.
 
 ## Configuration: `datme.yaml`
 

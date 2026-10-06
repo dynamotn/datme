@@ -5,7 +5,7 @@ import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
 import { site, type Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
-import { preprocess, DOC, type LinkRef } from "./obsidian"
+import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 
 /** A published markdown file of the vault, independent of language. */
@@ -83,8 +83,19 @@ export interface Doc {
   texts: Record<Lang, Record<string, string>>
 }
 
+/** Something wrong in the vault that a reader of the site would notice, reported by `datme check`. */
+export interface Problem {
+  /** error: visibly broken on the site; warning: likely a mistake; info: expected in a private vault. */
+  level: "error" | "warning" | "info"
+  /** Vault-relative file the problem is in. */
+  file: string
+  message: string
+}
+
 export interface Vault {
   version: number
+  /** Broken links, missing files and clashes found while indexing. */
+  problems: Problem[]
   /** Canvases and bases linked from published notes (all of them with `publish: all`). */
   docs: Map<string, Doc>
   /** The note rendered as the home page, if the vault has one. */
@@ -129,17 +140,19 @@ function walk(dir: string, out: { md: string[]; files: string[] }, rel = ""): vo
 
 const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
-function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string } {
+function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string; error?: string } {
   const m = src.match(FM_RE)
   if (!m) return { fm: {}, body: src }
   let fm: Record<string, unknown> = {}
+  let error: string | undefined
   try {
     const parsed = loadYaml(m[1], { schema: JSON_SCHEMA })
     if (parsed && typeof parsed === "object") fm = parsed as Record<string, unknown>
-  } catch {
+  } catch (e) {
     // malformed frontmatter: treat the note as having none
+    error = (e as Error).message.split("\n")[0]
   }
-  return { fm, body: src.slice(m[0].length) }
+  return { fm, body: src.slice(m[0].length), error }
 }
 
 function toArray(v: unknown): string[] {
@@ -236,12 +249,24 @@ function buildVault(version: number): Vault {
     assetByName.set(name, [...(assetByName.get(name) ?? []), rel])
   }
 
+  const problems: Problem[] = []
+  const report = (level: Problem["level"], file: string, message: string) => void problems.push({ level, file, message })
+  // Every note of the vault, published or not, to tell a private link target from a missing one.
+  const anyNote = new Set<string>()
+  for (const rel of found.md) {
+    const key = rel.replace(MD_EXT, "").toLowerCase()
+    anyNote.add(key)
+    anyNote.add(path.posix.basename(key))
+  }
+
   const sources = new Map<string, SourceNote>()
   let homeTarget: string | undefined
   for (const rel of found.md) {
     const abs = path.join(site.vault, rel)
     const src = fs.readFileSync(abs, "utf8")
-    const { fm, body } = parseFrontmatter(src)
+    const { fm, body, error } = parseFrontmatter(src)
+    // Without its frontmatter a note cannot say `publish: true`, so it silently disappears.
+    if (error) report("warning", rel, `frontmatter is not valid YAML, so it is ignored: ${error}`)
     if (!isPublished(fm, site.publish)) continue
     // The password never stays in the frontmatter, so nothing can render it by accident.
     const password = fm.password != null && fm.password !== "" ? String(fm.password) : undefined
@@ -277,7 +302,16 @@ function buildVault(version: number): Vault {
     byPath.set(s.key.toLowerCase(), s)
     const stem = s.stem.toLowerCase()
     byStem.set(stem, [...(byStem.get(stem) ?? []), s])
-    for (const a of toArray(s.fm.aliases ?? s.fm.alias)) byAlias.set(a.toLowerCase(), s)
+  }
+  for (const s of sources.values()) {
+    for (const a of toArray(s.fm.aliases ?? s.fm.alias)) {
+      const lower = a.toLowerCase()
+      const other = byAlias.get(lower) ?? byStem.get(lower)?.find((o) => o !== s)
+      if (other && other !== s) {
+        report("warning", s.key + ".md", `alias "${a}" is also the name or an alias of ${other.key}.md, so links to it are ambiguous`)
+      }
+      byAlias.set(lower, s)
+    }
   }
   if (home && homeTarget && homeTarget !== home.key) {
     const stem = path.posix.basename(homeTarget).toLowerCase()
@@ -307,6 +341,27 @@ function buildVault(version: number): Vault {
     if (hit) return hit
     const cands = assetByName.get(path.posix.basename(t).toLowerCase())
     return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
+  }
+
+  // The same broken link shows up once per language; report it once.
+  const seenProblems = new Set<string>()
+  function linkProblem(file: string, p: LinkProblem): void {
+    const id = `${file}\0${p.kind}\0${p.target}`
+    if (seenProblems.has(id)) return
+    seenProblems.add(id)
+    const t = p.target.trim().replace(/^\/+/, "")
+    const isNote = !/\.\w+$/.test(t) || MD_EXT.test(t)
+    const name = t.replace(MD_EXT, "").toLowerCase()
+    const relative = path.posix.normalize(path.posix.join(path.posix.dirname(file), name))
+    if (p.kind === "drawing") {
+      report("warning", file, `drawing "${t}" has no exported SVG or PNG next to it, so it is not shown`)
+    } else if (isNote && (anyNote.has(name) || anyNote.has(relative))) {
+      report("info", file, `${p.kind} to unpublished note "${t}" is shown as plain text`)
+    } else if (isNote) {
+      report("error", file, `${p.kind} to missing note "${t}"`)
+    } else {
+      report("error", file, `${p.kind} to missing file "${t}"`)
+    }
   }
 
   const git = gitDates()
@@ -342,7 +397,7 @@ function buildVault(version: number): Vault {
           if (asset) {
             assets.add(asset)
             banner = assetUrl(asset)
-          }
+          } else if (lang === site.defaultLang) report("error", relFile, `banner "${b}" is not in the vault`)
         }
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
@@ -355,6 +410,7 @@ function buildVault(version: number): Vault {
       })
       pre.assets.forEach((a) => assets.add(a))
       pre.docs.forEach((d) => docRefs.add(d))
+      for (const p of pre.problems) linkProblem(relFile, p)
 
       const { typePrefix, blogTags, mapTags } = site.conventions
       const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
@@ -405,6 +461,7 @@ function buildVault(version: number): Vault {
         doc.canvas = parseCanvas(src)
       } catch {
         console.warn(`[datme] skipped ${rel}: not a valid canvas`)
+        report("error", rel, "not a valid canvas, so it is not published")
         continue
       }
       for (const lang of site.langs) {
@@ -429,6 +486,16 @@ function buildVault(version: number): Vault {
     for (const n of notes[lang]) n.md = fillUrls(n.md, lang)
     for (const d of docs.values()) {
       for (const id of Object.keys(d.texts[lang] ?? {})) d.texts[lang][id] = fillUrls(d.texts[lang][id], lang)
+    }
+  }
+
+  // Two notes with the same URL: one page silently replaces the other.
+  for (const lang of site.langs) {
+    const byUrl = new Map<string, Note>()
+    for (const n of notes[lang]) {
+      const other = byUrl.get(n.url.toLowerCase())
+      if (other) report("error", n.key + ".md", `has the same URL ${n.url} as ${other.key}.md, so only one of them is published`)
+      else byUrl.set(n.url.toLowerCase(), n)
     }
   }
 
@@ -473,6 +540,7 @@ function buildVault(version: number): Vault {
 
   return {
     version,
+    problems,
     docs,
     home,
     sources,

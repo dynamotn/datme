@@ -18,7 +18,10 @@ describe("parseArgs", () => {
       site: "https://x.example",
       port: undefined,
       host: undefined,
+      strict: undefined,
+      verbose: undefined,
     })
+    expect(parseArgs(["check", "--strict", "--verbose"])).toMatchObject({ command: "check", strict: true, verbose: true })
     expect(parseArgs(["dev", "-p", "8080", "--host"])).toMatchObject({ command: "dev", port: 8080, host: true })
   })
 
@@ -36,7 +39,7 @@ describe("parseArgs", () => {
   })
 
   test("the usage lists every command", () => {
-    for (const c of ["dev", "build", "preview", "init"]) expect(USAGE).toContain(`datme ${c}`)
+    for (const c of ["dev", "build", "preview", "check", "init"]) expect(USAGE).toContain(`datme ${c}`)
   })
 })
 

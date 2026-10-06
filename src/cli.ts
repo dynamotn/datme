@@ -16,6 +16,7 @@ Usage:
   datme dev     [vault] [--port 4321] [--host]   live preview, reloads on note changes
   datme build   [vault] [--out ./dist]           build the static site
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
+  datme check   [vault] [--verbose]              report broken links and other problems
   datme init    [vault]                          write a starter datme.yaml
 
 The vault defaults to $DATME_VAULT, then the current directory.
@@ -24,10 +25,12 @@ Options:
   --site <url>   public URL of the site, overrides site.url in datme.yaml
   --port <n>     port of dev and preview
   --host         listen on every network interface
+  --strict       fail check and build on warnings too, not only on errors
+  --verbose      also list links to unpublished notes
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "init" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -36,6 +39,8 @@ export interface Args {
   site?: string
   port?: number
   host?: boolean
+  strict?: boolean
+  verbose?: boolean
 }
 
 export class CliError extends Error {
@@ -53,6 +58,8 @@ export function parseArgs(argv: string[]): Args {
         site: { type: "string" },
         port: { type: "string", short: "p" },
         host: { type: "boolean" },
+        strict: { type: "boolean" },
+        verbose: { type: "boolean" },
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
       },
@@ -64,7 +71,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", vault, ...rest] = positionals
-  if (!["dev", "build", "preview", "init", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   if (rest.length) throw new CliError(`Unexpected argument "${rest[0]}".`)
@@ -72,7 +79,16 @@ export function parseArgs(argv: string[]): Args {
   if (port !== undefined && !(Number.isInteger(port) && port > 0 && port < 65536)) {
     throw new CliError(`Invalid port "${values.port}".`)
   }
-  return { command: command as Command, vault, out: values.out, site: values.site, port, host: values.host }
+  return {
+    command: command as Command,
+    vault,
+    out: values.out,
+    site: values.site,
+    port,
+    host: values.host,
+    strict: values.strict,
+    verbose: values.verbose,
+  }
 }
 
 function expandHome(p: string): string {
@@ -164,6 +180,24 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   const rel = path.relative(vault, out)
   // Output written inside the vault must not be scanned on the next build.
   if (!rel.startsWith("..") && !path.isAbsolute(rel)) env.DATME_IGNORE = rel
+
+  if (args.command === "check" || args.command === "build") {
+    // Imported only now: the config module reads the vault from the environment set above.
+    const { checkVault, countProblems, formatReport, summarize } = await import("./lib/check.ts")
+    const problems = checkVault()
+    const counts = countProblems(problems)
+    const failed = counts.error > 0 || (args.strict && counts.warning > 0)
+    if (args.command === "check") {
+      console.log(formatReport(problems, args.verbose))
+      if (failed) throw new CliError(`check failed: ${summarize(counts)}.`)
+      return
+    }
+    // Without --strict a build only reports: a broken link should not take a garden offline.
+    if (args.strict && (counts.error || counts.warning)) {
+      throw new CliError(`${formatReport(problems, args.verbose)}\nBuild stopped by --strict.`)
+    }
+    if (counts.error || counts.warning) console.warn(`[datme] ${summarize(counts)}; run "datme check" for details`)
+  }
 
   const astro = await import("astro")
   const server = { port: args.port, host: args.host }

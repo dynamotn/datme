@@ -8,6 +8,12 @@ export interface LinkRef {
   context: string
 }
 
+/** A link or embed the converter could not resolve, classified later by the vault. */
+export interface LinkProblem {
+  kind: "link" | "embed" | "drawing"
+  target: string
+}
+
 /** The only thing the converter needs to know about a resolved note. */
 export interface LinkTarget {
   key: string
@@ -70,7 +76,7 @@ function plainLine(line: string): string {
 export function preprocess(
   src: string,
   ctx: Ctx,
-): { md: string; links: LinkRef[]; assets: string[]; docs: string[] } {
+): { md: string; links: LinkRef[]; assets: string[]; docs: string[]; problems: LinkProblem[] } {
   const masks: string[] = []
   const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
 
@@ -84,6 +90,11 @@ export function preprocess(
   const links: LinkRef[] = []
   const assets: string[] = []
   const docs: string[] = []
+  const problems: LinkProblem[] = []
+  const broken = (kind: LinkProblem["kind"], target: string, html: string) => {
+    problems.push({ kind, target })
+    return html
+  }
   const lines = md.split("\n")
   const lineOf = (offset: number) => {
     let n = 0
@@ -120,6 +131,7 @@ export function preprocess(
     const dark = find(".dark.svg") ?? find(".dark.png")
     const name = escapeAttr(base.split("/").pop()!.replace(EXCALIDRAW, ""))
     if (!light && !dark) {
+      problems.push({ kind: "drawing", target: file })
       return `<span class="drawing-missing">✏️ ${name}: export the drawing as SVG in the Excalidraw plugin to publish it</span>`
     }
     const img = (rel: string, cls: string) => {
@@ -145,7 +157,7 @@ export function preprocess(
     if (DOC.test(file)) {
       const rel = ctx.resolveAsset(file, ctx.dir)
       const name = escapeAttr(alias ?? file.split("/").pop()!.replace(DOC, ""))
-      if (!rel) return `<span class="broken-link">${name}</span>`
+      if (!rel) return broken(bang ? "embed" : "link", file, `<span class="broken-link">${name}</span>`)
       docs.push(rel)
       const url = docUrl(rel, ctx.lang)
       if (bang && /\.base$/i.test(rel)) {
@@ -162,7 +174,7 @@ export function preprocess(
       }
       const asset = file ? ctx.resolveAsset(file, ctx.dir) : undefined
       if (asset) return embedAsset(asset, alias)
-      return `<span class="broken-link">${escapeAttr(alias ?? file)}</span>`
+      return broken("embed", file, `<span class="broken-link">${escapeAttr(alias ?? file)}</span>`)
     }
 
     const text = alias ?? (fragment && !file ? fragment : file.split("/").pop()!)
@@ -174,7 +186,7 @@ export function preprocess(
         assets.push(asset)
         return `<a href="${assetUrl(asset)}" class="attachment">${text}</a>`
       }
-      return `<span class="broken-link" title="Not published">${text}</span>`
+      return broken("link", file, `<span class="broken-link" title="Not published">${text}</span>`)
     }
     links.push({ key: note.key, context: plainLine(lineOf(offset)) })
     return internalLink(note, fragment, text)
@@ -192,12 +204,13 @@ export function preprocess(
       }
       if (!bang && /\.md$/i.test(decoded)) {
         const note = ctx.resolveNote(decoded, ctx.dir)
-        if (!note) return `<span class="broken-link">${text}</span>`
+        if (!note) return broken("link", decoded, `<span class="broken-link">${text}</span>`)
         links.push({ key: note.key, context: plainLine(lineOf(offset)) })
         return internalLink(note, (frag ?? "").slice(1), text)
       }
       const asset = ctx.resolveAsset(decoded, ctx.dir)
-      if (!asset) return m
+      // Only targets that look like files: a bare word may be a route of the site itself.
+      if (!asset) return /\.\w+$/.test(decoded) ? broken(bang ? "embed" : "link", decoded, m) : m
       if (bang) return embedAsset(asset, text || undefined)
       assets.push(asset)
       return `<a href="${assetUrl(asset)}" class="attachment">${text}</a>`
@@ -221,5 +234,5 @@ export function preprocess(
     .replace(/[^\S\n]\^([A-Za-z0-9-]+)$/gm, ' <span class="block-id" id="^$1"></span>')
 
   md = md.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
-  return { md, links, assets, docs }
+  return { md, links, assets, docs, problems }
 }
