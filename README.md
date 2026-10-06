@@ -1,34 +1,93 @@
 # datme
 
-An Astro rebuild of the Quartz-based digital garden: a blog-like front page on top
-of a second-brain notebook, published straight from an Obsidian vault.
+Publish an Obsidian vault as a digital garden: a blog-like home page on top of
+a second-brain notebook, with backlinks, a graph, full-text search and
+optional multilingual notes. Built with Astro; needs [Bun](https://bun.sh).
 
-## Usage
+## Quick start
+
+```bash
+bunx datme dev ~/MyVault                 # live preview at http://localhost:4321
+bunx datme build ~/MyVault --out ./site  # static site, ready for any host
+```
+
+Only notes with `publish: true` in their frontmatter are published, so nothing
+private leaks by default. Run `bunx datme init ~/MyVault` to write a commented
+`datme.yaml` into the vault and adjust it.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `datme dev [vault]` | Live preview; reloads when a note changes. `--port`, `--host` |
+| `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is only replaced if datme created it. |
+| `datme preview [vault]` | Builds, then serves the result |
+| `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
+
+The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`
+(or `$DATME_SITE_URL`) overrides the public URL, handy for preview deploys.
+
+## Configuration: `datme.yaml`
+
+The file lives at the root of the vault, so the site settings travel with the
+notes. Every key is optional.
+
+```yaml
+site:
+  title: My Garden            # or one value per language: { en-US: …, vi-VN: … }
+  tagline: Notes in progress
+  url: https://notes.example.com   # enables the sitemap and absolute links
+  author: Me
+  logo: 🌿                     # defaults to the first letter of the title
+
+languages: [en-US]            # the first is served at /, others under /<lang>/
+publish: explicit             # or `all`: everything except `publish: false`
+home: index.md                # note rendered as the home page
+ignore: [Archive, Journal]    # added to .obsidian, .trash, templates, private
+
+conventions:
+  typePrefix: type/           # tags like type/book become chips on the note
+  blogTags: [type/blog, blog] # listed as posts on the home page
+  mapTags: [type/moc, moc]    # listed as maps of content
+
+stages:                       # top-level folders shown as note maturity
+  Inbox: fleeting             # presets: fleeting, literature, atomic,
+  Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
+
+footer:
+  GitHub: https://github.com/me
+
+strings:                      # override any UI text, per language
+  en-US: { blog: Essays }
+```
+
+An invalid file stops the build with the path of every problem, e.g.
+`languages: Too small: expected array to have >=1 items`.
+
+## Writing notes
+
+- Obsidian syntax works as in the app: `[[wikilinks]]`, `[[note#heading|alias]]`,
+  `![[embeds]]` of notes, sections, images and PDFs, callouts (`> [!tip]-` folds),
+  `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
+- Frontmatter: `title`, `aliases` (become redirects), `tags`, `created`, `updated`,
+  `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
+- Notes with a `password` field are never published (encryption is not built yet).
+- Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …
+  `<!--lang:en-US-->` … `<!--lang:*-->`, and give `title` one value per language.
+- A note named after its folder (`Books/Books.md`) introduces that folder's page.
+- Only assets referenced by a published note are copied to the site.
+
+## Development
 
 ```bash
 bun install
-bun run dev      # http://localhost:4321, reloads when a note changes
-bun run build    # static site in dist/
-bun run check    # type-check
-bun run test     # unit tests and an end-to-end build of tests/fixtures/vault
+bun run dev ~/MyVault   # same as `datme dev`
+bun run check           # type-check
+bun run test            # unit tests and end-to-end builds of tests/fixtures
 ```
 
-The vault is read in place from `~/Documents/Notes`; set `VAULT_PATH` to use
-another one. Site settings live in `src/site.config.ts`.
-
-## How content is published
-
-- Only notes with `publish: true` are built; `draft: true` and notes with a
-  `password` (encryption is not implemented yet) are skipped.
-- `<!--lang:vi-VN-->` / `<!--lang:en-US-->` / `<!--lang:*-->` blocks and a
-  per-language `title` map produce `/` (Vietnamese) and `/en-US/` pages, with
-  Quartz-compatible slugs so existing URLs keep working.
-- Only assets referenced by a published note are emitted under `/assets/`.
-
-## Layout
-
-- `src/lib/vault.ts` scans the vault, resolves links, builds backlinks, tags and the folder tree.
-- `src/lib/obsidian.ts` turns wikilinks, embeds, highlights and tags into standard markdown.
+- `src/site.config.ts` loads and validates `datme.yaml`.
+- `src/lib/vault.ts` scans the vault, resolves links, builds backlinks, tags and folders.
+- `src/lib/obsidian.ts` turns Obsidian syntax into standard markdown.
 - `src/lib/markdown.ts` is the unified pipeline: callouts, KaTeX, Shiki, transclusion.
-- `src/scripts/` holds the client: search (MiniSearch), graph (d3-force), popovers, TOC.
-- `tests/` runs with `bun test` against the fixture vault in `tests/fixtures/vault`.
+- `src/cli.ts` is the `datme` command; `src/scripts/` holds the browser code.
