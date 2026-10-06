@@ -2119,6 +2119,39 @@ li > .flashcard {
   margin: 2px 6px 2px 0;
 }
 
+/* ---------- reading progress ---------- */
+.reading-progress-fill {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  height: 3px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  pointer-events: none;
+}
+.reading-progress-left {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font: 12px var(--font-ui);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reading-progress-fill {
+    transition: transform 0.1s linear;
+  }
+}
+
 /* ---------- sharing a passage ---------- */
 .share-passage {
   position: fixed;

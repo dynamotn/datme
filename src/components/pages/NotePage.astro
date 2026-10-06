@@ -61,6 +61,14 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       )
     }
     <Breadcrumbs lang={note.lang} dir={note.dir} />
+    {
+      r.words >= 300 && (
+        <div class="reading-progress" data-progress data-words={r.words} data-left={s.minutesLeft} aria-hidden="true">
+          <span class="reading-progress-fill" />
+          <span class="reading-progress-left" hidden />
+        </div>
+      )
+    }
     <DevProblems file={note.source.key + ".md"} />
     <header class="note-head">
       <NoteMeta note={note} words={r.words}>
