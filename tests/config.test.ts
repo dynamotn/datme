@@ -100,3 +100,14 @@ describe("publishing rules and conventions", () => {
     expect(() => resolveConfig({ publish: "some" }, "/v")).toThrow(ConfigError)
   })
 })
+
+describe("logo", () => {
+  test("defaults to the first letter of the title, skipping emoji", () => {
+    expect(resolveConfig({ site: { title: "🪴 digital garden" } }, "/v").logo).toBe("D")
+    expect(resolveConfig({}, "/home/me/notes").logo).toBe("N")
+  })
+
+  test("can be set explicitly", () => {
+    expect(resolveConfig({ site: { logo: "đ" } }, "/v").logo).toBe("đ")
+  })
+})

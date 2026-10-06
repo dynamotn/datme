@@ -40,6 +40,8 @@ const schema = z
         tagline: localized.optional(),
         url: z.url().optional(),
         author: z.string().optional(),
+        /** One letter or emoji shown as the logo and favicon. */
+        logo: z.string().min(1).max(8).optional(),
       })
       .strict()
       .default({}),
@@ -119,6 +121,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     title: localize(c.site.title, langs, name),
     tagline: localize(c.site.tagline, langs, ""),
     author: c.site.author ?? "",
+    // Default logo: the first letter of the title, skipping any leading emoji.
+    logo: c.site.logo ?? localize(c.site.title, langs, name)[langs[0]].match(/\p{L}/u)?.[0]?.toUpperCase() ?? "✦",
     defaultLang: langs[0],
     langs,
     ignore: [...new Set([...DEFAULT_IGNORE, ...c.ignore.map((p) => p.replace(/^\/+|\/+$/g, ""))])],

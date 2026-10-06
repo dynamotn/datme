@@ -75,6 +75,11 @@ describe("static build", () => {
     expect(index.links.length).toBeGreaterThan(0)
   })
 
+  test("favicon and robots.txt come from the config", () => {
+    expect(read("favicon.svg")).toContain(">K</text>")
+    expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")
