@@ -135,6 +135,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
 - Frontmatter: `title`, `permalink` (a custom URL, or one per language; the old URL redirects), `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
+- Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end.
 - Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.
 - Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { getVault } from "../src/lib/vault"
-import { renderNote, renderSecret } from "../src/lib/markdown"
+import { renderNote, renderSecret, renderMarkdown } from "../src/lib/markdown"
 
 const vi = getVault().byKey["vi-VN"]
 const zk = await renderNote(vi.get("03_Atomic/Zettelkasten")!)
@@ -142,6 +142,20 @@ describe("dataview", () => {
   test("empty blocks render nothing", async () => {
     const { html } = await queries
     expect(html).not.toContain("dv-error")
+  })
+
+  test("plain footnotes are copied next to their reference as sidenotes", async () => {
+    const html = await renderMarkdown("Text[^1] and more[^2].\n\n[^1]: First *note*.\n[^2]: Second.", "en-US", "x")
+    expect(html).toContain(
+      '<sup><a href="#user-content-fn-1" id="user-content-fnref-1" data-footnote-ref="" aria-describedby="footnote-label">1</a></sup><span class="sidenote" role="note"><span class="sidenote-number">1</span> First <em>note</em>.</span>',
+    )
+    expect(html).toContain('<section data-footnotes="" class="footnotes">')
+    expect(html.match(/class="sidenote"/g)).toHaveLength(2)
+  })
+
+  test("footnotes holding a list keep only the footnotes section", async () => {
+    const html = await renderMarkdown("Text[^1] and[^2].\n\n[^1]: Plain.\n[^2]: Has a list:\n\n    - one\n    - two", "en-US", "x")
+    expect(html).not.toContain('class="sidenote"')
   })
 
   test("GROUP BY renders one row per group", async () => {

@@ -119,6 +119,13 @@
   .prose .media-link {
     display: inline;
   }
+  /* Paper keeps the footnotes at the end. */
+  .prose .sidenote {
+    display: none !important;
+  }
+  .prose .footnotes {
+    display: block !important;
+  }
   .drawing-dark {
     display: none !important;
   }

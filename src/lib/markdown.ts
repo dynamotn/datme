@@ -278,6 +278,51 @@ const rehypeCodeTitle: Plugin<[], HastRoot> = () => (tree) => {
   })
 }
 
+const isElement = (n: ElementContent | undefined): n is Element => n?.type === "element"
+
+/**
+ * A copy of each footnote right after its reference, shown in the margin when
+ * there is room for it. Only notes whose footnotes are plain paragraphs get
+ * them: a list or a code block does not fit in a margin.
+ */
+const rehypeSidenotes: Plugin<[], HastRoot> = () => (tree) => {
+  const notes = new Map<string, ElementContent[]>()
+  let plain = true
+  visit(tree, "element", (node: Element) => {
+    const id = String(node.properties.id ?? "")
+    if (node.tagName !== "li" || !id.startsWith("user-content-fn-")) return
+    const blocks = node.children.filter(isElement)
+    if (blocks.some((b) => b.tagName !== "p")) plain = false
+    const parts: ElementContent[] = []
+    blocks.forEach((p, i) => {
+      if (i) parts.push({ type: "element", tagName: "br", properties: {}, children: [] })
+      parts.push(...p.children.filter((c) => !(isElement(c) && "dataFootnoteBackref" in c.properties)))
+    })
+    const last = parts.at(-1)
+    if (last?.type === "text") last.value = last.value.trimEnd()
+    notes.set(id, parts)
+    return SKIP
+  })
+  if (!plain || !notes.size) return
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (node.tagName !== "sup" || !parent || index == null) return
+    const ref = node.children.find((c): c is Element => isElement(c) && "dataFootnoteRef" in c.properties)
+    const content = ref && notes.get(String(ref.properties.href).slice(1))
+    if (!ref || !content) return
+    parent.children.splice(index + 1, 0, {
+      type: "element",
+      tagName: "span",
+      properties: { className: ["sidenote"], role: "note" },
+      children: [
+        { type: "element", tagName: "span", properties: { className: ["sidenote-number"] }, children: [{ type: "text", value: hastToString(ref) }] },
+        { type: "text", value: " " },
+        ...structuredClone(content),
+      ],
+    })
+    return index + 2
+  })
+}
+
 /** Section of a rendered note under a heading or a block id. */
 function extractFragment(root: HastRoot, fragment: string): ElementContent[] {
   if (!fragment) return root.children as ElementContent[]
@@ -432,6 +477,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(rehypeAutolinkHeadings, autolink)
     .use(rehypeDecorate, { out })
     .use(rehypeCodeTitle)
+    .use(rehypeSidenotes)
     .use(rehypeShiki, {
       themes: { light: "github-light", dark: "github-dark" },
       defaultColor: false,

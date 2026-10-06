@@ -1768,6 +1768,34 @@ dialog.graph-modal {
   color: var(--muted);
 }
 
+/* ---------- sidenotes: footnotes in the margin when there is room ---------- */
+.prose .sidenote {
+  display: none;
+}
+@media (min-width: 1360px) {
+  :root.reader .prose .sidenote,
+  :root.hide-left.hide-right .prose .sidenote {
+    display: block;
+    float: right;
+    clear: right;
+    position: relative;
+    width: 15rem;
+    margin: 0.3em -17.5rem 0.8em 0;
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  :root.reader .prose:has(.sidenote) .footnotes,
+  :root.hide-left.hide-right .prose:has(.sidenote) .footnotes {
+    display: none;
+  }
+}
+.prose .sidenote-number {
+  font-weight: 700;
+  color: var(--accent);
+}
+
 /* ---------- series ---------- */
 .series-box {
   margin: 0 0 24px;
