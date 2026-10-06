@@ -140,7 +140,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
 - Frontmatter: `title`, `permalink` (a custom URL, or one per language; the old URL redirects), `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
-- Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end.
+- Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end. Hovering a footnote number or a citation shows it in a popover.
 - Citations in Pandoc's syntax, `[@key]`, `[@key, p. 12]`, `[see @a; @b]` or `[-@key]`, are looked up in the `bibliography` files, shown author–date ("Luhmann 1992, p. 12") and listed in APA style at the end of the note. `datme check` reports keys missing from the bibliography.
 - Notes with `start` (and `end`) — `1927`, `1927-12` or `1927-12-08`, `-0500` for BCE — or tagged as events appear on `/timeline`; notes with `location: [lat, lng]` appear on `/map`. Each page exists only when some note qualifies; protected notes never do.
 - Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.

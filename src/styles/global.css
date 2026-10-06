@@ -1561,6 +1561,17 @@ dialog.graph-modal {
   height: 60px;
   background: linear-gradient(transparent, var(--surface));
 }
+.popover.popover-small {
+  max-height: 16rem;
+  font-size: 14px;
+}
+/* A footnote or a reference is short: no fade at the bottom. */
+.popover.popover-small::after {
+  display: none;
+}
+.popover-small .prose {
+  font-size: 14px;
+}
 .popover h3 {
   margin: 0 0 8px;
   font-family: var(--font-read);
