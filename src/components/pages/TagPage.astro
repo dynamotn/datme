@@ -1,0 +1,78 @@
+---
+import type { Lang } from "~/site.config"
+import { site } from "~/site.config"
+import { getVault, byRecent } from "~/lib/vault"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import Base from "~/layouts/Base.astro"
+import NoteRow from "../NoteRow.astro"
+import NoteCard from "../NoteCard.astro"
+
+interface Props {
+  lang: Lang
+  /** Undefined renders the index of every tag. */
+  tag?: string
+}
+const { lang, tag } = Astro.props
+const s = t(lang)
+const all = getVault().tags[lang]
+const tagUrl = (l: Lang, x: string) => slugToUrl(langPrefix(l) + "tags/" + x)
+const notes = tag ? byRecent(all.get(tag) ?? [], "created") : []
+const children = tag ? [...all.keys()].filter((x) => x.startsWith(tag + "/")) : []
+const roots = [...all.entries()]
+const alternates = Object.fromEntries(
+  site.langs.map((l) => [l, tag ? tagUrl(l, tag) : slugToUrl(langPrefix(l) + "tags")]),
+)
+const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
+---
+
+<Base lang={lang} title={tag ? `#${tag}` : s.allTags} alternates={alternates}>
+  <div class="note is-wide">
+    <nav class="crumbs">
+      <a href={slugToUrl(langPrefix(lang) + "index")}>{s.home}</a>
+      <span class="sep">/</span>
+      <a href={slugToUrl(langPrefix(lang) + "tags")}>{s.tags}</a>
+    </nav>
+    <header class="page-head">
+      <span class="chip type">{s.tag}</span>
+      <h1>{tag ? `#${tag}` : s.allTags}</h1>
+      <p>{tag ? s.notesCount(notes.length) : `${all.size} ${s.tags.toLowerCase()}`}</p>
+    </header>
+    {
+      tag ? (
+        <>
+          {children.length > 0 && (
+            <div class="tag-cloud" style="margin-bottom: 28px">
+              {children.map((c) => (
+                <a class="chip tag" href={tagUrl(lang, c)}>
+                  {c} <small>{all.get(c)!.length}</small>
+                </a>
+              ))}
+            </div>
+          )}
+          {showCards ? (
+            <div class="card-grid">
+              {notes.map((n) => (
+                <NoteCard note={n} />
+              ))}
+            </div>
+          ) : (
+            <ul class="note-list">
+              {notes.map((n) => (
+                <NoteRow note={n} date="created" />
+              ))}
+            </ul>
+          )}
+        </>
+      ) : (
+        <div class="tag-cloud">
+          {roots.map(([x, list]) => (
+            <a class="chip tag" href={tagUrl(lang, x)}>
+              {x} <small>{list.length}</small>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</Base>
