@@ -107,6 +107,18 @@
   [data-look="notebook"] .shiki span {
     color: var(--shiki-light) !important;
   }
+  .prose .media-embed {
+    aspect-ratio: auto;
+    background: none;
+  }
+  .prose .media-embed iframe,
+  .prose video,
+  .prose audio {
+    display: none;
+  }
+  .prose .media-link {
+    display: inline;
+  }
   .drawing-dark {
     display: none !important;
   }

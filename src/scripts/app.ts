@@ -172,6 +172,21 @@ async function renderMermaid(rerender = false) {
   await mermaid.run({ nodes: blocks })
 }
 
+// ---- embedded tweets: the widget script only loads on pages that have one ----
+function setupTweets() {
+  const tweets = document.querySelectorAll<HTMLElement>(".prose blockquote.twitter-tweet")
+  if (!tweets.length) return
+  tweets.forEach((b) => (b.dataset.theme = root.dataset.theme === "dark" ? "dark" : "light"))
+  const w = window as { twttr?: { widgets?: { load(el?: Element): void } } }
+  if (w.twttr?.widgets) return w.twttr.widgets.load(document.querySelector(".prose") ?? undefined)
+  if (document.querySelector("script[data-tweets]")) return
+  const s = document.createElement("script")
+  s.src = "https://platform.twitter.com/widgets.js"
+  s.async = true
+  s.dataset.tweets = ""
+  document.head.append(s)
+}
+
 function setupLocalGraph() {
   document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach((c) => void mountGraph(c, "local"))
 }
@@ -257,6 +272,7 @@ document.addEventListener("astro:page-load", () => {
   setupCode()
   setupPopovers()
   setupLocalGraph()
+  setupTweets()
   void setupWebmentions()
   syncToggles()
   void renderMermaid()

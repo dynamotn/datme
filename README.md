@@ -104,6 +104,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Obsidian syntax works as in the app: `[[wikilinks]]`, `[[note#heading|alias]]`,
   `![[embeds]]` of notes, sections, images and PDFs, callouts (`> [!tip]-` folds),
   `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
+- `![](https://…)` embeds YouTube (privacy-enhanced, `t=` kept), Vimeo, tweets from twitter.com or x.com, and remote video or audio files; `![Title|640](…)` sets the width, as in Obsidian. Printed pages show the link instead.
 - Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
 - Frontmatter: `title`, `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.

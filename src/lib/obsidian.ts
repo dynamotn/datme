@@ -2,6 +2,7 @@ import GithubSlugger from "github-slugger"
 import type { Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl } from "./slug"
+import { embedExternal } from "./media"
 
 export interface LinkRef {
   key: string
@@ -191,6 +192,9 @@ export function preprocess(
     links.push({ key: note.key, context: plainLine(lineOf(offset)) })
     return internalLink(note, fragment, text)
   })
+
+  // ![](https://…) of a video page, a tweet or a media file embeds it, as in Obsidian.
+  md = md.replace(/!\[([^\]\n]*)\]\((https?:\/\/[^)\s]+)\)/g, (m, alt: string, href: string) => embedExternal(alt, href) ?? m)
 
   // Standard markdown links pointing at vault notes or assets.
   md = md.replace(
