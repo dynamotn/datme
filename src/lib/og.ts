@@ -174,7 +174,34 @@ export async function renderOg(card: OgCard): Promise<Buffer> {
         ),
     ),
   )
-  const svg = await satori(tree as unknown as Parameters<typeof satori>[0], { width: 1200, height: 630, fonts: loadFonts() })
+  return toPng(tree, 1200, 630)
+}
+
+async function toPng(tree: Node, width: number, height: number): Promise<Buffer> {
+  const svg = await satori(tree as unknown as Parameters<typeof satori>[0], { width, height, fonts: loadFonts() })
   // Satori already turned text into paths; scanning system fonts would dominate the render time.
-  return new Resvg(svg, { fitTo: { mode: "width", value: 1200 }, font: { loadSystemFonts: false } }).render().asPng()
+  return new Resvg(svg, { fitTo: { mode: "width", value: width }, font: { loadSystemFonts: false } }).render().asPng()
+}
+
+/**
+ * A square app icon: the logo on the brand gradient, like the favicon. The
+ * logo stays inside the middle 80%, the safe zone of maskable icons.
+ */
+export function renderIcon(logo: string, size: number): Promise<Buffer> {
+  const tree = h(
+    "div",
+    {
+      width: "100%",
+      height: "100%",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundImage: "linear-gradient(135deg, #2d6a4f 0%, #4f8f5b 45%, #b5532c 100%)",
+      color: "#fff",
+      fontFamily: family("Bricolage"),
+      fontSize: Math.round(size * 0.5),
+      fontWeight: 800,
+    },
+    stripEmoji(logo) || "✦",
+  )
+  return toPng(tree, size, size)
 }

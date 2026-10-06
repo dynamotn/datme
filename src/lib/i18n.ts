@@ -79,6 +79,8 @@ const builtin = {
     reposts: "{n} lượt chia sẻ",
     mentionReplied: "đã trả lời",
     mentionMentioned: "đã nhắc đến",
+    offline: "Bạn đang ngoại tuyến",
+    offlineLead: "Trang này chưa được lưu để đọc ngoại tuyến. Những ghi chú bạn đã mở vẫn đọc được.",
   },
   en: {
     search: "Search",
@@ -157,6 +159,8 @@ const builtin = {
     reposts: "{n} reposts",
     mentionReplied: "replied",
     mentionMentioned: "mentioned this",
+    offline: "You are offline",
+    offlineLead: "This page was not saved for offline reading. The notes you already opened still work.",
   },
 } satisfies Record<string, Record<string, string>>
 

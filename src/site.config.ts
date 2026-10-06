@@ -153,6 +153,8 @@ const schema = z
       .optional(),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
+    /** Make the site installable and keep the pages a reader opened available offline. */
+    offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
@@ -270,6 +272,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     comments: c.comments,
     cname: c.cname,
     ogImages: c.ogImages,
+    offline: c.offline,
     stackedPages: c.stackedPages,
     properties: c.properties,
     types: Object.fromEntries(

@@ -191,6 +191,15 @@ function setupLocalGraph() {
   document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach((c) => void mountGraph(c, "local"))
 }
 
+// ---- offline reading: register the service worker, or drop one a previous config installed ----
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  if (root.dataset.offline != null) {
+    window.addEventListener("load", () => void navigator.serviceWorker.register("/sw.js").catch(() => {}))
+  } else {
+    void navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()))
+  }
+}
+
 // ---- printing: folded callouts and lazy images would be missing on paper ----
 let printOpened: HTMLDetailsElement[] = []
 window.addEventListener("beforeprint", () => {

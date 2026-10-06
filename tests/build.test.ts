@@ -271,6 +271,15 @@ describe("static build", () => {
     expect(print).toContain('content:" (" attr(href) ")"')
   })
 
+  test("the site is installable and registers a service worker for offline reading", () => {
+    const home = read("index.html")
+    expect(home).toContain('<link rel="manifest" href="/manifest.webmanifest">')
+    expect(home).toContain("data-offline")
+    expect(JSON.parse(read("manifest.webmanifest")).name).toBe("Khu vườn thử nghiệm")
+    expect(read("sw.js")).toContain('self.addEventListener("fetch"')
+    for (const icon of ["icon-192.png", "icon-512.png"]) expect(exists(icon)).toBe(true)
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

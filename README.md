@@ -85,6 +85,7 @@ comments:                     # giscus { repo, repoId, category, categoryId } or
 webmentions: {}               # receive mentions via webmention.io ({ domain } defaults to
                               # the host of site.url) and list likes, reposts and replies under notes
 cname: true                   # write CNAME with the host of site.url
+offline: true                 # installable app; pages a reader opened stay readable offline
 ogImages: true                # social cards for the home page and notes without a banner
 stackedPages: true            # a header button to open linked notes side by side
 properties:

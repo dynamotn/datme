@@ -43,7 +43,7 @@ const year = new Date().getFullYear()
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} data-lang={lang} data-look={look}>
+<html lang={langMeta(lang).html} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -51,6 +51,14 @@ const year = new Date().getFullYear()
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {
+      site.offline && (
+        <>
+          <link rel="manifest" href="/manifest.webmanifest" />
+          <link rel="apple-touch-icon" href="/icon-192.png" />
+        </>
+      )
+    }
     <link rel="alternate" type="application/rss+xml" title={siteTitle} href={rss} />
     {
       site.langs.map(
