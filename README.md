@@ -138,6 +138,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Obsidian syntax works as in the app: `[[wikilinks]]`, `[[note#heading|alias]]`,
   `![[embeds]]` of notes, sections, images and PDFs, callouts (`> [!tip]-` folds),
   `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
+- A paragraph that is only a pasted URL becomes a card with the page's title, description and image, read at build time and cached (`linkPreviews: false` to keep plain links; the image loads from the other site).
 - `![](https://…)` embeds YouTube (privacy-enhanced, `t=` kept), Vimeo, tweets from twitter.com or x.com, and remote video or audio files; `![Title|640](…)` sets the width, as in Obsidian. Printed pages show the link instead.
 - Flashcards in the Spaced Repetition plugin's syntax, in notes tagged `#flashcards`: `Question::Answer`, `Word:::Translation` (both ways), and multi-line cards with a `?` (or `??`) line between question and answer. They flip open on click, and `==highlights==` outside cards become clozes, hidden until clicked. A practice button runs the deck one card at a time, Leitner style (boxes of 0, 1, 3, 7 and 14 days), keeping progress in the reader's browser.
 - Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.

@@ -29,6 +29,7 @@ import { renderBaseView } from "./base-render"
 import { renderChart } from "./charts"
 import { linkTerms, glossarySignature } from "./glossary"
 import { readDeadLinks, deadLinksStamp, archiveUrl } from "./dead-links"
+import { linkPreview, previewCard } from "./link-preview"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
@@ -301,6 +302,30 @@ const rehypeCodeTitle: Plugin<[], HastRoot> = () => (tree) => {
   })
 }
 
+/**
+ * A paragraph holding nothing but a pasted URL becomes a card with the page's
+ * title, description and image, read from it at build time.
+ */
+const rehypeLinkCards: Plugin<[], HastRoot> = () => async (tree) => {
+  if (!site.linkPreviews) return
+  const jobs: Promise<void>[] = []
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (node.tagName !== "p" || !parent || index == null) return
+    const kids = node.children.filter((c) => c.type !== "text" || c.value.trim())
+    const a = kids[0]
+    if (kids.length !== 1 || a.type !== "element" || a.tagName !== "a") return
+    const href = String(a.properties.href ?? "")
+    // Only a bare URL, as pasted: a link with its own words stays a link.
+    if (!/^https?:\/\//.test(href) || hastToString(a).trim() !== href) return
+    jobs.push(
+      linkPreview(href).then((p) => {
+        if (p) parent.children[parent.children.indexOf(node)] = previewCard(href, p)
+      }),
+    )
+  })
+  await Promise.all(jobs)
+}
+
 /** First mentions of glossary terms link to the note defining them. */
 const rehypeGlossary: Plugin<[{ lang: Lang; key: string }], HastRoot> = ({ lang, key }) => (tree) => linkTerms(tree, lang, key)
 
@@ -504,6 +529,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(rehypeDecorate, { out, lang })
     .use(rehypeCodeTitle)
     .use(rehypeGlossary, { lang, key: stack[stack.length - 1] })
+    .use(rehypeLinkCards)
     .use(rehypeSidenotes)
     .use(rehypeShiki, {
       themes: { light: "github-light", dark: "github-dark" },
