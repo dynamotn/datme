@@ -1,0 +1,128 @@
+---
+import type { Lang } from "~/site.config"
+import { site } from "~/site.config"
+import { getVault, listed, byRecent, countNotes } from "~/lib/vault"
+import { renderNote } from "~/lib/markdown"
+import { t, stageMeta, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import Base from "~/layouts/Base.astro"
+import NoteCard from "../NoteCard.astro"
+import NoteRow from "../NoteRow.astro"
+import Icon from "../Icon.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const vault = getVault()
+const home = vault.byKey[lang].get("index")
+const r = home ? await renderNote(home) : undefined
+
+// The home note is split at each H2: the intro becomes the hero, the rest become shelves.
+// Sections holding a table are hand-serialized Dataview queries, superseded by the live cards.
+const [intro = "", ...sections] = (r?.html ?? "").split(/(?=<h2[\s>])/)
+const shelves = sections.filter((html) => !html.includes("<table"))
+
+const notes = listed(lang).filter((n) => !n.isHome)
+const blog = byRecent(notes.filter((n) => n.isBlog), "created")
+const recent = byRecent(notes).slice(0, 8)
+const mocs = notes.filter((n) => n.isMoc)
+const linkCount = notes.reduce((acc, n) => acc + n.links.length, 0)
+const stages = [...vault.trees[lang].folders]
+  .filter((f) => site.stages[f.segment])
+  .map((f) => ({ folder: f, stage: stageMeta[site.stages[f.segment]], count: countNotes(f) }))
+const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
+---
+
+<Base lang={lang} title={site.title[lang]} description={r?.description ?? site.tagline[lang]} image={home?.banner} alternates={alternates}>
+  <section class="hero">
+    <span class="hero-eyebrow"><Icon name="sprout" /> {site.tagline[lang]}</span>
+    <h1><span class="gradient-text">{r?.h1 ?? site.title[lang]}</span></h1>
+    <div class="prose" set:html={intro} />
+    <div class="hero-stats">
+      <div class="stat"><b>{notes.length}</b><span>{s.notesCount(notes.length).replace(/^\d+\s*/, "")}</span></div>
+      <div class="stat"><b>{linkCount}</b><span>{s.links}</span></div>
+      <div class="stat"><b>{vault.tags[lang].size}</b><span>{s.tags.toLowerCase()}</span></div>
+    </div>
+  </section>
+
+  {
+    blog.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>{s.blog}</h2>
+            <p>{s.blogLead}</p>
+          </div>
+          <a href={slugToUrl(langPrefix(lang) + "tags/type/blog")}>{s.seeAll} →</a>
+        </div>
+        <div class="card-grid">
+          {blog.slice(0, 6).map((n) => <NoteCard note={n} />)}
+        </div>
+      </section>
+    )
+  }
+
+  <div class="home-cols section">
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>{s.recent}</h2>
+          <p>{s.recentLead}</p>
+        </div>
+      </div>
+      <ul class="note-list">
+        {recent.map((n) => <NoteRow note={n} />)}
+      </ul>
+    </section>
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>{s.garden}</h2>
+          <p>{s.gardenLead}</p>
+        </div>
+      </div>
+      <div class="stage-grid">
+        {
+          stages.map(({ folder, stage, count }) => (
+            <a class="stage-card" href={folder.url}>
+              <span class="emoji">{stage.icon}</span>
+              <span>
+                <b>{stage.label[lang]}</b>
+                <span>{s.notesCount(count)}</span>
+              </span>
+            </a>
+          ))
+        }
+      </div>
+      {
+        mocs.length > 0 && (
+          <>
+            <div class="section-head" style="margin-top: 32px">
+              <div>
+                <h2>{s.maps}</h2>
+                <p>{s.mapsLead}</p>
+              </div>
+            </div>
+            <ul class="note-list">
+              {mocs.map((n) => (
+                <NoteRow note={n} />
+              ))}
+            </ul>
+          </>
+        )
+      }
+    </section>
+  </div>
+
+  {
+    shelves.length > 0 && (
+      <section class="section shelves">
+        {shelves.map((html) => (
+          <div class="shelf prose" set:html={html} />
+        ))}
+      </section>
+    )
+  }
+</Base>

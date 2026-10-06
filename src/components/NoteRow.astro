@@ -1,0 +1,24 @@
+---
+import type { Note } from "~/lib/vault"
+import { getVault } from "~/lib/vault"
+import { formatDate, stageMeta } from "~/lib/i18n"
+
+interface Props {
+  note: Note
+  date?: "created" | "updated"
+}
+const { note, date = "updated" } = Astro.props
+const folder = getVault().folders[note.lang].get(note.dir)
+const d = note[date]
+---
+
+<li>
+  <a class="note-row internal" href={note.url}>
+    <span class="emoji">{note.stage ? stageMeta[note.stage].icon : "📝"}</span>
+    <span>
+      <span class="title">{note.title}</span>
+      <span class="sub">{[folder?.name, ...note.types].filter(Boolean).join(" · ")}</span>
+    </span>
+    {d && <time datetime={d.toISOString()}>{formatDate(d, note.lang)}</time>}
+  </a>
+</li>

@@ -1,0 +1,29 @@
+---
+import type { Note } from "~/lib/vault"
+import { renderNote } from "~/lib/markdown"
+import { formatDate, stageMeta, t } from "~/lib/i18n"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const r = await renderNote(note)
+const minutes = Math.max(1, Math.round(r.words / 220))
+---
+
+<a class="card internal" href={note.url}>
+  <div class="card-media">
+    {note.banner && <img src={note.banner} alt="" loading="lazy" style={`object-position: ${note.bannerPos}`} />}
+  </div>
+  <div class="card-body">
+    <div class="chips">
+      {note.stage && <span class="chip stage">{stageMeta[note.stage].icon} {stageMeta[note.stage].label[note.lang]}</span>}
+    </div>
+    <h3 class="card-title">{r.h1 ?? note.title}</h3>
+    <p class="card-desc">{r.description}</p>
+    <div class="card-foot">
+      <span>{formatDate(note.created, note.lang)}</span>
+      <span>{t(note.lang).readingTime(minutes)}</span>
+    </div>
+  </div>
+</a>
