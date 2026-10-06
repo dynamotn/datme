@@ -20,7 +20,7 @@ Usage:
   datme dev     [vault] [--port 4321] [--host]   live preview, reloads on note changes
   datme build   [vault] [--out ./dist] [--fresh] build the static site
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
-  datme check   [vault] [--verbose]              report broken links and other problems
+  datme check   [vault] [--verbose] [--external] report broken links and other problems
   datme init    [vault]                          write a starter datme.yaml
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
                                                  hosts: github, gitlab, netlify, cloudflare
@@ -34,6 +34,7 @@ Options:
   --fresh        ignore the cache of rendered notes and social cards
   --strict       fail check and build on warnings too, not only on errors
   --verbose      also list links to unpublished notes
+  --external     also check that links to other websites still answer
   --branch <b>   branch whose pushes publish the site (default: the current one)
   -h, --help     show this help
   -v, --version  show the version`
@@ -53,6 +54,7 @@ export interface Args {
   strict?: boolean
   verbose?: boolean
   fresh?: boolean
+  external?: boolean
 }
 
 export class CliError extends Error {
@@ -72,6 +74,7 @@ export function parseArgs(argv: string[]): Args {
         host: { type: "boolean" },
         strict: { type: "boolean" },
         fresh: { type: "boolean" },
+        external: { type: "boolean" },
         branch: { type: "string", short: "b" },
         verbose: { type: "boolean" },
         help: { type: "boolean", short: "h" },
@@ -113,6 +116,7 @@ export function parseArgs(argv: string[]): Args {
     strict: values.strict,
     verbose: values.verbose,
     fresh: values.fresh,
+    ...(values.external ? { external: true } : {}),
   }
 }
 
@@ -282,8 +286,15 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
 
   if (args.command === "check" || args.command === "build") {
     // Imported only now: the config module reads the vault from the environment set above.
-    const { checkVault, countProblems, formatReport, summarize } = await import("./lib/check.ts")
+    const { checkVault, countProblems, formatReport, summarize, externalLinks, sortProblems } = await import("./lib/check.ts")
     const problems = checkVault()
+    if (args.command === "check" && args.external) {
+      const { checkExternal } = await import("./lib/links.ts")
+      const urls = externalLinks()
+      console.log(`Checking ${urls.size} external links…`)
+      problems.push(...(await checkExternal(urls)))
+      sortProblems(problems)
+    }
     const counts = countProblems(problems)
     const failed = counts.error > 0 || (args.strict && counts.warning > 0)
     if (args.command === "check") {
