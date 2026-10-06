@@ -2,6 +2,7 @@ import { site, type Lang } from "../site.config"
 import { getVault, type Note, type FolderNode, type Doc } from "./vault"
 import { langPrefix } from "./i18n"
 import { sluggify, slugToUrl } from "./slug"
+import { hasMap, hasTimeline } from "./places"
 
 export type Page =
   | { kind: "home"; lang: Lang }
@@ -13,6 +14,8 @@ export type Page =
   | { kind: "base"; lang: Lang; doc: Doc }
   | { kind: "archive"; lang: Lang }
   | { kind: "recent"; lang: Lang }
+  | { kind: "timeline"; lang: Lang }
+  | { kind: "map"; lang: Lang }
 
 /**
  * Every page of the site by slug. First claim wins: notes, then folders, tags,
@@ -36,6 +39,9 @@ export function routes(): Map<string, Page> {
     claim(prefix + "tags", { kind: "tag", lang })
     claim(prefix + "archive", { kind: "archive", lang })
     claim(prefix + "recent", { kind: "recent", lang })
+    // Only when some note has a date or a place to show.
+    if (hasTimeline(lang)) claim(prefix + "timeline", { kind: "timeline", lang })
+    if (hasMap(lang)) claim(prefix + "map", { kind: "map", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
     for (const doc of vault.docs.values()) claim(prefix + sluggify(doc.rel), { kind: doc.kind, lang, doc })
     for (const note of vault.notes[lang]) {

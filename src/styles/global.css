@@ -1796,6 +1796,62 @@ dialog.graph-modal {
   color: var(--accent);
 }
 
+/* ---------- timeline ---------- */
+.timeline,
+.timeline ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.timeline-year {
+  position: relative;
+  padding-left: 28px;
+  border-left: 2px solid var(--line-strong);
+}
+.timeline-year h2 {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+}
+.timeline-year h2::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  margin-top: 0.45em;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.timeline-event {
+  padding: 0 0 18px;
+}
+.timeline-when {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+.timeline-event p {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+/* ---------- map ---------- */
+.map-canvas {
+  height: min(70vh, 560px);
+  margin-bottom: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.map-list {
+  columns: 2 16rem;
+  padding-left: 1.2em;
+}
+:root[data-theme="dark"] .map-canvas .leaflet-tile-pane {
+  filter: invert(0.9) hue-rotate(180deg) brightness(0.9);
+}
+
 /* ---------- citations ---------- */
 .prose cite.citations {
   font-style: normal;

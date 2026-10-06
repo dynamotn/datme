@@ -375,6 +375,15 @@ describe("static build", () => {
     expect(second).not.toContain("<dt>series")
   })
 
+  test("the timeline and the map show the notes that have dates and places", () => {
+    const tl = read("timeline/index.html")
+    expect(tl).toMatch(/<span class="timeline-when">8 thg 12, 1927 – 6 thg 11, 1998<\/span><a class="internal" href="\/06_Reference\/Niklas-Luhmann">/)
+    const map = read("en-US/map/index.html")
+    const data = JSON.parse(map.match(/data-map="([^"]+)"/)![1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))
+    expect(data).toEqual([expect.objectContaining({ lat: 52.0302, url: "/en-US/06_Reference/Niklas-Luhmann-(sociologist)" })])
+    expect(map).toContain('data-tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png"')
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

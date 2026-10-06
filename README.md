@@ -66,13 +66,14 @@ conventions:
   blogTags: [type/blog, blog] # listed as posts on the home page
   mapTags: [type/moc, moc]    # listed as maps of content
   flashcardTags: [flashcards] # decks: Q::A, Q:::A and ?-separated cards flip open
+  timelineTags: [timeline, type/event]  # events dated by `date` on /timeline
 
 stages:                       # top-level folders shown as note maturity
   Inbox: fleeting             # presets: fleeting, literature, atomic,
   Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive, recent
+  - home                      # built-ins: home, tags, archive, recent, timeline, map
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf
@@ -102,6 +103,8 @@ images:                       # PNG/JPEG/WebP/AVIF get their size and resized We
   widths: [480, 960, 1600]
   quality: 80
 bibliography: refs.bib        # BibTeX file(s) for [@key] citations
+map:                          # tiles of /map (OpenStreetMap by default)
+  tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
 offline: true                 # installable app; pages a reader opened stay readable offline
 ogImages: true                # social cards for the home page and notes without a banner
 stackedPages: true            # a header button to open linked notes side by side
@@ -138,6 +141,7 @@ An invalid file stops the build with the path of every problem, e.g.
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
 - Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end.
 - Citations in Pandoc's syntax, `[@key]`, `[@key, p. 12]`, `[see @a; @b]` or `[-@key]`, are looked up in the `bibliography` files, shown author–date ("Luhmann 1992, p. 12") and listed in APA style at the end of the note. `datme check` reports keys missing from the bibliography.
+- Notes with `start` (and `end`) — `1927`, `1927-12` or `1927-12-08`, `-0500` for BCE — or tagged as events appear on `/timeline`; notes with `location: [lat, lng]` appear on `/map`. Each page exists only when some note qualifies; protected notes never do.
 - Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.
 - Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …

@@ -1,0 +1,50 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { timeline, formatWhen, hasTimeline } from "~/lib/places"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const events = timeline(lang)
+const years = new Map<number, typeof events>()
+for (const e of events) years.set(e.start.year, [...(years.get(e.start.year) ?? []), e])
+const alternates = Object.fromEntries(site.langs.filter(hasTimeline).map((l) => [l, slugToUrl(langPrefix(l) + "timeline")]))
+---
+
+<Base lang={lang} title={s.timeline} alternates={alternates}>
+  <div class="note is-wide timeline-page">
+    <header class="page-head">
+      <span class="chip type">⏳ {s.timeline}</span>
+      <h1>{s.timeline}</h1>
+      <p>{s.timelineLead} · {s.notesCount(events.length)}</p>
+    </header>
+    <ol class="timeline">
+      {
+        [...years].map(([year, list]) => (
+          <li class="timeline-year">
+            <h2 id={`t${year}`}>{formatWhen({ year }, lang)}</h2>
+            <ol>
+              {list.map((e) => (
+                <li class="timeline-event">
+                  <span class="timeline-when">
+                    {formatWhen(e.start, lang)}
+                    {e.end && ` – ${formatWhen(e.end, lang)}`}
+                  </span>
+                  <a class="internal" href={e.note.url}>
+                    {e.note.title}
+                  </a>
+                  {e.note.description && <p>{e.note.description}</p>}
+                </li>
+              ))}
+            </ol>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Base>

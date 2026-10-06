@@ -106,6 +106,7 @@ describe("publishing rules and conventions", () => {
       blogTags: ["type/blog", "blog"],
       mapTags: ["type/moc", "moc"],
       flashcardTags: ["flashcards"],
+      timelineTags: ["timeline", "type/event"],
     })
   })
 

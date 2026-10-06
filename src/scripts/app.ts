@@ -215,6 +215,7 @@ window.addEventListener("afterprint", () => {
 
 document.addEventListener("astro:before-swap", () => {
   teardownGraphs()
+  if (document.querySelector("[data-map]")) void import("./map").then((m) => m.unmountMap())
   hidePopover()
   root.classList.remove("nav-open")
 })
@@ -284,6 +285,9 @@ document.addEventListener("astro:page-load", () => {
   setupLocalGraph()
   setupTweets()
   setupLightbox()
+  // Leaflet is only fetched on the map page.
+  const mapEl = document.querySelector<HTMLElement>("[data-map]")
+  if (mapEl) void import("./map").then((m) => m.mountMap(mapEl))
   void setupWebmentions()
   syncToggles()
   void renderMermaid()

@@ -10,6 +10,8 @@ import CanvasPage from "~/components/pages/CanvasPage.astro"
 import BasePage from "~/components/pages/BasePage.astro"
 import ArchivePage from "~/components/pages/ArchivePage.astro"
 import RecentPage from "~/components/pages/RecentPage.astro"
+import TimelinePage from "~/components/pages/TimelinePage.astro"
+import MapPage from "~/components/pages/MapPage.astro"
 
 
 export const getStaticPaths = (() =>
@@ -27,3 +29,5 @@ const { page } = Astro.props as { page: Page }
 {page.kind === "base" && <BasePage lang={page.lang} doc={page.doc} />}
 {page.kind === "archive" && <ArchivePage lang={page.lang} />}
 {page.kind === "recent" && <RecentPage lang={page.lang} />}
+{page.kind === "timeline" && <TimelinePage lang={page.lang} />}
+{page.kind === "map" && <MapPage lang={page.lang} />}

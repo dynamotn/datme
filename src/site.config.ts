@@ -104,6 +104,8 @@ const schema = z
         mapTags: z.array(z.string()).default(["type/moc", "moc"]),
         /** Notes with one of these tags turn `Q::A` and `?` cards into flashcards. */
         flashcardTags: z.array(z.string()).default(["flashcards"]),
+        /** Notes with one of these tags are timeline events, dated by `date` when they have no `start`. */
+        timelineTags: z.array(z.string()).default(["timeline", "type/event"]),
       })
       .strict()
       .default({
@@ -111,13 +113,14 @@ const schema = z
         blogTags: ["type/blog", "blog"],
         mapTags: ["type/moc", "moc"],
         flashcardTags: ["flashcards"],
+        timelineTags: ["timeline", "type/event"],
       }),
     footer: z.record(z.string(), z.string()).default({}),
     /** Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs. */
     nav: z
       .array(
         z.union([
-          z.enum(["home", "tags", "archive", "recent"]),
+          z.enum(["home", "tags", "archive", "recent", "timeline", "map"]),
           z.object({ note: z.string().min(1), label: localized.optional() }).strict(),
           z.object({ url: z.string().min(1), label: localized }).strict(),
         ]),
@@ -209,6 +212,17 @@ const schema = z
       })
       .strict()
       .default({ optimize: true, widths: [480, 960, 1600], quality: 80 }),
+    /** Tiles of the map page, for notes with a `location`. */
+    map: z
+      .object({
+        tiles: z.string().default("https://tile.openstreetmap.org/{z}/{x}/{y}.png"),
+        attribution: z.string().default('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'),
+      })
+      .strict()
+      .default({
+        tiles: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }),
     /** BibTeX files, relative to the vault, that [@key] citations are looked up in. */
     bibliography: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
     /** Make the site installable and keep the pages a reader opened available offline. */
@@ -261,7 +275,7 @@ function localize(v: z.infer<typeof localized> | undefined, langs: Lang[], fallb
 }
 
 export interface NavItem {
-  kind: "home" | "tags" | "archive" | "recent" | "note" | "url"
+  kind: "home" | "tags" | "archive" | "recent" | "timeline" | "map" | "note" | "url"
   /** Wikilink target for notes, href for URLs. */
   target?: string
   label?: Record<Lang, string>
@@ -334,6 +348,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     redirects: c.redirects,
     ogImages: c.ogImages,
     offline: c.offline,
+    map: c.map,
     bibliography: (typeof c.bibliography === "string" ? [c.bibliography] : (c.bibliography ?? [])).map((p) => p.replace(/^\/+/, "")),
     images: { ...c.images, widths: [...new Set(c.images.widths)].sort((a, b) => a - b) },
     stackedPages: c.stackedPages,

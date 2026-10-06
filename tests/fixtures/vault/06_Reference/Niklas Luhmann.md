@@ -8,6 +8,9 @@ person:
   born: 1927
 related: "[[Zettelkasten|the slip box]]"
 website: https://example.com/luhmann
+start: 1927-12-08
+end: 1998-11-06
+location: [52.0302, 8.5325]
 tags:
   - type/person
 title:

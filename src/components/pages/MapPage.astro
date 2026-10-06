@@ -1,0 +1,49 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { places, hasMap } from "~/lib/places"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const list = places(lang)
+const alternates = Object.fromEntries(site.langs.filter(hasMap).map((l) => [l, slugToUrl(langPrefix(l) + "map")]))
+---
+
+<Base lang={lang} title={s.map} alternates={alternates}>
+  <div class="note is-wide map-page">
+    <header class="page-head">
+      <span class="chip type">🗺️ {s.map}</span>
+      <h1>{s.map}</h1>
+      <p>{s.mapLead} · {s.notesCount(list.length)}</p>
+    </header>
+    <div
+      class="map-canvas"
+      data-map={JSON.stringify(list)}
+      data-tiles={site.map.tiles}
+      data-attribution={site.map.attribution}
+      role="region"
+      aria-label={s.map}
+    >
+    </div>
+    <!-- Without scripts, or for screen readers, the places are a plain list. -->
+    <ul class="map-list">
+      {
+        list.map((p) => (
+          <li>
+            <a class="internal" href={p.url}>
+              {p.title}
+            </a>{" "}
+            <small>
+              {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
+            </small>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>

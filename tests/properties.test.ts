@@ -36,7 +36,7 @@ describe("noteProperties", () => {
 
   test("lists aliases first and hides bookkeeping keys", () => {
     const keys = noteProperties(vi.get("06_Reference/Niklas Luhmann")!).map(([k]) => k)
-    expect(keys).toEqual(["person", "related", "website"])
+    expect(keys).toEqual(["person", "related", "website", "start", "end", "location"])
     expect(noteProperties(vi.get("03_Atomic/Zettelkasten")!).map(([k]) => k)).toEqual(["aliases"])
   })
 
