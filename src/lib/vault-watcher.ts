@@ -3,6 +3,14 @@ import fs from "node:fs"
 import path from "node:path"
 import { site } from "../site.config"
 import { redirectsFile } from "./routes"
+import { headersFile, inlineScriptHashes } from "./headers"
+
+/** Every HTML file under a directory, as text. */
+function htmlFiles(dir: string): string[] {
+  return (fs.readdirSync(dir, { recursive: true }) as string[])
+    .filter((f) => f.endsWith(".html"))
+    .map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
+}
 
 /**
  * datme's Astro integration: in dev it rebuilds the vault index whenever a note
@@ -17,6 +25,11 @@ export default function vaultWatcher(): AstroIntegration {
         if (site.redirects) {
           const lines = redirectsFile()
           if (lines) fs.writeFileSync(new URL("_redirects", dir), lines)
+        }
+        if (site.headers) {
+          // The CSP allows the inline scripts the pages actually hold, by hash.
+          const hashes = site.headers.csp ? inlineScriptHashes(htmlFiles(dir.pathname)) : []
+          fs.writeFileSync(new URL("_headers", dir), headersFile(site, hashes))
         }
       },
       "astro:server:setup": ({ server }) => {

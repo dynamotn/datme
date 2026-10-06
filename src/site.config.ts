@@ -233,6 +233,13 @@ const schema = z
     ogImages: z.boolean().default(true),
     /** Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text. */
     llms: z.boolean().default(true),
+    /**
+     * Write a _headers file (Netlify, Cloudflare Pages) with safe defaults and caching; `false` skips
+     * it. `csp: true` adds a Content-Security-Policy built from the features in use.
+     */
+    headers: z
+      .union([z.literal(false), z.object({ csp: z.boolean().default(false) }).strict()])
+      .default({ csp: false }),
     /** Write a _redirects file (Netlify, Cloudflare Pages) with 301s for aliases and old URLs. */
     redirects: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
@@ -350,6 +357,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     comments: c.comments,
     cname: c.cname,
     redirects: c.redirects,
+    headers: c.headers,
     ogImages: c.ogImages,
     llms: c.llms,
     offline: c.offline,

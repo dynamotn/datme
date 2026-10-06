@@ -106,6 +106,8 @@ images:                       # PNG/JPEG/WebP/AVIF get their size and resized We
 bibliography: refs.bib        # BibTeX file(s) for [@key] citations
 map:                          # tiles of /map (OpenStreetMap by default)
   tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+headers: { csp: false }       # _headers: safe defaults and caching; csp: true adds a CSP derived
+                              # from the features in use (inline scripts allowed by hash)
 llms: true                    # /llms.txt and a .md copy of every public note (without comments)
 offline: true                 # installable app; pages a reader opened stay readable offline
 ogImages: true                # social cards for the home page and notes without a banner

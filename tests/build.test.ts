@@ -407,6 +407,14 @@ describe("static build", () => {
     expect(read("03_Atomic/Zettelkasten/index.html")).toContain('<link rel="alternate" type="text/markdown" href="/03_Atomic/Zettelkasten.md">')
   })
 
+  test("_headers sets safe defaults and caches hashed assets for good", () => {
+    const headers = read("_headers")
+    expect(headers).toStartWith("/*\n  X-Content-Type-Options: nosniff\n")
+    expect(headers).toContain("/_astro/*\n  Cache-Control: public, max-age=31536000, immutable")
+    // CSP is opt-in: a strict one could block embeds written by hand in notes.
+    expect(headers).not.toContain("Content-Security-Policy")
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")
