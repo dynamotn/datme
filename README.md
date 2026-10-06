@@ -25,7 +25,7 @@ Installed globally (`npm i -g @dynamotn/datme`) the command is simply `datme`.
 | `datme dev [vault]` | Live preview; reloads when a note changes. `--port`, `--host` |
 | `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is only replaced if datme created it. |
 | `datme preview [vault]` | Builds, then serves the result |
-| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases and invalid frontmatter; exits 1 on errors. `--verbose` also lists links to unpublished notes; `--external` also checks that links to other websites still answer (404, 410 and unreachable hosts are reported); the next builds point those dead links at their Internet Archive copy (`archiveDeadLinks: false` to keep them). |
+| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases and invalid frontmatter; exits 1 on errors. `--verbose` also lists links to unpublished notes and scheduled notes; `--external` also checks that links to other websites still answer (404, 410 and unreachable hosts are reported); the next builds point those dead links at their Internet Archive copy (`archiveDeadLinks: false` to keep them). |
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push: `github` (Pages), `gitlab` (Pages), `netlify` or `cloudflare` (Pages, through GitHub Actions). Goes at the root of the vault's git repository, never overwrites a file, and keeps the build cache between runs. `--branch` picks the branch (default: the current one). |
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or with `--format html` into one self-contained page to print as PDF. Chapters follow the folder tree, links between them stay links, images are packed in; protected notes are left out. `--out`, `--lang` |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
@@ -144,6 +144,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
 - Frontmatter: `title`, `permalink` (a custom URL, or one per language; the old URL redirects), `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
+- Scheduling: a note with `publish_date: 2025-01-31` in the future stays private until that day; the CI configs of `datme deploy` rebuild daily so it appears on time.
 - Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end. Hovering a footnote number or a citation shows it in a popover.
 - Selecting text in a note offers a link to that passage (`#:~:text=`), which opens the page scrolled to it and highlighted.
 - Notes of 300 words or more show a reading progress bar and the minutes left.

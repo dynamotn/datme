@@ -41,7 +41,7 @@ Options:
   --host         listen on every network interface
   --fresh        ignore the cache of rendered notes and social cards
   --strict       fail check and build on warnings too, not only on errors
-  --verbose      also list links to unpublished notes
+  --verbose      also list notices: links to unpublished notes, scheduled notes
   --external     also check that links to other websites still answer
   --branch <b>   branch whose pushes publish the site (default: the current one)
   --format <f>   export as epub (default) or html

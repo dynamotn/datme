@@ -41,6 +41,9 @@ name: datme
 on:
   push:
     branches: [${o.branch}]
+  # Daily, so notes with a publish_date appear on their day.
+  schedule:
+    - cron: "17 5 * * *"
   workflow_dispatch:
 
 permissions:
@@ -105,6 +108,8 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == "${o.branch}"
+    # Add a daily pipeline schedule (Build → Pipeline schedules) so notes with a publish_date appear on their day.
+    - if: $CI_PIPELINE_SOURCE == "schedule"
 `,
     },
   ]
@@ -115,6 +120,7 @@ function netlify(o: DeployOpts): DeployFile[] {
     {
       path: "netlify.toml",
       content: `# Netlify builds the vault with datme on every push; set the production branch to ${o.branch}.
+# For notes with a publish_date, call a build hook daily (Site configuration → Build hooks).
 [build.environment]
   ASTRO_TELEMETRY_DISABLED = "1"
 
@@ -140,6 +146,9 @@ name: datme-cloudflare
 on:
   push:
     branches: [${o.branch}]
+  # Daily, so notes with a publish_date appear on their day.
+  schedule:
+    - cron: "17 5 * * *"
   workflow_dispatch:
 
 permissions:

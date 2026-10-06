@@ -50,10 +50,10 @@ export function countProblems(problems: Problem[]): Counts {
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
 
-/** One line such as "2 errors, 1 warning, 3 links to unpublished notes". */
+/** One line such as "2 errors, 1 warning, 3 notices". */
 export function summarize(c: Counts): string {
   const parts = [plural(c.error, "error"), plural(c.warning, "warning")]
-  if (c.info) parts.push(`${plural(c.info, "link")} to unpublished notes`)
+  if (c.info) parts.push(plural(c.info, "notice"))
   return parts.join(", ")
 }
 
@@ -71,6 +71,6 @@ export function formatReport(problems: Problem[], verbose = false): string {
   }
   const counts = countProblems(problems)
   lines.push("", summarize(counts))
-  if (!verbose && counts.info) lines.push('Links to unpublished notes are expected in a private vault; "--verbose" lists them.')
+  if (!verbose && counts.info) lines.push('Notices (links to unpublished notes, scheduled notes) are expected; "--verbose" lists them.')
   return lines.join("\n").replace(/^\n/, "")
 }

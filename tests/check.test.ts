@@ -28,11 +28,11 @@ describe("datme check", () => {
 
   test("the report hides private links unless verbose, and ends with a summary", () => {
     const counts = countProblems(problems)
-    expect(summarize({ error: 1, warning: 2, info: 1 })).toBe("1 error, 2 warnings, 1 link to unpublished notes")
+    expect(summarize({ error: 1, warning: 2, info: 1 })).toBe("1 error, 2 warnings, 1 notice")
     expect(formatReport(problems)).not.toContain('"Private"')
     expect(formatReport(problems, true)).toContain('"Private"')
     expect(formatReport(problems)).toEndWith(
-      `${summarize(counts)}\nLinks to unpublished notes are expected in a private vault; "--verbose" lists them.`,
+      `${summarize(counts)}\nNotices (links to unpublished notes, scheduled notes) are expected; "--verbose" lists them.`,
     )
   })
 })
