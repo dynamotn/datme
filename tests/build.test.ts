@@ -242,6 +242,16 @@ describe("static build", () => {
     expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")
   })
 
+  test("note pages describe themselves as JSON-LD articles, the home page as a website", () => {
+    const ld = (html: string) =>
+      [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]))
+    const [article, crumbs] = ld(read("03_Atomic/Zettelkasten/index.html"))
+    expect(article).toMatchObject({ "@type": "Article", url: "https://notes.dynamotn.dev/03_Atomic/Zettelkasten" })
+    expect(crumbs["@type"]).toBe("BreadcrumbList")
+    expect(ld(read("index.html"))[0]["@type"]).toBe("WebSite")
+    expect(ld(read("tags/index.html"))).toEqual([])
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

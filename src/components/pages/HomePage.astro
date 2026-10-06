@@ -5,6 +5,7 @@ import { getVault, listed, byRecent, countNotes } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
+import { websiteLd } from "~/lib/jsonld"
 import Base from "~/layouts/Base.astro"
 import NoteCard from "../NoteCard.astro"
 import NoteRow from "../NoteRow.astro"
@@ -46,7 +47,7 @@ const look = site.appearance.style
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
 ---
 
-<Base lang={lang} title={site.title[lang]} description={r?.description ?? site.tagline[lang]} image={home?.banner} alternates={alternates}>
+<Base lang={lang} title={site.title[lang]} description={r?.description ?? site.tagline[lang]} image={home?.banner} alternates={alternates} jsonLd={websiteLd(lang)}>
   {
     look === "notebook" ? (
       <>

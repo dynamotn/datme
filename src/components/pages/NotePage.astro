@@ -7,6 +7,7 @@ import { site } from "~/site.config"
 import { t } from "~/lib/i18n"
 import { lookOf } from "~/lib/nav"
 import { ogPath } from "~/lib/og-url"
+import { noteLd } from "~/lib/jsonld"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
@@ -30,9 +31,11 @@ const payload =
   note.protected && password
     ? await encrypt((await renderSecret(note)).html, password, site.encryption.iterations)
     : undefined
+const image = note.banner ?? ogPath(note.slug)
+const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 ---
 
-<Base lang={note.lang} title={note.title} description={r.description} image={note.banner ?? ogPath(note.slug)} alternates={alternates} look={lookOf(note)} rail>
+<Base lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} rail>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article

@@ -40,7 +40,7 @@ notes. Every key is optional.
 site:
   title: My Garden            # or one value per language: { en-US: …, vi-VN: … }
   tagline: Notes in progress
-  url: https://notes.example.com   # enables the sitemap and absolute links
+  url: https://notes.example.com   # enables the sitemap, absolute links and JSON-LD
   author: Me
   logo: 🌿                     # defaults to the first letter of the title
 
