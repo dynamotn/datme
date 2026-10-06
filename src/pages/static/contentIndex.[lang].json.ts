@@ -30,7 +30,8 @@ export const GET: APIRoute = async ({ params }) => {
   const links: [number, number][] = []
   const seen = new Set<string>()
   for (const n of notes) {
-    for (const l of n.links) {
+    // A protected note's links are part of its secret content.
+    for (const l of n.protected ? [] : n.links) {
       const a = index.get(n.key)!
       const b = index.get(l.key)
       const id = `${Math.min(a, b ?? -1)}-${Math.max(a, b ?? -1)}`

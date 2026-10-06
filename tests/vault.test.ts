@@ -6,14 +6,22 @@ const vi = vault.byKey["vi-VN"]
 const en = vault.byKey["en-US"]
 
 describe("publishing rules", () => {
-  test("only published, non-draft, unprotected notes outside ignored folders are kept", () => {
+  test("only published, non-draft notes outside ignored folders are kept", () => {
     expect([...vault.sources.keys()].sort()).toEqual([
       "01_Fleeting/01_Fleeting",
       "03_Atomic/Zettelkasten",
       "06_Reference/Niklas Luhmann",
+      "06_Reference/Secret",
       "07_Project/Blog post",
       "index",
     ])
+  })
+
+  test("password-protected notes are published sealed, with the password out of the frontmatter", () => {
+    const secret = vault.sources.get("06_Reference/Secret")!
+    expect(secret.password).toBe("fixture-not-a-real-secret")
+    expect("password" in secret.fm).toBe(false)
+    expect(vi.get("06_Reference/Secret")!.protected).toBe(true)
   })
 
   test("explicit mode needs publish: true, all mode only skips publish: false", () => {

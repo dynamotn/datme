@@ -82,7 +82,7 @@ An invalid file stops the build with the path of every problem, e.g.
   `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
 - Frontmatter: `title`, `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
-- Notes with a `password` field are never published (encryption is not built yet).
+- Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …
   `<!--lang:en-US-->` … `<!--lang:*-->`, and give `title` one value per language.
 - A note named after its folder (`Books/Books.md`) introduces that folder's page.

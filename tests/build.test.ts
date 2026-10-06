@@ -46,12 +46,27 @@ describe("static build", () => {
     }
   })
 
-  test("unpublished, draft, protected and ignored notes are never emitted", () => {
+  test("unpublished, draft and ignored notes are never emitted", () => {
     const all = fs.readdirSync(out, { recursive: true }).join("\n")
-    expect(all).not.toMatch(/Private|Secret|Idea|Template/)
+    expect(all).not.toMatch(/Private|Idea|Template/)
     const search = read("static/contentIndex.vi-VN.json")
     expect(search).not.toContain("Never published")
     expect(search).not.toContain("Protected content")
+  })
+
+  test("protected notes ship only ciphertext that the password opens", async () => {
+    const html = read("06_Reference/Secret/index.html")
+    const payload = html.match(/data-payload="([^"]+)"/)![1]
+    const { decrypt } = await import("../src/scripts/decrypt")
+    expect(await decrypt(payload, "fixture-not-a-real-secret", 100_000)).toContain("Protected content")
+    for (const file of fs.readdirSync(out, { recursive: true }) as string[]) {
+      const p = path.join(out, file)
+      if (fs.statSync(p).isFile()) {
+        const body = fs.readFileSync(p, "utf8")
+        expect(body.includes("Protected content")).toBe(false)
+        expect(body.includes("fixture-not-a-real-secret")).toBe(false)
+      }
+    }
   })
 
   test("aliases redirect to their note", () => {

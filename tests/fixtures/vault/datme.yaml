@@ -33,3 +33,5 @@ nav:
   - note: Missing note
 appearance:
   classic: [07_Project]
+encryption:
+  iterations: 100000

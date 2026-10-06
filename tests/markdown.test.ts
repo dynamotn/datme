@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { getVault } from "../src/lib/vault"
-import { renderNote } from "../src/lib/markdown"
+import { renderNote, renderSecret } from "../src/lib/markdown"
 
 const vi = getVault().byKey["vi-VN"]
 const zk = await renderNote(vi.get("03_Atomic/Zettelkasten")!)
@@ -90,5 +90,18 @@ describe("readable text", () => {
 
   test("KaTeX's hidden MathML is not duplicated into the text", () => {
     expect(zk.text).not.toContain("e^{i\\pi}")
+  })
+})
+
+describe("protected notes", () => {
+  const secret = vi.get("06_Reference/Secret")!
+
+  test("render as empty everywhere they could leak", async () => {
+    const r = await renderNote(secret)
+    expect(r).toEqual({ html: "", headings: [], text: "", words: 0, description: "" })
+  })
+
+  test("only renderSecret returns their content, for encryption", async () => {
+    expect((await renderSecret(secret)).html).toContain("Protected content")
   })
 })

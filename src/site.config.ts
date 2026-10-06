@@ -82,6 +82,13 @@ const schema = z
         ]),
       )
       .default(["home", "tags"]),
+    encryption: z
+      .object({
+        /** PBKDF2 rounds for notes with a `password`; higher is slower to unlock and to brute-force. */
+        iterations: z.number().int().min(100_000).default(600_000),
+      })
+      .strict()
+      .default({ iterations: 600_000 }),
     appearance: z
       .object({
         /** notebook: index cards on dotted paper; classic: the quiet serif blog look. */
@@ -173,6 +180,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
           ? { kind: "note", target: item.note, label: item.label ? localize(item.label, langs, item.note) : undefined }
           : { kind: "url", target: item.url, label: localize(item.label, langs, item.url) },
     ),
+    encryption: c.encryption,
     appearance: {
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),

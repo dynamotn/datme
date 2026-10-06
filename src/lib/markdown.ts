@@ -266,7 +266,7 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
                 tagName: "a",
                 properties: { className: ["transclude-src", "internal"], href, dataKey: key },
                 children: [
-                  { type: "text", value: `${t(lang).transcludeFrom} ${target?.title ?? key}` },
+                  { type: "text", value: `${target?.protected ? "🔒 " : ""}${t(lang).transcludeFrom} ${target?.title ?? key}` },
                 ],
               },
               ...children,
@@ -311,7 +311,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>) {
     .use(rehypeStringify, { allowDangerousHtml: true })
 }
 
-export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
+function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   const id = `${getVault().version}:${note.lang}:${note.key}:${stack.length > 1 ? "embed" : "page"}`
   let hit = cache.get(id)
   if (!hit) {
@@ -330,4 +330,20 @@ export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Re
     cache.set(id, hit)
   }
   return hit
+}
+
+const SEALED: Rendered = { html: "", headings: [], text: "", words: 0, description: "" }
+
+/**
+ * Render a note for public use: cards, feeds, search, embeds and the page itself.
+ * A protected note renders as empty here, so its content cannot leak anywhere;
+ * only renderSecret hands it out, to be encrypted.
+ */
+export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
+  return note.protected ? Promise.resolve(SEALED) : renderFull(note, stack)
+}
+
+/** The full rendering of a protected note, only for encrypting its page. */
+export function renderSecret(note: Note): Promise<Rendered> {
+  return renderFull(note, [note.key])
 }

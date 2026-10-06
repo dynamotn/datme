@@ -33,6 +33,7 @@ const minutes = Math.max(1, Math.round(r.words / 220))
   <p class="index-card-meta">
     {d && <time datetime={d.toISOString()}>{formatDate(d, note.lang)}</time>}
     {stage && <span>{stage.icon} {stage.label[note.lang]}</span>}
+    {note.protected && <span title={s.locked}>🔒</span>}
     {featured && <span>{s.readingTime(minutes)}</span>}
   </p>
   <h3 class="index-card-title"><a class="internal" href={note.url}>{r.h1 ?? note.title}</a></h3>

@@ -1,7 +1,8 @@
 ---
 import type { Note } from "~/lib/vault"
 import { getVault } from "~/lib/vault"
-import { renderNote } from "~/lib/markdown"
+import { renderNote, renderSecret } from "~/lib/markdown"
+import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t } from "~/lib/i18n"
 import { lookOf } from "~/lib/nav"
@@ -21,6 +22,12 @@ const title = r.h1 ?? note.title
 const backlinks = vault.backlinks[note.lang].get(note.key) ?? []
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.byKey[l].get(note.key)?.url]))
 const s = t(note.lang)
+// A protected page ships only its ciphertext; the browser decrypts it with the password.
+const password = vault.sources.get(note.key)?.password
+const payload =
+  note.protected && password
+    ? await encrypt((await renderSecret(note)).html, password, site.encryption.iterations)
+    : undefined
 ---
 
 <Base lang={note.lang} title={note.title} description={r.description} image={note.banner} alternates={alternates} look={lookOf(note)} rail>
@@ -42,7 +49,26 @@ const s = t(note.lang)
         <h1 class="note-title">{title}</h1>
       </NoteMeta>
     </header>
-    <div class="prose" set:html={r.html} />
+    {
+      payload ? (
+        <>
+          <form class="locked" data-payload={payload} data-iterations={site.encryption.iterations}>
+            <p>🔒 {s.locked}</p>
+            <label>
+              <span class="sr-only">{s.password}</span>
+              <input type="password" name="password" placeholder={s.password} autocomplete="current-password" required />
+            </label>
+            <button type="submit">{s.unlock}</button>
+            <p class="locked-error" hidden>
+              {s.wrongPassword}
+            </p>
+          </form>
+          <div class="prose" hidden />
+        </>
+      ) : (
+        <div class="prose" set:html={r.html} />
+      )
+    }
   </article>
   <section class="backlinks">
     <h2>{s.backlinks} <span class="count">{backlinks.length}</span></h2>

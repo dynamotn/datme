@@ -18,6 +18,8 @@ export interface SourceNote {
   fm: Record<string, unknown>
   raw: string
   isHome: boolean
+  /** Set for notes with a `password` field; the page is published encrypted. */
+  password?: string
 }
 
 /** A source note as seen in one language. */
@@ -42,6 +44,8 @@ export interface Note {
   isMoc: boolean
   isHome: boolean
   unlisted: boolean
+  /** Encrypted with its password: no content may leak into excerpts, search or feeds. */
+  protected: boolean
   dir: string
   /** Markdown after language filtering and Obsidian syntax conversion. */
   md: string
@@ -218,17 +222,14 @@ function buildVault(version: number): Vault {
 
   const sources = new Map<string, SourceNote>()
   let homeTarget: string | undefined
-  let skippedProtected = 0
   for (const rel of found.md) {
     const abs = path.join(site.vault, rel)
     const src = fs.readFileSync(abs, "utf8")
     const { fm, body } = parseFrontmatter(src)
     if (!isPublished(fm, site.publish)) continue
-    // Encrypted pages are not part of the prototype yet: never publish them in clear text.
-    if (fm.password != null) {
-      skippedProtected++
-      continue
-    }
+    // The password never stays in the frontmatter, so nothing can render it by accident.
+    const password = fm.password != null && fm.password !== "" ? String(fm.password) : undefined
+    delete fm.password
     const key = rel.replace(MD_EXT, "")
     const isHome = rel.toLowerCase() === site.home.toLowerCase()
     if (isHome) {
@@ -246,14 +247,12 @@ function buildVault(version: number): Vault {
       fm,
       raw: body,
       isHome,
+      password,
     })
   }
   const home = [...sources.values()].find((s) => s.isHome)
   // A symlinked home note would otherwise be published twice.
   if (home && homeTarget && homeTarget !== home.key) sources.delete(homeTarget)
-  if (skippedProtected > 0) {
-    console.warn(`[datme] skipped ${skippedProtected} password-protected note(s)`)
-  }
 
   const byPath = new Map<string, SourceNote>()
   const byStem = new Map<string, SourceNote[]>()
@@ -361,6 +360,7 @@ function buildVault(version: number): Vault {
         isMoc: tags.some((x) => mapTags.includes(x)),
         isHome: s.isHome,
         unlisted: s.fm.unlisted === true,
+        protected: s.password != null,
         dir: s.dir,
         md: pre.md,
         links: pre.links,
@@ -388,7 +388,8 @@ function buildVault(version: number): Vault {
     const tg = new Map<string, Note[]>()
     for (const n of notes[lang]) {
       const seen = new Set<string>()
-      for (const l of n.links) {
+      // What a protected note links to is part of its secret content.
+      for (const l of n.protected ? [] : n.links) {
         if (l.key === n.key || seen.has(l.key)) continue
         seen.add(l.key)
         bl.set(l.key, [...(bl.get(l.key) ?? []), { note: n, context: l.context }])
