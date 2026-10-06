@@ -61,7 +61,7 @@ describe("static build", () => {
   test("the note page shows its backlinks and language alternates", () => {
     const html = read("06_Reference/Niklas-Luhmann/index.html")
     expect(html).toContain('class="backlink internal" href="/03_Atomic/Zettelkasten"')
-    expect(html).toContain('hreflang="en" href="https://notes.dynamotn.dev/en-US/06_Reference/Niklas-Luhmann-(sociologist)"')
+    expect(html).toContain('hreflang="en-US" href="https://notes.dynamotn.dev/en-US/06_Reference/Niklas-Luhmann-(sociologist)"')
   })
 
   test("referenced assets are copied, nothing else", () => {

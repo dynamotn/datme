@@ -42,7 +42,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
     <h1><span class="gradient-text">{r?.h1 ?? site.title[lang]}</span></h1>
     <div class="prose" set:html={intro} />
     <div class="hero-stats">
-      <div class="stat"><b>{notes.length}</b><span>{s.notesCount(notes.length).replace(/^\d+\s*/, "")}</span></div>
+      <div class="stat"><b>{notes.length}</b><span>{s.notes}</span></div>
       <div class="stat"><b>{linkCount}</b><span>{s.links}</span></div>
       <div class="stat"><b>{vault.tags[lang].size}</b><span>{s.tags.toLowerCase()}</span></div>
     </div>

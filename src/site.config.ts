@@ -55,6 +55,8 @@ const schema = z
       )
       .default({}),
     footer: z.record(z.string(), z.string()).default({}),
+    /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
+    strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
   .strict()
 
@@ -107,6 +109,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ignore: [...new Set([...DEFAULT_IGNORE, ...c.ignore.map((p) => p.replace(/^\/+|\/+$/g, ""))])],
     stages,
     footerLinks: c.footer,
+    strings: c.strings,
   }
 }
 

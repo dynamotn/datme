@@ -116,11 +116,11 @@ function setupCode() {
     const btn = document.createElement("button")
     btn.className = "copy-btn"
     btn.type = "button"
-    btn.textContent = root.lang === "vi" ? "Sao chép" : "Copy"
+    btn.textContent = document.body.dataset.copy ?? "Copy"
     btn.addEventListener("click", async () => {
       await navigator.clipboard.writeText(pre.querySelector("code")?.innerText ?? pre.innerText)
       const label = btn.textContent
-      btn.textContent = root.lang === "vi" ? "Đã sao chép" : "Copied"
+      btn.textContent = document.body.dataset.copied ?? "Copied"
       setTimeout(() => (btn.textContent = label), 1400)
     })
     pre.append(btn)

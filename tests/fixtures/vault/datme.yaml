@@ -20,3 +20,6 @@ stages:
       en-US: Experiments
 footer:
   GitHub: https://github.com/example
+strings:
+  en-US:
+    blog: Essays

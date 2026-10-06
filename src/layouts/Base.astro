@@ -29,7 +29,7 @@ const year = new Date().getFullYear()
 ---
 
 <!doctype html>
-<html lang={langMeta[lang].html} data-lang={lang}>
+<html lang={langMeta(lang).html} data-lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,7 +41,7 @@ const year = new Date().getFullYear()
     {
       site.langs.map(
         (l) =>
-          alternates[l] && <link rel="alternate" hreflang={langMeta[l].html} href={abs(alternates[l]!)} />,
+          alternates[l] && <link rel="alternate" hreflang={langMeta(l).html} href={abs(alternates[l]!)} />,
       )
     }
     <meta property="og:title" content={title} />
@@ -72,7 +72,7 @@ const year = new Date().getFullYear()
     </script>
     <ClientRouter fallback="swap" />
   </head>
-  <body>
+  <body data-copy={s.copy} data-copied={s.copied}>
     <header class="site-header">
       <button class="icon-btn menu-btn" type="button" data-nav-toggle aria-label={s.menu}>
         <Icon name="menu" />
@@ -98,20 +98,24 @@ const year = new Date().getFullYear()
         <Icon name="sun" class="theme-sun" />
         <Icon name="moon" class="theme-moon" />
       </button>
-      <nav class="lang-switch" aria-label={s.language}>
-        {
-          site.langs.map((l) => (
-            <a
-              href={alternates[l] ?? slugToUrl(langPrefix(l) + "index")}
-              hreflang={langMeta[l].html}
-              aria-current={l === lang ? "true" : undefined}
-              title={langMeta[l].name}
-            >
-              {langMeta[l].short}
-            </a>
-          ))
-        }
-      </nav>
+      {
+        site.langs.length > 1 && (
+          <nav class="lang-switch" aria-label={s.language}>
+            {
+              site.langs.map((l) => (
+                <a
+                  href={alternates[l] ?? slugToUrl(langPrefix(l) + "index")}
+                  hreflang={langMeta(l).html}
+                  aria-current={l === lang ? "true" : undefined}
+                  title={langMeta(l).name}
+                >
+                  {langMeta(l).short}
+                </a>
+              ))
+            }
+          </nav>
+        )
+      }
     </header>
 
     <div class:list={["shell", { "no-right": !rail }]}>

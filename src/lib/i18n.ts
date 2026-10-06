@@ -1,7 +1,8 @@
 import { site, type Lang } from "../site.config"
 
-const strings = {
-  "vi-VN": {
+/** Built-in UI strings by base language; "{n}" is replaced by a number. */
+const builtin = {
+  vi: {
     search: "Tìm kiếm",
     searchPlaceholder: "Tìm ghi chú, thẻ, ý tưởng…",
     searchEmpty: "Không tìm thấy gì",
@@ -17,9 +18,10 @@ const strings = {
     allTags: "Tất cả thẻ",
     created: "Tạo",
     updated: "Cập nhật",
-    readingTime: (n: number) => `${n} phút đọc`,
-    words: (n: number) => `${n.toLocaleString("vi-VN")} từ`,
-    notesCount: (n: number) => `${n} ghi chú`,
+    readingTime: "{n} phút đọc",
+    words: "{n} từ",
+    notesCount: "{n} ghi chú",
+    notes: "ghi chú",
     folder: "Thư mục",
     tag: "Thẻ",
     home: "Trang chủ",
@@ -51,7 +53,7 @@ const strings = {
     open: "mở",
     close: "đóng",
   },
-  "en-US": {
+  en: {
     search: "Search",
     searchPlaceholder: "Search notes, tags, ideas…",
     searchEmpty: "Nothing found",
@@ -67,9 +69,10 @@ const strings = {
     allTags: "All tags",
     created: "Created",
     updated: "Updated",
-    readingTime: (n: number) => `${n} min read`,
-    words: (n: number) => `${n.toLocaleString("en-US")} words`,
-    notesCount: (n: number) => `${n} notes`,
+    readingTime: "{n} min read",
+    words: "{n} words",
+    notesCount: "{n} notes",
+    notes: "notes",
     folder: "Folder",
     tag: "Tag",
     home: "Home",
@@ -101,15 +104,44 @@ const strings = {
     open: "open",
     close: "close",
   },
-} satisfies Record<Lang, Record<string, unknown>>
+} satisfies Record<string, Record<string, string>>
 
-export function t(lang: Lang) {
-  return strings[lang as keyof typeof strings] ?? strings["en-US"]
+export type StringKey = keyof (typeof builtin)["en"]
+const COUNTED = ["readingTime", "words", "notesCount"] as const
+type Counted = (typeof COUNTED)[number]
+export type Strings = Record<Exclude<StringKey, Counted>, string> & Record<Counted, (n: number) => string>
+
+const cache = new Map<Lang, Strings>()
+
+/**
+ * UI strings for a language: the built-in set of its base language (English
+ * when there is none), overridden by the `strings` section of datme.yaml.
+ */
+export function t(lang: Lang): Strings {
+  let hit = cache.get(lang)
+  if (!hit) {
+    const base = lang.split("-")[0] as keyof typeof builtin
+    const merged: Record<string, string> = { ...builtin.en, ...(builtin[base] ?? {}), ...(site.strings[lang] ?? {}) }
+    const out: Record<string, unknown> = { ...merged }
+    for (const key of COUNTED) {
+      const template = merged[key]
+      out[key] = (n: number) => template.replace("{n}", n.toLocaleString(lang))
+    }
+    hit = out as Strings
+    cache.set(lang, hit)
+  }
+  return hit
 }
 
-export const langMeta: Record<Lang, { short: string; name: string; html: string }> = {
-  "vi-VN": { short: "VI", name: "Tiếng Việt", html: "vi" },
-  "en-US": { short: "EN", name: "English", html: "en" },
+/** Short code, native name and HTML tag of a language. */
+export function langMeta(lang: Lang): { short: string; name: string; html: string } {
+  let name = lang
+  try {
+    name = new Intl.DisplayNames([lang], { type: "language" }).of(lang.split("-")[0]) ?? lang
+  } catch {
+    // unknown tag: show it as is
+  }
+  return { short: lang.split("-")[0].toUpperCase(), name: name.charAt(0).toUpperCase() + name.slice(1), html: lang }
 }
 
 /** URL prefix of a language: the default language lives at the site root. */
@@ -119,5 +151,5 @@ export function langPrefix(lang: Lang): string {
 
 export function formatDate(d: Date | undefined, lang: Lang): string {
   if (!d) return ""
-  return d.toLocaleDateString(langMeta[lang].html, { year: "numeric", month: "short", day: "numeric" })
+  return d.toLocaleDateString(lang, { year: "numeric", month: "short", day: "numeric" })
 }

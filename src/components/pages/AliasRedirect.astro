@@ -11,7 +11,7 @@ const target = site.url ? new URL(note.url, site.url + "/").href : note.url
 ---
 
 <!doctype html>
-<html lang={langMeta[note.lang].html}>
+<html lang={langMeta(note.lang).html}>
   <head>
     <meta charset="utf-8" />
     <title>{note.title}</title>
