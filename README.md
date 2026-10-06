@@ -126,6 +126,9 @@ An invalid file stops the build with the path of every problem, e.g.
 - Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …
   `<!--lang:en-US-->` … `<!--lang:*-->`, and give `title` one value per language.
+  A note without a block for a language is shown in its original language there,
+  with a notice; `lang: en-US` in the frontmatter marks a note written in another
+  language than the default one.
 - Excalidraw drawings (`![[Plan.excalidraw]]`) use the SVG or PNG the Obsidian Excalidraw plugin exports next to them; with both `.light.svg` and `.dark.svg` the drawing follows the site theme.
 - Search (`Ctrl K`) narrows by folder and note type, or by tag with `#tag`; the global graph (`Ctrl G`) filters by folder and tag.
 - ```` ```dataview ```` blocks run at build time over the published notes only (never private ones): `LIST`/`TABLE [WITHOUT ID]`, `FROM` #tags, "folders" and [[links]] with `AND`/`OR`/`-`, `WHERE`, `FLATTEN`, `SORT`, `LIMIT` and common functions. `GROUP BY`, `TASK` and DataviewJS show a notice.

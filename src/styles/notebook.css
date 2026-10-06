@@ -1232,3 +1232,18 @@
 [data-look="notebook"].stacking .stack-col .note {
   box-shadow: var(--shadow);
 }
+
+/* ---------- untranslated notes ---------- */
+[data-look="notebook"] .untranslated {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--pink);
+  color: #050505;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  box-shadow: var(--shadow-sm);
+}
+[data-look="notebook"] .untranslated a {
+  color: #050505;
+  text-decoration: underline;
+}

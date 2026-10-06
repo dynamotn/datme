@@ -20,6 +20,13 @@ describe("publishing rules", () => {
     ])
   })
 
+  test("a language counts as translated only with its own lang block", () => {
+    expect(en.get("03_Atomic/Zettelkasten")!.translated).toBe(true)
+    expect(en.get("06_Reference/Niklas Luhmann")!.translated).toBe(false)
+    expect(vi.get("06_Reference/Niklas Luhmann")!.translated).toBe(true)
+    expect(en.get("06_Reference/Niklas Luhmann")!.sourceLang).toBe("vi-VN")
+  })
+
   test("lineBreaks applies to configured types and yields to frontmatter", () => {
     expect(vi.get("07_Project/Poem")!.hardBreaks).toBe(true)
     expect(vi.get("03_Atomic/Zettelkasten")!.hardBreaks).toBe(false)

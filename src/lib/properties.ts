@@ -9,6 +9,7 @@ export type PropValue =
 /** Keys shown elsewhere on the page or meaningful only inside Obsidian. */
 export const HIDDEN_PROPERTIES = [
   "title",
+  "lang",
   "tags",
   "tag",
   "alias",

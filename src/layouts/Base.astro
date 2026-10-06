@@ -21,6 +21,10 @@ interface Props {
   image?: string
   /** URL of this page in every language, for the language switch and hreflang. */
   alternates: Partial<Record<Lang, string>>
+  /** Languages the page really exists in; hreflang only lists these. Defaults to every alternate. */
+  translatedIn?: Lang[]
+  /** Canonical URL when it is another page, e.g. the original of an untranslated note. */
+  canonicalUrl?: string
   /** Whether the right rail slot is used. */
   rail?: boolean
   /** Visual style of the page; defaults to the configured one. */
@@ -28,7 +32,18 @@ interface Props {
   /** schema.org structured data describing the page. */
   jsonLd?: JsonLd[]
 }
-const { lang, title, description, image, alternates, rail = false, look = site.appearance.style, jsonLd = [] } = Astro.props
+const {
+  lang,
+  title,
+  description,
+  image,
+  alternates,
+  translatedIn,
+  canonicalUrl,
+  rail = false,
+  look = site.appearance.style,
+  jsonLd = [],
+} = Astro.props
 const nav = navLinks(lang)
 // Pages without their own image share the generated card of the home page.
 const ogUrl = image ?? ogPath(langPrefix(lang) + "index")
@@ -37,7 +52,7 @@ const siteTitle = site.title[lang]
 const fullTitle = title === siteTitle ? title : `${title} · ${siteTitle}`
 const home = slugToUrl(langPrefix(lang) + "index")
 const abs = (p: string) => (site.url ? new URL(p, site.url + "/").href : p)
-const canonical = abs(Astro.url.pathname)
+const canonical = abs(canonicalUrl ?? Astro.url.pathname)
 const rss = slugToUrl(langPrefix(lang) + "index.xml")
 const year = new Date().getFullYear()
 ---
@@ -63,7 +78,10 @@ const year = new Date().getFullYear()
     {
       site.langs.map(
         (l) =>
-          alternates[l] && <link rel="alternate" hreflang={langMeta(l).html} href={abs(alternates[l]!)} />,
+          alternates[l] &&
+          (!translatedIn || translatedIn.includes(l)) && (
+            <link rel="alternate" hreflang={langMeta(l).html} href={abs(alternates[l]!)} />
+          ),
       )
     }
     <meta property="og:title" content={title} />

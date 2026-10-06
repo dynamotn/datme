@@ -2,7 +2,7 @@
 import type { Note } from "~/lib/vault"
 import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
-import { formatDate, t } from "~/lib/i18n"
+import { formatDate, t, langMeta } from "~/lib/i18n"
 import { typeInfo } from "~/lib/types"
 
 interface Props {
@@ -45,6 +45,7 @@ const initials = title
     {d && <time datetime={d.toISOString()}>{formatDate(d, note.lang)}</time>}
     {stage && <span>{stage.icon} {stage.label[note.lang]}</span>}
     {note.protected && <span title={s.locked}>🔒</span>}
+    {!note.translated && <span class="lang-badge" title={langMeta(note.sourceLang).name}>{langMeta(note.sourceLang).short}</span>}
     {kindInfo && !featured && <span class="index-card-type">{kindInfo.icon} {kindInfo.label}</span>}
     {featured && <span>{s.readingTime(minutes)}</span>}
   </p>

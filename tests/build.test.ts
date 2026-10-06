@@ -129,10 +129,26 @@ describe("static build", () => {
     expect(props).not.toMatch(/uid|template|20240101000000/)
   })
 
+  test("untranslated pages say so, point canonical at the original and skip fake hreflang", () => {
+    const html = read("en-US/06_Reference/Niklas-Luhmann-(sociologist)/index.html")
+    expect(html).toContain('<p class="untranslated">')
+    expect(html).toContain('<link rel="canonical" href="https://notes.dynamotn.dev/06_Reference/Niklas-Luhmann">')
+    expect(html).not.toContain('<link rel="alternate" hreflang="en-US"')
+    expect(html).toContain('<div class="prose" lang="vi-VN">')
+    const translated = read("en-US/03_Atomic/Zettelkasten-method/index.html")
+    expect(translated).not.toContain('class="untranslated"')
+    expect(translated).toContain('<link rel="alternate" hreflang="en-US"')
+    expect(read("en-US/06_Reference/index.html")).toContain('<span class="lang-badge" title="Tiếng Việt">VI</span>')
+  })
+
   test("the note page shows its backlinks and language alternates", () => {
     const html = read("06_Reference/Niklas-Luhmann/index.html")
     expect(html).toContain('class="backlink internal" href="/03_Atomic/Zettelkasten"')
-    expect(html).toContain('hreflang="en-US" href="https://notes.dynamotn.dev/en-US/06_Reference/Niklas-Luhmann-(sociologist)"')
+    // The English Luhmann page has no text of its own, so it is not advertised.
+    expect(html).not.toContain('<link rel="alternate" hreflang="en-US"')
+    expect(read("03_Atomic/Zettelkasten/index.html")).toContain(
+      'hreflang="en-US" href="https://notes.dynamotn.dev/en-US/03_Atomic/Zettelkasten-method"',
+    )
   })
 
   test("referenced assets are copied, nothing else", () => {

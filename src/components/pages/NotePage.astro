@@ -4,7 +4,7 @@ import { getVault } from "~/lib/vault"
 import { renderNote, renderSecret } from "~/lib/markdown"
 import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
-import { t } from "~/lib/i18n"
+import { t, langMeta } from "~/lib/i18n"
 import { lookOf } from "~/lib/nav"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
@@ -25,6 +25,10 @@ const r = await renderNote(note)
 const title = r.h1 ?? note.title
 const backlinks = vault.backlinks[note.lang].get(note.key) ?? []
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.byKey[l].get(note.key)?.url]))
+// An untranslated page shows the original text: hreflang lists only real versions,
+// and the canonical URL is the original's.
+const original = note.translated ? undefined : vault.byKey[note.sourceLang]?.get(note.key)
+const translatedIn = site.langs.filter((l) => vault.byKey[l].get(note.key)?.translated)
 const s = t(note.lang)
 // A protected page ships only its ciphertext; the browser decrypts it with the password.
 const password = vault.sources.get(note.key)?.password
@@ -36,7 +40,7 @@ const image = note.banner ?? ogPath(note.slug)
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 ---
 
-<Base lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} rail>
+<Base lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
@@ -74,7 +78,17 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
           <div class="prose" hidden />
         </>
       ) : (
-        <div class="prose" set:html={r.html} />
+        <>
+          {original && (
+            <p class="untranslated">
+              🌐 {s.untranslated.replace("{lang}", langMeta(note.lang).name)}{" "}
+              <a href={original.url} hreflang={langMeta(original.lang).html}>
+                {s.readOriginal} ({langMeta(original.lang).name})
+              </a>
+            </p>
+          )}
+          <div class="prose" lang={original ? langMeta(original.lang).html : undefined} set:html={r.html} />
+        </>
       )
     }
   </article>

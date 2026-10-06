@@ -2361,3 +2361,23 @@ li > .flashcard {
 :root.stacking .stack-col .backlinks {
   margin-top: 36px;
 }
+
+/* ---------- untranslated notes ---------- */
+.untranslated {
+  margin: 0 0 22px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--clay);
+  border-radius: var(--radius-sm);
+  background: var(--clay-soft);
+  font-size: 14px;
+}
+.untranslated a {
+  color: var(--clay);
+  font-weight: 650;
+}
+.lang-badge {
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 10px;
+}

@@ -46,6 +46,10 @@ export interface Note {
   isMoc: boolean
   isHome: boolean
   unlisted: boolean
+  /** Language the note is written in: `lang` frontmatter, else the site's default language. */
+  sourceLang: Lang
+  /** Whether this language has its own text: the source language or a <!--lang:xx--> block. */
+  translated: boolean
   /** Single line breaks are kept (poems), from datme.yaml lineBreaks or `lineBreaks` frontmatter. */
   hardBreaks: boolean
   /** Encrypted with its password: no content may leak into excerpts, search or feeds. */
@@ -418,6 +422,7 @@ function buildVault(version: number): Vault {
       for (const p of pre.problems) linkProblem(relFile, p)
 
       const { typePrefix, blogTags, mapTags } = site.conventions
+      const sourceLang = typeof s.fm.lang === "string" && site.langs.includes(s.fm.lang) ? s.fm.lang : site.defaultLang
       const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
       const note: Note = {
         key: s.key,
@@ -437,6 +442,8 @@ function buildVault(version: number): Vault {
         types,
         isBlog: tags.some((x) => blogTags.includes(x)),
         isMoc: tags.some((x) => mapTags.includes(x)),
+        sourceLang,
+        translated: lang === sourceLang || s.raw.includes(`<!--lang:${lang}-->`),
         hardBreaks:
           typeof s.fm.lineBreaks === "boolean"
             ? s.fm.lineBreaks
