@@ -1,6 +1,6 @@
 {
   "name": "@dynamotn/datme",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Publish an Obsidian vault as a digital garden: notes as index cards on a notebook wall, with backlinks, graph, search and multilingual pages.",
   "keywords": [
     "obsidian",
