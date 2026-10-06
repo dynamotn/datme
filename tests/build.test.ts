@@ -1,19 +1,21 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 
-// End-to-end: build the whole site from the fixture vault and inspect the output.
+// End-to-end: build the fixture vault through the CLI and inspect the output.
 const root = path.resolve(import.meta.dir, "..")
+const vault = path.join(root, "tests/fixtures/vault")
 let out = ""
 const read = (p: string) => fs.readFileSync(path.join(out, p), "utf8")
 const exists = (p: string) => fs.existsSync(path.join(out, p))
 
 beforeAll(() => {
-  // Astro renames files out of .astro/, so the output must sit on the same filesystem.
-  out = fs.mkdtempSync(path.join(root, ".astro", "test-build-"))
-  const proc = Bun.spawnSync(["bunx", "astro", "build", "--outDir", out], {
+  // A directory on another filesystem than the package, as `--out` usually is.
+  out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "datme-build-")), "site")
+  const proc = Bun.spawnSync(["bun", "bin/datme.ts", "build", vault, "--out", out], {
     cwd: root,
-    env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1" },
+    env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "" },
     stdout: "pipe",
     stderr: "pipe",
   })
@@ -21,7 +23,7 @@ beforeAll(() => {
 }, 180_000)
 
 afterAll(() => {
-  if (path.basename(out).startsWith("test-build-")) fs.rmSync(out, { recursive: true })
+  fs.rmSync(path.dirname(out), { recursive: true, force: true })
 })
 
 describe("static build", () => {

@@ -1,12 +1,25 @@
 {
   "name": "datme",
-  "type": "module",
   "version": "0.1.0",
-  "private": true,
+  "description": "Publish an Obsidian vault as a bilingual digital garden: a blog-like home on top of a second-brain notebook.",
+  "type": "module",
+  "bin": {
+    "datme": "bin/datme.ts"
+  },
+  "files": [
+    "bin",
+    "src",
+    "astro.config.mjs",
+    "tsconfig.json"
+  ],
+  "engines": {
+    "bun": ">=1.2"
+  },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
+    "datme": "bun bin/datme.ts",
+    "dev": "bun bin/datme.ts dev",
+    "build": "bun bin/datme.ts build",
+    "preview": "bun bin/datme.ts preview",
     "check": "astro check",
     "test": "bun test"
   },

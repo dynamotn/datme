@@ -97,7 +97,9 @@ function localize(v: z.infer<typeof localized> | undefined, langs: Lang[], fallb
   return out
 }
 
-export class ConfigError extends Error {}
+export class ConfigError extends Error {
+  override name = "ConfigError"
+}
 
 /** Validate a parsed config and fill in every default. Pure, so it can be tested. */
 export function resolveConfig(raw: unknown, vault: string, env: Record<string, string | undefined> = {}) {
@@ -125,7 +127,14 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     logo: c.site.logo ?? localize(c.site.title, langs, name)[langs[0]].match(/\p{L}/u)?.[0]?.toUpperCase() ?? "✦",
     defaultLang: langs[0],
     langs,
-    ignore: [...new Set([...DEFAULT_IGNORE, ...c.ignore.map((p) => p.replace(/^\/+|\/+$/g, ""))])],
+    // DATME_IGNORE is set by the CLI when the output directory sits inside the vault.
+    ignore: [
+      ...new Set(
+        [...DEFAULT_IGNORE, ...c.ignore, ...(env.DATME_IGNORE ? [env.DATME_IGNORE] : [])].map((p) =>
+          p.replace(/^\/+|\/+$/g, ""),
+        ),
+      ),
+    ],
     stages,
     publish: c.publish,
     home: c.home.replace(/^\/+/, ""),
@@ -155,7 +164,7 @@ export function loadConfig(vault: string, env: Record<string, string | undefined
 
 /** The vault to publish: DATME_VAULT (set by the CLI), VAULT_PATH, or the working directory. */
 export function vaultFromEnv(env: Record<string, string | undefined> = process.env): string {
-  return path.resolve(expandHome(env.DATME_VAULT ?? env.VAULT_PATH ?? process.cwd()))
+  return path.resolve(expandHome(env.DATME_VAULT || env.VAULT_PATH || process.cwd()))
 }
 
 export const site: SiteConfig = loadConfig(vaultFromEnv())
