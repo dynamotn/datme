@@ -326,6 +326,19 @@ describe("static build", () => {
     for (const icon of ["icon-192.png", "icon-512.png"]) expect(exists(icon)).toBe(true)
   })
 
+  test("images get their size and resized WebP copies smaller than the original", () => {
+    const img = read("07_Project/Blog-post/index.html").match(/<img src="\/assets\/_assets\/images\/wide.png"[^>]*>/)![0]
+    expect(img).toContain('width="1200" height="600"')
+    expect(img).toContain(
+      'srcset="/assets/_assets/images/wide.png.w480.webp 480w, /assets/_assets/images/wide.png.w960.webp 960w, /assets/_assets/images/wide.png 1200w"',
+    )
+    const webp = fs.readFileSync(path.join(out, "assets/_assets/images/wide.png.w960.webp"))
+    expect(webp.subarray(8, 12).toString()).toBe("WEBP")
+    expect(exists("assets/_assets/images/wide.png.w1600.webp")).toBe(false)
+    // A 1×1 image has nothing smaller to offer.
+    expect(exists("assets/_assets/images/diagram.png.w480.webp")).toBe(false)
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

@@ -27,6 +27,7 @@ import { t } from "./i18n"
 import { renderDataview, renderDataviewJs } from "./dataview-render"
 import { renderBaseView } from "./base-render"
 import { readCache, writeCache } from "./render-cache"
+import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
 
 export interface Heading {
   depth: number
@@ -360,6 +361,45 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
     await Promise.all(jobs)
   }
 
+/** Vault path of an /assets/ URL. */
+function assetOf(src: string): string | undefined {
+  if (!src.startsWith("/assets/")) return undefined
+  try {
+    return src.slice("/assets/".length).split("/").map(decodeURIComponent).join("/")
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Images of the vault get their size, so the page does not jump while they
+ * load, and a srcset of resized WebP copies for small screens.
+ */
+const rehypeImages: Plugin<[], HastRoot> = () => async (tree) => {
+  const imgs: Element[] = []
+  visit(tree, "element", (node: Element) => {
+    // Images of an embedded note were sized when that note rendered.
+    if (node.tagName === "img" && !node.properties.decoding && assetOf(String(node.properties.src ?? ""))) imgs.push(node)
+  })
+  await Promise.all(
+    imgs.map(async (img) => {
+      const rel = assetOf(String(img.properties.src))!
+      const size = await imageSize(rel)
+      if (!size) return
+      const w = Number(img.properties.width) || undefined
+      const h = Number(img.properties.height) || undefined
+      // An Obsidian size like ![[x.png|300]] sets the width only; keep the ratio.
+      img.properties.width = w ?? size.width
+      img.properties.height = h ?? Math.round(((w ?? size.width) * size.height) / size.width)
+      img.properties.decoding = "async"
+      const widths = variantWidths(size.width)
+      if (!widths.length) return
+      img.properties.srcset = [...widths.map((v) => `${variantPath(rel, v)} ${v}w`), `${img.properties.src} ${size.width}w`].join(", ")
+      img.properties.sizes = w ? `(max-width: ${w}px) 100vw, ${w}px` : SIZES
+    }),
+  )
+}
+
 const autolink: AutolinkOptions = {
   behavior: "append",
   properties: { className: ["heading-anchor"], ariaHidden: "true", tabIndex: -1 },
@@ -399,6 +439,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
       ],
     })
     .use(rehypeTransclude, { lang, stack })
+    .use(rehypeImages)
     .use(rehypeStringify, { allowDangerousHtml: true })
 }
 
@@ -419,7 +460,10 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   let hit = cache.get(id)
   if (!hit) {
     hit = (async () => {
-      const diskKey = isSelfContained(note) ? [note.lang, variant, String(note.hardBreaks), note.md] : undefined
+      // Image sizes end up in the HTML, so a replaced image must invalidate it too.
+      const diskKey = isSelfContained(note)
+        ? [note.lang, variant, String(note.hardBreaks), note.md, ...note.assets.map((a) => `${a}@${stamp(a)}`)]
+        : undefined
       const cached = diskKey && readCache("notes", import.meta.url, diskKey)
       let parts: Parts
       if (cached) parts = JSON.parse(cached.toString("utf8"))

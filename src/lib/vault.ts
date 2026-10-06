@@ -60,6 +60,8 @@ export interface Note {
   /** Markdown after language filtering and Obsidian syntax conversion. */
   md: string
   links: LinkRef[]
+  /** Vault-relative assets the note embeds or links. */
+  assets: string[]
   source: SourceNote
 }
 
@@ -468,6 +470,7 @@ function buildVault(version: number): Vault {
         dir: s.dir,
         md: pre.md,
         links: pre.links,
+        assets: [...new Set(pre.assets)],
         source: s,
       }
       notes[lang].push(note)

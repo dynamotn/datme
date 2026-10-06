@@ -127,6 +127,7 @@ describe("metadata", () => {
       "_assets/draw/Flow.excalidraw.dark.svg",
       "_assets/draw/Flow.excalidraw.light.svg",
       "_assets/images/diagram.png",
+      "_assets/images/wide.png",
     ])
   })
 })

@@ -13,3 +13,5 @@ First paragraph of the blog post, used as its description.
 See the [[Map.canvas|project map]].
 
 ![[Map.canvas]]
+
+![[wide.png]]

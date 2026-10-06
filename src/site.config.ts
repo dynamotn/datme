@@ -199,6 +199,16 @@ const schema = z
       .default({ count: 5, mentions: true }),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
+    images: z
+      .object({
+        /** Resize raster images into WebP copies and let browsers pick the smallest that fits. */
+        optimize: z.boolean().default(true),
+        /** Widths of the resized copies, in pixels; only those below the original are made. */
+        widths: z.array(z.number().int().min(64).max(4096)).min(1).default([480, 960, 1600]),
+        quality: z.number().int().min(1).max(100).default(80),
+      })
+      .strict()
+      .default({ optimize: true, widths: [480, 960, 1600], quality: 80 }),
     /** Make the site installable and keep the pages a reader opened available offline. */
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
@@ -322,6 +332,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     redirects: c.redirects,
     ogImages: c.ogImages,
     offline: c.offline,
+    images: { ...c.images, widths: [...new Set(c.images.widths)].sort((a, b) => a - b) },
     stackedPages: c.stackedPages,
     related: c.related,
     theme: { ...c.theme, css: c.theme.css.replace(/^\/+/, "") },

@@ -97,6 +97,10 @@ webmentions: {}               # receive mentions via webmention.io ({ domain } d
                               # the host of site.url) and list likes, reposts and replies under notes
 cname: true                   # write CNAME with the host of site.url
 redirects: true               # write _redirects (Netlify, Cloudflare) with 301s for aliases and old URLs
+images:                       # PNG/JPEG/WebP/AVIF get their size and resized WebP copies
+  optimize: true              # (srcset), so phones never download the full picture
+  widths: [480, 960, 1600]
+  quality: 80
 offline: true                 # installable app; pages a reader opened stay readable offline
 ogImages: true                # social cards for the home page and notes without a banner
 stackedPages: true            # a header button to open linked notes side by side
