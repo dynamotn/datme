@@ -169,3 +169,16 @@ describe("analytics, comments and CNAME", () => {
     })
   })
 })
+
+describe("note types", () => {
+  test("common types have icons and are labelled by their name", () => {
+    const c = resolveConfig({ languages: ["vi-VN"] }, "/v")
+    expect(c.types.book).toEqual({ icon: "📕", label: { "vi-VN": "book" } })
+  })
+
+  test("the config overrides icons, adds labels and new types", () => {
+    const c = resolveConfig({ types: { book: { icon: "📚", label: "Sách" }, recipe: { icon: "🍲" } } }, "/v")
+    expect(c.types.book).toEqual({ icon: "📚", label: { "en-US": "Sách" } })
+    expect(c.types.recipe.icon).toBe("🍲")
+  })
+})

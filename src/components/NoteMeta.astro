@@ -6,6 +6,7 @@ import { slugToUrl } from "~/lib/slug"
 import Icon from "./Icon.astro"
 import PropValue from "./PropValue.astro"
 import { noteProperties } from "~/lib/properties"
+import { typeInfo } from "~/lib/types"
 
 interface Props {
   note: Note
@@ -30,7 +31,7 @@ const props = noteProperties(note)
   {
     note.types.map((ty) => (
       <a class="chip type" href={tagUrl(site.conventions.typePrefix + ty)}>
-        {ty}
+        {typeInfo(ty, note.lang).icon} {typeInfo(ty, note.lang).label}
       </a>
     ))
   }

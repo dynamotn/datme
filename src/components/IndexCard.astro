@@ -3,6 +3,7 @@ import type { Note } from "~/lib/vault"
 import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
 import { formatDate, t } from "~/lib/i18n"
+import { typeInfo } from "~/lib/types"
 
 interface Props {
   note: Note
@@ -20,9 +21,19 @@ const stage = note.stage ? site.stages[note.stage] : undefined
 const d = note[date]
 const tags = note.tags.slice(0, 4)
 const minutes = Math.max(1, Math.round(r.words / 220))
+// The first type shapes the card: quotes, people and books each get their own look.
+const kind = note.types[0]
+const kindInfo = kind ? typeInfo(kind, note.lang) : undefined
+const title = r.h1 ?? note.title
+const initials = title
+  .split(/\s+/)
+  .filter((w) => /\p{L}/u.test(w))
+  .slice(0, 2)
+  .map((w) => w.match(/\p{L}/u)![0].toUpperCase())
+  .join("")
 ---
 
-<article class:list={["index-card", { featured }]} data-ribbon={featured ? s.featured : undefined}>
+<article class:list={["index-card", { featured }]} data-ribbon={featured ? s.featured : undefined} data-type={kind}>
   {
     (media || featured) && note.banner && (
       <a class="index-card-media" href={note.url} tabindex="-1" aria-hidden="true">
@@ -34,15 +45,23 @@ const minutes = Math.max(1, Math.round(r.words / 220))
     {d && <time datetime={d.toISOString()}>{formatDate(d, note.lang)}</time>}
     {stage && <span>{stage.icon} {stage.label[note.lang]}</span>}
     {note.protected && <span title={s.locked}>🔒</span>}
+    {kindInfo && !featured && <span class="index-card-type">{kindInfo.icon} {kindInfo.label}</span>}
     {featured && <span>{s.readingTime(minutes)}</span>}
   </p>
-  <h3 class="index-card-title"><a class="internal" href={note.url}>{r.h1 ?? note.title}</a></h3>
+  <h3 class="index-card-title">
+    {kind === "person" && <span class="index-card-avatar" aria-hidden="true">{initials}</span>}
+    <a class="internal" href={note.url}>{title}</a>
+  </h3>
   {r.description && <p class="index-card-excerpt">{r.description}</p>}
   {
     tags.length > 0 && (
       <ul class="index-card-tags">
         {tags.map((tag) => (
-          <li>{tag.startsWith(site.conventions.typePrefix) ? tag.slice(site.conventions.typePrefix.length) : tag}</li>
+          <li>
+            {tag.startsWith(site.conventions.typePrefix)
+              ? typeInfo(tag.slice(site.conventions.typePrefix.length), note.lang).label
+              : tag}
+          </li>
         ))}
       </ul>
     )

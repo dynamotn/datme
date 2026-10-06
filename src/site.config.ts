@@ -32,6 +32,30 @@ const STAGE_PRESETS: Record<string, Omit<StageDef, "order">> = {
 
 const localized = z.union([z.string(), z.record(z.string(), z.string())])
 
+/** Icons for common note types (from tags like type/book); datme.yaml can add or override them. */
+const DEFAULT_TYPES: Record<string, string> = {
+  article: "📰",
+  blog: "✍️",
+  book: "📕",
+  composition: "🎼",
+  example: "🧪",
+  insight: "💡",
+  memorial: "🕯️",
+  methodology: "🧭",
+  moc: "🗺️",
+  notion: "💭",
+  organization: "🏢",
+  person: "👤",
+  place: "📍",
+  quote: "💬",
+  summary: "📝",
+  term: "🔤",
+  thing: "📦",
+  tool: "🔧",
+  vault: "🗄️",
+  video: "🎬",
+}
+
 const schema = z
   .object({
     site: z
@@ -113,6 +137,8 @@ const schema = z
       })
       .strict()
       .default({ hide: [] }),
+    /** Note types (the part after conventions.typePrefix): an icon and an optional label. */
+    types: z.record(z.string(), z.object({ icon: z.string().min(1), label: localized.optional() }).strict()).default({}),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
@@ -221,6 +247,15 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     cname: c.cname,
     ogImages: c.ogImages,
     properties: c.properties,
+    types: Object.fromEntries(
+      [...new Set([...Object.keys(DEFAULT_TYPES), ...Object.keys(c.types)])].map((type) => [
+        type,
+        {
+          icon: c.types[type]?.icon ?? DEFAULT_TYPES[type],
+          label: localize(c.types[type]?.label, langs, type),
+        },
+      ]),
+    ) as Record<string, { icon: string; label: Record<Lang, string> }>,
     appearance: {
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),

@@ -132,6 +132,13 @@ describe("static build", () => {
     expect((home.match(/class="index-card"/g) ?? []).length).toBeGreaterThan(1)
   })
 
+  test("note types show their icon and label, and shape the card", () => {
+    expect(read("06_Reference/Niklas-Luhmann/index.html")).toContain("🧑‍🔬 Nhân vật")
+    const card = read("06_Reference/index.html").match(/<article class="index-card" data-type="person">[\s\S]*?<\/article>/)![0]
+    expect(card).toContain('<span class="index-card-avatar" aria-hidden="true">NL</span>')
+    expect(card).toContain("🧑‍🔬 Nhân vật")
+  })
+
   test("folder and tag pages list notes as index cards", () => {
     expect(read("06_Reference/index.html")).toContain('class="card-wall"')
     expect(read("tags/theme/pkm/index.html")).toContain('class="index-card"')

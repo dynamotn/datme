@@ -3,6 +3,7 @@ import type { Note } from "~/lib/vault"
 import { getVault } from "~/lib/vault"
 import { site } from "~/site.config"
 import { formatDate } from "~/lib/i18n"
+import { typeInfo } from "~/lib/types"
 
 interface Props {
   note: Note
@@ -15,7 +16,7 @@ const d = note[date]
 
 <li>
   <a class="note-row internal" href={note.url}>
-    <span class="emoji">{note.stage ? site.stages[note.stage].icon : "📝"}</span>
+    <span class="emoji">{note.stage ? site.stages[note.stage].icon : note.types[0] ? typeInfo(note.types[0], note.lang).icon : "📝"}</span>
     <span>
       <span class="title">{note.title}</span>
       <span class="sub">{[folder?.name, ...note.types].filter(Boolean).join(" · ")}</span>

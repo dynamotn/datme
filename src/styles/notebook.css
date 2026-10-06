@@ -1059,3 +1059,58 @@
   font-size: 12px;
   box-shadow: 2px 2px 0 var(--ink);
 }
+
+/* ---------- note types ---------- */
+[data-look="notebook"] .index-card-type {
+  margin-left: auto;
+}
+[data-look="notebook"] .index-card[data-type="quote"] {
+  background: color-mix(in srgb, var(--pink) 22%, var(--surface));
+}
+[data-look="notebook"] .index-card[data-type="quote"] .index-card-excerpt {
+  position: relative;
+  padding-left: 22px;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+[data-look="notebook"] .index-card[data-type="quote"] .index-card-excerpt::before {
+  content: "“";
+  position: absolute;
+  left: -4px;
+  top: -14px;
+  font-family: var(--font-ui);
+  font-size: 3rem;
+  font-weight: 800;
+  font-style: normal;
+  color: var(--clay);
+}
+[data-look="notebook"] .index-card[data-type="book"]::before {
+  left: 0;
+  width: 14px;
+  border-left: none;
+  background: var(--accent);
+  border-right: var(--bw) solid var(--ink);
+  border-radius: calc(var(--radius) - 3px) 0 0 calc(var(--radius) - 3px);
+}
+[data-look="notebook"] .index-card[data-type="moc"] {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+[data-look="notebook"] .index-card-title:has(.index-card-avatar) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-look="notebook"] .index-card-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: var(--bw) solid var(--ink);
+  border-radius: 50%;
+  background: var(--green);
+  color: #050505;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  box-shadow: 2px 2px 0 var(--ink);
+}

@@ -80,6 +80,8 @@ cname: true                   # write CNAME with the host of site.url
 ogImages: true                # social cards for the home page and notes without a banner
 properties:
   hide: [rating]              # frontmatter keys left out of the properties block
+types:                        # icons and labels for type/* tags (common ones built in)
+  recipe: { icon: 🍲, label: Recipe }
 
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }

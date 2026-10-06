@@ -45,3 +45,9 @@ comments:
   category: Comments
   categoryId: DIC_test
 cname: true
+types:
+  person:
+    icon: 🧑‍🔬
+    label:
+      vi-VN: Nhân vật
+      en-US: Person
