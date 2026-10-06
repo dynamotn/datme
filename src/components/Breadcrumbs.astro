@@ -1,0 +1,27 @@
+---
+import type { Lang } from "~/site.config"
+import { getVault } from "~/lib/vault"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+
+interface Props {
+  lang: Lang
+  dir: string
+}
+const { lang, dir } = Astro.props
+const folders = getVault().folders[lang]
+const parts = dir ? dir.split("/") : []
+const crumbs = parts.map((_, i) => folders.get(parts.slice(0, i + 1).join("/"))).filter(Boolean)
+---
+
+<nav class="crumbs" aria-label="Breadcrumb">
+  <a href={slugToUrl(langPrefix(lang) + "index")}>{t(lang).home}</a>
+  {
+    crumbs.map((f) => (
+      <>
+        <span class="sep">/</span>
+        <a href={f!.url}>{f!.name}</a>
+      </>
+    ))
+  }
+</nav>

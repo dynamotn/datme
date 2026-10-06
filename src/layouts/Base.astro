@@ -1,0 +1,174 @@
+---
+import { ClientRouter } from "astro:transitions"
+import "~/styles/global.css"
+import { site, type Lang } from "~/site.config"
+import { t, langMeta, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import Icon from "~/components/Icon.astro"
+import Explorer from "~/components/Explorer.astro"
+
+interface Props {
+  lang: Lang
+  title: string
+  description?: string
+  image?: string
+  /** URL of this page in every language, for the language switch and hreflang. */
+  alternates: Partial<Record<Lang, string>>
+  /** Whether the right rail slot is used. */
+  rail?: boolean
+}
+const { lang, title, description, image, alternates, rail = false } = Astro.props
+const s = t(lang)
+const siteTitle = site.title[lang]
+const fullTitle = title === siteTitle ? title : `${title} · ${siteTitle}`
+const home = slugToUrl(langPrefix(lang) + "index")
+const canonical = new URL(Astro.url.pathname, site.url).href
+const rss = slugToUrl(langPrefix(lang) + "index.xml")
+const year = new Date().getFullYear()
+---
+
+<!doctype html>
+<html lang={langMeta[lang].html} data-lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={siteTitle} href={rss} />
+    {
+      site.langs.map(
+        (l) =>
+          alternates[l] && <link rel="alternate" hreflang={langMeta[l].html} href={new URL(alternates[l]!, site.url).href} />,
+      )
+    }
+    <meta property="og:title" content={title} />
+    <meta property="og:site_name" content={siteTitle} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    {description && <meta property="og:description" content={description} />}
+    {image && <meta property="og:image" content={new URL(image, site.url).href} />}
+    <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+    <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      ;(() => {
+        const apply = (doc) => {
+          let theme = null
+          let reader = null
+          try {
+            theme = localStorage.getItem("theme")
+            reader = localStorage.getItem("reader")
+          } catch {}
+          theme ??= matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+          doc.documentElement.dataset.theme = theme
+          doc.documentElement.classList.toggle("reader", reader === "1")
+        }
+        apply(document)
+        document.addEventListener("astro:before-swap", (e) => apply(e.newDocument))
+      })()
+    </script>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <header class="site-header">
+      <button class="icon-btn menu-btn" type="button" data-nav-toggle aria-label={s.menu}>
+        <Icon name="menu" />
+      </button>
+      <a class="brand" href={home}>
+        <span class="brand-mark">đ</span>
+        <span class="brand-name">{siteTitle}</span>
+      </a>
+      <div class="header-spacer"></div>
+      <button class="search-trigger" type="button" data-open-search aria-label={s.search}>
+        <Icon name="search" />
+        <span>{s.searchPlaceholder}</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+      <div class="header-spacer hide-sm"></div>
+      <button class="icon-btn" type="button" data-open-graph aria-label={s.globalGraph} title={`${s.globalGraph} (Ctrl G)`}>
+        <Icon name="graph" />
+      </button>
+      <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
+        <Icon name="book" />
+      </button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label={s.theme} title={s.theme}>
+        <Icon name="sun" class="theme-sun" />
+        <Icon name="moon" class="theme-moon" />
+      </button>
+      <nav class="lang-switch" aria-label={s.language}>
+        {
+          site.langs.map((l) => (
+            <a
+              href={alternates[l] ?? slugToUrl(langPrefix(l) + "index")}
+              hreflang={langMeta[l].html}
+              aria-current={l === lang ? "true" : undefined}
+              title={langMeta[l].name}
+            >
+              {langMeta[l].short}
+            </a>
+          ))
+        }
+      </nav>
+    </header>
+
+    <div class:list={["shell", { "no-right": !rail }]}>
+      <aside class="sidebar sidebar-left" transition:persist={`explorer-${lang}`} data-sidebar>
+        <Explorer lang={lang} />
+      </aside>
+      <main class="main" data-pagefind-body>
+        <slot />
+        <footer class="site-footer">
+          <span>© {year} {site.author} · <a href={rss}>{s.rss}</a></span>
+          <nav>
+            {
+              Object.entries(site.footerLinks).map(([label, href]) => (
+                <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
+                  {label}
+                </a>
+              ))
+            }
+          </nav>
+        </footer>
+      </main>
+      {
+        rail && (
+          <aside class="sidebar sidebar-right">
+            <slot name="rail" />
+          </aside>
+        )
+      }
+    </div>
+
+    <dialog class="modal" data-search-dialog data-lang={lang} transition:persist={`search-${lang}`}>
+      <div class="search-input-row">
+        <Icon name="search" />
+        <input type="search" placeholder={s.searchPlaceholder} aria-label={s.search} autocomplete="off" spellcheck="false" />
+        <kbd>Esc</kbd>
+      </div>
+      <ul class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
+      <div class="modal-foot">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> {s.navigate}</span>
+        <span><kbd>↵</kbd> {s.open}</span>
+        <span><kbd>Esc</kbd> {s.close}</span>
+      </div>
+    </dialog>
+
+    <dialog class="modal graph-modal" data-graph-dialog>
+      <div class="modal-head">
+        <span>{s.globalGraph}</span>
+        <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>
+          <Icon name="close" />
+        </button>
+      </div>
+      <div class="graph-full">
+        <canvas data-graph="global" data-lang={lang}></canvas>
+      </div>
+    </dialog>
+
+    <script>
+      import "~/scripts/app"
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+---
+import type { Lang } from "~/site.config"
+import { getVault } from "~/lib/vault"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import Icon from "./Icon.astro"
+import ExplorerNode from "./ExplorerNode.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const tree = getVault().trees[lang]
+const s = t(lang)
+const home = slugToUrl(langPrefix(lang) + "index")
+const tags = slugToUrl(langPrefix(lang) + "tags")
+---
+
+<nav class="side-nav" aria-label={s.menu}>
+  <a href={home} data-nav><Icon name="home" />{s.home}</a>
+  <a href={tags} data-nav><Icon name="tag" />{s.allTags}</a>
+</nav>
+<p class="panel-title">{s.explorer}</p>
+<div class="explorer" data-explorer={lang}>
+  <ExplorerNode folder={tree} />
+</div>

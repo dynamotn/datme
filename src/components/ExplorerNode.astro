@@ -1,0 +1,40 @@
+---
+import type { FolderNode } from "~/lib/vault"
+import { countNotes } from "~/lib/vault"
+import { stageMeta } from "~/lib/i18n"
+import Icon from "./Icon.astro"
+
+interface Props {
+  folder: FolderNode
+}
+const { folder } = Astro.props
+---
+
+<ul>
+  {
+    folder.folders.map((f) => (
+      <li>
+        <details data-dir={f.dir}>
+          <summary>
+            <span class="chev">
+              <Icon name="chevron" />
+            </span>
+            <a href={f.url}>{f.name}</a>
+            <span class="count">{countNotes(f)}</span>
+          </summary>
+          <Astro.self folder={f} />
+        </details>
+      </li>
+    ))
+  }
+  {
+    folder.notes.map((n) => (
+      <li>
+        <a href={n.url} title={n.title}>
+          {n.stage && folder.dir === "" ? <span class="stage-icon">{stageMeta[n.stage].icon}</span> : null}
+          {n.title}
+        </a>
+      </li>
+    ))
+  }
+</ul>
