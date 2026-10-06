@@ -24,7 +24,7 @@ export const USAGE = `datme: publish an Obsidian vault as a digital garden
 
 Usage:
   datme dev     [vault] [--port 4321] [--host]   live preview, reloads on note changes
-  datme build   [vault] [--out ./dist] [--fresh] build the static site
+  datme build   [vault] [--out ./dist] [--fresh] build the static site (dev, build and preview take --drafts)
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose] [--external] report broken links and other problems
   datme init    [vault]                          write a starter datme.yaml
@@ -40,6 +40,7 @@ Options:
   --port <n>     port of dev and preview
   --host         listen on every network interface
   --fresh        ignore the cache of rendered notes and social cards
+  --drafts       also build drafts and scheduled notes, marked and kept out of search engines
   --strict       fail check and build on warnings too, not only on errors
   --verbose      also list notices: links to unpublished notes, scheduled notes
   --external     also check that links to other websites still answer
@@ -68,6 +69,7 @@ export interface Args {
   strict?: boolean
   verbose?: boolean
   fresh?: boolean
+  drafts?: boolean
   external?: boolean
 }
 
@@ -88,6 +90,7 @@ export function parseArgs(argv: string[]): Args {
         host: { type: "boolean" },
         strict: { type: "boolean" },
         fresh: { type: "boolean" },
+        drafts: { type: "boolean" },
         external: { type: "boolean" },
         branch: { type: "string", short: "b" },
         format: { type: "string", short: "f" },
@@ -141,6 +144,7 @@ export function parseArgs(argv: string[]): Args {
     strict: values.strict,
     verbose: values.verbose,
     fresh: values.fresh,
+    ...(values.drafts ? { drafts: true } : {}),
     ...(values.external ? { external: true } : {}),
   }
 }
@@ -304,6 +308,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   // The Astro project reads the vault and its config from these at load time.
   env.DATME_VAULT = vault
   if (args.site) env.DATME_SITE_URL = args.site
+  if (args.drafts) env.DATME_DRAFTS = "1"
   const out = path.resolve(cwd, args.out ?? "dist")
   const rel = path.relative(vault, out)
   // Output written inside the vault must not be scanned on the next build.

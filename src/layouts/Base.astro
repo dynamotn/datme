@@ -37,6 +37,8 @@ interface Props {
   feed?: string
   /** URL of the page as plain markdown. */
   mdAlternate?: string
+  /** Keep the page out of search engines, e.g. a draft built for preview. */
+  noindex?: boolean
 }
 const {
   lang,
@@ -51,6 +53,7 @@ const {
   jsonLd = [],
   feed,
   mdAlternate,
+  noindex = false,
 } = Astro.props
 const nav = navLinks(lang)
 // Pages without their own image share the generated card of the home page.
@@ -72,6 +75,7 @@ const year = new Date().getFullYear()
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {fontsHref() && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}

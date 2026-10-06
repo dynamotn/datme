@@ -66,6 +66,8 @@ export interface Note {
   assets: string[]
   /** A flashcard deck: its cards and clozes can be practised. */
   deck: boolean
+  /** Built only because of `--drafts`: shown as a draft and kept out of search engines. */
+  draft: boolean
   source: SourceNote
 }
 
@@ -191,12 +193,17 @@ export function scheduledFor(fm: Record<string, unknown>): Date | undefined {
   return toDate(fm.publish_date ?? fm.publishDate)
 }
 
-export function isPublished(fm: Record<string, unknown>, mode: "explicit" | "all", now = new Date()): boolean {
-  const flag = (v: unknown) => (v === true || v === "true" ? true : v === false || v === "false" ? false : undefined)
-  if (flag(fm.draft) === true) return false
-  // A scheduled note waits for its day; the next build after it publishes the note.
+const flag = (v: unknown) => (v === true || v === "true" ? true : v === false || v === "false" ? false : undefined)
+
+/** A draft, or a note scheduled for later: what `--drafts` builds on top of the rest. */
+export function isDraft(fm: Record<string, unknown>, now = new Date()): boolean {
   const at = scheduledFor(fm)
-  if (at && at > now) return false
+  return flag(fm.draft) === true || (at != null && at > now)
+}
+
+export function isPublished(fm: Record<string, unknown>, mode: "explicit" | "all", now = new Date(), drafts = false): boolean {
+  // A scheduled note waits for its day; the next build after it publishes the note.
+  if (!drafts && isDraft(fm, now)) return false
   const publish = flag(fm.publish)
   return mode === "explicit" ? publish === true : publish !== false
 }
@@ -292,7 +299,7 @@ function buildVault(version: number): Vault {
     const { fm, body, error } = parseFrontmatter(src)
     // Without its frontmatter a note cannot say `publish: true`, so it silently disappears.
     if (error) report("warning", rel, `frontmatter is not valid YAML, so it is ignored: ${error}`)
-    if (!isPublished(fm, site.publish)) {
+    if (!isPublished(fm, site.publish, new Date(), site.drafts)) {
       const at = scheduledFor(fm)
       if (at && at > new Date() && isPublished({ ...fm, publish_date: undefined, publishDate: undefined }, site.publish)) {
         report("info", rel, `scheduled: published from ${at.toISOString().slice(0, 10)}`)
@@ -509,6 +516,7 @@ function buildVault(version: number): Vault {
               site.lineBreaks.folders.some((f) => s.dir === f || s.dir.startsWith(f + "/")),
         isHome: s.isHome,
         unlisted: s.fm.unlisted === true,
+        draft: site.drafts && isDraft(s.fm),
         protected: s.password != null,
         dir: s.dir,
         md: pre.md,

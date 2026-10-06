@@ -313,6 +313,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   let order = 0
   const stages: Record<string, StageDef> = {}
   const url = (env.DATME_SITE_URL ?? c.site.url)?.replace(/\/+$/, "")
+  /** Set by `--drafts`: drafts and scheduled notes are built too, for previewing. */
+  const drafts = env.DATME_DRAFTS === "1"
   let webmentions: { domain: string } | undefined
   if (c.webmentions) {
     const domain = c.webmentions.domain ?? (url ? new URL(url).host : undefined)
@@ -365,6 +367,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ogImages: c.ogImages,
     llms: c.llms,
     offline: c.offline,
+    drafts,
     map: c.map,
     glossary: c.glossary,
     archiveDeadLinks: c.archiveDeadLinks,

@@ -34,6 +34,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`
 (or `$DATME_SITE_URL`) overrides the public URL, handy for preview deploys.
 `build` prints a one-line summary of the problems `check` would report;
 `--strict` makes `check` and `build` fail on warnings too, for CI.
+`--drafts` (dev, build, preview) also builds drafts and scheduled notes, marked as such and kept out of search engines, for preview deploys.
 
 Builds are incremental: rendered notes and social cards are cached and reused
 while their content, the config and datme stay the same (a 300-note vault goes
