@@ -88,6 +88,18 @@ describe("static build", () => {
     expect(nav).toContain("Về Luhmann")
   })
 
+  test("the notebook home shows the newest blog post as a featured card and notes as index cards", () => {
+    const home = read("index.html")
+    expect(home).toMatch(/class="index-card featured" data-ribbon="Nổi bật"/)
+    expect(home).toContain('class="nb-hero-side"')
+    expect((home.match(/class="index-card"/g) ?? []).length).toBeGreaterThan(1)
+  })
+
+  test("folder and tag pages list notes as index cards", () => {
+    expect(read("06_Reference/index.html")).toContain('class="card-wall"')
+    expect(read("tags/theme/pkm/index.html")).toContain('class="index-card"')
+  })
+
   test("favicon and robots.txt come from the config", () => {
     expect(read("favicon.svg")).toContain(">K</text>")
     expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")

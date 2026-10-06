@@ -8,6 +8,7 @@ import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
 import Icon from "../Icon.astro"
+import IndexCard from "../IndexCard.astro"
 
 interface Props {
   lang: Lang
@@ -45,13 +46,20 @@ const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastInd
       )
     }
     {
-      folder.notes.length > 0 && (
-        <ul class="note-list">
-          {byRecent(folder.notes).map((n) => (
-            <NoteRow note={n} />
-          ))}
-        </ul>
-      )
+      folder.notes.length > 0 &&
+        (site.appearance.style === "notebook" ? (
+          <div class="card-wall">
+            {byRecent(folder.notes).map((n) => (
+              <IndexCard note={n} />
+            ))}
+          </div>
+        ) : (
+          <ul class="note-list">
+            {byRecent(folder.notes).map((n) => (
+              <NoteRow note={n} />
+            ))}
+          </ul>
+        ))
     }
   </div>
 </Base>

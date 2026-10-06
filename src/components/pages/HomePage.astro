@@ -9,6 +9,7 @@ import Base from "~/layouts/Base.astro"
 import NoteCard from "../NoteCard.astro"
 import NoteRow from "../NoteRow.astro"
 import Icon from "../Icon.astro"
+import IndexCard from "../IndexCard.astro"
 
 interface Props {
   lang: Lang
@@ -33,10 +34,101 @@ const stages = [...vault.trees[lang].folders]
   .filter((f) => site.stages[f.segment])
   .sort((a, b) => site.stages[a.segment].order - site.stages[b.segment].order)
   .map((f) => ({ folder: f, stage: site.stages[f.segment], count: countNotes(f) }))
+// Without configured stages, the notebook home lists the top-level folders instead.
+const shelvesOfFolders = stages.length
+  ? stages.map(({ folder, stage, count }) => ({ url: folder.url, icon: stage.icon, label: stage.label[lang], count }))
+  : vault.trees[lang].folders.map((f) => ({ url: f.url, icon: "📁", label: f.name, count: countNotes(f) }))
+const blogUrl = blog.length
+  ? slugToUrl(langPrefix(lang) + "tags/" + (blog[0].tags.find((x) => site.conventions.blogTags.includes(x)) ?? ""))
+  : ""
+const look = site.appearance.style
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
 ---
 
 <Base lang={lang} title={site.title[lang]} description={r?.description ?? site.tagline[lang]} image={home?.banner} alternates={alternates}>
+  {
+    look === "notebook" ? (
+      <>
+        <section class="nb-hero">
+          <article class="nb-hero-main">
+            {site.tagline[lang] && <span class="nb-kicker">{site.tagline[lang]}</span>}
+            <h1>{r?.h1 ?? site.title[lang]}</h1>
+            {intro && <div class="prose" set:html={intro} />}
+            <div class="nb-metrics">
+              <div><span>{s.notes}</span><strong>{notes.length}</strong></div>
+              <div><span>{s.links}</span><strong>{linkCount}</strong></div>
+              <div><span>{s.tags}</span><strong>{vault.tags[lang].size}</strong></div>
+            </div>
+          </article>
+          {shelvesOfFolders.length > 0 && (
+            <aside class="nb-hero-side">
+              <h2>{stages.length ? s.stagesTitle : s.explorer}</h2>
+              <ul>
+                {shelvesOfFolders.map((f) => (
+                  <li>
+                    <a href={f.url}>
+                      <span>{f.icon} {f.label}</span>
+                      <b>{f.count}</b>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          )}
+        </section>
+
+        {blog.length > 0 && (
+          <section class="nb-section">
+            <div class="nb-section-head">
+              <h2>{s.blog}</h2>
+              <a href={blogUrl}>{s.seeAll}</a>
+            </div>
+            <IndexCard note={blog[0]} date="created" featured />
+            {blog.length > 1 && (
+              <div class="card-wall">
+                {blog.slice(1, 7).map((n) => (
+                  <IndexCard note={n} date="created" media />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        <section class="nb-section">
+          <div class="nb-section-head">
+            <h2>{s.recent}</h2>
+            <span>{s.latest}</span>
+          </div>
+          <div class="card-wall">
+            {recent.map((n) => (
+              <IndexCard note={n} />
+            ))}
+          </div>
+        </section>
+
+        {mocs.length > 0 && (
+          <section class="nb-section">
+            <div class="nb-section-head">
+              <h2>{s.maps}</h2>
+            </div>
+            <div class="card-wall">
+              {mocs.map((n) => (
+                <IndexCard note={n} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {shelves.length > 0 && (
+          <section class="nb-section card-wall">
+            {shelves.map((html) => (
+              <div class="nb-shelf prose" set:html={html} />
+            ))}
+          </section>
+        )}
+      </>
+    ) : (
+      <>
   <section class="hero">
     <span class="hero-eyebrow"><Icon name="sprout" /> {site.tagline[lang]}</span>
     <h1><span class="gradient-text">{r?.h1 ?? site.title[lang]}</span></h1>
@@ -56,7 +148,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
             <h2>{s.blog}</h2>
             <p>{s.blogLead}</p>
           </div>
-          <a href={slugToUrl(langPrefix(lang) + "tags/" + (blog[0].tags.find((x) => site.conventions.blogTags.includes(x)) ?? ""))}>{s.seeAll} →</a>
+          <a href={blogUrl}>{s.seeAll} →</a>
         </div>
         <div class="card-grid">
           {blog.slice(0, 6).map((n) => <NoteCard note={n} />)}
@@ -124,6 +216,9 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
           <div class="shelf prose" set:html={html} />
         ))}
       </section>
+    )
+  }
+      </>
     )
   }
 </Base>

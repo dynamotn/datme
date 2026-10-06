@@ -41,7 +41,7 @@ describe("zero-config build", () => {
   })
 
   test("notes tagged blog appear as cards on the home page", () => {
-    expect(read("index.html")).toContain('class="card internal" href="/Hello"')
+    expect(read("index.html")).toMatch(/class="index-card featured"[\s\S]*?href="\/Hello"/)
   })
 
   test("without site.url there is no sitemap and robots.txt does not point to one", () => {
@@ -55,6 +55,10 @@ describe("zero-config build", () => {
     expect(home).toContain('data-look="notebook"')
     const nav = home.match(/<nav class="main-nav"[\s\S]*?<\/nav>/)![0]
     expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/", "/tags"])
+  })
+
+  test("without stages the home lists top-level folders", () => {
+    expect(read("index.html")).toMatch(/class="nb-hero-side"[\s\S]*Projects/)
   })
 
   test("the logo comes from the vault name", () => {

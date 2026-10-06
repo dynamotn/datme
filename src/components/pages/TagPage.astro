@@ -7,6 +7,7 @@ import { slugToUrl } from "~/lib/slug"
 import Base from "~/layouts/Base.astro"
 import NoteRow from "../NoteRow.astro"
 import NoteCard from "../NoteCard.astro"
+import IndexCard from "../IndexCard.astro"
 
 interface Props {
   lang: Lang
@@ -50,7 +51,13 @@ const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
               ))}
             </div>
           )}
-          {showCards ? (
+          {site.appearance.style === "notebook" ? (
+            <div class="card-wall">
+              {notes.map((n) => (
+                <IndexCard note={n} date="created" media={showCards} />
+              ))}
+            </div>
+          ) : showCards ? (
             <div class="card-grid">
               {notes.map((n) => (
                 <NoteCard note={n} />
