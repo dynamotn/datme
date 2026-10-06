@@ -13,3 +13,25 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bunx astro check
       - run: bun test
+
+  # Accessibility (with colour contrast, which needs a real browser), best practices and SEO
+  # of the fixture site, measured by Lighthouse; reports are kept as an artifact.
+  lighthouse:
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - run: bun bin/datme.ts build tests/fixtures/vault --out .lhci-site
+      - run: npx --yes @lhci/cli@0.14.x autorun
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: .lhci-report

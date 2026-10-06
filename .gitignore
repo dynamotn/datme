@@ -4,3 +4,5 @@ dist/
 .DS_Store
 .datme/
 bin/datme.js
+.lhci-site/
+.lhci-report/

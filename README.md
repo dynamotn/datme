@@ -179,7 +179,8 @@ real dates. Set `cname: true` when using a custom domain.
 bun install
 bun run dev ~/MyVault   # same as `datme dev`
 bun run check           # type-check
-bun run test            # unit tests and end-to-end builds of tests/fixtures
+bun run test            # unit tests, end-to-end builds of tests/fixtures and axe
+                        # accessibility checks; CI adds Lighthouse (lighthouserc.json)
 ```
 
 - `src/site.config.ts` loads and validates `datme.yaml`.
