@@ -144,9 +144,21 @@ describe("dataview", () => {
     expect(html).not.toContain("dv-error")
   })
 
-  test("GROUP BY and DataviewJS show a notice instead of code", async () => {
+  test("GROUP BY renders one row per group", async () => {
     const { html } = await queries
-    expect(html).toContain("(GROUP BY)")
+    expect(html).toMatch(/<th>file.folder<\/th><th>rows.file.link<\/th>/)
+    expect(html).toContain("<td>03_Atomic</td>")
+  })
+
+  test("TASK lists the tasks of each note as checkboxes, with their links rendered", async () => {
+    const { html } = await queries
+    expect(html).toContain('<div class="dataview dv-tasks">')
+    expect(html).toMatch(/<li class="task-list-item"><input type="checkbox" disabled> Ask <a href="\/06_Reference\/Niklas-Luhmann"/)
+    expect(html).toMatch(/<input type="checkbox" checked disabled> <strong>Read<\/strong> the paper/)
+  })
+
+  test("DataviewJS shows a notice instead of code", async () => {
+    const { html } = await queries
     expect(html).toContain("(DataviewJS)")
     expect(html).not.toContain("dv.list")
   })

@@ -153,8 +153,16 @@ const remarkHardBreaks: Plugin<[{ enabled: boolean }], MdRoot> = ({ enabled }) =
 const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, key }) => (tree) => {
   visit(tree, "code", (node: Code, index, parent) => {
     if (!parent || index == null) return
-    if (node.lang === "dataview") parent.children[index] = { type: "html", value: renderDataview(node.value, lang, key) }
-    else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
+    if (node.lang === "dataview") {
+      const out = renderDataview(node.value, lang, key)
+      if (typeof out === "string") parent.children[index] = { type: "html", value: out }
+      else {
+        // TASK results are markdown, parsed in place so each task renders like the rest of the note.
+        const root = unified().use(remarkParse).use(remarkGfm).parse(out.markdown)
+        parent.children.splice(index, 1, ...(root.children as typeof parent.children))
+        return index + root.children.length
+      }
+    } else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
   })
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseQuery, runQuery, DataviewError, Unsupported, type Engine, type Page } from "../src/lib/dataview"
+import { parseQuery, runQuery, extractTasks, DataviewError, Unsupported, type Engine, type Page } from "../src/lib/dataview"
 
 const page = (key: string, over: Partial<Page> = {}): Page => ({
   key,
@@ -17,8 +17,16 @@ const page = (key: string, over: Partial<Page> = {}): Page => ({
 const pages = [
   page("Books/Dune", { tags: ["type/book"], fields: { book: { author: "Herbert", year: 1965 }, rating: 5 }, outlinks: ["People/Herbert"] }),
   page("Books/Emma", { tags: ["type/book", "classic"], fields: { book: { author: "Austen", year: 1815 }, rating: 4 } }),
-  page("People/Herbert", { tags: ["type/person"], fields: { born: "1920-10-08" }, inlinks: ["Books/Dune"] }),
-  page("Inbox/Idea", { fields: { related: "[[Dune]]" } }),
+  page("People/Herbert", {
+    tags: ["type/person"],
+    fields: { born: "1920-10-08" },
+    inlinks: ["Books/Dune"],
+    tasks: extractTasks("1. [ ] call\n* [/] halfway"),
+  }),
+  page("Inbox/Idea", {
+    fields: { related: "[[Dune]]" },
+    tasks: extractTasks("- [ ] write #draft 📅 2020-01-02\n- [x] read [priority:: high]\n```\n- [ ] in code\n```"),
+  }),
 ]
 const engine: Engine = { pages, resolve: (t) => pages.find((p) => p.stem.toLowerCase() === t.toLowerCase()) }
 const run = (q: string) => runQuery(parseQuery(q), engine)
@@ -84,10 +92,65 @@ describe("output", () => {
   })
 })
 
+describe("GROUP BY", () => {
+  test("TABLE shows one row per group, with the key first and rows of the group", () => {
+    const res = run('TABLE rows.file.link AS "Notes" FROM #type GROUP BY file.folder')
+    expect(res.headers).toEqual(["file.folder", "Notes"])
+    expect(res.rows.map((r) => r[0])).toEqual(["Books", "People"])
+    expect((res.rows[0][1] as { title: string }[]).map((l) => l.title)).toEqual(["Dune", "Emma"])
+  })
+
+  test("groups can be named, filtered and sorted afterwards", () => {
+    const res = run("TABLE WITHOUT ID folder, length(rows) AS n FROM #type GROUP BY file.folder AS folder WHERE length(rows) > 1")
+    expect(res.rows).toEqual([["Books", 2]])
+    expect(run("LIST FROM #type GROUP BY file.folder SORT key DESC").rows.map((r) => r[0])).toEqual(["People", "Books"])
+  })
+
+  test("LIST without a column nests the notes of each group", () => {
+    const res = run("LIST FROM #type GROUP BY file.folder")
+    expect(res.nested).toBe(true)
+    expect(res.rows[1]).toEqual(["People", [expect.objectContaining({ title: "Herbert" })]])
+  })
+})
+
+describe("TASK", () => {
+  test("tasks come from list items with a checkbox, never from code", () => {
+    const [write, read] = extractTasks("- [ ] write #draft 📅 2020-01-02\n- [x] read [priority:: high]\n```\n- [ ] x\n```")
+    expect(write).toEqual({ text: "write #draft 📅 2020-01-02", status: " ", line: 1, tags: ["#draft"], fields: { due: "2020-01-02" } })
+    expect(read.fields).toEqual({ priority: "high" })
+    expect(extractTasks("```\n- [ ] x\n```")).toEqual([])
+  })
+
+  test("tasks are listed under their note", () => {
+    const res = run("TASK")
+    expect(res.groups!.map((g) => (g.key as { title: string }).title)).toEqual(["Herbert", "Idea"])
+    expect(res.groups![1].tasks).toEqual([
+      { text: "write #draft 📅 2020-01-02", checked: false },
+      { text: "read [priority:: high]", checked: true },
+    ])
+  })
+
+  test("WHERE sees the task's status, dates, tags and fields", () => {
+    const texts = (q: string) => run(q).groups!.flatMap((g) => g.tasks.map((t) => t.text))
+    expect(texts("TASK WHERE !completed")).toEqual(["call", "halfway", "write #draft 📅 2020-01-02"])
+    expect(texts("TASK WHERE due < date(today)")).toEqual(["write #draft 📅 2020-01-02"])
+    expect(texts('TASK WHERE priority = "high"')).toEqual(["read [priority:: high]"])
+    expect(texts('TASK WHERE contains(tags, "#draft")')).toEqual(["write #draft 📅 2020-01-02"])
+    expect(texts('TASK FROM "People" WHERE checked AND !completed')).toEqual(["halfway"])
+  })
+
+  test("GROUP BY regroups tasks by any key", () => {
+    const res = run("TASK GROUP BY completed")
+    expect(res.groups!.map((g) => [g.key, g.tasks.length])).toEqual([
+      [false, 3],
+      [true, 1],
+    ])
+  })
+})
+
 describe("errors", () => {
   test("unsupported features are reported as such", () => {
-    expect(() => parseQuery("TASK FROM #x")).toThrow(Unsupported)
-    expect(() => parseQuery("TABLE x GROUP BY y")).toThrow(Unsupported)
+    expect(() => parseQuery("CALENDAR file.ctime")).toThrow(Unsupported)
   })
 
   test("syntax errors and unknown functions are explained", () => {

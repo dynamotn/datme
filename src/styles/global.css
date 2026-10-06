@@ -1740,6 +1740,14 @@ dialog.graph-modal {
   margin: 48px auto 0;
 }
 
+.prose .dv-task-group {
+  margin: 1em 0 0.3em;
+  font-weight: 600;
+}
+.prose .dv-groups > li > ul {
+  margin-top: 0.2em;
+}
+
 /* ---------- datme dev: problems of the note ---------- */
 .dev-problems {
   margin: 0 0 20px;

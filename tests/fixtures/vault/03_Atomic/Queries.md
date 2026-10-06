@@ -13,6 +13,13 @@ LIST WHERE publish = false OR file.name = "Private"
 TABLE rows.file.link GROUP BY file.folder
 ```
 
+```dataview
+TASK FROM "03_Atomic"
+```
+
+- [ ] Ask [[Niklas Luhmann]] about it
+- [x] **Read** the paper
+
 ```dataviewjs
 dv.list(dv.pages().file.name)
 ```

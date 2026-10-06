@@ -2,9 +2,10 @@
  * A subset of the Dataview Query Language, run at build time over the
  * published notes only, so a query can never reveal a private note.
  *
- *   LIST [expr] | TABLE [WITHOUT ID] expr [AS "Name"], ...
+ *   LIST [expr] | TABLE [WITHOUT ID] expr [AS "Name"], ... | TASK
  *   FROM #tag | "folder" | [[note]] combined with AND, OR, -, ! and ( )
- *   WHERE expr · FLATTEN expr [AS name] · SORT expr [ASC|DESC], ... · LIMIT n
+ *   WHERE expr · FLATTEN expr [AS name] · GROUP BY expr [AS name]
+ *   SORT expr [ASC|DESC], ... · LIMIT n
  */
 
 export interface Link {
@@ -15,6 +16,48 @@ export interface Link {
 }
 
 export type Value = string | number | boolean | null | Date | Link | Value[] | { [k: string]: Value }
+
+/** A `- [ ] task` line of a note. */
+export interface Task {
+  /** The line as written after the checkbox, links already turned into HTML. */
+  text: string
+  /** The character between the brackets: " ", "x", or a custom status such as "/". */
+  status: string
+  /** 1-based line in the note's published markdown. */
+  line: number
+  tags: string[]
+  /** Dates of the Tasks plugin (📅 due…) and inline [key:: value] fields. */
+  fields: Record<string, string>
+}
+
+/** Dates written with the emoji of the Obsidian Tasks plugin. */
+const TASK_DATES: Record<string, string> = { "📅": "due", "⏳": "scheduled", "🛫": "start", "✅": "completion", "➕": "created" }
+
+/** Tasks of a note's markdown, outside code blocks. */
+export function extractTasks(md: string): Task[] {
+  const tasks: Task[] = []
+  let fence: string | undefined
+  md.split("\n").forEach((line, i) => {
+    const f = line.match(/^\s*(`{3,}|~{3,})/)
+    if (f && (!fence || f[1].startsWith(fence))) {
+      fence = fence ? undefined : f[1]
+      return
+    }
+    if (fence) return
+    const m = line.match(/^\s*(?:[-*+]|\d+[.)])\s+\[(.)\]\s+(.*)$/)
+    if (!m) return
+    const text = m[2].trim()
+    const fields: Record<string, string> = {}
+    for (const [emoji, name] of Object.entries(TASK_DATES)) {
+      const d = text.match(new RegExp(`${emoji}\\uFE0F?\\s*(\\d{4}-\\d{2}-\\d{2})`, "u"))
+      if (d) fields[name] = d[1]
+    }
+    for (const f of text.matchAll(/[[(]([\p{L}\p{N}_ -]+)::\s*([^\])]*)[\])]/gu)) fields[f[1].trim()] = f[2].trim()
+    const tags = [...text.matchAll(/(?:^|[\s>])#([\p{L}_][\p{L}\p{N}_/-]*)/gu)].map((t) => "#" + t[1])
+    tasks.push({ text, status: m[1], line: i + 1, tags, fields })
+  })
+  return tasks
+}
 
 /** What the engine needs to know about a published note. */
 export interface Page {
@@ -30,6 +73,7 @@ export interface Page {
   fields: Record<string, unknown>
   outlinks: string[]
   inlinks: string[]
+  tasks?: Task[]
 }
 
 export class DataviewError extends Error {}
@@ -124,12 +168,19 @@ type Source =
   | { k: "not"; s: Source }
   | { k: "and" | "or"; a: Source; b: Source }
 
+type Step =
+  | { k: "where"; e: Expr }
+  | { k: "flatten"; e: Expr; as: string }
+  | { k: "group"; e: Expr; as: string }
+  | { k: "sort"; keys: { e: Expr; desc: boolean }[] }
+  | { k: "limit"; n: number }
+
 export interface Query {
-  type: "list" | "table"
+  type: "list" | "table" | "task"
   withoutId: boolean
   columns: { e: Expr; name: string }[]
   from?: Source
-  steps: ({ k: "where"; e: Expr } | { k: "flatten"; e: Expr; as: string } | { k: "sort"; keys: { e: Expr; desc: boolean }[] } | { k: "limit"; n: number })[]
+  steps: Step[]
 }
 
 class Parser {
@@ -165,16 +216,16 @@ class Parser {
 
   query(): Query {
     const head = this.peek()
-    if (head?.t !== "id") throw new DataviewError("a query starts with LIST or TABLE")
+    if (head?.t !== "id") throw new DataviewError("a query starts with LIST, TABLE or TASK")
     const type = head.v.toUpperCase()
     this.i++
-    if (type !== "LIST" && type !== "TABLE") throw new Unsupported(`${type} queries`)
-    const q: Query = { type: type.toLowerCase() as "list" | "table", withoutId: false, columns: [], steps: [] }
+    if (type !== "LIST" && type !== "TABLE" && type !== "TASK") throw new Unsupported(`${type} queries`)
+    const q: Query = { type: type.toLowerCase() as Query["type"], withoutId: false, columns: [], steps: [] }
     if (this.isKw("WITHOUT") && this.isKw("ID", 1)) {
       this.i += 2
       q.withoutId = true
     }
-    if (this.peek() && !this.atClause()) {
+    if (q.type !== "task" && this.peek() && !this.atClause()) {
       do {
         const e = this.expr()
         let name = describe(e)
@@ -203,7 +254,12 @@ class Parser {
         } while (this.eatOp(","))
         q.steps.push({ k: "sort", keys })
       } else if (this.eatKw("LIMIT")) q.steps.push({ k: "limit", n: Number(this.next("num").v) })
-      else if (this.isKw("GROUP")) throw new Unsupported("GROUP BY")
+      else if (this.isKw("GROUP") && this.isKw("BY", 1)) {
+        this.i += 2
+        const e = this.expr()
+        const as = this.eatKw("AS") ? String(this.next("id").v) : describe(e)
+        q.steps.push({ k: "group", e, as })
+      }
       else throw new DataviewError(`unexpected "${String(this.peek()!.v)}"`)
     }
     return q
@@ -362,6 +418,9 @@ export interface Engine {
 
 const ISO = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/
 
+/** Moments date() understands by name; all but `now` are the start of a day. */
+const DATE_WORDS = ["today", "tomorrow", "yesterday", "now"]
+
 function linkTo(page: Page): Link {
   return { kind: "link", key: page.key, title: page.title, url: page.url }
 }
@@ -514,8 +573,14 @@ function evaluate(e: Expr, row: Row, engine: Engine): Value {
       }
       return null
     }
-    case "call":
+    case "call": {
+      // date(today) names a moment, not a field: Dataview writes it without quotes.
+      const [first] = e.args
+      if (e.fn === "date" && first?.k === "var" && DATE_WORDS.includes(first.name.toLowerCase())) {
+        return call("date", [first.name.toLowerCase()], engine)
+      }
       return call(e.fn, e.args.map((a) => evaluate(a, row, engine)), engine)
+    }
   }
 }
 
@@ -570,14 +635,17 @@ function call(fn: string, args: Value[], engine: Engine): Value {
       } catch {
         return false
       }
-    case "date":
-      if (str(a) === "today") {
+    case "date": {
+      const word = str(a).toLowerCase()
+      if (word === "now") return new Date()
+      if (DATE_WORDS.includes(word)) {
         const d = new Date()
         d.setHours(0, 0, 0, 0)
+        d.setDate(d.getDate() + (word === "tomorrow" ? 1 : word === "yesterday" ? -1 : 0))
         return d
       }
-      if (str(a) === "now") return new Date()
       return a instanceof Date ? a : Number.isNaN(Date.parse(str(a))) ? null : new Date(str(a))
+    }
     case "link": {
       const page = engine.resolve(str(a))
       return page ? linkTo(page) : { kind: "link", title: str(a) }
@@ -612,17 +680,62 @@ function inSource(page: Page, s: Source, engine: Engine): boolean {
   }
 }
 
+export interface TaskGroup {
+  /** The note of the tasks, or the GROUP BY key. */
+  key: Value
+  tasks: { text: string; checked: boolean }[]
+}
+
 export interface Result {
-  type: "list" | "table"
+  type: "list" | "table" | "task"
   headers: string[]
   rows: Value[][]
+  /** LIST … GROUP BY without a column: each row is [key, members], shown nested. */
+  nested?: boolean
+  /** TASK results, by note or by GROUP BY key. */
+  groups?: TaskGroup[]
+}
+
+/** A task as a row: its own fields over those of its note, as in Dataview. */
+function taskRow(page: Page, task: Task, engine: Engine): Row {
+  const fields: Row = {}
+  for (const [k, v] of Object.entries(task.fields)) fields[k] = toValue(v, engine)
+  return {
+    ...rowOf(page, engine),
+    ...fields,
+    text: task.text,
+    status: task.status,
+    completed: task.status === "x" || task.status === "X",
+    checked: task.status !== " ",
+    line: task.line,
+    path: page.key + ".md",
+    link: linkTo(page),
+    tags: task.tags,
+  }
 }
 
 export function runQuery(q: Query, engine: Engine): Result {
   const pages = q.from ? engine.pages.filter((p) => inSource(p, q.from!, engine)) : engine.pages
-  let rows: Row[] = pages.map((p) => rowOf(p, engine))
+  let rows: Row[] =
+    q.type === "task" ? pages.flatMap((p) => (p.tasks ?? []).map((t) => taskRow(p, t, engine))) : pages.map((p) => rowOf(p, engine))
+  let group: string | undefined
   for (const step of q.steps) {
     if (step.k === "where") rows = rows.filter((r) => truthy(evaluate(step.e, r, engine)))
+    else if (step.k === "group") {
+      // Each group becomes one row: its key, and the rows it gathers under `rows`.
+      const groups = new Map<string, { key: Value; rows: Row[] }>()
+      for (const r of rows) {
+        const key = evaluate(step.e, r, engine)
+        const id = JSON.stringify(scalar(key))
+        const g = groups.get(id) ?? { key, rows: [] }
+        g.rows.push(r)
+        groups.set(id, g)
+      }
+      rows = [...groups.values()]
+        .sort((a, b) => compare(a.key, b.key))
+        .map((g) => ({ key: g.key, [step.as]: g.key, rows: g.rows as Value }))
+      group = step.as
+    }
     else if (step.k === "flatten") {
       rows = rows.flatMap((r) => {
         const v = evaluate(step.e, r, engine)
@@ -641,6 +754,32 @@ export function runQuery(q: Query, engine: Engine): Result {
     } else rows = rows.slice(0, step.n)
   }
   const file = (r: Row) => (r.file as Record<string, Value>).link
+  if (q.type === "task") {
+    const view = (r: Row) => ({ text: String(r.text), checked: r.checked === true })
+    if (group) return { type: "task", headers: [], rows: [], groups: rows.map((g) => ({ key: g.key, tasks: (g.rows as Row[]).map(view) })) }
+    // Without GROUP BY, tasks are listed under their note, as Dataview does.
+    const byNote = new Map<string, TaskGroup>()
+    for (const r of rows) {
+      const link = r.link as Link
+      const g = byNote.get(link.key!) ?? { key: link, tasks: [] }
+      g.tasks.push(view(r))
+      byNote.set(link.key!, g)
+    }
+    return { type: "task", headers: [], rows: [], groups: [...byNote.values()] }
+  }
+  if (group) {
+    const col = q.columns[0]
+    if (q.type === "list") {
+      return col
+        ? { type: "list", headers: [], rows: rows.map((r) => [r.key, evaluate(col.e, r, engine)]) }
+        : { type: "list", headers: [], nested: true, rows: rows.map((r) => [r.key, (r.rows as Row[]).map(file)]) }
+    }
+    return {
+      type: "table",
+      headers: [...(q.withoutId ? [] : [group]), ...q.columns.map((c) => c.name)],
+      rows: rows.map((r) => [...(q.withoutId ? [] : [r.key]), ...q.columns.map((c) => evaluate(c.e, r, engine))]),
+    }
+  }
   if (q.type === "list") {
     const col = q.columns[0]
     return {
