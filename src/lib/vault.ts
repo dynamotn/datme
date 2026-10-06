@@ -8,6 +8,7 @@ import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
 import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
+import { isKanban, kanban } from "./kanban"
 import { cite, parseBibtex, type BibEntry } from "./citations"
 
 /** A published markdown file of the vault, independent of language. */
@@ -438,7 +439,8 @@ function buildVault(version: number): Vault {
 
       const filtered = filterLanguage(s.raw, lang)
       const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
-      let body = deck ? flashcards(filtered, t(lang).showAnswer) : filtered
+      const board = isKanban(s.fm)
+      let body = deck ? flashcards(filtered, t(lang).showAnswer) : board ? kanban(filtered) : filtered
       if (body.includes("@")) {
         const cited = cite(body, bib, t(lang).references)
         body = cited.md
@@ -474,7 +476,8 @@ function buildVault(version: number): Vault {
         updated,
         banner,
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
-        cssclasses: toArray(s.fm.cssclasses ?? s.fm.cssclass),
+        // A board needs the width of the page.
+        cssclasses: [...toArray(s.fm.cssclasses ?? s.fm.cssclass), ...(board ? ["kanban-board"] : [])],
         description: typeof s.fm.description === "string" ? s.fm.description : undefined,
         stage: site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
         types,

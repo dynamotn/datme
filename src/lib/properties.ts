@@ -30,6 +30,7 @@ export const HIDDEN_PROPERTIES = [
   "cssclasses",
   "cssclass",
   "series",
+  "kanban-plugin",
   "series_order",
   "seriesOrder",
   "uid",

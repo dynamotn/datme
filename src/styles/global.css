@@ -2108,6 +2108,42 @@ li > .flashcard {
   margin: 2px 6px 2px 0;
 }
 
+/* ---------- kanban boards ---------- */
+.note.kanban-board {
+  --measure: 100%;
+}
+.prose .kanban {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.prose .kanban-lane {
+  flex: 0 0 17rem;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.prose .kanban-lane h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+.prose .kanban-lane ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.prose .kanban-lane li {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 0.92em;
+}
+
 /* ---------- clozes and practice ---------- */
 .prose .cloze {
   padding: 0 3px;
