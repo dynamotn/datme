@@ -339,6 +339,10 @@ describe("static build", () => {
     expect(exists("assets/_assets/images/diagram.png.w480.webp")).toBe(false)
   })
 
+  test("problems shown while writing in datme dev never reach the built site", () => {
+    expect(read("03_Atomic/Zettelkasten/index.html")).not.toContain("dev-problems")
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

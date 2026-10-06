@@ -16,6 +16,7 @@ import Toc from "../Toc.astro"
 import LocalGraph from "../LocalGraph.astro"
 import Comments from "../Comments.astro"
 import Webmentions from "../Webmentions.astro"
+import DevProblems from "../DevProblems.astro"
 
 interface Props {
   note: Note
@@ -59,6 +60,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       )
     }
     <Breadcrumbs lang={note.lang} dir={note.dir} />
+    <DevProblems file={note.source.key + ".md"} />
     <header class="note-head">
       <NoteMeta note={note} words={r.words}>
         <h1 class="note-title">{title}</h1>

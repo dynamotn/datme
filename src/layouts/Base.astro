@@ -13,6 +13,7 @@ import { ogPath } from "~/lib/og-url"
 import { customCssFile, fontsHref, themeCss } from "~/lib/theme"
 import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
+import DevProblems from "~/components/DevProblems.astro"
 import { serializeLd, type JsonLd } from "~/lib/jsonld"
 
 interface Props {
@@ -210,7 +211,7 @@ const year = new Date().getFullYear()
       <main class="main" data-pagefind-body>
         <slot />
         <footer class="site-footer">
-          <span>© {year} {site.author} · <a href={rss}>{s.rss}</a></span>
+          <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
           <nav>
             {
               Object.entries(site.footerLinks).map(([label, href]) => (

@@ -1,0 +1,28 @@
+---
+import { getVault } from "~/lib/vault"
+
+interface Props {
+  /** Vault-relative file whose problems to show; the whole vault's count when absent. */
+  file?: string
+}
+const { file } = Astro.props
+// Only `datme dev` shows these: they help the writer, a reader has nothing to do with them.
+const problems = import.meta.env.DEV ? getVault().problems.filter((p) => p.level !== "info") : []
+const mine = file ? problems.filter((p) => p.file === file) : []
+---
+
+{
+  file && mine.length > 0 && (
+    <aside class="dev-problems" role="note">
+      <strong>datme check</strong>
+      <ul>
+        {mine.map((p) => (
+          <li data-level={p.level}>
+            <span>{p.level}</span> {p.message}
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+{!file && problems.length > 0 && <span class="dev-problems-count">· ⚠ {problems.length} (datme check)</span>}
