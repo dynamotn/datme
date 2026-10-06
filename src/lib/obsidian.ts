@@ -1,7 +1,7 @@
 import GithubSlugger from "github-slugger"
 import type { Lang } from "../site.config"
 import { langPrefix } from "./i18n"
-import { slugTag, slugToUrl } from "./slug"
+import { sluggify, slugTag, slugToUrl } from "./slug"
 
 export interface LinkRef {
   key: string
@@ -25,6 +25,13 @@ const AUDIO = /\.(mp3|wav|ogg|m4a|flac|webm)$/i
 const VIDEO = /\.(mp4|webm|mov|mkv|ogv)$/i
 const PDF = /\.pdf$/i
 const EXCALIDRAW = /\.excalidraw(\.md)?$/i
+/** Obsidian Canvas and Bases files, published as pages of their own. */
+export const DOC = /\.(canvas|base)$/i
+
+/** URL of the page of a published canvas or base, which keeps its extension. */
+export function docUrl(rel: string, lang: Lang): string {
+  return slugToUrl(langPrefix(lang) + sluggify(rel))
+}
 
 /** Placeholder for a note URL; replaced once every slug of the language is known. */
 export const urlPlaceholder = (key: string) => `\u0001URL:${key}\u0001`
@@ -60,7 +67,10 @@ function plainLine(line: string): string {
  * Convert Obsidian-only syntax into CommonMark + inline HTML, so the rest of
  * the pipeline only has to deal with standard markdown. Code is masked first.
  */
-export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[]; assets: string[] } {
+export function preprocess(
+  src: string,
+  ctx: Ctx,
+): { md: string; links: LinkRef[]; assets: string[]; docs: string[] } {
   const masks: string[] = []
   const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
 
@@ -73,6 +83,7 @@ export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[
 
   const links: LinkRef[] = []
   const assets: string[] = []
+  const docs: string[] = []
   const lines = md.split("\n")
   const lineOf = (offset: number) => {
     let n = 0
@@ -131,6 +142,18 @@ export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[
     const fragment = hash >= 0 ? target.slice(hash + 1).trim() : ""
 
     if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias)
+    if (DOC.test(file)) {
+      const rel = ctx.resolveAsset(file, ctx.dir)
+      const name = escapeAttr(alias ?? file.split("/").pop()!.replace(DOC, ""))
+      if (!rel) return `<span class="broken-link">${name}</span>`
+      docs.push(rel)
+      const url = docUrl(rel, ctx.lang)
+      if (bang && /\.base$/i.test(rel)) {
+        return `<span class="base-ph" data-rel="${escapeAttr(rel)}" data-view="${escapeAttr(fragment)}"></span>`
+      }
+      if (bang) return `<a class="doc-card internal" href="${url}">🗂️ ${name}</a>`
+      return `<a href="${url}" class="internal doc">${name}</a>`
+    }
     if (bang) {
       const note = file ? ctx.resolveNote(file, ctx.dir) : undefined
       if (note && !IMAGE.test(file)) {
@@ -198,5 +221,5 @@ export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[
     .replace(/[^\S\n]\^([A-Za-z0-9-]+)$/gm, ' <span class="block-id" id="^$1"></span>')
 
   md = md.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
-  return { md, links, assets }
+  return { md, links, assets, docs }
 }

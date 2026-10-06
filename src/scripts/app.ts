@@ -3,6 +3,7 @@ import { mountGraph, openGraph, teardownGraphs } from "./graph"
 import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
 import { decrypt } from "./decrypt"
+import { setupCanvas } from "./canvas"
 
 const root = document.documentElement
 
@@ -217,6 +218,7 @@ function setupLocked() {
 document.addEventListener("astro:page-load", () => {
   setupSearch()
   setupLocked()
+  setupCanvas()
   setupExplorer()
   setupToc()
   setupCode()

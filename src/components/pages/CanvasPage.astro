@@ -1,0 +1,132 @@
+---
+import { site, type Lang } from "~/site.config"
+import { getVault, type Doc } from "~/lib/vault"
+import { renderMarkdown, renderNote } from "~/lib/markdown"
+import { bounds, canvasColor, edgePath, type CanvasNode } from "~/lib/canvas"
+import { docUrl } from "~/lib/obsidian"
+import { t } from "~/lib/i18n"
+import Base from "~/layouts/Base.astro"
+import Breadcrumbs from "../Breadcrumbs.astro"
+import Icon from "../Icon.astro"
+
+interface Props {
+  lang: Lang
+  doc: Doc
+}
+const { lang, doc } = Astro.props
+const s = t(lang)
+const vault = getVault()
+const canvas = doc.canvas!
+const PAD = 60
+const box = bounds(canvas.nodes)
+const pos = (n: CanvasNode) =>
+  `left:${n.x - box.x + PAD}px;top:${n.y - box.y + PAD}px;width:${n.width}px;height:${n.height}px;` +
+  (canvasColor(n.color) ? `--node:${canvasColor(n.color)};` : "")
+
+// Groups sit behind the cards they contain.
+const ordered = [...canvas.nodes].sort((a, b) => Number(b.type === "group") - Number(a.type === "group"))
+const nodes = await Promise.all(
+  ordered.map(async (n) => {
+    if (n.type === "text") return { n, html: await renderMarkdown(doc.texts[lang]?.[n.id] ?? "", lang, `doc:${doc.rel}`) }
+    if (n.type === "file" && n.file) {
+      const source = vault.resolveNote(n.file, "")
+      const note = source && vault.byKey[lang].get(source.key)
+      if (note) return { n, note, excerpt: (await renderNote(note)).description }
+      const asset = vault.resolveAsset(n.file, "")
+      if (asset && vault.assets.has(asset)) return { n, asset: "/assets/" + asset.split("/").map(encodeURIComponent).join("/") }
+      // The name of an unpublished note is private too.
+      return { n, missing: true }
+    }
+    return { n }
+  }),
+)
+const byId = new Map(canvas.nodes.map((n) => [n.id, n]))
+const edges = canvas.edges.map((e) => {
+  const from = byId.get(e.fromNode)!
+  const to = byId.get(e.toNode)!
+  const shift = (m: CanvasNode) => ({ ...m, x: m.x - box.x + PAD, y: m.y - box.y + PAD })
+  return { e, ...edgePath(shift(from), shift(to), e), color: canvasColor(e.color) }
+})
+const width = box.width + PAD * 2
+const height = box.height + PAD * 2
+const alternates = Object.fromEntries(site.langs.map((l) => [l, docUrl(doc.rel, l)]))
+---
+
+<Base lang={lang} title={doc.name} alternates={alternates}>
+  <div class="note is-wide canvas-page">
+    <Breadcrumbs lang={lang} dir={doc.dir} />
+    <header class="page-head">
+      <span class="chip type">🗂️ Canvas</span>
+      <h1>{doc.name}</h1>
+    </header>
+    <div class="canvas-viewport" data-canvas>
+      <div class="canvas-board" style={`width:${width}px;height:${height}px`}>
+        <svg class="canvas-edges" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+          <defs>
+            <marker id="cv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="context-stroke" />
+            </marker>
+          </defs>
+          {
+            edges.map(({ e, d, mid, color }) => (
+              <g style={color ? `--edge:${color}` : undefined}>
+                <path
+                  d={d}
+                  marker-end={e.toEnd === "none" ? undefined : "url(#cv-arrow)"}
+                  marker-start={e.fromEnd === "arrow" ? "url(#cv-arrow)" : undefined}
+                />
+                {e.label && (
+                  <text x={mid.x} y={mid.y} text-anchor="middle" dominant-baseline="middle">
+                    {e.label}
+                  </text>
+                )}
+              </g>
+            ))
+          }
+        </svg>
+        {
+          nodes.map((item) => {
+            const { n } = item
+            if (n.type === "group")
+              return (
+                <div class="cv-node cv-group" style={pos(n)}>
+                  {n.label && <span class="cv-group-label">{n.label}</span>}
+                </div>
+              )
+            if (n.type === "text") return <div class="cv-node cv-text prose" style={pos(n)} set:html={item.html} />
+            if (n.type === "link")
+              return (
+                <a class="cv-node cv-link" style={pos(n)} href={n.url} target="_blank" rel="noopener noreferrer">
+                  <span>🔗 {n.url ? new URL(n.url).host : ""}</span>
+                  <small>{n.url}</small>
+                </a>
+              )
+            if ("note" in item && item.note)
+              return (
+                <a class="cv-node cv-file internal" style={pos(n)} href={item.note.url}>
+                  <strong>{item.note.title}</strong>
+                  {item.excerpt && <p>{item.excerpt}</p>}
+                </a>
+              )
+            if ("asset" in item && item.asset)
+              return (
+                <div class="cv-node cv-media" style={pos(n)}>
+                  <img src={item.asset} alt="" loading="lazy" />
+                </div>
+              )
+            return (
+              <div class="cv-node cv-missing" style={pos(n)}>
+                🔒 {s.notPublished}
+              </div>
+            )
+          })
+        }
+      </div>
+      <div class="canvas-controls">
+        <button type="button" class="icon-btn" data-canvas-zoom="in" aria-label="Zoom in">+</button>
+        <button type="button" class="icon-btn" data-canvas-zoom="out" aria-label="Zoom out">−</button>
+        <button type="button" class="icon-btn" data-canvas-zoom="fit" aria-label={s.canvasFit}><Icon name="expand" /></button>
+      </div>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    { "id": "g1", "type": "group", "x": -40, "y": -60, "width": 760, "height": 340, "label": "Method", "color": "4" },
+    { "id": "t1", "type": "text", "x": 0, "y": 0, "width": 300, "height": 160, "text": "## Idea\nLinks to [[Zettelkasten]] and [[Private]].\n<!--lang:en-US-->\nEnglish card\n<!--lang:*-->" },
+    { "id": "f1", "type": "file", "x": 380, "y": 0, "width": 300, "height": 160, "file": "06_Reference/Niklas Luhmann.md" },
+    { "id": "f2", "type": "file", "x": 0, "y": 360, "width": 200, "height": 120, "file": "_assets/images/diagram.png" },
+    { "id": "f3", "type": "file", "x": 260, "y": 360, "width": 200, "height": 120, "file": "06_Reference/Private.md" },
+    { "id": "l1", "type": "link", "x": 520, "y": 360, "width": 240, "height": 120, "url": "https://example.com/zettel" }
+  ],
+  "edges": [
+    { "id": "e1", "fromNode": "t1", "fromSide": "right", "toNode": "f1", "toSide": "left", "label": "inspired" },
+    { "id": "e2", "fromNode": "f1", "toNode": "l1", "color": "1", "toEnd": "none" }
+  ]
+}

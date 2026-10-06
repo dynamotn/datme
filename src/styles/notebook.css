@@ -1114,3 +1114,44 @@
   font-size: 14px;
   box-shadow: 2px 2px 0 var(--ink);
 }
+
+/* ---------- canvas ---------- */
+[data-look="notebook"] .canvas-viewport {
+  border: var(--bw) solid var(--ink);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dots) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+[data-look="notebook"] .cv-node {
+  border: var(--bw) solid var(--ink);
+  border-top: 8px solid var(--node, var(--ink));
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+[data-look="notebook"] .cv-group {
+  border: 3px dashed var(--node, var(--ink));
+  box-shadow: none;
+}
+[data-look="notebook"] .cv-group-label {
+  padding: 2px 8px;
+  background: var(--ink);
+  color: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+[data-look="notebook"] .cv-file strong {
+  font-family: var(--font-ui);
+  font-weight: 800;
+}
+[data-look="notebook"] .canvas-edges path {
+  stroke: var(--edge, var(--ink));
+}
+[data-look="notebook"] .canvas-controls,
+[data-look="notebook"] .prose .doc-card {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}

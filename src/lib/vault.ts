@@ -5,7 +5,8 @@ import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
 import { site, type Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
-import { preprocess, type LinkRef } from "./obsidian"
+import { preprocess, DOC, type LinkRef } from "./obsidian"
+import { parseCanvas, type CanvasData } from "./canvas"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -69,8 +70,23 @@ export interface FolderNode {
   folderNote?: Note
 }
 
+/** A published Obsidian canvas or base, shown as a page of its own. */
+export interface Doc {
+  rel: string
+  kind: "canvas" | "base"
+  name: string
+  dir: string
+  /** Raw source: JSON for a canvas, YAML for a base. */
+  src: string
+  canvas?: CanvasData
+  /** Canvas text nodes per language, as preprocessed markdown, by node id. */
+  texts: Record<Lang, Record<string, string>>
+}
+
 export interface Vault {
   version: number
+  /** Canvases and bases linked from published notes (all of them with `publish: all`). */
+  docs: Map<string, Doc>
   /** The note rendered as the home page, if the vault has one. */
   home?: SourceNote
   sources: Map<string, SourceNote>
@@ -295,6 +311,7 @@ function buildVault(version: number): Vault {
 
   const git = gitDates()
   const assets = new Set<string>()
+  const docRefs = new Set<string>(site.publish === "all" ? found.files.filter((f) => DOC.test(f)) : [])
   const notes = {} as Vault["notes"]
   const byKey = {} as Vault["byKey"]
 
@@ -337,6 +354,7 @@ function buildVault(version: number): Vault {
         resolveAsset,
       })
       pre.assets.forEach((a) => assets.add(a))
+      pre.docs.forEach((d) => docRefs.add(d))
 
       const { typePrefix, blogTags, mapTags } = site.conventions
       const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
@@ -375,8 +393,43 @@ function buildVault(version: number): Vault {
   function noteUrl(key: string, lang: Lang): string {
     return byKey[lang]?.get(key)?.url ?? "#"
   }
+  // Canvases and bases referenced by published notes become pages; canvas text is markdown too.
+  const docs = new Map<string, Doc>()
+  for (const rel of docRefs) {
+    const src = fs.readFileSync(path.join(site.vault, rel), "utf8")
+    const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
+    const kind = rel.toLowerCase().endsWith(".canvas") ? "canvas" : "base"
+    const doc: Doc = { rel, kind, name: path.posix.basename(rel).replace(DOC, ""), dir, src, texts: {} }
+    if (kind === "canvas") {
+      try {
+        doc.canvas = parseCanvas(src)
+      } catch {
+        console.warn(`[datme] skipped ${rel}: not a valid canvas`)
+        continue
+      }
+      for (const lang of site.langs) {
+        doc.texts[lang] = {}
+        for (const node of doc.canvas.nodes) {
+          if (node.type === "text" && node.text) {
+            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset })
+            pre.assets.forEach((a) => assets.add(a))
+            doc.texts[lang][node.id] = pre.md
+          } else if (node.type === "file" && node.file && !resolveNote(node.file, "")) {
+            const asset = resolveAsset(node.file, "")
+            if (asset && !DOC.test(asset)) assets.add(asset)
+          }
+        }
+      }
+    }
+    docs.set(rel, doc)
+  }
+
+  const fillUrls = (md: string, lang: Lang) => md.replace(/\u0001URL:([^\u0001]+)\u0001/g, (_, k) => noteUrl(k, lang))
   for (const lang of site.langs) {
-    for (const n of notes[lang]) n.md = n.md.replace(/\u0001URL:([^\u0001]+)\u0001/g, (_, k) => noteUrl(k, lang))
+    for (const n of notes[lang]) n.md = fillUrls(n.md, lang)
+    for (const d of docs.values()) {
+      for (const id of Object.keys(d.texts[lang] ?? {})) d.texts[lang][id] = fillUrls(d.texts[lang][id], lang)
+    }
   }
 
   const backlinks = {} as Vault["backlinks"]
@@ -420,6 +473,7 @@ function buildVault(version: number): Vault {
 
   return {
     version,
+    docs,
     home,
     sources,
     notes,

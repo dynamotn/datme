@@ -391,6 +391,11 @@ export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Re
   return note.protected ? Promise.resolve(SEALED) : renderFull(note, stack)
 }
 
+/** Render already preprocessed markdown that is not a note, such as a canvas card. */
+export async function renderMarkdown(md: string, lang: Lang, key: string): Promise<string> {
+  return String(await processorFor(lang, [key], {}).process(md))
+}
+
 /** The full rendering of a protected note, only for encrypting its page. */
 export function renderSecret(note: Note): Promise<Rendered> {
   return renderFull(note, [note.key])

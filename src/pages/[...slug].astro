@@ -1,7 +1,7 @@
 ---
 import type { GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
-import { getVault, type Note, type FolderNode } from "~/lib/vault"
+import { getVault, type Note, type FolderNode, type Doc } from "~/lib/vault"
 import { langPrefix } from "~/lib/i18n"
 import { sluggify } from "~/lib/slug"
 import NotePage from "~/components/pages/NotePage.astro"
@@ -9,6 +9,8 @@ import HomePage from "~/components/pages/HomePage.astro"
 import FolderPage from "~/components/pages/FolderPage.astro"
 import TagPage from "~/components/pages/TagPage.astro"
 import AliasRedirect from "~/components/pages/AliasRedirect.astro"
+import CanvasPage from "~/components/pages/CanvasPage.astro"
+
 
 type Page =
   | { kind: "home"; lang: Lang }
@@ -16,6 +18,7 @@ type Page =
   | { kind: "folder"; lang: Lang; folder: FolderNode }
   | { kind: "tag"; lang: Lang; tag?: string }
   | { kind: "alias"; lang: Lang; note: Note }
+  | { kind: "canvas"; lang: Lang; doc: Doc }
 
 export const getStaticPaths = (() => {
   const vault = getVault()
@@ -34,6 +37,9 @@ export const getStaticPaths = (() => {
     }
     claim(prefix + "tags", { kind: "tag", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
+    for (const doc of vault.docs.values()) {
+      if (doc.kind === "canvas") claim(prefix + sluggify(doc.rel), { kind: "canvas", lang, doc })
+    }
     for (const note of vault.notes[lang]) {
       for (const alias of note.aliases) {
         claim(prefix + sluggify(note.dir ? `${note.dir}/${alias}` : alias), { kind: "alias", lang, note })
@@ -51,3 +57,4 @@ const { page } = Astro.props as { page: Page }
 {page.kind === "folder" && <FolderPage lang={page.lang} folder={page.folder} />}
 {page.kind === "tag" && <TagPage lang={page.lang} tag={page.tag} />}
 {page.kind === "alias" && <AliasRedirect note={page.note} />}
+{page.kind === "canvas" && <CanvasPage lang={page.lang} doc={page.doc} />}

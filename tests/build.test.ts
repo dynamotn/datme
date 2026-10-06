@@ -69,6 +69,28 @@ describe("static build", () => {
     }
   })
 
+  test("a linked canvas becomes a pannable page of cards and edges", () => {
+    const html = read("07_Project/Map.canvas/index.html")
+    expect(html).toContain('class="canvas-viewport" data-canvas')
+    expect(html).toMatch(/class="cv-node cv-file internal"[^>]*href="\/06_Reference\/Niklas-Luhmann"/)
+    expect(html).toContain('<img src="/assets/_assets/images/diagram.png"')
+    // A file card for an unpublished note does not even show its name.
+    expect(html).toMatch(/<div class="cv-node cv-missing"[^>]*>🔒 Chưa xuất bản<\/div>/)
+    expect(html).not.toContain("Private.md")
+    expect(html).toContain(">inspired</text>")
+    expect(read("en-US/07_Project/Map.canvas/index.html")).toContain("English card")
+    expect(read("07_Project/Blog-post/index.html")).toContain('href="/07_Project/Map.canvas" class="internal doc">project map</a>')
+  })
+
+  test("canvas files are never copied raw, and unlinked ones are not published", () => {
+    const all = (fs.readdirSync(out, { recursive: true }) as string[]).join("\n")
+    expect(all).not.toContain("Unlinked")
+    const rawCanvas = (fs.readdirSync(out, { recursive: true }) as string[]).filter(
+      (f) => f.endsWith(".canvas") && fs.statSync(path.join(out, f)).isFile(),
+    )
+    expect(rawCanvas).toEqual([])
+  })
+
   test("aliases redirect to their note", () => {
     const html = read("03_Atomic/Slip-box/index.html")
     expect(html).toContain('http-equiv="refresh"')
