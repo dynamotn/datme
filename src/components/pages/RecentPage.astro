@@ -1,0 +1,58 @@
+---
+import { site, type Lang } from "~/site.config"
+import { listed, byRecent, getVault } from "~/lib/vault"
+import { t, langPrefix, formatDate } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { dayKey } from "~/lib/calendar"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const folders = getVault().folders[lang]
+/** How many notes the page lists; older changes are in the archive. */
+const LIMIT = 100
+const notes = byRecent(listed(lang).filter((n) => !n.isHome && n.updated)).slice(0, LIMIT)
+const months = new Map<string, typeof notes>()
+const monthName = (d: Date) => d.toLocaleDateString(lang, { year: "numeric", month: "long" })
+for (const n of notes) {
+  const m = monthName(n.updated!)
+  months.set(m, [...(months.get(m) ?? []), n])
+}
+// Planted and watered on the same day: a new note rather than a change.
+const isNew = (n: (typeof notes)[number]) => !n.created || dayKey(n.created) === dayKey(n.updated!)
+const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "recent")]))
+---
+
+<Base lang={lang} title={s.recentChanges} alternates={alternates}>
+  <div class="note is-wide archive-page recent-page">
+    <header class="page-head">
+      <span class="chip type">🌱 {s.recentChanges}</span>
+      <h1>{s.recentChanges}</h1>
+      <p>{s.recentChangesLead}</p>
+    </header>
+    {
+      [...months].map(([month, list]) => (
+        <section class="archive-year">
+          <h2>
+            {month} <small>{list.length}</small>
+          </h2>
+          <ol class="archive-list">
+            {list.map((n) => (
+              <li>
+                <time datetime={n.updated!.toISOString()}>{formatDate(n.updated, lang)}</time>
+                <a class="internal" href={n.url}>
+                  {n.title}
+                </a>
+                <span class:list={["change", isNew(n) ? "is-new" : "is-updated"]}>{isNew(n) ? s.changeNew : s.changeUpdated}</span>
+                <span class="archive-where">{folders.get(n.dir)?.name}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
+</Base>

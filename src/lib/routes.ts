@@ -12,6 +12,7 @@ export type Page =
   | { kind: "canvas"; lang: Lang; doc: Doc }
   | { kind: "base"; lang: Lang; doc: Doc }
   | { kind: "archive"; lang: Lang }
+  | { kind: "recent"; lang: Lang }
 
 /**
  * Every page of the site by slug. First claim wins: notes, then folders, tags,
@@ -34,6 +35,7 @@ export function routes(): Map<string, Page> {
     }
     claim(prefix + "tags", { kind: "tag", lang })
     claim(prefix + "archive", { kind: "archive", lang })
+    claim(prefix + "recent", { kind: "recent", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
     for (const doc of vault.docs.values()) claim(prefix + sluggify(doc.rel), { kind: doc.kind, lang, doc })
     for (const note of vault.notes[lang]) {

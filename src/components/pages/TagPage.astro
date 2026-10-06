@@ -4,6 +4,7 @@ import { site } from "~/site.config"
 import { getVault, byRecent } from "~/lib/vault"
 import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
+import { feedPath } from "~/lib/feed"
 import Base from "~/layouts/Base.astro"
 import NoteRow from "../NoteRow.astro"
 import NoteCard from "../NoteCard.astro"
@@ -24,10 +25,11 @@ const roots = [...all.entries()]
 const alternates = Object.fromEntries(
   site.langs.map((l) => [l, tag ? tagUrl(l, tag) : slugToUrl(langPrefix(l) + "tags")]),
 )
+const feed = tag ? "/" + feedPath(lang, { kind: "tag", tag }) : undefined
 const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
 ---
 
-<Base lang={lang} title={tag ? `#${tag}` : s.allTags} alternates={alternates}>
+<Base lang={lang} title={tag ? `#${tag}` : s.allTags} alternates={alternates} feed={feed}>
   <div class="note is-wide">
     <nav class="crumbs">
       <a href={slugToUrl(langPrefix(lang) + "index")}>{s.home}</a>
@@ -37,7 +39,15 @@ const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
     <header class="page-head">
       <span class="chip type">{s.tag}</span>
       <h1>{tag ? `#${tag}` : s.allTags}</h1>
-      <p>{tag ? s.notesCount(notes.length) : `${all.size} ${s.tags.toLowerCase()}`}</p>
+      <p>
+        {tag ? s.notesCount(notes.length) : `${all.size} ${s.tags.toLowerCase()}`}
+        {feed && (
+          <>
+            {" · "}
+            <a href={feed}>{s.rss}</a>
+          </>
+        )}
+      </p>
     </header>
     {
       tag ? (

@@ -9,6 +9,7 @@ import AliasRedirect from "~/components/pages/AliasRedirect.astro"
 import CanvasPage from "~/components/pages/CanvasPage.astro"
 import BasePage from "~/components/pages/BasePage.astro"
 import ArchivePage from "~/components/pages/ArchivePage.astro"
+import RecentPage from "~/components/pages/RecentPage.astro"
 
 
 export const getStaticPaths = (() =>
@@ -25,3 +26,4 @@ const { page } = Astro.props as { page: Page }
 {page.kind === "canvas" && <CanvasPage lang={page.lang} doc={page.doc} />}
 {page.kind === "base" && <BasePage lang={page.lang} doc={page.doc} />}
 {page.kind === "archive" && <ArchivePage lang={page.lang} />}
+{page.kind === "recent" && <RecentPage lang={page.lang} />}

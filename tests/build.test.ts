@@ -343,6 +343,26 @@ describe("static build", () => {
     expect(read("03_Atomic/Zettelkasten/index.html")).not.toMatch(/class="dev-problems/)
   })
 
+  test("every folder and tag has its own feed, linked from its page", () => {
+    const folder = read("03_Atomic/index.xml")
+    expect(folder).toContain("<title>Atomic · Khu vườn thử nghiệm</title>")
+    expect(folder).toMatch(/\/03_Atomic\/Zettelkasten\/?<\/link>/)
+    expect(folder).not.toContain("Niklas-Luhmann")
+    expect(read("tags/type/blog/index.xml")).toMatch(/\/07_Project\/Blog-post\/?<\/link>/)
+    expect(exists("en-US/tags/theme/pkm/index.xml")).toBe(true)
+    expect(read("03_Atomic/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Atomic · Khu vườn thử nghiệm" href="/03_Atomic/index.xml">')
+    expect(read("tags/type/blog/index.html")).toContain('href="/tags/type/blog/index.xml"')
+  })
+
+  test("the recent page lists notes by the day they last changed, newest first", () => {
+    const html = read("recent/index.html")
+    const dates = [...html.matchAll(/<time datetime="([^"]+)">/g)].map((m) => m[1])
+    expect(dates.length).toBeGreaterThan(1)
+    expect(dates).toEqual([...dates].sort().reverse())
+    expect(html).toMatch(/Zettelkasten<\/a><span class="change is-updated">vừa tưới<\/span>/)
+    expect(exists("en-US/recent/index.html")).toBe(true)
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

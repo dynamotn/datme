@@ -33,6 +33,8 @@ interface Props {
   look?: "notebook" | "classic"
   /** schema.org structured data describing the page. */
   jsonLd?: JsonLd[]
+  /** URL of the RSS feed of this page's notes, next to the site's. */
+  feed?: string
 }
 const {
   lang,
@@ -45,6 +47,7 @@ const {
   rail = false,
   look = site.appearance.style,
   jsonLd = [],
+  feed,
 } = Astro.props
 const nav = navLinks(lang)
 // Pages without their own image share the generated card of the home page.
@@ -80,6 +83,7 @@ const year = new Date().getFullYear()
       )
     }
     <link rel="alternate" type="application/rss+xml" title={siteTitle} href={rss} />
+    {feed && <link rel="alternate" type="application/rss+xml" title={fullTitle} href={feed} />}
     {
       site.langs.map(
         (l) =>

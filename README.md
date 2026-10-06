@@ -72,7 +72,7 @@ stages:                       # top-level folders shown as note maturity
   Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive
+  - home                      # built-ins: home, tags, archive, recent
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf
@@ -147,6 +147,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Canvases (`.canvas`) linked or embedded from a published note become pannable, zoomable pages: text cards render markdown, file cards link to published notes or show images, and edges keep their labels and colours. With `publish: all`, every canvas is published.
 - Bases (`.base`) get a page with all their views and render in place when embedded (`![[Books.base#Reading]]`): `filters` with `and`/`or`/`not` and expressions like `file.hasTag("book") && rating >= 4`, `formulas`, `properties.displayName`, and `table`, `cards` or `list` views with `order`, `sort` and `limit`. Like Dataview, they only see published notes.
 - A note named after its folder (`Books/Books.md`) introduces that folder's page.
+- Every folder and tag has its own RSS feed (`/Books/index.xml`, `/tags/book/index.xml`), linked from its page; `/recent` lists the notes planted or watered lately.
 - Only assets referenced by a published note are copied to the site.
 
 ## Deploying

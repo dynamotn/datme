@@ -1748,6 +1748,26 @@ dialog.graph-modal {
   margin-top: 0.2em;
 }
 
+.recent-page .archive-list li {
+  grid-template-columns: 130px minmax(0, 1fr) auto auto;
+}
+.recent-page .change {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.recent-page .change.is-new {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.recent-page .change.is-updated {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
 /* ---------- datme dev: problems of the note ---------- */
 .dev-problems {
   margin: 0 0 20px;

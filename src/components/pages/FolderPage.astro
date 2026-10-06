@@ -4,6 +4,7 @@ import { site } from "~/site.config"
 import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { t } from "~/lib/i18n"
+import { feedPath } from "~/lib/feed"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
@@ -20,16 +21,17 @@ const vault = getVault()
 const intro = folder.folderNote ? await renderNote(folder.folderNote) : undefined
 const stage = site.stages[folder.segment]
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.folders[l].get(folder.dir)?.url]))
+const feed = "/" + feedPath(lang, { kind: "folder", dir: folder.dir })
 const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastIndexOf("/")) : ""
 ---
 
-<Base lang={lang} title={folder.name} description={intro?.description} alternates={alternates}>
+<Base lang={lang} title={folder.name} description={intro?.description} alternates={alternates} feed={feed}>
   <div class="note is-wide">
     <Breadcrumbs lang={lang} dir={parent} />
     <header class="page-head">
       <span class="chip stage">{stage ? `${stage.icon} ${stage.label[lang]}` : s.folder}</span>
       <h1>{folder.name}</h1>
-      <p>{s.notesCount(countNotes(folder))}</p>
+      <p>{s.notesCount(countNotes(folder))} · <a href={feed}>{s.rss}</a></p>
     </header>
     {intro && <div class="prose" style="margin-bottom: 36px" set:html={intro.html} />}
     {
