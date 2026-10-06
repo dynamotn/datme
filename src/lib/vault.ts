@@ -63,6 +63,8 @@ export interface Note {
   links: LinkRef[]
   /** Vault-relative assets the note embeds or links. */
   assets: string[]
+  /** A flashcard deck: its cards and clozes can be practised. */
+  deck: boolean
   source: SourceNote
 }
 
@@ -493,6 +495,7 @@ function buildVault(version: number): Vault {
         md: pre.md,
         links: pre.links,
         assets: [...new Set(pre.assets)],
+        deck,
         source: s,
       }
       notes[lang].push(note)

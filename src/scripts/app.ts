@@ -7,6 +7,7 @@ import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
 import { setupWebmentions } from "./webmentions"
 import { setupLightbox } from "./lightbox"
+import { setupPractice, setupClozes } from "./practice"
 
 const root = document.documentElement
 
@@ -285,6 +286,8 @@ document.addEventListener("astro:page-load", () => {
   setupLocalGraph()
   setupTweets()
   setupLightbox()
+  setupClozes()
+  setupPractice()
   // Leaflet is only fetched on the map page.
   const mapEl = document.querySelector<HTMLElement>("[data-map]")
   if (mapEl) void import("./map").then((m) => m.mountMap(mapEl))

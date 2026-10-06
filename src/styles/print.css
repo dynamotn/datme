@@ -107,6 +107,15 @@
   [data-look="notebook"] .shiki span {
     color: var(--shiki-light) !important;
   }
+  .practice-bar {
+    display: none !important;
+  }
+  /* On paper a cloze shows its answer. */
+  .prose .cloze {
+    color: inherit !important;
+    background: none !important;
+    text-decoration: underline;
+  }
   .prose .media-embed {
     aspect-ratio: auto;
     background: none;

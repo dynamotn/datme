@@ -69,6 +69,21 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
     </header>
     <SeriesBox note={note} at="head" />
     {
+      note.deck && !note.protected && (
+        <div
+          class="practice-bar"
+          data-practice
+          data-start={s.practiceStart}
+          data-show={s.practiceShow}
+          data-again={s.practiceAgain}
+          data-good={s.practiceGood}
+          data-done={s.practiceDone}
+          data-close={s.close}
+          hidden
+        />
+      )
+    }
+    {
       payload ? (
         <>
           <form class="locked" data-payload={payload} data-iterations={site.encryption.iterations}>
