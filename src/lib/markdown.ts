@@ -30,6 +30,7 @@ import { renderChart } from "./charts"
 import { linkTerms, glossarySignature } from "./glossary"
 import { readDeadLinks, deadLinksStamp, archiveUrl } from "./dead-links"
 import { linkPreview, previewCard } from "./link-preview"
+import { loadUserPlugins, type UserPlugins } from "./user-plugins"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
@@ -517,7 +518,15 @@ const autolink: AutolinkOptions = {
 
 const cache = new Map<string, Promise<Rendered>>()
 
-function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardBreaks = false) {
+let userPlugins: { version: number; plugins: Promise<UserPlugins> } | undefined
+/** The vault's own plugins, loaded again whenever the vault changes in `datme dev`. */
+function plugins(): Promise<UserPlugins> {
+  const version = getVault().version
+  if (userPlugins?.version !== version) userPlugins = { version, plugins: loadUserPlugins(site.vault) }
+  return userPlugins.plugins
+}
+
+function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardBreaks = false, user: UserPlugins) {
   return unified()
     .use(remarkParse)
     .use(remarkGfm)
@@ -526,6 +535,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(remarkCallouts)
     .use(remarkDataview, { lang, key: stack[stack.length - 1] })
     .use(remarkMermaid)
+    .use(user.remark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeKatex)
@@ -550,6 +560,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
         transformerNotationFocus(),
       ],
     })
+    .use(user.rehype)
     .use(rehypeTransclude, { lang, stack })
     .use(rehypeImages)
     .use(rehypeStringify, { allowDangerousHtml: true })
@@ -572,6 +583,7 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   let hit = cache.get(id)
   if (!hit) {
     hit = (async () => {
+      const user = await plugins()
       // Image sizes end up in the HTML, so a replaced image must invalidate it too.
       const diskKey = isSelfContained(note)
         ? [
@@ -581,6 +593,7 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
             note.md,
             glossarySignature(note.lang),
             deadLinksStamp(),
+            user.signature,
             ...note.assets.map((a) => `${a}@${stamp(a)}`),
           ]
         : undefined
@@ -589,7 +602,7 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
       if (cached) parts = JSON.parse(cached.toString("utf8"))
       else {
         const out: Partial<Rendered> = {}
-        const file = await processorFor(note.lang, stack, out, note.hardBreaks).process(note.md)
+        const file = await processorFor(note.lang, stack, out, note.hardBreaks, user).process(note.md)
         parts = {
           html: String(file),
           h1: out.h1,
@@ -621,7 +634,7 @@ export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Re
 
 /** Render already preprocessed markdown that is not a note, such as a canvas card. */
 export async function renderMarkdown(md: string, lang: Lang, key: string): Promise<string> {
-  return String(await processorFor(lang, [key], {}).process(md))
+  return String(await processorFor(lang, [key], {}, false, await plugins()).process(md))
 }
 
 /** The full rendering of a protected note, only for encrypting its page. */

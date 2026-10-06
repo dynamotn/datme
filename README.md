@@ -189,6 +189,23 @@ vault's repository that runs the published package with
 Both fetch the full git history so notes without `created`/`updated` get their
 real dates. Set `cname: true` when using a custom domain.
 
+## Your own syntax: `datme.config.mjs`
+
+A `datme.config.mjs` at the root of the vault adds remark and rehype plugins to
+the markdown pipeline, for syntax datme does not know. It runs as code during
+the build, so only use plugins you trust. Under Bun, `datme dev` picks up a
+changed file after a restart.
+
+```js
+import remarkEmoji from "remark-emoji"
+import rehypeExternalLinks from "rehype-external-links"
+
+export default {
+  remarkPlugins: [remarkEmoji],
+  rehypePlugins: [[rehypeExternalLinks, { rel: ["nofollow"] }]],
+}
+```
+
 ## Development
 
 ```bash
