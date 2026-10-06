@@ -1,0 +1,21 @@
+---
+import type { Lang } from "~/site.config"
+import { t } from "~/lib/i18n"
+import Icon from "./Icon.astro"
+
+interface Props {
+  lang: Lang
+  current?: string
+}
+const { lang, current } = Astro.props
+---
+
+<section>
+  <p class="panel-title">{t(lang).graph}</p>
+  <div class="graph-box">
+    <canvas data-graph="local" data-lang={lang} data-current={current}></canvas>
+    <button class="icon-btn graph-expand" type="button" data-open-graph aria-label={t(lang).globalGraph}>
+      <Icon name="expand" />
+    </button>
+  </div>
+</section>
