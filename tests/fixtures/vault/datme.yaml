@@ -9,6 +9,7 @@ site:
   me: [https://mastodon.example/@tester]
   fediverse: "@tester@mastodon.example"
 webmentions: {}
+bibliography: _assets/refs.bib
 languages: [vi-VN, en-US]
 ignore:
   - _assets/templates

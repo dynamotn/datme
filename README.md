@@ -101,6 +101,7 @@ images:                       # PNG/JPEG/WebP/AVIF get their size and resized We
   optimize: true              # (srcset), so phones never download the full picture
   widths: [480, 960, 1600]
   quality: 80
+bibliography: refs.bib        # BibTeX file(s) for [@key] citations
 offline: true                 # installable app; pages a reader opened stay readable offline
 ogImages: true                # social cards for the home page and notes without a banner
 stackedPages: true            # a header button to open linked notes side by side
@@ -136,6 +137,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Frontmatter: `title`, `permalink` (a custom URL, or one per language; the old URL redirects), `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
 - Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end.
+- Citations in Pandoc's syntax, `[@key]`, `[@key, p. 12]`, `[see @a; @b]` or `[-@key]`, are looked up in the `bibliography` files, shown author–date ("Luhmann 1992, p. 12") and listed in APA style at the end of the note. `datme check` reports keys missing from the bibliography.
 - Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.
 - Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …

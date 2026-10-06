@@ -209,6 +209,8 @@ const schema = z
       })
       .strict()
       .default({ optimize: true, widths: [480, 960, 1600], quality: 80 }),
+    /** BibTeX files, relative to the vault, that [@key] citations are looked up in. */
+    bibliography: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
     /** Make the site installable and keep the pages a reader opened available offline. */
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
@@ -332,6 +334,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     redirects: c.redirects,
     ogImages: c.ogImages,
     offline: c.offline,
+    bibliography: (typeof c.bibliography === "string" ? [c.bibliography] : (c.bibliography ?? [])).map((p) => p.replace(/^\/+/, "")),
     images: { ...c.images, widths: [...new Set(c.images.widths)].sort((a, b) => a - b) },
     stackedPages: c.stackedPages,
     related: c.related,

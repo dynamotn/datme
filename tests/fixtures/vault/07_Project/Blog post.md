@@ -12,6 +12,8 @@ series_order: 1
 
 First paragraph of the blog post, used as its description.
 
+As Luhmann argued [@luhmann1992, p. 53], and nobody else [@missing2000].
+
 See the [[Map.canvas|project map]].
 
 ![[Map.canvas]]

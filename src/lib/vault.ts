@@ -8,6 +8,7 @@ import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
 import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
+import { cite, parseBibtex, type BibEntry } from "./citations"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -375,6 +376,17 @@ function buildVault(version: number): Vault {
     }
   }
 
+  // Every bibliography of the config, merged; a later file wins for a key both define.
+  const bib = new Map<string, BibEntry>()
+  for (const rel of site.bibliography) {
+    try {
+      for (const e of parseBibtex(fs.readFileSync(path.join(site.vault, rel), "utf8"))) bib.set(e.key, e)
+    } catch {
+      report("error", "datme.yaml", `bibliography "${rel}" cannot be read`)
+    }
+  }
+  const missingCitations = new Set<string>()
+
   const git = gitDates()
   const assets = new Set<string>()
   const docRefs = new Set<string>(site.publish === "all" ? found.files.filter((f) => DOC.test(f)) : [])
@@ -422,9 +434,19 @@ function buildVault(version: number): Vault {
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
-      const body = filterLanguage(s.raw, lang)
-      const deck = isDeck(tags, body, site.conventions.flashcardTags)
-      const pre = preprocess(deck ? flashcards(body, t(lang).showAnswer) : body, {
+      const filtered = filterLanguage(s.raw, lang)
+      const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
+      let body = deck ? flashcards(filtered, t(lang).showAnswer) : filtered
+      if (body.includes("@")) {
+        const cited = cite(body, bib, t(lang).references)
+        body = cited.md
+        for (const key of cited.missing) {
+          if (missingCitations.has(`${relFile}\0${key}`)) continue
+          missingCitations.add(`${relFile}\0${key}`)
+          report("error", relFile, `citation @${key} is not in the bibliography`)
+        }
+      }
+      const pre = preprocess(body, {
         lang,
         dir: s.dir,
         resolveNote,
