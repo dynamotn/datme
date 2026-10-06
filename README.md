@@ -7,16 +7,18 @@ optional multilingual notes. Long-form folders can keep a quiet serif blog look.
 ## Quick start
 
 ```bash
-bunx datme dev ~/MyVault                 # live preview at http://localhost:4321
-bunx datme build ~/MyVault --out ./site  # static site, ready for any host
-npx datme build ~/MyVault                # the same with Node 23.6+
+bunx @dynamotn/datme dev ~/MyVault                 # live preview at http://localhost:4321
+bunx @dynamotn/datme build ~/MyVault --out ./site  # static site, ready for any host
+npx @dynamotn/datme build ~/MyVault                # the same with Node 23.6+
 ```
 
 Only notes with `publish: true` in their frontmatter are published, so nothing
-private leaks by default. Run `bunx datme init ~/MyVault` to write a commented
+private leaks by default. Run `bunx @dynamotn/datme init ~/MyVault` to write a commented
 `datme.yaml` into the vault and adjust it.
 
 ## Commands
+
+Installed globally (`npm i -g @dynamotn/datme`) the command is simply `datme`.
 
 | Command | What it does |
 | --- | --- |

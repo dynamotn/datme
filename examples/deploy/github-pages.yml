@@ -26,11 +26,7 @@ jobs:
           # Full history gives notes without created/updated frontmatter their real dates.
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      - run: git clone --depth 1 https://gitlab.com/dynamo-tools/datme.git "$RUNNER_TEMP/datme"
-      - run: bun install --frozen-lockfile
-        working-directory: ${{ runner.temp }}/datme
-      - run: bun bin/datme.ts build "$GITHUB_WORKSPACE" --out "$RUNNER_TEMP/site"
-        working-directory: ${{ runner.temp }}/datme
+      - run: bunx @dynamotn/datme build "$GITHUB_WORKSPACE" --out "$RUNNER_TEMP/site"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ runner.temp }}/site

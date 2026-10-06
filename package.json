@@ -1,5 +1,5 @@
 {
-  "name": "datme",
+  "name": "@dynamotn/datme",
   "version": "0.1.0",
   "description": "Publish an Obsidian vault as a bilingual digital garden: a blog-like home on top of a second-brain notebook.",
   "type": "module",
@@ -67,5 +67,8 @@
     "@types/js-yaml": "^4.0.9",
     "@types/mdast": "^4.0.4",
     "typescript": "6"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

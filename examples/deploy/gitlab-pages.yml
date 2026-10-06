@@ -7,9 +7,7 @@ pages:
     # Full history gives notes without created/updated frontmatter their real dates.
     GIT_DEPTH: "0"
   script:
-    - git clone --depth 1 https://gitlab.com/dynamo-tools/datme.git /tmp/datme
-    - cd /tmp/datme && bun install --frozen-lockfile
-    - bun bin/datme.ts build "$CI_PROJECT_DIR" --out "$CI_PROJECT_DIR/public"
+    - bunx @dynamotn/datme build "$CI_PROJECT_DIR" --out "$CI_PROJECT_DIR/public"
   artifacts:
     paths: [public]
   rules:
