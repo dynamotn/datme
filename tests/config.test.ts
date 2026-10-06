@@ -171,6 +171,7 @@ describe("analytics, comments and CNAME", () => {
     expect(c.cname).toBe(false)
     expect(c.ogImages).toBe(true)
     expect(c.stackedPages).toBe(true)
+    expect(c.lineBreaks).toEqual({ all: false, types: [], folders: [] })
   })
 
   test("each provider checks its own fields", () => {

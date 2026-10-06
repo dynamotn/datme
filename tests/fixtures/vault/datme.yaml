@@ -54,3 +54,5 @@ types:
     label:
       vi-VN: Nhân vật
       en-US: Person
+lineBreaks:
+  types: [composition]

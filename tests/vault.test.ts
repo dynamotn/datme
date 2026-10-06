@@ -15,8 +15,14 @@ describe("publishing rules", () => {
       "06_Reference/Niklas Luhmann",
       "06_Reference/Secret",
       "07_Project/Blog post",
+      "07_Project/Poem",
       "index",
     ])
+  })
+
+  test("lineBreaks applies to configured types and yields to frontmatter", () => {
+    expect(vi.get("07_Project/Poem")!.hardBreaks).toBe(true)
+    expect(vi.get("03_Atomic/Zettelkasten")!.hardBreaks).toBe(false)
   })
 
   test("password-protected notes are published sealed, with the password out of the frontmatter", () => {

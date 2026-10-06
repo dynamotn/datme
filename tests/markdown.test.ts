@@ -151,3 +151,22 @@ describe("dataview", () => {
     expect(html).not.toContain("dv.list")
   })
 })
+
+describe("line breaks", () => {
+  test("poems keep their single line breaks", async () => {
+    const { html } = await renderNote(vi.get("07_Project/Poem")!)
+    expect(html).toContain("Plain stanza<br>\ngoes on here")
+    expect(html).toContain("second line<br>\nthird line")
+  })
+
+  test("a line already ending in </br> gets no second break", async () => {
+    const { html } = await renderNote(vi.get("07_Project/Poem")!)
+    expect(html).not.toMatch(/First line<\/br>\s*<br>/)
+    expect(html).not.toMatch(/First line<br>\s*<br>/)
+  })
+
+  test("other notes keep markdown's soft breaks", async () => {
+    const { html } = await renderNote(vi.get("03_Atomic/Zettelkasten")!)
+    expect(html).not.toContain("<br>")
+  })
+})

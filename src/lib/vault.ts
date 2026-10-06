@@ -46,6 +46,8 @@ export interface Note {
   isMoc: boolean
   isHome: boolean
   unlisted: boolean
+  /** Single line breaks are kept (poems), from datme.yaml lineBreaks or `lineBreaks` frontmatter. */
+  hardBreaks: boolean
   /** Encrypted with its password: no content may leak into excerpts, search or feeds. */
   protected: boolean
   dir: string
@@ -435,6 +437,12 @@ function buildVault(version: number): Vault {
         types,
         isBlog: tags.some((x) => blogTags.includes(x)),
         isMoc: tags.some((x) => mapTags.includes(x)),
+        hardBreaks:
+          typeof s.fm.lineBreaks === "boolean"
+            ? s.fm.lineBreaks
+            : site.lineBreaks.all ||
+              types.some((ty) => site.lineBreaks.types.includes(ty)) ||
+              site.lineBreaks.folders.some((f) => s.dir === f || s.dir.startsWith(f + "/")),
         isHome: s.isHome,
         unlisted: s.fm.unlisted === true,
         protected: s.password != null,

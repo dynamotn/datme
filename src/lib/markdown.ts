@@ -18,7 +18,7 @@ import rehypeStringify from "rehype-stringify"
 import { visit, SKIP } from "unist-util-visit"
 import { toString as hastToString } from "hast-util-to-string"
 import { fromHtml } from "hast-util-from-html"
-import type { Root as MdRoot, Blockquote, Paragraph, PhrasingContent, Code } from "mdast"
+import type { Root as MdRoot, Blockquote, Paragraph, PhrasingContent, Code, Text } from "mdast"
 import type { Root as HastRoot, Element, ElementContent } from "hast"
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
@@ -119,6 +119,32 @@ const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
         ...(fold === "+" ? { open: true } : {}),
       },
     }
+  })
+}
+
+const BR = /<\/?br\s*\/?>\s*$/i
+
+/**
+ * Turn single newlines into line breaks, as Obsidian does unless "strict line
+ * breaks" is on. A line already ending in <br> or </br> gets no second break.
+ */
+// Options are an object: unified reads a bare `true`/`false` as "use with defaults" / "skip".
+const remarkHardBreaks: Plugin<[{ enabled: boolean }], MdRoot> = ({ enabled }) => (tree) => {
+  if (!enabled) return
+  visit(tree, "text", (node: Text, index, parent) => {
+    if (!parent || index == null || !node.value.includes("\n")) return
+    const parts = node.value.split("\n")
+    const out: PhrasingContent[] = []
+    parts.forEach((part, i) => {
+      if (i > 0) {
+        const prev = out.length ? out[out.length - 1] : (parent.children[index - 1] as PhrasingContent | undefined)
+        const brAlready = prev?.type === "html" && BR.test(prev.value)
+        if (!brAlready) out.push({ type: "break" })
+      }
+      if (part) out.push({ type: "text", value: part })
+    })
+    ;(parent.children as PhrasingContent[]).splice(index, 1, ...out)
+    return index + out.length
   })
 }
 
@@ -342,10 +368,11 @@ const autolink: AutolinkOptions = {
 
 const cache = new Map<string, Promise<Rendered>>()
 
-function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>) {
+function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardBreaks = false) {
   return unified()
     .use(remarkParse)
     .use(remarkGfm)
+    .use(remarkHardBreaks, { enabled: hardBreaks })
     .use(remarkMath)
     .use(remarkCallouts)
     .use(remarkDataview, { lang, key: stack[stack.length - 1] })
@@ -392,13 +419,13 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   let hit = cache.get(id)
   if (!hit) {
     hit = (async () => {
-      const diskKey = isSelfContained(note) ? [note.lang, variant, note.md] : undefined
+      const diskKey = isSelfContained(note) ? [note.lang, variant, String(note.hardBreaks), note.md] : undefined
       const cached = diskKey && readCache("notes", import.meta.url, diskKey)
       let parts: Parts
       if (cached) parts = JSON.parse(cached.toString("utf8"))
       else {
         const out: Partial<Rendered> = {}
-        const file = await processorFor(note.lang, stack, out).process(note.md)
+        const file = await processorFor(note.lang, stack, out, note.hardBreaks).process(note.md)
         parts = {
           html: String(file),
           h1: out.h1,

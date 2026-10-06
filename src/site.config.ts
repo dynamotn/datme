@@ -158,6 +158,16 @@ const schema = z
       })
       .strict()
       .optional(),
+    /** Keep single line breaks, as Obsidian does by default; for poems and lyrics. */
+    lineBreaks: z
+      .object({
+        all: z.boolean().default(false),
+        /** Note types (from tags like type/composition) that keep their line breaks. */
+        types: z.array(z.string()).default([]),
+        folders: z.array(z.string()).default([]),
+      })
+      .strict()
+      .default({ all: false, types: [], folders: [] }),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
     /** Make the site installable and keep the pages a reader opened available offline. */
@@ -281,6 +291,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ogImages: c.ogImages,
     offline: c.offline,
     stackedPages: c.stackedPages,
+    lineBreaks: { ...c.lineBreaks, folders: c.lineBreaks.folders.map((p) => p.replace(/^\/+|\/+$/g, "")) },
     properties: c.properties,
     types: Object.fromEntries(
       [...new Set([...Object.keys(DEFAULT_TYPES), ...Object.keys(c.types)])].map((type) => [
