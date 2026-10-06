@@ -1,0 +1,16 @@
+# Type-check and test datme on every push and merge request.
+image: oven/bun:1
+
+variables:
+  ASTRO_TELEMETRY_DISABLED: "1"
+
+cache:
+  key:
+    files: [bun.lock]
+  paths: [node_modules/]
+
+test:
+  script:
+    - bun install --frozen-lockfile
+    - bunx astro check
+    - bun test
