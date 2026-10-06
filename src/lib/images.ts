@@ -13,6 +13,8 @@ export const VARIANT = /\.w(\d+)\.webp$/
 export interface ImageSize {
   width: number
   height: number
+  /** Transparent images get no blurred placeholder: it would show through. */
+  alpha?: boolean
 }
 
 /** Size and modification stamp of an asset, keying everything derived from it. */
@@ -41,7 +43,8 @@ export function imageSize(rel: string): Promise<ImageSize | undefined> {
         if (!meta.width || !meta.height) return undefined
         // EXIF orientation 5–8 turns the picture a quarter, swapping its sides.
         const turned = (meta.orientation ?? 1) >= 5
-        const size = turned ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height }
+        const dims = turned ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height }
+        const size: ImageSize = { ...dims, alpha: meta.hasAlpha === true }
         writeCache("img-size", import.meta.url, key, JSON.stringify(size))
         return size
       } catch {
@@ -79,6 +82,27 @@ export async function renderVariant(rel: string, width: number): Promise<Buffer>
     .toBuffer()
   writeCache("img", import.meta.url, key, out)
   return out
+}
+
+/**
+ * A tiny blurred copy of an image as a data URI, shown while the image loads.
+ * A few hundred bytes per image; transparent images go without.
+ */
+export async function placeholder(rel: string): Promise<string | undefined> {
+  if (!site.images.placeholders) return undefined
+  const size = await imageSize(rel)
+  if (!size || size.alpha) return undefined
+  const key = [rel, stamp(rel)]
+  const cached = readCache("lqip", import.meta.url, key)
+  if (cached) return cached.toString("utf8")
+  try {
+    const tiny = await sharp(path.join(site.vault, rel)).rotate().resize({ width: 16 }).blur(1).webp({ quality: 40 }).toBuffer()
+    const uri = `data:image/webp;base64,${tiny.toString("base64")}`
+    writeCache("lqip", import.meta.url, key, uri)
+    return uri
+  } catch {
+    return undefined
+  }
 }
 
 /** Layout width of the reading column, for `sizes`. */

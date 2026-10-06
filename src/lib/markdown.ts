@@ -32,7 +32,7 @@ import { readDeadLinks, deadLinksStamp, archiveUrl } from "./dead-links"
 import { linkPreview, previewCard } from "./link-preview"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
-import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
+import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
 
 export interface Heading {
   depth: number
@@ -496,6 +496,11 @@ const rehypeImages: Plugin<[], HastRoot> = () => async (tree) => {
       img.properties.width = w ?? size.width
       img.properties.height = h ?? Math.round(((w ?? size.width) * size.height) / size.width)
       img.properties.decoding = "async"
+      const blur = await placeholder(rel)
+      if (blur) {
+        img.properties.style = `background:url(${blur}) center/cover no-repeat`
+        img.properties.className = [...((img.properties.className as string[]) ?? []), "lqip"]
+      }
       const widths = variantWidths(size.width)
       if (!widths.length) return
       img.properties.srcset = [...widths.map((v) => `${variantPath(rel, v)} ${v}w`), `${img.properties.src} ${size.width}w`].join(", ")

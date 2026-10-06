@@ -104,6 +104,7 @@ images:                       # PNG/JPEG/WebP/AVIF get their size and resized We
   optimize: true              # (srcset), so phones never download the full picture
   widths: [480, 960, 1600]
   quality: 80
+  placeholders: true          # a tiny blurred copy shows while each image loads
 search: { engine: minisearch } # or pagefind: indexes the built pages, loads only what a query needs
 bibliography: refs.bib        # BibTeX file(s) for [@key] citations
 map:                          # tiles of /map (OpenStreetMap by default)

@@ -335,6 +335,9 @@ describe("static build", () => {
     const webp = fs.readFileSync(path.join(out, "assets/_assets/images/wide.png.w960.webp"))
     expect(webp.subarray(8, 12).toString()).toBe("WEBP")
     expect(exists("assets/_assets/images/wide.png.w1600.webp")).toBe(false)
+    // A blurred copy shows while it loads; the 1×1 diagram is transparent, so it gets none.
+    expect(img).toMatch(/style="background:url\(data:image\/webp;base64,[A-Za-z0-9+/=]+\) center\/cover no-repeat"/)
+    expect(img).toContain('class="lqip"')
     // A 1×1 image has nothing smaller to offer.
     expect(exists("assets/_assets/images/diagram.png.w480.webp")).toBe(false)
   })
