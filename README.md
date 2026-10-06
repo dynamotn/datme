@@ -75,7 +75,7 @@ stages:                       # top-level folders shown as note maturity
   Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive, recent, timeline, map
+  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf
@@ -153,7 +153,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Notes of 300 words or more show a reading progress bar and the minutes left.
 - The "Aa" menu lets readers enlarge the text, switch to a legible font (Atkinson Hyperlegible, fetched only then) or high contrast; their choice stays in their browser. Right-to-left languages (Arabic, Hebrew, Persian, Urdu…) get `dir="rtl"`.
 - Citations in Pandoc's syntax, `[@key]`, `[@key, p. 12]`, `[see @a; @b]` or `[-@key]`, are looked up in the `bibliography` files, shown author–date ("Luhmann 1992, p. 12") and listed in APA style at the end of the note. `datme check` reports keys missing from the bibliography.
-- Notes with `start` (and `end`) — `1927`, `1927-12` or `1927-12-08`, `-0500` for BCE — or tagged as events appear on `/timeline`; notes with `location: [lat, lng]` appear on `/map`. Each page exists only when some note qualifies; protected notes never do.
+- Notes with `start` (and `end`) — `1927`, `1927-12` or `1927-12-08`, `-0500` for BCE — or tagged as events appear on `/timeline`; notes with `location: [lat, lng]` appear on `/map`. `/stats` shows the garden in numbers: notes, words, links, growth by month, folders and top tags. Each page exists only when some note qualifies; protected notes never do.
 - Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.
 - Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
 - Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …

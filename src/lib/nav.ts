@@ -20,6 +20,7 @@ export function navLinks(lang: Lang): NavLink[] {
     else if (item.kind === "tags") out.push({ label: t(lang).tags, url: slugToUrl(langPrefix(lang) + "tags") })
     else if (item.kind === "archive") out.push({ label: t(lang).archive, url: slugToUrl(langPrefix(lang) + "archive") })
     else if (item.kind === "recent") out.push({ label: t(lang).recentChanges, url: slugToUrl(langPrefix(lang) + "recent") })
+    else if (item.kind === "stats") out.push({ label: t(lang).stats, url: slugToUrl(langPrefix(lang) + "stats") })
     // These pages only exist when some note has a date or a place to show.
     else if (item.kind === "timeline") {
       if (hasTimeline(lang)) out.push({ label: t(lang).timeline, url: slugToUrl(langPrefix(lang) + "timeline") })

@@ -53,6 +53,7 @@ const PAGES = [
   "recent/index.html",
   "timeline/index.html",
   "map/index.html",
+  "stats/index.html",
   "06_Reference/Secret/index.html",
 ]
 

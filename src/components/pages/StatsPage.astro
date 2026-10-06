@@ -1,0 +1,100 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { gardenStats, growthPath } from "~/lib/stats"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const st = await gardenStats(lang)
+const fmt = (n: number) => n.toLocaleString(lang)
+const W = 640
+const H = 160
+const path = growthPath(st.growth, W, H)
+const maxFolder = Math.max(1, ...st.folders.map((f) => f.count))
+const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "stats")]))
+---
+
+<Base lang={lang} title={s.stats} alternates={alternates}>
+  <div class="note is-wide stats-page">
+    <header class="page-head">
+      <span class="chip type">📊 {s.stats}</span>
+      <h1>{s.stats}</h1>
+      <p>{s.statsLead}</p>
+    </header>
+    <dl class="stats-tiles">
+      <div><dt>{s.notes}</dt><dd>{fmt(st.notes)}</dd></div>
+      <div><dt>{s.statsWords}</dt><dd>{fmt(st.words)}</dd></div>
+      <div><dt>{s.links}</dt><dd>{fmt(st.links)}</dd></div>
+      <div><dt>{s.tags}</dt><dd>{fmt(st.tags)}</dd></div>
+      <div><dt>{s.statsAverage}</dt><dd>{fmt(st.notes ? Math.round(st.words / st.notes) : 0)}</dd></div>
+    </dl>
+    {
+      st.growth.length > 1 && (
+        <section>
+          <h2>{s.statsGrowth}</h2>
+          <figure class="stats-growth">
+            <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={s.statsGrowth}>
+              <path class="area" d={`${path} L${W},${H} L0,${H} Z`} />
+              <path class="line" d={path} />
+            </svg>
+            <figcaption>
+              <span>{st.growth[0][0]}</span>
+              <span>{st.growth.at(-1)![0]}</span>
+            </figcaption>
+            <table class="chart-data">
+              <tr>
+                <th scope="col">{s.statsMonth}</th>
+                <th scope="col">{s.notes}</th>
+              </tr>
+              {st.growth.map(([m, n]) => (
+                <tr>
+                  <th scope="row">{m}</th>
+                  <td>{n}</td>
+                </tr>
+              ))}
+            </table>
+          </figure>
+        </section>
+      )
+    }
+    <div class="stats-columns">
+      {
+        st.folders.length > 0 && (
+          <section>
+            <h2>{s.folder}</h2>
+            <ul class="stats-bars">
+              {st.folders.map((f) => (
+                <li>
+                  <span>{f.label}</span>
+                  <span class="bar" style={`--w:${(f.count / maxFolder) * 100}%`} />
+                  <span>{f.count}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+      {
+        st.topTags.length > 0 && (
+          <section>
+            <h2>{s.tags}</h2>
+            <ol class="stats-tags">
+              {st.topTags.map((x) => (
+                <li>
+                  <a class="chip tag" href={slugToUrl(langPrefix(lang) + "tags/" + x.tag)}>
+                    #{x.tag} <small>{x.count}</small>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )
+      }
+    </div>
+  </div>
+</Base>

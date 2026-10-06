@@ -16,6 +16,7 @@ export type Page =
   | { kind: "recent"; lang: Lang }
   | { kind: "timeline"; lang: Lang }
   | { kind: "map"; lang: Lang }
+  | { kind: "stats"; lang: Lang }
 
 /**
  * Every page of the site by slug. First claim wins: notes, then folders, tags,
@@ -39,6 +40,7 @@ export function routes(): Map<string, Page> {
     claim(prefix + "tags", { kind: "tag", lang })
     claim(prefix + "archive", { kind: "archive", lang })
     claim(prefix + "recent", { kind: "recent", lang })
+    claim(prefix + "stats", { kind: "stats", lang })
     // Only when some note has a date or a place to show.
     if (hasTimeline(lang)) claim(prefix + "timeline", { kind: "timeline", lang })
     if (hasMap(lang)) claim(prefix + "map", { kind: "map", lang })
