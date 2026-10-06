@@ -117,6 +117,7 @@
     overflow: visible;
     clip: auto;
   }
+  .share-passage,
   .practice-bar {
     display: none !important;
   }

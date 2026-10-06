@@ -2119,6 +2119,23 @@ li > .flashcard {
   margin: 2px 6px 2px 0;
 }
 
+/* ---------- sharing a passage ---------- */
+.share-passage {
+  position: fixed;
+  z-index: 70;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font: 600 12.5px var(--font-ui);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+::target-text {
+  background: var(--mark);
+}
+
 /* ---------- glossary terms ---------- */
 .prose a.term {
   background: none;

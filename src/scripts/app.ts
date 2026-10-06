@@ -8,6 +8,7 @@ import { setupStack } from "./stack"
 import { setupWebmentions } from "./webmentions"
 import { setupLightbox } from "./lightbox"
 import { setupPractice, setupClozes } from "./practice"
+import { setupShare } from "./share"
 
 const root = document.documentElement
 
@@ -294,6 +295,7 @@ document.addEventListener("astro:page-load", () => {
   setupTweets()
   setupLightbox()
   setupClozes()
+  setupShare()
   setupPractice()
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())
