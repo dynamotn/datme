@@ -128,6 +128,29 @@ interface DecorateOpts {
   out: Partial<Rendered>
 }
 
+const SKIP_CLASSES = ["heading-anchor", "katex-mathml", "block-id"]
+
+/**
+ * Text a reader would see, for search and descriptions: leaves out code blocks
+ * (mostly Dataview queries), heading anchors and KaTeX's hidden MathML.
+ */
+function readable(node: HastRoot | ElementContent): string {
+  const parts: string[] = []
+  const walk = (n: HastRoot | ElementContent) => {
+    if (n.type === "text") parts.push(n.value)
+    else if (n.type === "element") {
+      if (n.tagName === "pre" || n.tagName === "script" || n.tagName === "style") return
+      const cls = (n.properties.className as string[] | undefined) ?? []
+      if (cls.some((c) => SKIP_CLASSES.includes(c))) return
+      n.children.forEach(walk)
+      // Block elements end a word even without whitespace between them.
+      if (/^(p|li|h[1-6]|div|td|th|blockquote)$/.test(n.tagName)) parts.push(" ")
+    } else if (n.type === "root") n.children.forEach((c) => walk(c as ElementContent))
+  }
+  walk(node)
+  return parts.join("").replace(/\s+/g, " ").trim()
+}
+
 /** Links, images, tables and headings, plus hoisting of the leading H1. */
 const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => {
   const firstEl = tree.children.find((c) => c.type === "element") as Element | undefined
@@ -165,9 +188,7 @@ const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => 
     }
   })
   out.headings = headings
-  // Searchable text leaves out code blocks (mostly Dataview queries).
-  const prose = { ...tree, children: tree.children.filter((c) => !(c.type === "element" && c.tagName === "pre")) }
-  const text = hastToString(prose).replace(/\s+/g, " ").trim()
+  const text = readable(tree)
   out.text = text
   out.words = text ? text.split(" ").length : 0
   // First paragraph in reading order, including ones inside callouts (often a definition).
@@ -177,7 +198,7 @@ const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => 
     if (node.tagName === "pre") return SKIP
     if (node.tagName === "p" && hastToString(node).trim()) firstP = node
   })
-  const desc = firstP ? hastToString(firstP).replace(/\s+/g, " ").trim() : text
+  const desc = firstP ? readable(firstP) : text
   out.description = desc.length > 180 ? desc.slice(0, 177).trimEnd() + "…" : desc
 }
 

@@ -81,3 +81,14 @@ describe("caching", () => {
     expect(renderNote(note)).toBe(renderNote(note))
   })
 })
+
+describe("readable text", () => {
+  test("headings contribute their words without the # anchor", () => {
+    expect(zk.text).toContain("Definition A slip box")
+    expect(zk.text).not.toMatch(/Definition#/)
+  })
+
+  test("KaTeX's hidden MathML is not duplicated into the text", () => {
+    expect(zk.text).not.toContain("e^{i\\pi}")
+  })
+})
