@@ -1,0 +1,136 @@
+/* ---------- print: the note alone, black on white, in either look and theme ---------- */
+@media print {
+  @page {
+    margin: 18mm 16mm;
+  }
+
+  :root,
+  :root[data-theme="dark"],
+  [data-look="notebook"],
+  [data-look="notebook"][data-theme="dark"] {
+    color-scheme: light;
+    --bg: #fff;
+    --dots: transparent;
+    --surface: #fff;
+    --surface-2: #f4f4f2;
+    --surface-3: #ebebe8;
+    --ink: #000;
+    --ink-2: #222;
+    --muted: #555;
+    --line: #bbb;
+    --line-strong: #888;
+    --accent: #000;
+    --accent-2: #000;
+    --accent-soft: transparent;
+    --clay: #000;
+    --clay-soft: transparent;
+    --mark: #fff1a8;
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-lg: none;
+    --margin-line: transparent;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    font-size: 11pt;
+  }
+
+  /* Navigation, interaction and everything around the note itself. */
+  .site-header,
+  .sidebar,
+  .site-footer,
+  .backlinks,
+  .comments,
+  .webmentions,
+  .copy-btn,
+  .heading-anchor,
+  dialog,
+  .locked,
+  .stack-col:not(:first-child) {
+    display: none !important;
+  }
+
+  .shell,
+  .shell.no-right {
+    display: block;
+    max-width: none;
+    min-height: 0;
+  }
+  .main {
+    padding: 0;
+  }
+  .note,
+  [data-look="notebook"] .note {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  [data-look="notebook"] .note::before,
+  [data-look="notebook"] .note::after {
+    display: none;
+  }
+
+  /* Paper cannot be clicked: spell out where external links go. */
+  .prose a.external::after {
+    content: " (" attr(href) ")";
+    display: inline;
+    width: auto;
+    height: auto;
+    margin: 0;
+    background: none;
+    -webkit-mask: none;
+    mask: none;
+    opacity: 1;
+    font-size: 0.85em;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .prose a.internal {
+    background: none;
+    text-decoration: underline;
+  }
+
+  /* Code on light paper, wrapped instead of cut at the margin. */
+  .prose pre,
+  [data-look="notebook"] .prose pre {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--line);
+    box-shadow: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .shiki span,
+  :root[data-theme="dark"] .shiki span,
+  [data-look="notebook"] .shiki span {
+    color: var(--shiki-light) !important;
+  }
+  .drawing-dark {
+    display: none !important;
+  }
+  .drawing-light {
+    display: block !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+  pre,
+  figure,
+  img,
+  table,
+  blockquote,
+  .callout,
+  .transclude,
+  .flashcard {
+    break-inside: avoid;
+  }
+  img {
+    max-width: 100% !important;
+  }
+}

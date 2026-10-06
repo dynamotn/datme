@@ -176,6 +176,18 @@ function setupLocalGraph() {
   document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach((c) => void mountGraph(c, "local"))
 }
 
+// ---- printing: folded callouts and lazy images would be missing on paper ----
+let printOpened: HTMLDetailsElement[] = []
+window.addEventListener("beforeprint", () => {
+  printOpened = [...document.querySelectorAll<HTMLDetailsElement>(".prose details:not([open])")]
+  printOpened.forEach((d) => (d.open = true))
+  document.querySelectorAll<HTMLImageElement>('.prose img[loading="lazy"]').forEach((img) => (img.loading = "eager"))
+})
+window.addEventListener("afterprint", () => {
+  printOpened.forEach((d) => (d.open = false))
+  printOpened = []
+})
+
 document.addEventListener("astro:before-swap", () => {
   teardownGraphs()
   hidePopover()

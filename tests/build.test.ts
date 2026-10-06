@@ -261,6 +261,16 @@ describe("static build", () => {
     expect(read("tags/index.html")).not.toContain("data-webmentions")
   })
 
+  test("a print stylesheet keeps only the note, with external link targets spelled out", () => {
+    const css = (fs.readdirSync(path.join(out, "_astro")) as string[])
+      .filter((f) => f.endsWith(".css"))
+      .map((f) => read(`_astro/${f}`))
+      .join("\n")
+    const print = css.slice(css.indexOf("@media print"))
+    expect(print).toContain(".site-header")
+    expect(print).toContain('content:" (" attr(href) ")"')
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")
