@@ -27,6 +27,7 @@ import { t } from "./i18n"
 import { renderDataview, renderDataviewJs, renderTasksBlock, renderSearchBlock } from "./dataview-render"
 import { renderBaseView } from "./base-render"
 import { renderChart } from "./charts"
+import { linkTerms, glossarySignature } from "./glossary"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
 
@@ -283,6 +284,9 @@ const rehypeCodeTitle: Plugin<[], HastRoot> = () => (tree) => {
   })
 }
 
+/** First mentions of glossary terms link to the note defining them. */
+const rehypeGlossary: Plugin<[{ lang: Lang; key: string }], HastRoot> = ({ lang, key }) => (tree) => linkTerms(tree, lang, key)
+
 const isElement = (n: ElementContent | undefined): n is Element => n?.type === "element"
 
 /**
@@ -482,6 +486,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(rehypeAutolinkHeadings, autolink)
     .use(rehypeDecorate, { out })
     .use(rehypeCodeTitle)
+    .use(rehypeGlossary, { lang, key: stack[stack.length - 1] })
     .use(rehypeSidenotes)
     .use(rehypeShiki, {
       themes: { light: "github-light", dark: "github-dark" },
@@ -521,7 +526,7 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
     hit = (async () => {
       // Image sizes end up in the HTML, so a replaced image must invalidate it too.
       const diskKey = isSelfContained(note)
-        ? [note.lang, variant, String(note.hardBreaks), note.md, ...note.assets.map((a) => `${a}@${stamp(a)}`)]
+        ? [note.lang, variant, String(note.hardBreaks), note.md, glossarySignature(note.lang), ...note.assets.map((a) => `${a}@${stamp(a)}`)]
         : undefined
       const cached = diskKey && readCache("notes", import.meta.url, diskKey)
       let parts: Parts

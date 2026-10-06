@@ -212,6 +212,8 @@ const schema = z
       })
       .strict()
       .default({ optimize: true, widths: [480, 960, 1600], quality: 80 }),
+    /** Link the first mention of a term (a note tagged type/term) to its note. */
+    glossary: z.boolean().default(true),
     /** Tiles of the map page, for notes with a `location`. */
     map: z
       .object({
@@ -349,6 +351,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ogImages: c.ogImages,
     offline: c.offline,
     map: c.map,
+    glossary: c.glossary,
     bibliography: (typeof c.bibliography === "string" ? [c.bibliography] : (c.bibliography ?? [])).map((p) => p.replace(/^\/+/, "")),
     images: { ...c.images, widths: [...new Set(c.images.widths)].sort((a, b) => a - b) },
     stackedPages: c.stackedPages,

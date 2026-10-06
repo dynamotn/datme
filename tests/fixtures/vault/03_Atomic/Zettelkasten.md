@@ -4,6 +4,7 @@ aliases:
   - Slip box
 tags:
   - type/notion
+  - type/term
   - theme/pkm
 created: 2024-04-22T19:54
 updated: 2024-05-01T08:00

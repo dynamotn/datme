@@ -192,7 +192,7 @@ describe("static build", () => {
   test("the content index links notes for search and the graph", () => {
     const index = JSON.parse(read("static/contentIndex.en-US.json"))
     expect(index.notes.map((n: { t: string }) => n.t)).toContain("Zettelkasten method")
-    expect(index.notes.find((n: { t: string }) => n.t === "Zettelkasten method")).toMatchObject({ p: "03_Atomic", y: ["notion"] })
+    expect(index.notes.find((n: { t: string }) => n.t === "Zettelkasten method")).toMatchObject({ p: "03_Atomic", y: ["notion", "term"] })
     expect(index.links.length).toBeGreaterThan(0)
   })
 

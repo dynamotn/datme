@@ -109,8 +109,8 @@ describe("metadata", () => {
   const zk = vi.get("03_Atomic/Zettelkasten")!
   test("frontmatter dates, tags, aliases, types and stage", () => {
     expect(zk.created?.getFullYear()).toBe(2024)
-    expect(zk.tags).toEqual(["type/notion", "theme/pkm"])
-    expect(zk.types).toEqual(["notion"])
+    expect(zk.tags).toEqual(["type/notion", "type/term", "theme/pkm"])
+    expect(zk.types).toEqual(["notion", "term"])
     expect(zk.aliases).toEqual(["Slip box"])
     expect(zk.stage).toBe("03_Atomic")
   })

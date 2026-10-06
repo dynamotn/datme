@@ -2108,6 +2108,17 @@ li > .flashcard {
   margin: 2px 6px 2px 0;
 }
 
+/* ---------- glossary terms ---------- */
+.prose a.term {
+  background: none;
+  color: inherit;
+  text-decoration: underline dotted var(--accent);
+  text-underline-offset: 3px;
+}
+.prose a.term:hover {
+  color: var(--accent);
+}
+
 /* ---------- kanban boards ---------- */
 .note.kanban-board {
   --measure: 100%;
