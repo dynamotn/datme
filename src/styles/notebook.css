@@ -696,7 +696,7 @@
 /* ---------- prose ---------- */
 [data-look="notebook"] .prose {
   font-family: var(--font-read);
-  font-size: 1.06rem;
+  font-size: calc(1.06rem * var(--reading-scale, 1));
   line-height: 1.75;
 }
 [data-look="notebook"] .prose :is(h1, h2, h3, h4, h5) {

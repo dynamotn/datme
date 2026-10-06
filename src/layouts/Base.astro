@@ -4,7 +4,7 @@ import "~/styles/global.css"
 import "~/styles/notebook.css"
 import "~/styles/print.css"
 import { site, type Lang } from "~/site.config"
-import { t, langMeta, langPrefix } from "~/lib/i18n"
+import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
@@ -63,7 +63,7 @@ const year = new Date().getFullYear()
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined}>
+<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -132,6 +132,14 @@ const year = new Date().getFullYear()
           doc.documentElement.classList.toggle("reader", reader === "1")
           doc.documentElement.classList.toggle("hide-left", hidden.includes("left"))
           doc.documentElement.classList.toggle("hide-right", hidden.includes("right"))
+          // Reading preferences; the "Aa" menu writes them (src/scripts/prefs.ts).
+          let prefs = {}
+          try {
+            prefs = JSON.parse(localStorage.getItem("prefs") || "{}")
+          } catch {}
+          doc.documentElement.style.setProperty("--reading-scale", String(Number(prefs.size) || 1))
+          doc.documentElement.classList.toggle("font-legible", prefs.legible === true)
+          doc.documentElement.classList.toggle("high-contrast", prefs.contrast === true)
         }
         apply(document)
         document.addEventListener("astro:before-swap", (e) => apply(e.newDocument))
@@ -181,6 +189,21 @@ const year = new Date().getFullYear()
           </button>
         )
       }
+      <div class="prefs">
+        <button class="icon-btn prefs-toggle" type="button" data-prefs-toggle aria-label={s.prefs} title={s.prefs} aria-expanded="false">
+          <span aria-hidden="true">Aa</span>
+        </button>
+        <div class="prefs-panel" data-prefs-panel role="group" aria-label={s.prefs} hidden>
+          <div class="prefs-size">
+            <span>{s.prefsSize}</span>
+            <button type="button" data-pref-size="-1" aria-label={`${s.prefsSize} −`}>A−</button>
+            <output data-pref-size-out>100%</output>
+            <button type="button" data-pref-size="1" aria-label={`${s.prefsSize} +`}>A+</button>
+          </div>
+          <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
+          <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
+        </div>
+      </div>
       <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
         <Icon name="book" />
       </button>

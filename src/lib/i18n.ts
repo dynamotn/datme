@@ -95,6 +95,10 @@ const builtin = {
     previous: "Trước",
     sharePassage: "🔗 Chép link đoạn này",
     minutesLeft: "còn {n} phút",
+    prefs: "Tuỳ chọn đọc",
+    prefsSize: "Cỡ chữ",
+    prefsLegible: "Phông dễ đọc",
+    prefsContrast: "Tương phản cao",
     graphColorBy: "Tô màu",
     graphColorNone: "không",
     graphColorType: "loại",
@@ -207,6 +211,10 @@ const builtin = {
     previous: "Previous",
     sharePassage: "🔗 Copy link to passage",
     minutesLeft: "{n} min left",
+    prefs: "Reading preferences",
+    prefsSize: "Text size",
+    prefsLegible: "Legible font",
+    prefsContrast: "High contrast",
     graphColorBy: "Colour",
     graphColorNone: "none",
     graphColorType: "type",
@@ -256,6 +264,14 @@ export function t(lang: Lang): Strings {
 }
 
 /** Short code, native name and HTML tag of a language. */
+/** Languages written from right to left, by base tag. */
+const RTL = new Set(["ar", "he", "fa", "ur", "ps", "yi", "dv", "ckb", "sd", "ug"])
+
+/** Writing direction of a language, for the dir attribute. */
+export function langDir(lang: Lang): "rtl" | "ltr" {
+  return RTL.has(lang.split("-")[0].toLowerCase()) ? "rtl" : "ltr"
+}
+
 export function langMeta(lang: Lang): { short: string; name: string; html: string } {
   let name = lang
   try {

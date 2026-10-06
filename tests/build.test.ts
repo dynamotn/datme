@@ -384,6 +384,13 @@ describe("static build", () => {
     expect(map).toContain('data-tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png"')
   })
 
+  test("pages carry their writing direction and the reading preferences menu", () => {
+    const html = read("index.html")
+    expect(html).toMatch(/<html lang="vi-VN" dir="ltr"/)
+    expect(html).toContain('data-prefs-panel role="group"')
+    expect(html).toContain('localStorage.getItem("prefs")')
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

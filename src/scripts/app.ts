@@ -10,6 +10,7 @@ import { setupLightbox } from "./lightbox"
 import { setupPractice, setupClozes } from "./practice"
 import { setupShare } from "./share"
 import { setupProgress } from "./progress"
+import { setupPrefs } from "./prefs"
 
 const root = document.documentElement
 
@@ -298,6 +299,7 @@ document.addEventListener("astro:page-load", () => {
   setupClozes()
   setupShare()
   setupProgress()
+  setupPrefs()
   setupPractice()
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())

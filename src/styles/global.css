@@ -601,7 +601,7 @@ a.chip:hover {
 /* ---------- prose ---------- */
 .prose {
   font-family: var(--font-read);
-  font-size: 1.22rem;
+  font-size: calc(1.22rem * var(--reading-scale, 1));
   line-height: 1.7;
   color: var(--ink);
   font-optical-sizing: auto;
@@ -2117,6 +2117,89 @@ li > .flashcard {
   display: inline-block;
   vertical-align: top;
   margin: 2px 6px 2px 0;
+}
+
+/* ---------- reading preferences ---------- */
+.prefs {
+  position: relative;
+}
+.prefs-toggle span {
+  font: 700 14px var(--font-ui);
+}
+.prefs-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 70;
+  display: grid;
+  gap: 10px;
+  min-width: 15rem;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  font: 13.5px var(--font-ui);
+  color: var(--ink);
+}
+.prefs-panel[hidden] {
+  display: none;
+}
+.prefs-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.prefs-size span {
+  flex: 1;
+}
+.prefs-size button {
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+.prefs-size output {
+  min-width: 3em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.prefs-panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+:root.font-legible body,
+:root.font-legible .prose {
+  font-family: "Atkinson Hyperlegible", var(--font-ui);
+  letter-spacing: 0.01em;
+}
+:root.high-contrast {
+  --ink: #000;
+  --ink-2: #000;
+  --muted: #2b2b2b;
+  --line: #000;
+  --line-strong: #000;
+  --bg: #fff;
+  --surface: #fff;
+  --surface-2: #f2f2f2;
+  --accent: #0033cc;
+}
+:root.high-contrast[data-theme="dark"] {
+  --ink: #fff;
+  --ink-2: #fff;
+  --muted: #e0e0e0;
+  --line: #fff;
+  --line-strong: #fff;
+  --bg: #000;
+  --surface: #000;
+  --surface-2: #151515;
+  --accent: #8fb3ff;
+}
+:root.high-contrast .prose a {
+  text-decoration: underline;
 }
 
 /* ---------- graph: time and colours ---------- */

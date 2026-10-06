@@ -143,6 +143,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end. Hovering a footnote number or a citation shows it in a popover.
 - Selecting text in a note offers a link to that passage (`#:~:text=`), which opens the page scrolled to it and highlighted.
 - Notes of 300 words or more show a reading progress bar and the minutes left.
+- The "Aa" menu lets readers enlarge the text, switch to a legible font (Atkinson Hyperlegible, fetched only then) or high contrast; their choice stays in their browser. Right-to-left languages (Arabic, Hebrew, Persian, Urdu…) get `dir="rtl"`.
 - Citations in Pandoc's syntax, `[@key]`, `[@key, p. 12]`, `[see @a; @b]` or `[-@key]`, are looked up in the `bibliography` files, shown author–date ("Luhmann 1992, p. 12") and listed in APA style at the end of the note. `datme check` reports keys missing from the bibliography.
 - Notes with `start` (and `end`) — `1927`, `1927-12` or `1927-12-08`, `-0500` for BCE — or tagged as events appear on `/timeline`; notes with `location: [lat, lng]` appear on `/map`. Each page exists only when some note qualifies; protected notes never do.
 - Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.
