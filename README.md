@@ -91,6 +91,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Obsidian syntax works as in the app: `[[wikilinks]]`, `[[note#heading|alias]]`,
   `![[embeds]]` of notes, sections, images and PDFs, callouts (`> [!tip]-` folds),
   `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
+- Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
 - Frontmatter: `title`, `aliases` (become redirects), `tags`, `created`, `updated`,
   `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
 - Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.

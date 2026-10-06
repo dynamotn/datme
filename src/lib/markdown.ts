@@ -8,6 +8,12 @@ import rehypeKatex from "rehype-katex"
 import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings"
 import rehypeShiki from "@shikijs/rehype"
+import {
+  transformerMetaHighlight,
+  transformerNotationDiff,
+  transformerNotationFocus,
+  transformerNotationHighlight,
+} from "@shikijs/transformers"
 import rehypeStringify from "rehype-stringify"
 import { visit, SKIP } from "unist-util-visit"
 import { toString as hastToString } from "hast-util-to-string"
@@ -113,9 +119,11 @@ const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
   })
 }
 
-/** ```mermaid blocks are rendered in the browser. */
+/** ```mermaid blocks are rendered in the browser; other blocks keep their meta string. */
 const remarkMermaid: Plugin<[], MdRoot> = () => (tree) => {
   visit(tree, "code", (node: Code, index, parent) => {
+    // rehype-raw drops node data, so the meta (title, {1-3}) travels as an attribute Shiki reads.
+    if (node.meta) node.data = { ...node.data, hProperties: { ...node.data?.hProperties, metastring: node.meta } }
     if (node.lang !== "mermaid" || !parent || index == null) return
     parent.children[index] = {
       type: "html",
@@ -200,6 +208,27 @@ const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => 
   })
   const desc = firstP ? readable(firstP) : text
   out.description = desc.length > 180 ? desc.slice(0, 177).trimEnd() + "…" : desc
+}
+
+/** ```ts title="app.ts" wraps the block in a figure captioned with the file name. */
+const rehypeCodeTitle: Plugin<[], HastRoot> = () => (tree) => {
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (node.tagName !== "pre" || !parent || index == null) return
+    const code = node.children.find((c): c is Element => c.type === "element" && c.tagName === "code")
+    const meta = String(code?.properties.metastring ?? "")
+    const title = meta.match(/(?:title|file(?:name)?)=(?:"([^"]+)"|'([^']+)'|(\S+))/)
+    if (!title) return
+    parent.children[index] = {
+      type: "element",
+      tagName: "figure",
+      properties: { className: ["code-figure"] },
+      children: [
+        { type: "element", tagName: "figcaption", properties: {}, children: [{ type: "text", value: title[1] ?? title[2] ?? title[3] }] },
+        node,
+      ],
+    }
+    return SKIP
+  })
 }
 
 /** Section of a rendered note under a heading or a block id. */
@@ -300,12 +329,20 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>) {
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, autolink)
     .use(rehypeDecorate, { out })
+    .use(rehypeCodeTitle)
     .use(rehypeShiki, {
       themes: { light: "github-light", dark: "github-dark" },
       defaultColor: false,
       lazy: true,
       fallbackLanguage: "text",
       addLanguageClass: true,
+      // ```ts {2,4-5} marks lines; // [!code highlight|++|--|focus] comments mark them inline.
+      transformers: [
+        transformerMetaHighlight(),
+        transformerNotationHighlight(),
+        transformerNotationDiff(),
+        transformerNotationFocus(),
+      ],
     })
     .use(rehypeTransclude, { lang, stack })
     .use(rehypeStringify, { allowDangerousHtml: true })

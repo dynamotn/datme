@@ -1032,3 +1032,18 @@
   text-transform: uppercase;
   box-shadow: 3px 3px 0 var(--clay);
 }
+
+/* ---------- code titles and line marks ---------- */
+[data-look="notebook"] .prose .code-figure figcaption {
+  border: var(--bw) solid var(--ink);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--yellow);
+  color: #050505;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+[data-look="notebook"] .prose pre .line.highlighted {
+  background: rgb(255 232 0 / 0.18);
+  box-shadow: inset 4px 0 0 #ffe800;
+}

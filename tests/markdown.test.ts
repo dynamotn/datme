@@ -105,3 +105,21 @@ describe("protected notes", () => {
     expect((await renderSecret(secret)).html).toContain("Protected content")
   })
 })
+
+describe("code blocks", () => {
+  const code = renderNote(vi.get("03_Atomic/Code")!)
+
+  test("title meta wraps the block in a captioned figure", async () => {
+    const { html } = await code
+    expect(html).toContain('<figure class="code-figure"><figcaption>app.ts</figcaption><pre')
+    expect(html).toContain("<figcaption>tool.py</figcaption>")
+  })
+
+  test("meta ranges and notation comments mark lines", async () => {
+    const { html } = await code
+    expect(html).toMatch(/<span class="line highlighted">.*const<\/span><span[^>]*> b/)
+    expect(html).toContain('class="line diff add"')
+    expect(html).toContain('class="line focused"')
+    expect(html).not.toContain("[!code")
+  })
+})
