@@ -3,6 +3,7 @@ import { getVault, type Note } from "./vault"
 import { formatDate, t } from "./i18n"
 import { escapeAttr } from "./obsidian"
 import { parseQuery, runQuery, extractTasks, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
+import { parseTasksQuery, runTasksQuery, groupOf, TasksQueryError, type TaskItem } from "./tasks-query"
 
 const engines = new Map<string, Engine>()
 
@@ -98,6 +99,38 @@ export function renderDataview(source: string, lang: Lang, currentKey: string): 
   } catch (e) {
     if (e instanceof Unsupported) return `<p class="dataview dv-note">⚙️ ${escapeAttr(s.dvUnsupported)} (${escapeAttr(e.message)})</p>`
     if (e instanceof DataviewError) return `<p class="dataview dv-error">Dataview: ${escapeAttr(e.message)}</p>`
+    throw e
+  }
+}
+
+/**
+ * A ```tasks block of the Obsidian Tasks plugin, over the published notes: a
+ * task list in markdown, each task followed by a link to its note.
+ */
+export function renderTasksBlock(source: string, lang: Lang): string | { markdown: string } {
+  const s = t(lang)
+  try {
+    const engine = engineFor(lang)
+    const items: (TaskItem & { page: Page })[] = engine.pages.flatMap((page) =>
+      (page.tasks ?? []).map((task) => ({ task, path: page.key + ".md", page })),
+    )
+    const query = parseTasksQuery(source)
+    const found = runTasksQuery(query, items) as (TaskItem & { page: Page })[]
+    if (!found.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
+    const line = (i: (typeof found)[number]) =>
+      `- [${i.task.status === " " ? " " : "x"}] ${i.task.text} <a class="task-note internal" href="${escapeAttr(i.page.url)}">${escapeAttr(i.page.title)}</a>`
+    const groups = new Map<string, typeof found>()
+    for (const i of found) {
+      const key = query.group ? groupOf(i, query.group) : ""
+      groups.set(key, [...(groups.get(key) ?? []), i])
+    }
+    // Blank lines around the HTML let the task lists in between parse as markdown.
+    const parts = [...groups].map(([key, list]) =>
+      `${query.group ? `<p class="dv-task-group">${escapeAttr(key)}</p>\n\n` : ""}${list.map(line).join("\n")}`,
+    )
+    return { markdown: `<div class="dataview dv-tasks tasks-query">\n\n${parts.join("\n\n")}\n\n</div>` }
+  } catch (e) {
+    if (e instanceof TasksQueryError) return `<p class="dataview dv-error">Tasks: ${escapeAttr(e.message)}</p>`
     throw e
   }
 }

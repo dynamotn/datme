@@ -28,6 +28,8 @@ export interface Task {
   tags: string[]
   /** Dates of the Tasks plugin (📅 due…) and inline [key:: value] fields. */
   fields: Record<string, string>
+  /** Text of the heading the task sits under, if any. */
+  heading?: string
 }
 
 /** Dates written with the emoji of the Obsidian Tasks plugin. */
@@ -37,6 +39,7 @@ const TASK_DATES: Record<string, string> = { "📅": "due", "⏳": "scheduled", 
 export function extractTasks(md: string): Task[] {
   const tasks: Task[] = []
   let fence: string | undefined
+  let heading: string | undefined
   md.split("\n").forEach((line, i) => {
     const f = line.match(/^\s*(`{3,}|~{3,})/)
     if (f && (!fence || f[1].startsWith(fence))) {
@@ -44,6 +47,8 @@ export function extractTasks(md: string): Task[] {
       return
     }
     if (fence) return
+    const h = line.match(/^#{1,6}\s+(.*?)\s*#*$/)
+    if (h) heading = h[1].replace(/<[^>]+>/g, "")
     const m = line.match(/^\s*(?:[-*+]|\d+[.)])\s+\[(.)\]\s+(.*)$/)
     if (!m) return
     const text = m[2].trim()
@@ -54,7 +59,7 @@ export function extractTasks(md: string): Task[] {
     }
     for (const f of text.matchAll(/[[(]([\p{L}\p{N}_ -]+)::\s*([^\])]*)[\])]/gu)) fields[f[1].trim()] = f[2].trim()
     const tags = [...text.matchAll(/(?:^|[\s>])#([\p{L}_][\p{L}\p{N}_/-]*)/gu)].map((t) => "#" + t[1])
-    tasks.push({ text, status: m[1], line: i + 1, tags, fields })
+    tasks.push({ text, status: m[1], line: i + 1, tags, fields, ...(heading ? { heading } : {}) })
   })
   return tasks
 }

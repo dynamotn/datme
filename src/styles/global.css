@@ -1759,6 +1759,11 @@ dialog.graph-modal {
   margin: 48px auto 0;
 }
 
+.prose .task-note {
+  margin-left: 0.4em;
+  font-size: 0.82em;
+  color: var(--muted);
+}
 .prose .dv-task-group {
   margin: 1em 0 0.3em;
   font-weight: 600;

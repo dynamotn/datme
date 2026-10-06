@@ -20,6 +20,11 @@ TASK FROM "03_Atomic"
 - [ ] Ask [[Niklas Luhmann]] about it
 - [x] **Read** the paper
 
+```tasks
+not done
+path includes Atomic
+```
+
 ```dataviewjs
 dv.list(dv.pages().file.name)
 ```

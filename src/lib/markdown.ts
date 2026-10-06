@@ -24,7 +24,7 @@ import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
-import { renderDataview, renderDataviewJs } from "./dataview-render"
+import { renderDataview, renderDataviewJs, renderTasksBlock } from "./dataview-render"
 import { renderBaseView } from "./base-render"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
@@ -153,8 +153,8 @@ const remarkHardBreaks: Plugin<[{ enabled: boolean }], MdRoot> = ({ enabled }) =
 const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, key }) => (tree) => {
   visit(tree, "code", (node: Code, index, parent) => {
     if (!parent || index == null) return
-    if (node.lang === "dataview") {
-      const out = renderDataview(node.value, lang, key)
+    if (node.lang === "dataview" || node.lang === "tasks") {
+      const out = node.lang === "tasks" ? renderTasksBlock(node.value, lang) : renderDataview(node.value, lang, key)
       if (typeof out === "string") parent.children[index] = { type: "html", value: out }
       else {
         // TASK results are markdown, parsed in place so each task renders like the rest of the note.
@@ -503,7 +503,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
  * protected note, whose content must not reach the disk unencrypted.
  */
 function isSelfContained(note: Note): boolean {
-  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*dataview/im.test(note.md)
+  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks)/im.test(note.md)
 }
 
 type Parts = Omit<Rendered, "description"> & { description?: string }

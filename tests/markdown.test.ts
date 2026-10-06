@@ -171,6 +171,13 @@ describe("dataview", () => {
     expect(html).toMatch(/<input type="checkbox" checked disabled> <strong>Read<\/strong> the paper/)
   })
 
+  test("a tasks block lists the open tasks, each with a link to its note", async () => {
+    const { html } = await queries
+    const block = html.match(/<div class="dataview dv-tasks tasks-query">[\s\S]*?<\/div>/)![0]
+    expect(block).toMatch(/<input type="checkbox" disabled> Ask <a href="\/06_Reference\/Niklas-Luhmann"[^>]*>Niklas Luhmann<\/a> about it <a class="task-note internal" href="\/03_Atomic\/Queries">Queries<\/a>/)
+    expect(block).not.toContain("Read")
+  })
+
   test("DataviewJS shows a notice instead of code", async () => {
     const { html } = await queries
     expect(html).toContain("(DataviewJS)")
