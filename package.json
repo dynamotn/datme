@@ -1,7 +1,26 @@
 {
   "name": "@dynamotn/datme",
   "version": "0.1.0",
-  "description": "Publish an Obsidian vault as a bilingual digital garden: a blog-like home on top of a second-brain notebook.",
+  "description": "Publish an Obsidian vault as a digital garden: notes as index cards on a notebook wall, with backlinks, graph, search and multilingual pages.",
+  "keywords": [
+    "obsidian",
+    "digital-garden",
+    "second-brain",
+    "astro",
+    "static-site",
+    "zettelkasten",
+    "notes"
+  ],
+  "license": "CC-BY-SA-4.0",
+  "author": "Trần Đức Nam <me@dynamotn.dev>",
+  "homepage": "https://gitlab.com/dynamo-tools/datme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/dynamo-tools/datme.git"
+  },
+  "bugs": {
+    "url": "https://gitlab.com/dynamo-tools/datme/-/issues"
+  },
   "type": "module",
   "bin": {
     "datme": "bin/datme.ts"
@@ -10,7 +29,9 @@
     "bin",
     "src",
     "astro.config.mjs",
-    "tsconfig.json"
+    "tsconfig.json",
+    "LICENSE",
+    "README.md"
   ],
   "engines": {
     "node": ">=23.6",

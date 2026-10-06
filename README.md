@@ -160,3 +160,8 @@ bun run test            # unit tests and end-to-end builds of tests/fixtures
 - `src/lib/obsidian.ts` turns Obsidian syntax into standard markdown.
 - `src/lib/markdown.ts` is the unified pipeline: callouts, KaTeX, Shiki, transclusion.
 - `src/cli.ts` is the `datme` command; `src/scripts/` holds the browser code.
+
+## License
+
+[CC BY-SA 4.0](LICENSE): share and adapt freely, with attribution, under the
+same license.
