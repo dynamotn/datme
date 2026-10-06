@@ -35,6 +35,8 @@ interface Props {
   jsonLd?: JsonLd[]
   /** URL of the RSS feed of this page's notes, next to the site's. */
   feed?: string
+  /** URL of the page as plain markdown. */
+  mdAlternate?: string
 }
 const {
   lang,
@@ -48,6 +50,7 @@ const {
   look = site.appearance.style,
   jsonLd = [],
   feed,
+  mdAlternate,
 } = Astro.props
 const nav = navLinks(lang)
 // Pages without their own image share the generated card of the home page.
@@ -84,6 +87,7 @@ const year = new Date().getFullYear()
     }
     <link rel="alternate" type="application/rss+xml" title={siteTitle} href={rss} />
     {feed && <link rel="alternate" type="application/rss+xml" title={fullTitle} href={feed} />}
+    {mdAlternate && <link rel="alternate" type="text/markdown" href={mdAlternate} />}
     {
       site.langs.map(
         (l) =>

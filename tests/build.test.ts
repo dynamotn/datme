@@ -391,6 +391,22 @@ describe("static build", () => {
     expect(html).toContain('localStorage.getItem("prefs")')
   })
 
+  test("llms.txt lists every public note as markdown, which each note links to", () => {
+    const txt = read("llms.txt")
+    expect(txt).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")
+    expect(txt).toContain("- [Zettelkasten](https://notes.dynamotn.dev/03_Atomic/Zettelkasten.md): A note-taking method made famous by Niklas Luhmann.")
+    expect(txt).not.toMatch(/Secret|Private/)
+    const md = read("03_Atomic/Zettelkasten.md")
+    expect(md).toStartWith("# Zettelkasten\n")
+    expect(md).toContain("[[Niklas Luhmann]]")
+    expect(md).not.toContain("a private comment")
+    expect(md).not.toContain("publish: true")
+    expect(md).not.toContain("English-only")
+    expect(exists("en-US/03_Atomic/Zettelkasten-method.md")).toBe(true)
+    expect(exists("06_Reference/Secret.md")).toBe(false)
+    expect(read("03_Atomic/Zettelkasten/index.html")).toContain('<link rel="alternate" type="text/markdown" href="/03_Atomic/Zettelkasten.md">')
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

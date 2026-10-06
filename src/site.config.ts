@@ -231,6 +231,8 @@ const schema = z
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
+    /** Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text. */
+    llms: z.boolean().default(true),
     /** Write a _redirects file (Netlify, Cloudflare Pages) with 301s for aliases and old URLs. */
     redirects: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
@@ -349,6 +351,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     cname: c.cname,
     redirects: c.redirects,
     ogImages: c.ogImages,
+    llms: c.llms,
     offline: c.offline,
     map: c.map,
     glossary: c.glossary,
