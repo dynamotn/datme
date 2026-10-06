@@ -28,6 +28,8 @@ import { renderDataview, renderDataviewJs, renderTasksBlock, renderSearchBlock }
 import { renderBaseView } from "./base-render"
 import { renderChart } from "./charts"
 import { linkTerms, glossarySignature } from "./glossary"
+import { readDeadLinks, deadLinksStamp, archiveUrl } from "./dead-links"
+import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { imageSize, stamp, variantPath, variantWidths, SIZES } from "./images"
 
@@ -185,6 +187,15 @@ const remarkMermaid: Plugin<[], MdRoot> = () => (tree) => {
 
 interface DecorateOpts {
   out: Partial<Rendered>
+  lang: Lang
+}
+
+let dead: { stamp: string; urls: Set<string> } | undefined
+/** Dead links of the last `datme check --external`, read once per check. */
+function deadLinks(): Set<string> {
+  const stamp = deadLinksStamp()
+  if (dead?.stamp !== stamp) dead = { stamp, urls: readDeadLinks() }
+  return dead.urls
 }
 
 const SKIP_CLASSES = ["heading-anchor", "katex-mathml", "block-id"]
@@ -211,7 +222,7 @@ function readable(node: HastRoot | ElementContent): string {
 }
 
 /** Links, images, tables and headings, plus hoisting of the leading H1. */
-const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => {
+const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out, lang }) => (tree) => {
   const firstEl = tree.children.find((c) => c.type === "element") as Element | undefined
   if (firstEl?.tagName === "h1") {
     out.h1 = hastToString(firstEl).replace(/#$/, "").trim()
@@ -233,6 +244,12 @@ const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out }) => (tree) => 
         node.properties.target = "_blank"
         node.properties.rel = ["noopener", "noreferrer"]
         node.properties.className = [...((node.properties.className as string[]) ?? []), "external"]
+        // A link found dead goes to the archived copy; the original stays in the title.
+        if (site.archiveDeadLinks && deadLinks().has(href)) {
+          node.properties.href = archiveUrl(href)
+          node.properties.title = `${t(lang).archivedLink}: ${href}`
+          ;(node.properties.className as string[]).push("archived")
+        }
       }
     }
     if (tag === "img") node.properties.loading = "lazy"
@@ -484,7 +501,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(rehypeKatex)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, autolink)
-    .use(rehypeDecorate, { out })
+    .use(rehypeDecorate, { out, lang })
     .use(rehypeCodeTitle)
     .use(rehypeGlossary, { lang, key: stack[stack.length - 1] })
     .use(rehypeSidenotes)
@@ -526,7 +543,15 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
     hit = (async () => {
       // Image sizes end up in the HTML, so a replaced image must invalidate it too.
       const diskKey = isSelfContained(note)
-        ? [note.lang, variant, String(note.hardBreaks), note.md, glossarySignature(note.lang), ...note.assets.map((a) => `${a}@${stamp(a)}`)]
+        ? [
+            note.lang,
+            variant,
+            String(note.hardBreaks),
+            note.md,
+            glossarySignature(note.lang),
+            deadLinksStamp(),
+            ...note.assets.map((a) => `${a}@${stamp(a)}`),
+          ]
         : undefined
       const cached = diskKey && readCache("notes", import.meta.url, diskKey)
       let parts: Parts

@@ -4,6 +4,7 @@ import path from "node:path"
 import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
 import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
+import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
 
 /** Root of the datme package, where the Astro project lives. */
 export const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..")
@@ -13,6 +14,11 @@ const STAGING = path.join(PACKAGE_ROOT, ".datme", "dist")
 const MARKER = ".datme-build"
 /** Rendered notes and social cards reused by the next build, unless DATME_CACHE says otherwise. */
 const CACHE = path.join(PACKAGE_ROOT, ".datme", "cache")
+
+/** The build cache: DATME_CACHE moves it, an empty value turns it off. */
+function cacheDirOf(env: NodeJS.ProcessEnv, cwd: string): string | undefined {
+  return env.DATME_CACHE === undefined ? CACHE : env.DATME_CACHE ? path.resolve(cwd, env.DATME_CACHE) : undefined
+}
 
 export const USAGE = `datme: publish an Obsidian vault as a digital garden
 
@@ -187,7 +193,7 @@ export function pruneCache(root: string, since: number): void {
       if (e.isDirectory()) {
         walk(p)
         if (!fs.readdirSync(p).length) fs.rmdirSync(p)
-      } else if (fs.statSync(p).mtimeMs < since) fs.rmSync(p)
+      } else if (e.name !== DEAD_LINKS_FILE && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
     }
   }
   walk(root)
@@ -328,8 +334,15 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       const { checkExternal } = await import("./lib/links.ts")
       const urls = externalLinks()
       console.log(`Checking ${urls.size} external links…`)
-      problems.push(...(await checkExternal(urls)))
+      const found = await checkExternal(urls)
+      problems.push(...found)
       sortProblems(problems)
+      // Builds point the dead ones at the Internet Archive.
+      const cacheDir = cacheDirOf(env, cwd)
+      if (cacheDir) {
+        const { writeDeadLinks } = await import("./lib/dead-links.ts")
+        writeDeadLinks(cacheDir, found.filter((p) => p.level === "warning" && p.url).map((p) => p.url!))
+      }
     }
     const counts = countProblems(problems)
     const failed = counts.error > 0 || (args.strict && counts.warning > 0)
@@ -353,7 +366,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return
   }
   // An empty DATME_CACHE turns the cache off; a path moves it, e.g. somewhere CI keeps between runs.
-  const cacheDir = env.DATME_CACHE === undefined ? CACHE : env.DATME_CACHE && path.resolve(cwd, env.DATME_CACHE)
+  const cacheDir = cacheDirOf(env, cwd)
   if (cacheDir) {
     if (args.fresh) fs.rmSync(cacheDir, { recursive: true, force: true })
     env.DATME_CACHE = cacheDir

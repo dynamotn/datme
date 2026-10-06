@@ -105,6 +105,8 @@ export interface Problem {
   /** Vault-relative file the problem is in. */
   file: string
   message: string
+  /** The outside URL the problem is about, for dead links. */
+  url?: string
 }
 
 export interface Vault {

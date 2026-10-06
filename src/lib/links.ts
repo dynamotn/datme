@@ -90,7 +90,7 @@ export async function checkExternal(
     for (let url = queue.shift(); url; url = queue.shift()) {
       const status = await probe(url, opts)
       if (status.ok) continue
-      for (const file of urls.get(url)!) problems.push({ level: status.level, file, message: `external link ${url} ${status.reason}` })
+      for (const file of urls.get(url)!) problems.push({ level: status.level, file, message: `external link ${url} ${status.reason}`, url })
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker))

@@ -2285,6 +2285,14 @@ li > .flashcard {
   background: var(--mark);
 }
 
+.prose a.archived {
+  text-decoration-style: dashed;
+}
+.prose a.archived::before {
+  content: "🗄 ";
+  font-size: 0.8em;
+}
+
 /* ---------- glossary terms ---------- */
 .prose a.term {
   background: none;
