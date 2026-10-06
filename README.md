@@ -2,13 +2,14 @@
 
 Publish an Obsidian vault as a digital garden: every note is an index card
 pinned on a notebook wall, with backlinks, a graph, full-text search and
-optional multilingual notes. Long-form folders can keep a quiet serif blog look. Built with Astro; needs [Bun](https://bun.sh).
+optional multilingual notes. Long-form folders can keep a quiet serif blog look. Built with Astro; runs on [Bun](https://bun.sh) or Node 23.6+.
 
 ## Quick start
 
 ```bash
 bunx datme dev ~/MyVault                 # live preview at http://localhost:4321
 bunx datme build ~/MyVault --out ./site  # static site, ready for any host
+npx datme build ~/MyVault                # the same with Node 23.6+
 ```
 
 Only notes with `publish: true` in their frontmatter are published, so nothing

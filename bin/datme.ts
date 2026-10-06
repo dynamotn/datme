@@ -1,5 +1,5 @@
-#!/usr/bin/env bun
-import { parseArgs, run } from "../src/cli"
+#!/usr/bin/env node
+import { parseArgs, run } from "../src/cli.ts"
 
 try {
   await run(parseArgs(process.argv.slice(2)))

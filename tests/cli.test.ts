@@ -105,3 +105,17 @@ describe("init", () => {
     expect((again as Error).message).toContain("already exists")
   })
 })
+
+describe("runtimes", () => {
+  // Node strips TypeScript types natively from 23.6 on.
+  const node = Bun.which("node")
+  const version = node ? Bun.spawnSync([node, "--version"]).stdout.toString().trim().slice(1).split(".").map(Number) : []
+  const modernNode = version.length > 1 && (version[0] > 23 || (version[0] === 23 && version[1] >= 6))
+
+  test.skipIf(!modernNode)("the CLI runs on Node as well as Bun", () => {
+    const root = path.resolve(import.meta.dir, "..")
+    const out = Bun.spawnSync([node!, "bin/datme.ts", "--version"], { cwd: root })
+    expect(out.exitCode).toBe(0)
+    expect(out.stdout.toString().trim()).toMatch(/^\d+\.\d+\.\d+$/)
+  })
+})
