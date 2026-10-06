@@ -111,7 +111,9 @@ function setupExplorer() {
     else a.removeAttribute("aria-current")
     if (on && a.closest(".explorer")) active = a
   })
-  for (let d = active?.closest("details"); d; d = d.parentElement?.closest("details")) d.open = true
+  // A folder's own page opens its folder too; its link sits beside its <details>.
+  const own = active?.classList.contains("folder-link") ? active.parentElement?.querySelector<HTMLDetailsElement>(":scope > details") : null
+  for (let d = own ?? active?.closest("details"); d; d = d.parentElement?.closest("details")) d.open = true
   active?.scrollIntoView({ block: "nearest" })
 }
 

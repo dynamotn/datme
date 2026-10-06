@@ -13,17 +13,20 @@ const { folder } = Astro.props
 <ul>
   {
     folder.folders.map((f) => (
-      <li>
+      <li class="folder">
+        {/* The link sits beside the toggle, not inside it: a summary must hold no other control. */}
         <details data-dir={f.dir}>
-          <summary>
+          <summary aria-label={f.name}>
             <span class="chev">
               <Icon name="chevron" />
             </span>
-            <a href={f.url}>{f.name}</a>
-            <span class="count">{countNotes(f)}</span>
           </summary>
           <Astro.self folder={f} />
         </details>
+        <a class="folder-link" href={f.url}>
+          {f.name}
+        </a>
+        <span class="count">{countNotes(f)}</span>
       </li>
     ))
   }

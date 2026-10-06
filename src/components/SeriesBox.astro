@@ -16,16 +16,18 @@ const s = t(note.lang)
 {
   place && at === "head" && (
     <details class="series-box">
+      {/* No link inside the summary: it is a control of its own. */}
       <summary>
         <span class="series-label">{s.seriesPart(place.index + 1).replace("{total}", String(place.series.parts.length))}</span>{" "}
-        {place.series.intro ? (
-          <a class="internal" href={place.series.intro.url}>
-            {place.series.name}
-          </a>
-        ) : (
-          <strong>{place.series.name}</strong>
-        )}
+        <strong>{place.series.name}</strong>
       </summary>
+      {place.series.intro && !place.series.parts.includes(place.series.intro) && (
+        <p class="series-intro">
+          <a class="internal" href={place.series.intro.url}>
+            {place.series.intro.title}
+          </a>
+        </p>
+      )}
       <ol>
         {place.series.parts.map((p) =>
           p === note ? (

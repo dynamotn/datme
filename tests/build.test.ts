@@ -365,7 +365,7 @@ describe("static build", () => {
 
   test("notes of a series show their place in it and link to the parts around them", () => {
     const first = read("07_Project/Blog-post/index.html")
-    expect(first).toMatch(/<span class="series-label">Phần 1\/2 của<\/span> <a class="internal" href="\/07_Project\/Blog-post">Writing datme<\/a>/)
+    expect(first).toMatch(/<span class="series-label">Phần 1\/2 của<\/span> <strong>Writing datme<\/strong>/)
     expect(first).toMatch(/<a class="internal series-next" href="\/03_Atomic\/Code" rel="next">/)
     expect(first).not.toContain("series-prev")
     const second = read("03_Atomic/Code/index.html")

@@ -355,14 +355,16 @@ kbd {
   padding-left: 9px;
   border-left: 1px solid var(--line);
 }
+.explorer li.folder {
+  position: relative;
+}
 .explorer summary {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 4px;
+  height: 29px;
   cursor: pointer;
   border-radius: 7px;
-  padding: 1px 4px 1px 0;
 }
 .explorer summary::-webkit-details-marker {
   display: none;
@@ -378,18 +380,34 @@ kbd {
 .explorer details[open] > summary .chev {
   transform: rotate(90deg);
 }
-.explorer summary a {
-  flex: 1;
+/* Folder name and count lie over the summary row, beside the chevron. */
+.explorer .folder-link {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  right: 30px;
+  display: block;
+  height: 29px;
+  line-height: 21px;
+  padding: 4px 4px;
   font-weight: 600;
   color: var(--ink);
-  padding: 4px 4px;
+  border-radius: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.explorer summary .count {
+.explorer li.folder > .count {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  line-height: 29px;
   font-size: 11px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
-.explorer li > a {
+.explorer li > a:not(.folder-link) {
   display: block;
   padding: 4px 8px;
   border-radius: 7px;
@@ -399,7 +417,8 @@ kbd {
   text-overflow: ellipsis;
 }
 .explorer summary:hover,
-.explorer li > a:hover {
+.explorer .folder-link:hover,
+.explorer li > a:not(.folder-link):hover {
   background: var(--surface-2);
 }
 .explorer a[aria-current="page"] {

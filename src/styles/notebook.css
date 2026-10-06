@@ -202,11 +202,11 @@
 [data-look="notebook"] .explorer ul ul {
   border-left: 2px dashed var(--ink);
 }
-[data-look="notebook"] .explorer summary a {
+[data-look="notebook"] .explorer .folder-link {
   font-family: var(--font-ui);
   font-weight: 700;
 }
-[data-look="notebook"] .explorer summary .count {
+[data-look="notebook"] .explorer li.folder > .count {
   font-family: var(--font-mono);
   color: var(--ink);
 }
