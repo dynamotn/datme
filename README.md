@@ -1,8 +1,8 @@
 # datme
 
-Publish an Obsidian vault as a digital garden: a blog-like home page on top of
-a second-brain notebook, with backlinks, a graph, full-text search and
-optional multilingual notes. Built with Astro; needs [Bun](https://bun.sh).
+Publish an Obsidian vault as a digital garden: every note is an index card
+pinned on a notebook wall, with backlinks, a graph, full-text search and
+optional multilingual notes. Long-form folders can keep a quiet serif blog look. Built with Astro; needs [Bun](https://bun.sh).
 
 ## Quick start
 
@@ -53,6 +53,17 @@ conventions:
 stages:                       # top-level folders shown as note maturity
   Inbox: fleeting             # presets: fleeting, literature, atomic,
   Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
+
+nav:                          # main menu in the header, in order
+  - home                      # built-ins: home, tags
+  - note: About me            # a note, found like a wikilink (aliases work)
+    label: About
+  - url: /cv.pdf
+    label: CV
+
+appearance:
+  style: notebook             # index cards on dotted paper; or `classic`
+  classic: [Writing]          # folders whose notes use the other style
 
 footer:
   GitHub: https://github.com/me
