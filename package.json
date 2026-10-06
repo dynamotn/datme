@@ -4,13 +4,14 @@
   "description": "Publish an Obsidian vault as a bilingual digital garden: a blog-like home on top of a second-brain notebook.",
   "type": "module",
   "bin": {
-    "datme": "bin/datme.ts"
+    "datme": "bin/datme.js"
   },
   "files": [
     "bin",
     "src",
     "astro.config.mjs",
-    "tsconfig.json"
+    "tsconfig.json",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=23.6",
@@ -18,6 +19,7 @@
   },
   "scripts": {
     "datme": "bun bin/datme.ts",
+    "prepack": "bun build bin/datme.ts --target node --packages external --outfile bin/datme.js",
     "dev": "bun bin/datme.ts dev",
     "build": "bun bin/datme.ts build",
     "preview": "bun bin/datme.ts preview",
