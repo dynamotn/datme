@@ -240,6 +240,21 @@ footer: {}
 }
 
 /** Run a command; returns once a build finishes, or never for dev and preview. */
+/**
+ * Runs Astro from the package root. An outDir outside the working directory
+ * makes Astro prerender into <cwd>/.astro and rename from there, which fails
+ * with EXDEV when the package sits on another filesystem (bunx under /tmp).
+ */
+export async function inPackage<T>(fn: () => Promise<T>): Promise<T> {
+  const cwd = process.cwd()
+  process.chdir(PACKAGE_ROOT)
+  try {
+    return await fn()
+  } finally {
+    process.chdir(cwd)
+  }
+}
+
 export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd = process.cwd()): Promise<void> {
   if (args.command === "help") return void console.log(USAGE)
   if (args.command === "version") {
@@ -298,7 +313,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   }
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000
-  await astro.build({ root: PACKAGE_ROOT, outDir: STAGING })
+  await inPackage(() => astro.build({ root: PACKAGE_ROOT, outDir: STAGING }))
   if (cacheDir) pruneCache(cacheDir, started)
   if (args.command === "build") {
     publishOutput(STAGING, out, vault)
