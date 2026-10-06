@@ -24,6 +24,7 @@ private leaks by default. Run `bunx datme init ~/MyVault` to write a commented
 | `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is only replaced if datme created it. |
 | `datme preview [vault]` | Builds, then serves the result |
 | `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases and invalid frontmatter; exits 1 on errors. `--verbose` also lists links to unpublished notes. |
+| `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push: `github` (Pages), `gitlab` (Pages), `netlify` or `cloudflare` (Pages, through GitHub Actions). Goes at the root of the vault's git repository, never overwrites a file, and keeps the build cache between runs. `--branch` picks the branch (default: the current one). |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
 
 The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`

@@ -2,6 +2,8 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { parseArgs as parseNodeArgs } from "node:util"
+import { execFileSync } from "node:child_process"
+import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
 
 /** Root of the datme package, where the Astro project lives. */
 export const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..")
@@ -20,6 +22,8 @@ Usage:
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose]              report broken links and other problems
   datme init    [vault]                          write a starter datme.yaml
+  datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
+                                                 hosts: github, gitlab, netlify, cloudflare
 
 The vault defaults to $DATME_VAULT, then the current directory.
 Options:
@@ -30,14 +34,18 @@ Options:
   --fresh        ignore the cache of rendered notes and social cards
   --strict       fail check and build on warnings too, not only on errors
   --verbose      also list links to unpublished notes
+  --branch <b>   branch whose pushes publish the site (default: the current one)
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "help" | "version"
 
 export interface Args {
   command: Command
   vault?: string
+  /** Host of `datme deploy`. */
+  target?: Target
+  branch?: string
   out?: string
   site?: string
   port?: number
@@ -64,6 +72,7 @@ export function parseArgs(argv: string[]): Args {
         host: { type: "boolean" },
         strict: { type: "boolean" },
         fresh: { type: "boolean" },
+        branch: { type: "string", short: "b" },
         verbose: { type: "boolean" },
         help: { type: "boolean", short: "h" },
         version: { type: "boolean", short: "v" },
@@ -75,10 +84,19 @@ export function parseArgs(argv: string[]): Args {
   const { values, positionals } = parsed
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
-  const [command = "help", vault, ...rest] = positionals
-  if (!["dev", "build", "preview", "check", "init", "help"].includes(command)) {
+  const [command = "help", ...operands] = positionals
+  if (!["dev", "build", "preview", "check", "init", "deploy", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
+  let target: Target | undefined
+  if (command === "deploy") {
+    const host = operands.shift()
+    if (!TARGETS.includes(host as Target)) {
+      throw new CliError(`${host ? `Unknown host "${host}"` : "Missing host"}; choose one of ${TARGETS.join(", ")}.`)
+    }
+    target = host as Target
+  }
+  const [vault, ...rest] = operands
   if (rest.length) throw new CliError(`Unexpected argument "${rest[0]}".`)
   const port = values.port === undefined ? undefined : Number(values.port)
   if (port !== undefined && !(Number.isInteger(port) && port > 0 && port < 65536)) {
@@ -87,6 +105,7 @@ export function parseArgs(argv: string[]): Args {
   return {
     command: command as Command,
     vault,
+    ...(target ? { target, branch: values.branch } : {}),
     out: values.out,
     site: values.site,
     port,
@@ -151,6 +170,40 @@ export function pruneCache(root: string, since: number): void {
   walk(root)
 }
 
+function git(cwd: string, ...args: string[]): string | undefined {
+  try {
+    return execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** Write the CI configuration for a host at the root of the vault's repository. */
+export function deploy(target: Target, dir: string, branch?: string): void {
+  // git answers with resolved paths, so the vault must be resolved too to get its place in the repository.
+  const vault = fs.realpathSync(dir)
+  const root = git(vault, "rev-parse", "--show-toplevel") ?? vault
+  if (root === vault && !git(vault, "rev-parse", "--git-dir")) {
+    console.warn(`[datme] ${vault} is not a git repository yet; CI builds need one.`)
+  }
+  const files = deployFiles(target, {
+    vault: path.relative(root, vault) || ".",
+    branch: branch ?? git(vault, "symbolic-ref", "--short", "HEAD") ?? "main",
+    project: projectName(path.basename(root)),
+  })
+  for (const f of files) {
+    const file = path.join(root, f.path)
+    if (fs.existsSync(file)) throw new CliError(`${file} already exists; remove it first to regenerate it.`)
+  }
+  for (const f of files) {
+    const file = path.join(root, f.path)
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, f.content)
+    console.log(`Wrote ${file}`)
+  }
+  console.log(NEXT_STEPS[target])
+}
+
 /** A commented datme.yaml to start from, named after the vault. */
 export function starterConfig(vault: string): string {
   const name = path.basename(vault)
@@ -201,6 +254,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     fs.writeFileSync(file, starterConfig(vault))
     return void console.log(`Wrote ${file}`)
   }
+
+  if (args.command === "deploy") return deploy(args.target!, vault, args.branch)
 
   // The Astro project reads the vault and its config from these at load time.
   env.DATME_VAULT = vault

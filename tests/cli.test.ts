@@ -40,7 +40,7 @@ describe("parseArgs", () => {
   })
 
   test("the usage lists every command", () => {
-    for (const c of ["dev", "build", "preview", "check", "init"]) expect(USAGE).toContain(`datme ${c}`)
+    for (const c of ["dev", "build", "preview", "check", "init", "deploy"]) expect(USAGE).toContain(`datme ${c}`)
   })
 })
 
