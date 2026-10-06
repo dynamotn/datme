@@ -1,5 +1,6 @@
 import L from "leaflet"
-import "leaflet/dist/leaflet.css"
+// As a URL, not an import: every page shares one stylesheet, and only the map page needs this one.
+import leafletCss from "leaflet/dist/leaflet.css?url"
 
 interface Place {
   lat: number
@@ -14,6 +15,13 @@ let map: L.Map | undefined
 /** The places of the map page as dots; a click shows the note's title and links to it. */
 export function mountMap(el: HTMLElement): void {
   map?.remove()
+  if (!document.querySelector("link[data-leaflet]")) {
+    const link = document.createElement("link")
+    link.rel = "stylesheet"
+    link.href = leafletCss
+    link.dataset.leaflet = ""
+    document.head.append(link)
+  }
   const places = JSON.parse(el.dataset.map ?? "[]") as Place[]
   map = L.map(el, { scrollWheelZoom: false })
   L.tileLayer(el.dataset.tiles!, { attribution: el.dataset.attribution, maxZoom: 18 }).addTo(map)

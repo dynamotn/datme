@@ -382,6 +382,10 @@ describe("static build", () => {
     const data = JSON.parse(map.match(/data-map="([^"]+)"/)![1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))
     expect(data).toEqual([expect.objectContaining({ lat: 52.0302, url: "/en-US/06_Reference/Niklas-Luhmann-(sociologist)" })])
     expect(map).toContain('data-tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png"')
+    // Leaflet's stylesheet only loads on the map page.
+    const css = (html: string) => [...html.matchAll(/<link rel="stylesheet" href="(\/_astro\/[^"]+)"/g)].map((m) => read(m[1].slice(1))).join("")
+    expect(fs.readdirSync(path.join(out, "_astro")).some((f) => /^leaflet\..*\.css$/.test(f))).toBe(true)
+    expect(css(read("03_Atomic/Zettelkasten/index.html"))).not.toContain(".leaflet-pane")
   })
 
   test("pages carry their writing direction and the reading preferences menu", () => {
