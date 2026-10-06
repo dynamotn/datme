@@ -14,6 +14,7 @@ import NoteMeta from "../NoteMeta.astro"
 import Toc from "../Toc.astro"
 import LocalGraph from "../LocalGraph.astro"
 import Comments from "../Comments.astro"
+import Webmentions from "../Webmentions.astro"
 
 interface Props {
   note: Note
@@ -96,6 +97,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
   </section>
   </div>
   </div>
+  <Webmentions lang={note.lang} url={note.url} />
   <Comments lang={note.lang} />
   <Fragment slot="rail">
     <Toc headings={r.headings} lang={note.lang} />

@@ -1,0 +1,32 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t } from "~/lib/i18n"
+
+interface Props {
+  lang: Lang
+  /** Site path of the note; mentions are looked up by its absolute URL. */
+  url: string
+}
+const { lang, url } = Astro.props
+const s = t(lang)
+// Mentions target absolute URLs, so they need to know where the site lives.
+const target = site.webmentions && site.url ? new URL(url, site.url + "/").href : undefined
+---
+
+{
+  target && (
+    <section
+      class="webmentions"
+      data-webmentions={target}
+      data-likes={s.likes}
+      data-reposts={s.reposts}
+      data-replied={s.mentionReplied}
+      data-mentioned={s.mentionMentioned}
+      hidden
+    >
+      <h2>{s.mentions}</h2>
+      <div class="wm-pile" />
+      <ul class="wm-list" />
+    </section>
+  )
+}

@@ -1740,6 +1740,72 @@ dialog.graph-modal {
   margin: 48px auto 0;
 }
 
+/* ---------- webmentions ---------- */
+.webmentions {
+  max-width: var(--measure);
+  margin: 48px auto 0;
+}
+.webmentions h2 {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+}
+.wm-pile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.wm-faces {
+  display: flex;
+  flex-wrap: wrap;
+}
+.wm-faces a + a {
+  margin-left: -8px;
+}
+.wm-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: var(--surface-3);
+  object-fit: cover;
+}
+.wm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.wm-item {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 4px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.wm-item .wm-avatar {
+  grid-row: span 2;
+}
+.wm-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.wm-meta a {
+  color: var(--ink);
+  font-weight: 600;
+}
+.wm-text {
+  margin: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
 /* ---------- excalidraw ---------- */
 .prose .drawing {
   display: block;

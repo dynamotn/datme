@@ -6,6 +6,9 @@ site:
   tagline: A test notebook
   url: https://notes.dynamotn.dev
   author: Tester
+  me: [https://mastodon.example/@tester]
+  fediverse: "@tester@mastodon.example"
+webmentions: {}
 languages: [vi-VN, en-US]
 ignore:
   - _assets/templates

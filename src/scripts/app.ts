@@ -5,6 +5,7 @@ import { samePath } from "./data"
 import { decrypt } from "./decrypt"
 import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
+import { setupWebmentions } from "./webmentions"
 
 const root = document.documentElement
 
@@ -244,6 +245,7 @@ document.addEventListener("astro:page-load", () => {
   setupCode()
   setupPopovers()
   setupLocalGraph()
+  void setupWebmentions()
   syncToggles()
   void renderMermaid()
 })

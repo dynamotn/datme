@@ -49,6 +49,21 @@ describe("resolveConfig", () => {
     expect(c.url).toBe("https://b.example")
   })
 
+  test("webmentions use the host of the site unless an account is given", () => {
+    expect(resolveConfig({ site: { url: "https://notes.example" }, webmentions: {} }, "/v").webmentions).toEqual({
+      domain: "notes.example",
+    })
+    expect(resolveConfig({ webmentions: { domain: "me.example" } }, "/v").webmentions).toEqual({ domain: "me.example" })
+    expect(resolveConfig({}, "/v").webmentions).toBeUndefined()
+    expect(() => resolveConfig({ webmentions: {} }, "/v")).toThrow("needs site.url or webmentions.domain")
+  })
+
+  test("rel=me profiles must be URLs and the fediverse handle must look like one", () => {
+    expect(resolveConfig({}, "/v").me).toEqual([])
+    expect(() => resolveConfig({ site: { me: ["mastodon"] } }, "/v")).toThrow("site.me.0")
+    expect(() => resolveConfig({ site: { fediverse: "me@host" } }, "/v")).toThrow("expected @user@host")
+  })
+
   test("invalid configs fail with the path of every problem", () => {
     expect(() => resolveConfig({ languages: [], site: { url: "not a url" }, typo: 1 }, "/v")).toThrow(ConfigError)
     try {

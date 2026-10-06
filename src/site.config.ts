@@ -66,9 +66,13 @@ const schema = z
         author: z.string().optional(),
         /** One letter or emoji shown as the logo and favicon. */
         logo: z.string().min(1).max(8).optional(),
+        /** Profiles that link back to the site, as rel="me" (verifies the site on Mastodon). */
+        me: z.array(z.url()).default([]),
+        /** Fediverse handle credited when a note is shared on Mastodon, e.g. @me@mastodon.social. */
+        fediverse: z.string().regex(/^@[^@\s]+@[^@\s]+$/, "expected @user@host").optional(),
       })
       .strict()
-      .default({}),
+      .default({ me: [] }),
     languages: z.array(z.string().min(2)).min(1).default(["en-US"]),
     ignore: z.array(z.string()).default([]),
     stages: z
@@ -139,6 +143,14 @@ const schema = z
       .default({ hide: [] }),
     /** Note types (the part after conventions.typePrefix): an icon and an optional label. */
     types: z.record(z.string(), z.object({ icon: z.string().min(1), label: localized.optional() }).strict()).default({}),
+    /** Receive webmentions through webmention.io and show them under each note. */
+    webmentions: z
+      .object({
+        /** The webmention.io account; defaults to the host of site.url. */
+        domain: z.string().min(1).optional(),
+      })
+      .strict()
+      .optional(),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
@@ -209,16 +221,26 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   const name = path.basename(vault) || "Notes"
   let order = 0
   const stages: Record<string, StageDef> = {}
+  const url = (env.DATME_SITE_URL ?? c.site.url)?.replace(/\/+$/, "")
+  let webmentions: { domain: string } | undefined
+  if (c.webmentions) {
+    const domain = c.webmentions.domain ?? (url ? new URL(url).host : undefined)
+    if (!domain) throw new ConfigError(`Invalid datme config in ${vault}:\n  - webmentions: needs site.url or webmentions.domain`)
+    webmentions = { domain }
+  }
   for (const [folder, def] of Object.entries(c.stages)) {
     const base = typeof def === "string" ? STAGE_PRESETS[def] : def
     stages[folder] = { icon: base.icon, label: localize(base.label, langs, folder), order: order++ }
   }
   return {
     vault,
-    url: (env.DATME_SITE_URL ?? c.site.url)?.replace(/\/+$/, ""),
+    url,
     title: localize(c.site.title, langs, name),
     tagline: localize(c.site.tagline, langs, ""),
     author: c.site.author ?? "",
+    me: c.site.me,
+    fediverse: c.site.fediverse,
+    webmentions,
     // Default logo: the first letter of the title, skipping any leading emoji.
     logo: c.site.logo ?? localize(c.site.title, langs, name)[langs[0]].match(/\p{L}/u)?.[0]?.toUpperCase() ?? "✦",
     defaultLang: langs[0],

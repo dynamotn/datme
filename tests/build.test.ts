@@ -252,6 +252,15 @@ describe("static build", () => {
     expect(ld(read("tags/index.html"))).toEqual([])
   })
 
+  test("webmentions are received through webmention.io and listed under notes", () => {
+    const note = read("03_Atomic/Zettelkasten/index.html")
+    expect(note).toContain('<link rel="webmention" href="https://webmention.io/notes.dynamotn.dev/webmention">')
+    expect(note).toContain('<link rel="me" href="https://mastodon.example/@tester">')
+    expect(note).toContain('<meta name="fediverse:creator" content="@tester@mastodon.example">')
+    expect(note).toContain('data-webmentions="https://notes.dynamotn.dev/03_Atomic/Zettelkasten"')
+    expect(read("tags/index.html")).not.toContain("data-webmentions")
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

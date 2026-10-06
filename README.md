@@ -43,6 +43,8 @@ site:
   url: https://notes.example.com   # enables the sitemap, absolute links and JSON-LD
   author: Me
   logo: 🌿                     # defaults to the first letter of the title
+  me: [https://mastodon.social/@me]   # rel="me" links, e.g. to verify the site on Mastodon
+  fediverse: "@me@mastodon.social"    # credited when a note is shared on Mastodon
 
 languages: [en-US]            # the first is served at /, others under /<lang>/
 publish: explicit             # or `all`: everything except `publish: false`
@@ -80,6 +82,8 @@ comments:                     # giscus { repo, repoId, category, categoryId } or
   repoId: R_xxx
   category: Comments
   categoryId: DIC_xxx
+webmentions: {}               # receive mentions via webmention.io ({ domain } defaults to
+                              # the host of site.url) and list likes, reposts and replies under notes
 cname: true                   # write CNAME with the host of site.url
 ogImages: true                # social cards for the home page and notes without a banner
 stackedPages: true            # a header button to open linked notes side by side

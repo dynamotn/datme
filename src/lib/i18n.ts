@@ -74,6 +74,11 @@ const builtin = {
     navigate: "di chuyển",
     open: "mở",
     close: "đóng",
+    mentions: "Được nhắc đến",
+    likes: "{n} lượt thích",
+    reposts: "{n} lượt chia sẻ",
+    mentionReplied: "đã trả lời",
+    mentionMentioned: "đã nhắc đến",
   },
   en: {
     search: "Search",
@@ -147,6 +152,11 @@ const builtin = {
     navigate: "navigate",
     open: "open",
     close: "close",
+    mentions: "Mentions",
+    likes: "{n} likes",
+    reposts: "{n} reposts",
+    mentionReplied: "replied",
+    mentionMentioned: "mentioned this",
   },
 } satisfies Record<string, Record<string, string>>
 
