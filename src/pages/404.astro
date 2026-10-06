@@ -1,0 +1,18 @@
+---
+import Base from "~/layouts/Base.astro"
+import { site } from "~/site.config"
+import { t } from "~/lib/i18n"
+
+const lang = site.defaultLang
+const s = t(lang)
+---
+
+<Base lang={lang} title={s.notFound} alternates={{}}>
+  <div class="note" style="text-align: center; padding: 10vh 0">
+    <p style="font-size: 64px; margin: 0">🌾</p>
+    <h1 class="note-title">{s.notFound}</h1>
+    <p class="empty">{s.notFoundLead}</p>
+    <p class="empty">{t("en-US").notFound} — {t("en-US").notFoundLead}</p>
+    <p><a class="chip stage" href="/">{s.backHome}</a></p>
+  </div>
+</Base>

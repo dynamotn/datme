@@ -1,0 +1,25 @@
+---
+import type { Note } from "~/lib/vault"
+import { site } from "~/site.config"
+import { t, langMeta } from "~/lib/i18n"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const target = new URL(note.url, site.url).href
+---
+
+<!doctype html>
+<html lang={langMeta[note.lang].html}>
+  <head>
+    <meta charset="utf-8" />
+    <title>{note.title}</title>
+    <link rel="canonical" href={target} />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${note.url}`} />
+  </head>
+  <body>
+    <a href={note.url}>{t(note.lang).redirecting}</a>
+  </body>
+</html>

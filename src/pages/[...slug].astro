@@ -1,0 +1,53 @@
+---
+import type { GetStaticPaths } from "astro"
+import { site, type Lang } from "~/site.config"
+import { getVault, type Note, type FolderNode } from "~/lib/vault"
+import { langPrefix } from "~/lib/i18n"
+import { sluggify } from "~/lib/slug"
+import NotePage from "~/components/pages/NotePage.astro"
+import HomePage from "~/components/pages/HomePage.astro"
+import FolderPage from "~/components/pages/FolderPage.astro"
+import TagPage from "~/components/pages/TagPage.astro"
+import AliasRedirect from "~/components/pages/AliasRedirect.astro"
+
+type Page =
+  | { kind: "home"; lang: Lang }
+  | { kind: "note"; lang: Lang; note: Note }
+  | { kind: "folder"; lang: Lang; folder: FolderNode }
+  | { kind: "tag"; lang: Lang; tag?: string }
+  | { kind: "alias"; lang: Lang; note: Note }
+
+export const getStaticPaths = (() => {
+  const vault = getVault()
+  const pages = new Map<string, Page>()
+  // First claim wins: notes, then folders, tags, and finally alias redirects.
+  const claim = (slug: string, page: Page) => {
+    const key = slug.replace(/\/?index$/, "")
+    if (!pages.has(key)) pages.set(key, page)
+  }
+  for (const lang of site.langs) {
+    const prefix = langPrefix(lang)
+    claim(prefix + "index", { kind: "home", lang })
+    for (const note of vault.notes[lang]) if (!note.isHome) claim(note.slug, { kind: "note", lang, note })
+    for (const folder of vault.folders[lang].values()) {
+      if (folder.dir) claim(prefix + sluggify(folder.dir), { kind: "folder", lang, folder })
+    }
+    claim(prefix + "tags", { kind: "tag", lang })
+    for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
+    for (const note of vault.notes[lang]) {
+      for (const alias of note.aliases) {
+        claim(prefix + sluggify(note.dir ? `${note.dir}/${alias}` : alias), { kind: "alias", lang, note })
+      }
+    }
+  }
+  return [...pages].map(([slug, page]) => ({ params: { slug: slug || undefined }, props: { page } }))
+}) satisfies GetStaticPaths
+
+const { page } = Astro.props as { page: Page }
+---
+
+{page.kind === "home" && <HomePage lang={page.lang} />}
+{page.kind === "note" && <NotePage note={page.note} />}
+{page.kind === "folder" && <FolderPage lang={page.lang} folder={page.folder} />}
+{page.kind === "tag" && <TagPage lang={page.lang} tag={page.tag} />}
+{page.kind === "alias" && <AliasRedirect note={page.note} />}
