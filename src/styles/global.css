@@ -2171,3 +2171,51 @@ dialog.graph-modal {
 .activity .day.out {
   visibility: hidden;
 }
+
+/* ---------- stacked notes ---------- */
+.stack-close {
+  display: none;
+}
+:root.stacking .sidebar-right,
+:root.stacking .site-footer,
+:root.stacking .comments {
+  display: none;
+}
+:root.stacking .shell:not(.no-right) {
+  grid-template-columns: var(--left-w) minmax(0, 1fr);
+}
+:root.stacking.hide-left .shell:not(.no-right) {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root.stacking .main {
+  padding: 0;
+}
+:root.stacking .stack-row {
+  display: flex;
+  height: calc(100vh - var(--header-h));
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+:root.stacking .stack-col {
+  position: sticky;
+  left: calc(var(--i, 0) * 44px);
+  flex: 0 0 min(660px, 82vw);
+  height: 100%;
+  overflow-y: auto;
+  padding: 28px 32px 60px;
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+  box-shadow: -10px 0 24px -18px rgb(0 0 0 / 0.35);
+}
+:root.stacking .stack-col .stack-close {
+  display: inline-grid;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  font-size: 22px;
+  background: var(--surface);
+}
+:root.stacking .stack-col .backlinks {
+  margin-top: 36px;
+}

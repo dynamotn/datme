@@ -1222,3 +1222,13 @@
   background: var(--green);
   color: #050505;
 }
+
+/* ---------- stacked notes ---------- */
+[data-look="notebook"].stacking .stack-col {
+  border-left: var(--bw) solid var(--ink);
+  box-shadow: -8px 0 0 -4px var(--ink);
+  padding: 24px 22px 60px;
+}
+[data-look="notebook"].stacking .stack-col .note {
+  box-shadow: var(--shadow);
+}

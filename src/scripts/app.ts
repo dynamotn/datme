@@ -4,6 +4,7 @@ import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
 import { decrypt } from "./decrypt"
 import { setupCanvas } from "./canvas"
+import { setupStack } from "./stack"
 
 const root = document.documentElement
 
@@ -43,6 +44,17 @@ document.addEventListener("click", (e) => {
     root.classList.toggle(`hide-${side}`)
     store("sidebars", ["left", "right"].filter((x) => root.classList.contains(`hide-${x}`)).join(","))
     syncToggles()
+  } else if (target.closest("[data-stack-toggle]")) {
+    const on = root.classList.toggle("stack-mode")
+    store("stack", on ? "1" : "0")
+    if (!on) {
+      document.querySelectorAll("[data-stack-row] > [data-stack-col]:not(:first-child)").forEach((c) => c.remove())
+      root.classList.remove("stacking")
+      const url = new URL(location.href)
+      url.searchParams.delete("stack")
+      history.replaceState(history.state, "", url)
+    }
+    syncToggles()
   } else if (target.closest("[data-reader-toggle]")) {
     const on = root.classList.toggle("reader")
     store("reader", on ? "1" : "0")
@@ -60,6 +72,9 @@ document.addEventListener("keydown", (e) => {
 })
 
 function syncToggles() {
+  document
+    .querySelectorAll("[data-stack-toggle]")
+    .forEach((b) => b.setAttribute("aria-pressed", String(root.classList.contains("stack-mode"))))
   document
     .querySelectorAll<HTMLElement>("[data-sidebar-toggle]")
     .forEach((b) => b.setAttribute("aria-pressed", String(!root.classList.contains(`hide-${b.dataset.sidebarToggle}`))))
@@ -219,6 +234,11 @@ document.addEventListener("astro:page-load", () => {
   setupSearch()
   setupLocked()
   setupCanvas()
+  setupStack(() => {
+    setupCode()
+    setupPopovers()
+    void renderMermaid()
+  })
   setupExplorer()
   setupToc()
   setupCode()

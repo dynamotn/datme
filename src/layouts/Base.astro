@@ -75,6 +75,7 @@ const year = new Date().getFullYear()
             theme = localStorage.getItem("theme")
             reader = localStorage.getItem("reader")
             hidden = localStorage.getItem("sidebars") || ""
+            doc.documentElement.classList.toggle("stack-mode", localStorage.getItem("stack") === "1")
           } catch {}
           theme ??= matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
           doc.documentElement.dataset.theme = theme
@@ -118,6 +119,13 @@ const year = new Date().getFullYear()
         rail && (
           <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="right" aria-label={s.toggleRight} title={s.toggleRight} aria-pressed="false">
             <Icon name="panelRight" />
+          </button>
+        )
+      }
+      {
+        site.stackedPages && rail && (
+          <button class="icon-btn stack-toggle" type="button" data-stack-toggle aria-label={s.stackMode} title={s.stackMode} aria-pressed="false">
+            <Icon name="layers" />
           </button>
         )
       }

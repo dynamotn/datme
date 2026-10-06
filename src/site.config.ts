@@ -139,6 +139,8 @@ const schema = z
       .default({ hide: [] }),
     /** Note types (the part after conventions.typePrefix): an icon and an optional label. */
     types: z.record(z.string(), z.object({ icon: z.string().min(1), label: localized.optional() }).strict()).default({}),
+    /** Offer the stacked-notes mode, where links open side by side. */
+    stackedPages: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
     /** Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains. */
@@ -246,6 +248,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     comments: c.comments,
     cname: c.cname,
     ogImages: c.ogImages,
+    stackedPages: c.stackedPages,
     properties: c.properties,
     types: Object.fromEntries(
       [...new Set([...Object.keys(DEFAULT_TYPES), ...Object.keys(c.types)])].map((type) => [

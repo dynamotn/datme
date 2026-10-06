@@ -78,6 +78,7 @@ comments:                     # giscus { repo, repoId, category, categoryId } or
   categoryId: DIC_xxx
 cname: true                   # write CNAME with the host of site.url
 ogImages: true                # social cards for the home page and notes without a banner
+stackedPages: true            # a header button to open linked notes side by side
 properties:
   hide: [rating]              # frontmatter keys left out of the properties block
 types:                        # icons and labels for type/* tags (common ones built in)

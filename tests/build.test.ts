@@ -191,6 +191,13 @@ describe("static build", () => {
     expect(read("tags/index.html")).not.toContain('data-sidebar-toggle="right"')
   })
 
+  test("note pages are one stack column and offer the stacked mode", () => {
+    const html = read("03_Atomic/Zettelkasten/index.html")
+    expect(html).toMatch(/<div class="stack-row" data-stack-row><div class="stack-col" data-stack-col data-url="\/03_Atomic\/Zettelkasten"/)
+    expect(html).toContain("data-stack-toggle")
+    expect(read("tags/index.html")).not.toContain("data-stack-toggle")
+  })
+
   test("folder and tag pages list notes as index cards", () => {
     expect(read("06_Reference/index.html")).toContain('class="card-wall"')
     expect(read("tags/theme/pkm/index.html")).toContain('class="index-card"')

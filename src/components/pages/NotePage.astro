@@ -33,6 +33,8 @@ const payload =
 ---
 
 <Base lang={note.lang} title={note.title} description={r.description} image={note.banner ?? ogPath(note.slug)} alternates={alternates} look={lookOf(note)} rail>
+  <div class="stack-row" data-stack-row>
+  <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
     class:list={["note", { "is-blog": note.isBlog }, ...note.cssclasses]}
     data-key={note.key}
@@ -89,6 +91,8 @@ const payload =
       )
     }
   </section>
+  </div>
+  </div>
   <Comments lang={note.lang} />
   <Fragment slot="rail">
     <Toc headings={r.headings} lang={note.lang} />

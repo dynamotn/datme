@@ -63,7 +63,8 @@ async function show(link: HTMLAnchorElement) {
 export function setupPopovers() {
   if (matchMedia("(pointer: coarse)").matches) return
   document.querySelectorAll<HTMLAnchorElement>(".main a.internal, .main a.note-row").forEach((a) => {
-    if (a.closest(".popover") || a.classList.contains("anchor")) return
+    if (a.closest(".popover") || a.classList.contains("anchor") || a.dataset.popover) return
+    a.dataset.popover = "1"
     if (samePath(new URL(a.href).pathname, location.pathname)) return
     a.addEventListener("mouseenter", () => {
       clearTimeout(timer)
