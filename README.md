@@ -105,6 +105,7 @@ An invalid file stops the build with the path of every problem, e.g.
 - Search (`Ctrl K`) narrows by folder and note type, or by tag with `#tag`; the global graph (`Ctrl G`) filters by folder and tag.
 - ```` ```dataview ```` blocks run at build time over the published notes only (never private ones): `LIST`/`TABLE [WITHOUT ID]`, `FROM` #tags, "folders" and [[links]] with `AND`/`OR`/`-`, `WHERE`, `FLATTEN`, `SORT`, `LIMIT` and common functions. `GROUP BY`, `TASK` and DataviewJS show a notice.
 - Canvases (`.canvas`) linked or embedded from a published note become pannable, zoomable pages: text cards render markdown, file cards link to published notes or show images, and edges keep their labels and colours. With `publish: all`, every canvas is published.
+- Bases (`.base`) get a page with all their views and render in place when embedded (`![[Books.base#Reading]]`): `filters` with `and`/`or`/`not` and expressions like `file.hasTag("book") && rating >= 4`, `formulas`, `properties.displayName`, and `table`, `cards` or `list` views with `order`, `sort` and `limit`. Like Dataview, they only see published notes.
 - A note named after its folder (`Books/Books.md`) introduces that folder's page.
 - Only assets referenced by a published note are copied to the site.
 

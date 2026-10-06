@@ -33,7 +33,7 @@ describe("published canvases", () => {
   const vault = getVault()
 
   test("only canvases linked from a published note are published", () => {
-    expect([...vault.docs.keys()]).toEqual(["07_Project/Map.canvas"])
+    expect([...vault.docs.keys()].sort()).toEqual(["05_Structure/Library.base", "07_Project/Map.canvas"])
   })
 
   test("text cards are filtered per language and keep links to published notes only", () => {

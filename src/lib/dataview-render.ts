@@ -7,7 +7,7 @@ import { parseQuery, runQuery, DataviewError, Unsupported, type Engine, type Pag
 const engines = new Map<string, Engine>()
 
 /** The published, unprotected notes of a language, as Dataview pages. */
-function engineFor(lang: Lang): Engine {
+export function engineFor(lang: Lang): Engine {
   const vault = getVault()
   const id = `${vault.version}:${lang}`
   let engine = engines.get(id)
@@ -41,7 +41,7 @@ function engineFor(lang: Lang): Engine {
   return engine
 }
 
-function html(v: Value, lang: Lang): string {
+export function html(v: Value, lang: Lang): string {
   if (v == null) return '<span class="dv-null">–</span>'
   if (v instanceof Date) return formatDate(v, lang)
   if (Array.isArray(v)) return v.map((x) => html(x, lang)).join(", ")

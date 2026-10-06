@@ -25,6 +25,7 @@ import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
 import { renderDataview, renderDataviewJs } from "./dataview-render"
+import { renderBaseView } from "./base-render"
 
 export interface Heading {
   depth: number
@@ -276,9 +277,23 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
       if (node.tagName !== "p" || !parent || index == null) return
       const kids = node.children.filter((c) => c.type !== "text" || c.value.trim())
       const only = kids[0]
-      if (kids.length === 1 && only.type === "element" && (only.properties.className as string[] | undefined)?.includes("transclude-ph")) {
+      const embed = only?.type === "element" && (only.properties.className as string[] | undefined)?.some((c) => c === "transclude-ph" || c === "base-ph")
+      if (kids.length === 1 && embed) {
         parent.children[index] = only
       }
+    })
+    // ![[x.base#View]] renders that view of the base in place.
+    visit(tree, "element", (node: Element, index, parent) => {
+      if (!(node.properties.className as string[] | undefined)?.includes("base-ph") || !parent || index == null) return
+      const doc = getVault().docs.get(String(node.properties.dataRel))
+      const view = String(node.properties.dataView ?? "") || undefined
+      parent.children[index] = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["base-embed"] },
+        children: doc ? (fromHtml(renderBaseView(doc, view, lang), { fragment: true }).children as ElementContent[]) : [],
+      }
+      return SKIP
     })
     const jobs: Promise<void>[] = []
     visit(tree, "element", (node: Element, index, parent) => {

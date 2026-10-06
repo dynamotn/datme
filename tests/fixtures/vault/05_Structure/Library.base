@@ -1,0 +1,20 @@
+filters:
+  and:
+    - '!file.inFolder("_assets")'
+formulas:
+  shout: 'file.name.upper() + "!"'
+properties:
+  person.fullname:
+    displayName: Full name
+views:
+  - type: table
+    name: People
+    filters: 'file.hasTag("type/person")'
+    order: [file.name, person.fullname, formula.shout]
+  - type: cards
+    name: Recent
+    order: [file.name, file.folder]
+    sort:
+      - property: file.name
+        direction: DESC
+    limit: 2

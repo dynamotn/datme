@@ -91,6 +91,19 @@ describe("static build", () => {
     expect(rawCanvas).toEqual([])
   })
 
+  test("a base embedded in a note renders its view, and gets a page with every view", () => {
+    const home = read("index.html")
+    expect(home).toContain('<div class="base-embed"><table class="dataview base-table"><thead><tr><th>Name</th><th>Full name</th><th>shout</th></tr>')
+    expect(home).toContain("<td>NIKLAS LUHMANN!</td>")
+    const page = read("05_Structure/Library.base/index.html")
+    expect(page).toContain("<h2>People</h2>")
+    expect(page).toContain('class="card-wall base-cards"')
+    expect((page.match(/class="index-card base-card"/g) ?? []).length).toBe(2)
+    // Views only see published, unprotected notes.
+    const content = page.match(/<div class="note is-wide base-page">[\s\S]*?<footer/)![0]
+    expect(content).not.toMatch(/Private|Secret/)
+  })
+
   test("aliases redirect to their note", () => {
     const html = read("03_Atomic/Slip-box/index.html")
     expect(html).toContain('http-equiv="refresh"')

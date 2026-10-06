@@ -2012,3 +2012,44 @@ dialog.graph-modal {
   font-family: var(--font-ui);
   text-decoration: none;
 }
+
+/* ---------- bases ---------- */
+.base-section + .base-section {
+  margin-top: 40px;
+}
+.prose table.base-table {
+  display: block;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.base-embed {
+  margin: 0 0 1.2em;
+}
+.base-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.base-card {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.base-card .index-card-title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+.base-card .index-card-media img {
+  width: 100%;
+  border-radius: 6px;
+}
+.base-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-2);
+}

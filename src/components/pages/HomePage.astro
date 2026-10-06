@@ -21,9 +21,10 @@ const home = vault.home && vault.byKey[lang].get(vault.home.key)
 const r = home ? await renderNote(home) : undefined
 
 // The home note is split at each H2: the intro becomes the hero, the rest become shelves.
-// Sections holding a table are hand-serialized Dataview queries, superseded by the live cards.
+// Sections holding a static table are hand-serialized Dataview queries, superseded by the
+// live cards; tables that datme renders from queries or bases carry the dataview class.
 const [intro = "", ...sections] = (r?.html ?? "").split(/(?=<h2[\s>])/)
-const shelves = sections.filter((html) => !html.includes("<table"))
+const shelves = sections.filter((html) => !/<table(?![^>]*class="dataview)/.test(html))
 
 const notes = listed(lang).filter((n) => !n.isHome)
 const blog = byRecent(notes.filter((n) => n.isBlog), "created")

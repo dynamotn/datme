@@ -19,5 +19,8 @@ This is the [[Zettelkasten|slip box]].
 | --- | --- |
 | x | [[Blog post\|Blog post]] |
 
+## Library
+![[Library.base#People]]
+
 ## Quotes
 - [[Niklas Luhmann]]
