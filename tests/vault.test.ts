@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { getVault, filterLanguage, listed, byRecent, countNotes } from "../src/lib/vault"
+import { getVault, filterLanguage, listed, byRecent, countNotes, isPublished } from "../src/lib/vault"
 
 const vault = getVault()
 const vi = vault.byKey["vi-VN"]
@@ -16,7 +16,21 @@ describe("publishing rules", () => {
     ])
   })
 
+  test("explicit mode needs publish: true, all mode only skips publish: false", () => {
+    expect(isPublished({ publish: true }, "explicit")).toBe(true)
+    expect(isPublished({ publish: "true" }, "explicit")).toBe(true)
+    expect(isPublished({}, "explicit")).toBe(false)
+    expect(isPublished({}, "all")).toBe(true)
+    expect(isPublished({ publish: false }, "all")).toBe(false)
+  })
+
+  test("drafts are never published", () => {
+    expect(isPublished({ publish: true, draft: true }, "explicit")).toBe(false)
+    expect(isPublished({ draft: "true" }, "all")).toBe(false)
+  })
+
   test("the home symlink replaces its target instead of duplicating it", () => {
+    expect(vault.home?.key).toBe("index")
     expect(vault.sources.has("05_Structure/Home")).toBe(false)
     expect(vi.get("index")?.isHome).toBe(true)
     expect(vault.resolveNote("Home", "")?.key).toBe("index")

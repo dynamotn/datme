@@ -54,6 +54,21 @@ const schema = z
         ]),
       )
       .default({}),
+    /** explicit: only notes with `publish: true`; all: every note except `publish: false`. */
+    publish: z.enum(["explicit", "all"]).default("explicit"),
+    /** Vault-relative note rendered as the home page. */
+    home: z.string().default("index.md"),
+    conventions: z
+      .object({
+        /** Tags starting with this prefix give a note its types, shown as chips. */
+        typePrefix: z.string().default("type/"),
+        /** Notes with one of these tags are listed as blog posts on the home page. */
+        blogTags: z.array(z.string()).default(["type/blog", "blog"]),
+        /** Notes with one of these tags are listed as maps of content. */
+        mapTags: z.array(z.string()).default(["type/moc", "moc"]),
+      })
+      .strict()
+      .default({ typePrefix: "type/", blogTags: ["type/blog", "blog"], mapTags: ["type/moc", "moc"] }),
     footer: z.record(z.string(), z.string()).default({}),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
@@ -108,6 +123,9 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     langs,
     ignore: [...new Set([...DEFAULT_IGNORE, ...c.ignore.map((p) => p.replace(/^\/+|\/+$/g, ""))])],
     stages,
+    publish: c.publish,
+    home: c.home.replace(/^\/+/, ""),
+    conventions: c.conventions,
     footerLinks: c.footer,
     strings: c.strings,
   }

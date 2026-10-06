@@ -67,6 +67,8 @@ export interface FolderNode {
 
 export interface Vault {
   version: number
+  /** The note rendered as the home page, if the vault has one. */
+  home?: SourceNote
   sources: Map<string, SourceNote>
   notes: Record<Lang, Note[]>
   byKey: Record<Lang, Map<string, Note>>
@@ -131,6 +133,14 @@ function toDate(v: unknown): Date | undefined {
   if (v == null || v === "") return undefined
   const d = new Date(String(v))
   return Number.isNaN(d.getTime()) ? undefined : d
+}
+
+/** Whether a note's frontmatter allows publishing it under the given mode. */
+export function isPublished(fm: Record<string, unknown>, mode: "explicit" | "all"): boolean {
+  const flag = (v: unknown) => (v === true || v === "true" ? true : v === false || v === "false" ? false : undefined)
+  if (flag(fm.draft) === true) return false
+  const publish = flag(fm.publish)
+  return mode === "explicit" ? publish === true : publish !== false
 }
 
 /** Port of the fork's MultiLanguage transformer: keeps blocks of one language. */
@@ -213,15 +223,14 @@ function buildVault(version: number): Vault {
     const abs = path.join(site.vault, rel)
     const src = fs.readFileSync(abs, "utf8")
     const { fm, body } = parseFrontmatter(src)
-    if (fm.publish !== true && fm.publish !== "true") continue
-    if (fm.draft === true || fm.draft === "true") continue
+    if (!isPublished(fm, site.publish)) continue
     // Encrypted pages are not part of the prototype yet: never publish them in clear text.
     if (fm.password != null) {
       skippedProtected++
       continue
     }
     const key = rel.replace(MD_EXT, "")
-    const isHome = key === "index"
+    const isHome = rel.toLowerCase() === site.home.toLowerCase()
     if (isHome) {
       try {
         homeTarget = path.relative(site.vault, fs.realpathSync(abs)).replace(MD_EXT, "")
@@ -239,7 +248,9 @@ function buildVault(version: number): Vault {
       isHome,
     })
   }
-  if (homeTarget && homeTarget !== "index") sources.delete(homeTarget)
+  const home = [...sources.values()].find((s) => s.isHome)
+  // A symlinked home note would otherwise be published twice.
+  if (home && homeTarget && homeTarget !== home.key) sources.delete(homeTarget)
   if (skippedProtected > 0) {
     console.warn(`[datme] skipped ${skippedProtected} password-protected note(s)`)
   }
@@ -253,8 +264,7 @@ function buildVault(version: number): Vault {
     byStem.set(stem, [...(byStem.get(stem) ?? []), s])
     for (const a of toArray(s.fm.aliases ?? s.fm.alias)) byAlias.set(a.toLowerCase(), s)
   }
-  const home = sources.get("index")
-  if (home && homeTarget) {
+  if (home && homeTarget && homeTarget !== home.key) {
     const stem = path.posix.basename(homeTarget).toLowerCase()
     byStem.set(stem, [home, ...(byStem.get(stem) ?? [])])
   }
@@ -329,7 +339,8 @@ function buildVault(version: number): Vault {
       })
       pre.assets.forEach((a) => assets.add(a))
 
-      const types = tags.filter((x) => x.startsWith("type/")).map((x) => x.slice(5))
+      const { typePrefix, blogTags, mapTags } = site.conventions
+      const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
       const note: Note = {
         key: s.key,
         lang,
@@ -346,8 +357,8 @@ function buildVault(version: number): Vault {
         description: typeof s.fm.description === "string" ? s.fm.description : undefined,
         stage: site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
         types,
-        isBlog: types.includes("blog"),
-        isMoc: types.includes("moc"),
+        isBlog: tags.some((x) => blogTags.includes(x)),
+        isMoc: tags.some((x) => mapTags.includes(x)),
         isHome: s.isHome,
         unlisted: s.fm.unlisted === true,
         dir: s.dir,
@@ -398,8 +409,17 @@ function buildVault(version: number): Vault {
     folders[lang] = all
   }
 
+  if (sources.size === 0) {
+    console.warn(
+      site.publish === "explicit"
+        ? `[datme] no note in ${site.vault} has \`publish: true\`; add it to the notes to share, or set \`publish: all\` in datme.yaml`
+        : `[datme] no publishable note found in ${site.vault}`,
+    )
+  }
+
   return {
     version,
+    home,
     sources,
     notes,
     byKey,

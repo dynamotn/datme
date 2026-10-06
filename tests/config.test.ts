@@ -80,3 +80,23 @@ describe("loading", () => {
     expect(vaultFromEnv({ DATME_VAULT: "~/x" }).startsWith("~")).toBe(false)
   })
 })
+
+describe("publishing rules and conventions", () => {
+  test("defaults are explicit publishing, index.md as home and type/ tags", () => {
+    const c = resolveConfig({}, "/v")
+    expect(c.publish).toBe("explicit")
+    expect(c.home).toBe("index.md")
+    expect(c.conventions).toEqual({ typePrefix: "type/", blogTags: ["type/blog", "blog"], mapTags: ["type/moc", "moc"] })
+  })
+
+  test("conventions can be partially overridden", () => {
+    const c = resolveConfig({ home: "/Home.md", conventions: { blogTags: ["post"] } }, "/v")
+    expect(c.home).toBe("Home.md")
+    expect(c.conventions.blogTags).toEqual(["post"])
+    expect(c.conventions.typePrefix).toBe("type/")
+  })
+
+  test("unknown publish modes are rejected", () => {
+    expect(() => resolveConfig({ publish: "some" }, "/v")).toThrow(ConfigError)
+  })
+})

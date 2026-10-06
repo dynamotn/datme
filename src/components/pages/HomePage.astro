@@ -16,7 +16,7 @@ interface Props {
 const { lang } = Astro.props
 const s = t(lang)
 const vault = getVault()
-const home = vault.byKey[lang].get("index")
+const home = vault.home && vault.byKey[lang].get(vault.home.key)
 const r = home ? await renderNote(home) : undefined
 
 // The home note is split at each H2: the intro becomes the hero, the rest become shelves.
@@ -56,7 +56,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
             <h2>{s.blog}</h2>
             <p>{s.blogLead}</p>
           </div>
-          <a href={slugToUrl(langPrefix(lang) + "tags/type/blog")}>{s.seeAll} →</a>
+          <a href={slugToUrl(langPrefix(lang) + "tags/" + (blog[0].tags.find((x) => site.conventions.blogTags.includes(x)) ?? ""))}>{s.seeAll} →</a>
         </div>
         <div class="card-grid">
           {blog.slice(0, 6).map((n) => <NoteCard note={n} />)}

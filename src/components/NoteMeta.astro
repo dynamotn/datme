@@ -26,7 +26,7 @@ const stageFolder = note.dir.split("/")[0]
   }
   {
     note.types.map((ty) => (
-      <a class="chip type" href={tagUrl("type/" + ty)}>
+      <a class="chip type" href={tagUrl(site.conventions.typePrefix + ty)}>
         {ty}
       </a>
     ))
@@ -60,10 +60,10 @@ const stageFolder = note.dir.split("/")[0]
   }
 </div>
 {
-  note.tags.filter((x) => !x.startsWith("type/")).length > 0 && (
+  note.tags.filter((x) => !x.startsWith(site.conventions.typePrefix)).length > 0 && (
     <div class="chips">
       {note.tags
-        .filter((x) => !x.startsWith("type/"))
+        .filter((x) => !x.startsWith(site.conventions.typePrefix))
         .map((tag) => (
           <a class="chip tag" href={tagUrl(tag)}>
             {tag}
