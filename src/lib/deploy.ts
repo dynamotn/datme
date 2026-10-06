@@ -56,6 +56,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      ASTRO_TELEMETRY_DISABLED: "1"
       DATME_CACHE: .datme-cache
     steps:
       - uses: actions/checkout@v4
@@ -90,14 +91,13 @@ function gitlab(o: DeployOpts): DeployFile[] {
 pages:
   image: oven/bun:1
   variables:
+    ASTRO_TELEMETRY_DISABLED: "1"
     GIT_DEPTH: 0 # the full history gives notes their created and updated dates
     DATME_CACHE: .datme-cache
   cache:
     key: datme
     paths:
       - .datme-cache
-  before_script:
-    - apt-get update -qq && apt-get install -y -qq git >/dev/null
   script:
     - ${build(o, "public")}
   artifacts:
@@ -115,6 +115,9 @@ function netlify(o: DeployOpts): DeployFile[] {
     {
       path: "netlify.toml",
       content: `# Netlify builds the vault with datme on every push; set the production branch to ${o.branch}.
+[build.environment]
+  ASTRO_TELEMETRY_DISABLED = "1"
+
 [build]
   # Netlify's image has no Bun, so the build installs it first.
   command = "curl -fsSL https://bun.sh/install | bash && ~/.bun/bin/${build(o, "dist").replace(/"/g, '\\"')}"
@@ -147,6 +150,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
+      ASTRO_TELEMETRY_DISABLED: "1"
       DATME_CACHE: .datme-cache
     steps:
       - uses: actions/checkout@v4
