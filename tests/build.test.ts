@@ -77,6 +77,17 @@ describe("static build", () => {
     expect(index.links.length).toBeGreaterThan(0)
   })
 
+  test("notes use the notebook look, except folders listed as classic", () => {
+    expect(read("03_Atomic/Zettelkasten/index.html")).toContain('data-look="notebook"')
+    expect(read("07_Project/Blog-post/index.html")).toContain('data-look="classic"')
+  })
+
+  test("the main menu lists the configured pages and skips missing notes", () => {
+    const nav = read("index.html").match(/<nav class="main-nav"[\s\S]*?<\/nav>/)![0]
+    expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/", "/06_Reference/Niklas-Luhmann", "/tags"])
+    expect(nav).toContain("Về Luhmann")
+  })
+
   test("favicon and robots.txt come from the config", () => {
     expect(read("favicon.svg")).toContain(">K</text>")
     expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")

@@ -50,6 +50,13 @@ describe("zero-config build", () => {
     expect(read("index.xml")).toContain("<item>")
   })
 
+  test("the default look is notebook with a home and tags menu", () => {
+    const home = read("index.html")
+    expect(home).toContain('data-look="notebook"')
+    const nav = home.match(/<nav class="main-nav"[\s\S]*?<\/nav>/)![0]
+    expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/", "/tags"])
+  })
+
   test("the logo comes from the vault name", () => {
     expect(read("favicon.svg")).toContain(">M</text>")
   })

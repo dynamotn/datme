@@ -1,11 +1,13 @@
 ---
 import { ClientRouter } from "astro:transitions"
 import "~/styles/global.css"
+import "~/styles/notebook.css"
 import { site, type Lang } from "~/site.config"
 import { t, langMeta, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
+import { navLinks } from "~/lib/nav"
 
 interface Props {
   lang: Lang
@@ -16,8 +18,11 @@ interface Props {
   alternates: Partial<Record<Lang, string>>
   /** Whether the right rail slot is used. */
   rail?: boolean
+  /** Visual style of the page; defaults to the configured one. */
+  look?: "notebook" | "classic"
 }
-const { lang, title, description, image, alternates, rail = false } = Astro.props
+const { lang, title, description, image, alternates, rail = false, look = site.appearance.style } = Astro.props
+const nav = navLinks(lang)
 const s = t(lang)
 const siteTitle = site.title[lang]
 const fullTitle = title === siteTitle ? title : `${title} · ${siteTitle}`
@@ -29,7 +34,7 @@ const year = new Date().getFullYear()
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} data-lang={lang}>
+<html lang={langMeta(lang).html} data-lang={lang} data-look={look}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -81,6 +86,9 @@ const year = new Date().getFullYear()
         <span class="brand-mark">{site.logo}</span>
         <span class="brand-name">{siteTitle}</span>
       </a>
+      <nav class="main-nav" aria-label={s.menu}>
+        {nav.map((l) => <a href={l.url}>{l.label}</a>)}
+      </nav>
       <div class="header-spacer"></div>
       <button class="search-trigger" type="button" data-open-search aria-label={s.search}>
         <Icon name="search" />

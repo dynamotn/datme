@@ -73,7 +73,7 @@ function setupExplorer() {
     })
   }
   let active: HTMLElement | undefined
-  document.querySelectorAll<HTMLAnchorElement>(".explorer a, .side-nav a").forEach((a) => {
+  document.querySelectorAll<HTMLAnchorElement>(".explorer a, .side-nav a, .main-nav a").forEach((a) => {
     const on = samePath(new URL(a.href).pathname, location.pathname)
     if (on) a.setAttribute("aria-current", "page")
     else a.removeAttribute("aria-current")

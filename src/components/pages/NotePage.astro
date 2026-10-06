@@ -4,6 +4,7 @@ import { getVault } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { site } from "~/site.config"
 import { t } from "~/lib/i18n"
+import { lookOf } from "~/lib/nav"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
@@ -22,7 +23,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.byKey[l].g
 const s = t(note.lang)
 ---
 
-<Base lang={note.lang} title={note.title} description={r.description} image={note.banner} alternates={alternates} rail>
+<Base lang={note.lang} title={note.title} description={r.description} image={note.banner} alternates={alternates} look={lookOf(note)} rail>
   <article
     class:list={["note", { "is-blog": note.isBlog }, ...note.cssclasses]}
     data-key={note.key}
