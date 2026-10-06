@@ -85,6 +85,9 @@ const builtin = {
     mentionReplied: "đã trả lời",
     mentionMentioned: "đã nhắc đến",
     showAnswer: "Bấm để xem đáp án",
+    seriesPart: "Phần {n}/{total} của",
+    seriesPrev: "Phần trước",
+    seriesNext: "Phần sau",
     recentChanges: "Mới chăm sóc",
     recentChangesLead: "Những ghi chú vừa được gieo hoặc tưới, mới nhất trước.",
     changeNew: "mới gieo",
@@ -175,6 +178,9 @@ const builtin = {
     mentionReplied: "replied",
     mentionMentioned: "mentioned this",
     showAnswer: "Click to show the answer",
+    seriesPart: "Part {n} of {total} in",
+    seriesPrev: "Previous part",
+    seriesNext: "Next part",
     recentChanges: "Recently changed",
     recentChangesLead: "Notes planted or watered lately, newest first.",
     changeNew: "new",
@@ -185,7 +191,7 @@ const builtin = {
 } satisfies Record<string, Record<string, string>>
 
 export type StringKey = keyof (typeof builtin)["en"]
-const COUNTED = ["readingTime", "words", "notesCount", "activityCount", "sharedLinks"] as const
+const COUNTED = ["readingTime", "words", "notesCount", "activityCount", "sharedLinks", "seriesPart"] as const
 type Counted = (typeof COUNTED)[number]
 export type Strings = Record<Exclude<StringKey, Counted>, string> & Record<Counted, (n: number) => string>
 

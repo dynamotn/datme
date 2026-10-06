@@ -5,6 +5,8 @@ tags:
 banner: _assets/images/diagram.png
 banner_y: 0.25
 created: 2024-05-14T23:47
+series: "[[Blog post|Writing datme]]"
+series_order: 1
 ---
 # A blog post
 

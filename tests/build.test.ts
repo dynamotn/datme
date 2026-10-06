@@ -363,6 +363,18 @@ describe("static build", () => {
     expect(exists("en-US/recent/index.html")).toBe(true)
   })
 
+  test("notes of a series show their place in it and link to the parts around them", () => {
+    const first = read("07_Project/Blog-post/index.html")
+    expect(first).toMatch(/<span class="series-label">Phần 1\/2 của<\/span> <a class="internal" href="\/07_Project\/Blog-post">Writing datme<\/a>/)
+    expect(first).toMatch(/<a class="internal series-next" href="\/03_Atomic\/Code" rel="next">/)
+    expect(first).not.toContain("series-prev")
+    const second = read("03_Atomic/Code/index.html")
+    expect(second).toMatch(/<li aria-current="page">Code<\/li>/)
+    expect(second).toMatch(/<a class="internal series-prev" href="\/07_Project\/Blog-post" rel="prev">/)
+    // The series fields are not repeated in the properties block.
+    expect(second).not.toContain("<dt>series")
+  })
+
   test("RSS feeds and the sitemap are generated", () => {
     expect(read("index.xml")).toContain("<item>")
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")

@@ -1,0 +1,64 @@
+---
+import type { Note } from "~/lib/vault"
+import { seriesOf } from "~/lib/series"
+import { t } from "~/lib/i18n"
+
+interface Props {
+  note: Note
+  /** head: the parts of the series above the note; foot: previous and next part below it. */
+  at: "head" | "foot"
+}
+const { note, at } = Astro.props
+const place = seriesOf(note)
+const s = t(note.lang)
+---
+
+{
+  place && at === "head" && (
+    <details class="series-box">
+      <summary>
+        <span class="series-label">{s.seriesPart(place.index + 1).replace("{total}", String(place.series.parts.length))}</span>{" "}
+        {place.series.intro ? (
+          <a class="internal" href={place.series.intro.url}>
+            {place.series.name}
+          </a>
+        ) : (
+          <strong>{place.series.name}</strong>
+        )}
+      </summary>
+      <ol>
+        {place.series.parts.map((p) =>
+          p === note ? (
+            <li aria-current="page">{p.title}</li>
+          ) : (
+            <li>
+              <a class="internal" href={p.url}>
+                {p.title}
+              </a>
+            </li>
+          ),
+        )}
+      </ol>
+    </details>
+  )
+}
+{
+  place && at === "foot" && (place.prev || place.next) && (
+    <nav class="series-nav" aria-label={place.series.name}>
+      {place.prev ? (
+        <a class="internal series-prev" href={place.prev.url} rel="prev">
+          <small>← {s.seriesPrev}</small>
+          {place.prev.title}
+        </a>
+      ) : (
+        <span />
+      )}
+      {place.next && (
+        <a class="internal series-next" href={place.next.url} rel="next">
+          <small>{s.seriesNext} →</small>
+          {place.next.title}
+        </a>
+      )}
+    </nav>
+  )
+}

@@ -1768,6 +1768,55 @@ dialog.graph-modal {
   color: var(--muted);
 }
 
+/* ---------- series ---------- */
+.series-box {
+  margin: 0 0 24px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+.series-box summary {
+  cursor: pointer;
+}
+.series-label {
+  color: var(--muted);
+}
+.series-box ol {
+  margin: 8px 0 2px;
+  padding-left: 22px;
+}
+.series-box li[aria-current] {
+  font-weight: 700;
+}
+.series-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 36px;
+}
+.series-nav a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
+.series-nav a:hover {
+  border-color: var(--accent);
+}
+.series-nav small {
+  color: var(--muted);
+}
+.series-next {
+  grid-column: 2;
+  text-align: right;
+}
+
 /* ---------- datme dev: problems of the note ---------- */
 .dev-problems {
   margin: 0 0 20px;
