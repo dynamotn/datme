@@ -67,6 +67,12 @@ describe("zero-config build", () => {
     expect(exists("CNAME")).toBe(false)
   })
 
+  test("no theme overrides or custom stylesheet unless the vault has them", () => {
+    const home = read("index.html")
+    expect(home).not.toContain("fonts.googleapis.com")
+    expect(home).not.toContain('href="/custom.css"')
+  })
+
   test("the logo comes from the vault name", () => {
     expect(read("favicon.svg")).toContain(">M</text>")
   })

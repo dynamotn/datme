@@ -209,3 +209,15 @@ describe("note types", () => {
     expect(c.types.recipe.icon).toBe("🍲")
   })
 })
+
+describe("theme", () => {
+  test("defaults to datme's own look with an optional datme.css", () => {
+    expect(resolveConfig({}, "/v").theme).toEqual({ fonts: {}, css: "datme.css" })
+  })
+
+  test("accents and font names are checked so they cannot break out of CSS", () => {
+    expect(() => resolveConfig({ theme: { accent: "red;}body{display:none" } }, "/v")).toThrow("expected a CSS colour")
+    expect(() => resolveConfig({ theme: { fonts: { body: "x}<style>" } } }, "/v")).toThrow("expected a font family name")
+    expect(resolveConfig({ theme: { accent: "oklch(0.6 0.2 260)" } }, "/v").theme.accent).toBe("oklch(0.6 0.2 260)")
+  })
+})

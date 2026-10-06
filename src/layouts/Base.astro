@@ -10,6 +10,7 @@ import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
 import { navLinks } from "~/lib/nav"
 import { ogPath } from "~/lib/og-url"
+import { customCssFile, fontsHref, themeCss } from "~/lib/theme"
 import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
 import { serializeLd, type JsonLd } from "~/lib/jsonld"
@@ -66,6 +67,9 @@ const year = new Date().getFullYear()
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {fontsHref() && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
+    {fontsHref() && <link rel="stylesheet" href={fontsHref()} />}
+    {themeCss() && <style is:inline set:html={themeCss()} />}
     {
       site.offline && (
         <>
@@ -132,6 +136,8 @@ const year = new Date().getFullYear()
     <Analytics />
   </head>
   <body data-copy={s.copy} data-copied={s.copied}>
+    {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
+    {customCssFile() && <link rel="stylesheet" href="/custom.css" />}
     <header class="site-header">
       <button class="icon-btn menu-btn" type="button" data-nav-toggle aria-label={s.menu}>
         <Icon name="menu" />

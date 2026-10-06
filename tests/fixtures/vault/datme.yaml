@@ -56,3 +56,9 @@ types:
       en-US: Person
 lineBreaks:
   types: [composition]
+theme:
+  accent:
+    light: "#7c3aed"
+    dark: "#c4b5fd"
+  fonts:
+    heading: Fraunces

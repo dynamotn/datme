@@ -32,6 +32,12 @@ const STAGE_PRESETS: Record<string, Omit<StageDef, "order">> = {
 
 const localized = z.union([z.string(), z.record(z.string(), z.string())])
 
+// Values that end up inside a <style> element must not be able to close a rule.
+const cssColor = z
+  .string()
+  .regex(/^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([\d\s.,%/+-]+\)|[a-zA-Z]+)$/, "expected a CSS colour")
+const fontFamily = z.string().regex(/^[\p{L}\p{N} _-]+$/u, "expected a font family name")
+
 /** Icons for common note types (from tags like type/book); datme.yaml can add or override them. */
 const DEFAULT_TYPES: Record<string, string> = {
   article: "📰",
@@ -168,6 +174,20 @@ const schema = z
       })
       .strict()
       .default({ all: false, types: [], folders: [] }),
+    theme: z
+      .object({
+        /** Accent colour of links and highlights; one value, or one per colour scheme. */
+        accent: z.union([cssColor, z.object({ light: cssColor, dark: cssColor }).strict()]).optional(),
+        /** Google Fonts families for headings and UI, reading text and code. */
+        fonts: z
+          .object({ heading: fontFamily.optional(), body: fontFamily.optional(), code: fontFamily.optional() })
+          .strict()
+          .default({}),
+        /** A stylesheet in the vault, loaded after datme's own. */
+        css: z.string().default("datme.css"),
+      })
+      .strict()
+      .default({ fonts: {}, css: "datme.css" }),
     related: z
       .object({
         /** How many related notes to suggest under each note; 0 turns them off. */
@@ -301,6 +321,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     offline: c.offline,
     stackedPages: c.stackedPages,
     related: c.related,
+    theme: { ...c.theme, css: c.theme.css.replace(/^\/+/, "") },
     lineBreaks: { ...c.lineBreaks, folders: c.lineBreaks.folders.map((p) => p.replace(/^\/+|\/+$/g, "")) },
     properties: c.properties,
     types: Object.fromEntries(

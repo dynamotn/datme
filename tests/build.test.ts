@@ -260,6 +260,16 @@ describe("static build", () => {
     expect(read("CNAME")).toBe("notes.dynamotn.dev\n")
   })
 
+  test("theme accents and fonts override both looks, and the vault stylesheet loads last", () => {
+    const html = read("index.html")
+    expect(html).toContain("--accent:#7c3aed")
+    expect(html).toContain(':root[data-theme="dark"][data-theme="dark"]{--accent:#c4b5fd')
+    expect(html).toContain('--font-ui:"Fraunces", system-ui, sans-serif')
+    expect(html).toContain("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;800&amp;display=swap")
+    expect(html.indexOf('href="/custom.css"')).toBeGreaterThan(html.lastIndexOf('rel="stylesheet" href="/_astro/'))
+    expect(read("custom.css")).toContain(".note-title { letter-spacing: 0.01em; }")
+  })
+
   test("favicon and robots.txt come from the config", () => {
     expect(read("favicon.svg")).toContain(">K</text>")
     expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")
