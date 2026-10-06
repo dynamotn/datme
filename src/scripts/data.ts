@@ -3,6 +3,7 @@ export interface IndexNote {
   t: string
   a: string[]
   g: string[]
+  /** Icon of the note's stage, if any. */
   s: string | null
   f: string
   d: string
@@ -22,16 +23,6 @@ export function loadIndex(lang: string): Promise<ContentIndex> {
     cache.set(lang, hit)
   }
   return hit
-}
-
-export const STAGE_ICON: Record<string, string> = {
-  fleeting: "🌱",
-  literature: "📖",
-  atomic: "⚛️",
-  permanent: "🌳",
-  structure: "🗺️",
-  reference: "📚",
-  project: "🛠️",
 }
 
 /** Compare URL paths regardless of percent-encoding and trailing slashes. */

@@ -8,7 +8,8 @@ export async function feed(lang: Lang): Promise<Response> {
   return rss({
     title: site.title[lang],
     description: site.tagline[lang],
-    site: site.url,
+    // RSS needs absolute links; without site.url they point at the dev server.
+    site: site.url ?? "http://localhost:4321",
     customData: `<language>${lang}</language>`,
     items: await Promise.all(
       notes.map(async (n) => {

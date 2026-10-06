@@ -63,7 +63,7 @@ describe("metadata", () => {
     expect(zk.tags).toEqual(["type/notion", "theme/pkm"])
     expect(zk.types).toEqual(["notion"])
     expect(zk.aliases).toEqual(["Slip box"])
-    expect(zk.stage).toBe("atomic")
+    expect(zk.stage).toBe("03_Atomic")
   })
 
   test("banners resolve vault assets and keep their focal point", () => {

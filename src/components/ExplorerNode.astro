@@ -1,7 +1,7 @@
 ---
 import type { FolderNode } from "~/lib/vault"
 import { countNotes } from "~/lib/vault"
-import { stageMeta } from "~/lib/i18n"
+import { site } from "~/site.config"
 import Icon from "./Icon.astro"
 
 interface Props {
@@ -31,7 +31,7 @@ const { folder } = Astro.props
     folder.notes.map((n) => (
       <li>
         <a href={n.url} title={n.title}>
-          {n.stage && folder.dir === "" ? <span class="stage-icon">{stageMeta[n.stage].icon}</span> : null}
+          {n.stage && folder.dir === "" ? <span class="stage-icon">{site.stages[n.stage].icon}</span> : null}
           {n.title}
         </a>
       </li>

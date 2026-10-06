@@ -1,6 +1,7 @@
 ---
 import type { Note } from "~/lib/vault"
-import { t, formatDate, stageMeta, langPrefix } from "~/lib/i18n"
+import { site } from "~/site.config"
+import { t, formatDate, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "./Icon.astro"
 
@@ -19,7 +20,7 @@ const stageFolder = note.dir.split("/")[0]
   {
     note.stage && (
       <a class="chip stage" href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
-        {stageMeta[note.stage].icon} {stageMeta[note.stage].label[note.lang]}
+        {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
       </a>
     )
   }

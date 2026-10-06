@@ -7,7 +7,7 @@ interface Props {
   note: Note
 }
 const { note } = Astro.props
-const target = new URL(note.url, site.url).href
+const target = site.url ? new URL(note.url, site.url + "/").href : note.url
 ---
 
 <!doctype html>

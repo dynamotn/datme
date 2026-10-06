@@ -1,4 +1,4 @@
-import { site, type Lang, type Stage } from "../site.config"
+import { site, type Lang } from "../site.config"
 
 const strings = {
   "vi-VN": {
@@ -104,22 +104,12 @@ const strings = {
 } satisfies Record<Lang, Record<string, unknown>>
 
 export function t(lang: Lang) {
-  return strings[lang]
+  return strings[lang as keyof typeof strings] ?? strings["en-US"]
 }
 
 export const langMeta: Record<Lang, { short: string; name: string; html: string }> = {
   "vi-VN": { short: "VI", name: "Tiếng Việt", html: "vi" },
   "en-US": { short: "EN", name: "English", html: "en" },
-}
-
-export const stageMeta: Record<Stage, { icon: string; label: Record<Lang, string>; order: number }> = {
-  fleeting: { icon: "🌱", order: 1, label: { "vi-VN": "Thoáng qua", "en-US": "Fleeting" } },
-  literature: { icon: "📖", order: 2, label: { "vi-VN": "Tài liệu", "en-US": "Literature" } },
-  atomic: { icon: "⚛️", order: 3, label: { "vi-VN": "Nguyên tử", "en-US": "Atomic" } },
-  permanent: { icon: "🌳", order: 4, label: { "vi-VN": "Vĩnh viễn", "en-US": "Permanent" } },
-  structure: { icon: "🗺️", order: 5, label: { "vi-VN": "Cấu trúc", "en-US": "Structure" } },
-  reference: { icon: "📚", order: 6, label: { "vi-VN": "Tham khảo", "en-US": "Reference" } },
-  project: { icon: "🛠️", order: 7, label: { "vi-VN": "Dự án", "en-US": "Project" } },
 }
 
 /** URL prefix of a language: the default language lives at the site root. */

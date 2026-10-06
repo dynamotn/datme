@@ -3,7 +3,7 @@ import type { Lang } from "~/site.config"
 import { site } from "~/site.config"
 import { getVault, listed, byRecent, countNotes } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { t, stageMeta, langPrefix } from "~/lib/i18n"
+import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Base from "~/layouts/Base.astro"
 import NoteCard from "../NoteCard.astro"
@@ -31,7 +31,8 @@ const mocs = notes.filter((n) => n.isMoc)
 const linkCount = notes.reduce((acc, n) => acc + n.links.length, 0)
 const stages = [...vault.trees[lang].folders]
   .filter((f) => site.stages[f.segment])
-  .map((f) => ({ folder: f, stage: stageMeta[site.stages[f.segment]], count: countNotes(f) }))
+  .sort((a, b) => site.stages[a.segment].order - site.stages[b.segment].order)
+  .map((f) => ({ folder: f, stage: site.stages[f.segment], count: countNotes(f) }))
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
 ---
 

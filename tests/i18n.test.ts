@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { t, langPrefix, formatDate, stageMeta } from "../src/lib/i18n"
+import { t, langPrefix, formatDate } from "../src/lib/i18n"
 
 describe("i18n", () => {
   test("the default language lives at the root", () => {
@@ -20,12 +20,5 @@ describe("i18n", () => {
     const d = new Date("2024-05-14T12:00:00Z")
     expect(formatDate(d, "en-US")).toBe("May 14, 2024")
     expect(formatDate(undefined, "vi-VN")).toBe("")
-  })
-
-  test("every stage has a label in both languages", () => {
-    for (const meta of Object.values(stageMeta)) {
-      expect(meta.label["vi-VN"]).toBeTruthy()
-      expect(meta.label["en-US"]).toBeTruthy()
-    }
   })
 })

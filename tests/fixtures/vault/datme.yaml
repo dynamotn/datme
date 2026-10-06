@@ -1,0 +1,22 @@
+# Mirrors a real bilingual Zettelkasten garden.
+site:
+  title:
+    vi-VN: Khu vườn thử nghiệm
+    en-US: Test garden
+  tagline: A test notebook
+  url: https://notes.dynamotn.dev
+  author: Tester
+languages: [vi-VN, en-US]
+ignore:
+  - _assets/templates
+stages:
+  01_Fleeting: fleeting
+  03_Atomic: atomic
+  06_Reference: reference
+  07_Project:
+    icon: 🧪
+    label:
+      vi-VN: Thử nghiệm
+      en-US: Experiments
+footer:
+  GitHub: https://github.com/example

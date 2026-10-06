@@ -1,6 +1,6 @@
 import MiniSearch from "minisearch"
 import { navigate } from "astro:transitions/client"
-import { loadIndex, currentLang, STAGE_ICON, type IndexNote } from "./data"
+import { loadIndex, currentLang, type IndexNote } from "./data"
 import { fold, esc, highlight, snippet } from "./text"
 
 const engines = new Map<string, Promise<{ ms: MiniSearch<IndexNote & { id: number }>; notes: IndexNote[] }>>()
@@ -59,7 +59,7 @@ async function run(dialog: HTMLDialogElement, query: string) {
       const n = notes[id as number]
       const path = [n.f, ...n.g.slice(0, 3).map((g) => "#" + g)].filter(Boolean).join(" · ")
       return `<li><a href="${esc(n.u)}" role="option">
-        <div class="r-title"><span>${n.s ? STAGE_ICON[n.s] : "📝"}</span>${highlight(n.t, terms)}</div>
+        <div class="r-title"><span>${n.s ?? "📝"}</span>${highlight(n.t, terms)}</div>
         <div class="r-path">${esc(path)}</div>
         <div class="r-snippet">${highlight(snippet(n.c || n.d, terms), terms)}</div>
       </a></li>`

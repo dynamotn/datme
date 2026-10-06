@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ params }) => {
         t: r.h1 && n.isHome ? r.h1 : n.title,
         a: n.aliases,
         g: n.tags,
-        s: n.stage ?? null,
+        s: n.stage ? site.stages[n.stage].icon : null,
         f: folders.get(n.dir)?.name ?? "",
         d: r.description,
         c: r.text.slice(0, 6000),

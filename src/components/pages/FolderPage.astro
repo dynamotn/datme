@@ -3,7 +3,7 @@ import type { Lang } from "~/site.config"
 import { site } from "~/site.config"
 import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { t, stageMeta } from "~/lib/i18n"
+import { t } from "~/lib/i18n"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
@@ -26,7 +26,7 @@ const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastInd
   <div class="note is-wide">
     <Breadcrumbs lang={lang} dir={parent} />
     <header class="page-head">
-      <span class="chip stage">{stage ? `${stageMeta[stage].icon} ${stageMeta[stage].label[lang]}` : s.folder}</span>
+      <span class="chip stage">{stage ? `${stage.icon} ${stage.label[lang]}` : s.folder}</span>
       <h1>{folder.name}</h1>
       <p>{s.notesCount(countNotes(folder))}</p>
     </header>

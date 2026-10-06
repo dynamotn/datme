@@ -22,7 +22,8 @@ const s = t(lang)
 const siteTitle = site.title[lang]
 const fullTitle = title === siteTitle ? title : `${title} · ${siteTitle}`
 const home = slugToUrl(langPrefix(lang) + "index")
-const canonical = new URL(Astro.url.pathname, site.url).href
+const abs = (p: string) => (site.url ? new URL(p, site.url + "/").href : p)
+const canonical = abs(Astro.url.pathname)
 const rss = slugToUrl(langPrefix(lang) + "index.xml")
 const year = new Date().getFullYear()
 ---
@@ -40,7 +41,7 @@ const year = new Date().getFullYear()
     {
       site.langs.map(
         (l) =>
-          alternates[l] && <link rel="alternate" hreflang={langMeta[l].html} href={new URL(alternates[l]!, site.url).href} />,
+          alternates[l] && <link rel="alternate" hreflang={langMeta[l].html} href={abs(alternates[l]!)} />,
       )
     }
     <meta property="og:title" content={title} />
@@ -48,7 +49,7 @@ const year = new Date().getFullYear()
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     {description && <meta property="og:description" content={description} />}
-    {image && <meta property="og:image" content={new URL(image, site.url).href} />}
+    {image && <meta property="og:image" content={abs(image)} />}
     <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
     <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)" />

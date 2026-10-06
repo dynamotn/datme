@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { execFileSync } from "node:child_process"
 import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
-import { site, type Lang, type Stage } from "../site.config"
+import { site, type Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
 import { preprocess, type LinkRef } from "./obsidian"
@@ -35,7 +35,8 @@ export interface Note {
   bannerPos: string
   cssclasses: string[]
   description?: string
-  stage?: Stage
+  /** Top-level folder of the note when the config defines it as a stage. */
+  stage?: string
   types: string[]
   isBlog: boolean
   isMoc: boolean
@@ -343,7 +344,7 @@ function buildVault(version: number): Vault {
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
         cssclasses: toArray(s.fm.cssclasses ?? s.fm.cssclass),
         description: typeof s.fm.description === "string" ? s.fm.description : undefined,
-        stage: site.stages[s.dir.split("/")[0]],
+        stage: site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
         types,
         isBlog: types.includes("blog"),
         isMoc: types.includes("moc"),
