@@ -1,0 +1,84 @@
+---
+import type { Note } from "~/lib/vault"
+import { t, formatDate, stageMeta, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import Icon from "./Icon.astro"
+
+interface Props {
+  note: Note
+  words: number
+}
+const { note, words } = Astro.props
+const s = t(note.lang)
+const tagUrl = (tag: string) => slugToUrl(langPrefix(note.lang) + "tags/" + tag)
+const minutes = Math.max(1, Math.round(words / 220))
+const stageFolder = note.dir.split("/")[0]
+---
+
+<div class="chips">
+  {
+    note.stage && (
+      <a class="chip stage" href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
+        {stageMeta[note.stage].icon} {stageMeta[note.stage].label[note.lang]}
+      </a>
+    )
+  }
+  {
+    note.types.map((ty) => (
+      <a class="chip type" href={tagUrl("type/" + ty)}>
+        {ty}
+      </a>
+    ))
+  }
+</div>
+<slot />
+<div class="note-meta">
+  {
+    note.created && (
+      <span title={s.created}>
+        <Icon name="calendar" />
+        <time datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>
+      </span>
+    )
+  }
+  {
+    note.updated && formatDate(note.updated, note.lang) !== formatDate(note.created, note.lang) && (
+      <span title={s.updated}>
+        <Icon name="edit" />
+        <time datetime={note.updated.toISOString()}>{formatDate(note.updated, note.lang)}</time>
+      </span>
+    )
+  }
+  {
+    words > 0 && (
+      <span>
+        <Icon name="clock" />
+        {s.readingTime(minutes)} · {s.words(words)}
+      </span>
+    )
+  }
+</div>
+{
+  note.tags.filter((x) => !x.startsWith("type/")).length > 0 && (
+    <div class="chips">
+      {note.tags
+        .filter((x) => !x.startsWith("type/"))
+        .map((tag) => (
+          <a class="chip tag" href={tagUrl(tag)}>
+            {tag}
+          </a>
+        ))}
+    </div>
+  )
+}
+{
+  note.aliases.length > 0 && (
+    <details class="properties">
+      <summary>{s.properties}</summary>
+      <dl>
+        <dt>{s.aliases}</dt>
+        <dd>{note.aliases.join(" · ")}</dd>
+      </dl>
+    </details>
+  )
+}

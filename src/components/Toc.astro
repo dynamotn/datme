@@ -1,0 +1,28 @@
+---
+import type { Heading } from "~/lib/markdown"
+import type { Lang } from "~/site.config"
+import { t } from "~/lib/i18n"
+
+interface Props {
+  headings: Heading[]
+  lang: Lang
+}
+const { headings, lang } = Astro.props
+---
+
+{
+  headings.length > 1 && (
+    <nav class="toc" aria-label={t(lang).toc}>
+      <p class="panel-title">{t(lang).toc}</p>
+      <ol>
+        {headings.map((h) => (
+          <li class={`d${h.depth}`}>
+            <a href={`#${h.id}`} data-toc={h.id}>
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}

@@ -1,0 +1,67 @@
+---
+import type { Note } from "~/lib/vault"
+import { getVault } from "~/lib/vault"
+import { renderNote } from "~/lib/markdown"
+import { site } from "~/site.config"
+import { t } from "~/lib/i18n"
+import Base from "~/layouts/Base.astro"
+import Breadcrumbs from "../Breadcrumbs.astro"
+import NoteMeta from "../NoteMeta.astro"
+import Toc from "../Toc.astro"
+import LocalGraph from "../LocalGraph.astro"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const vault = getVault()
+const r = await renderNote(note)
+const title = r.h1 ?? note.title
+const backlinks = vault.backlinks[note.lang].get(note.key) ?? []
+const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.byKey[l].get(note.key)?.url]))
+const s = t(note.lang)
+---
+
+<Base lang={note.lang} title={note.title} description={r.description} image={note.banner} alternates={alternates} rail>
+  <article
+    class:list={["note", { "is-blog": note.isBlog }, ...note.cssclasses]}
+    data-key={note.key}
+    transition:name="note"
+  >
+    {
+      note.banner && (
+        <figure class="banner">
+          <img src={note.banner} alt="" style={`object-position: ${note.bannerPos}`} />
+        </figure>
+      )
+    }
+    <Breadcrumbs lang={note.lang} dir={note.dir} />
+    <header class="note-head">
+      <NoteMeta note={note} words={r.words}>
+        <h1 class="note-title">{title}</h1>
+      </NoteMeta>
+    </header>
+    <div class="prose" set:html={r.html} />
+  </article>
+  <section class="backlinks">
+    <h2>{s.backlinks} <span class="count">{backlinks.length}</span></h2>
+    {
+      backlinks.length ? (
+        <div class="backlink-grid">
+          {backlinks.map((b) => (
+            <a class="backlink internal" href={b.note.url}>
+              <strong>{b.note.title}</strong>
+              {b.context && <p>{b.context}</p>}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty">{s.noBacklinks}</p>
+      )
+    }
+  </section>
+  <Fragment slot="rail">
+    <Toc headings={r.headings} lang={note.lang} />
+    <LocalGraph lang={note.lang} current={note.url} />
+  </Fragment>
+</Base>
