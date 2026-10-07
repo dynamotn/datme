@@ -21,3 +21,5 @@ See the [[Map.canvas|project map]].
 ![[wide.png]]
 
 ![[Sketch.excalidraw|300]]
+
+![[Sketch.excalidraw#Overview]]

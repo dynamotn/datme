@@ -2671,6 +2671,23 @@ li > .flashcard {
 :root[data-theme="dark"] .prose .drawing.generated svg image {
   filter: invert(100%) hue-rotate(180deg);
 }
+/* A drawing exported dark (excalidraw-export-dark) is dark in both themes. */
+.prose .drawing.generated svg[data-dark] {
+  filter: invert(93%) hue-rotate(180deg);
+}
+:root[data-theme="dark"] .prose .drawing.generated svg[data-dark] {
+  filter: none;
+}
+.prose .drawing-link {
+  cursor: pointer;
+}
+.prose .drawing-link:hover,
+.prose .drawing-link:focus-visible {
+  opacity: 0.75;
+}
+.prose a.drawing-link tspan {
+  text-decoration: underline;
+}
 .prose .drawing-dark,
 :root[data-theme="dark"] .prose .drawing-light {
   display: none !important;

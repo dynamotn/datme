@@ -24,6 +24,10 @@ export interface LinkTarget {
 export interface DrawnDrawing {
   svg: string
   assets: string[]
+  /** Keys of the published notes the drawing links to or embeds. */
+  links: string[]
+  /** The drawing's file in the vault. */
+  rel: string
 }
 
 interface Ctx {
@@ -32,7 +36,7 @@ interface Ctx {
   resolveNote(target: string, fromDir: string): LinkTarget | undefined
   resolveAsset(target: string, fromDir: string): string | undefined
   /** Draw an Excalidraw drawing that has no exported image; undefined when it cannot be found or read. */
-  drawDrawing?(target: string, fromDir: string): DrawnDrawing | undefined
+  drawDrawing?(target: string, fromDir: string, fragment?: string): DrawnDrawing | undefined
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -133,19 +137,23 @@ export function preprocess(
   }
 
   // Excalidraw drawings: the SVG/PNG the Obsidian plugin exports next to them, or else drawn by datme.
-  const embedDrawing = (file: string, alias: string | undefined): string => {
+  const embedDrawing = (file: string, alias: string | undefined, fragment = "", line = ""): string => {
     const base = file.replace(/\.md$/i, "")
     const find = (suffix: string) => ctx.resolveAsset(base + suffix, ctx.dir)
     const light = find(".light.svg") ?? find(".svg") ?? find(".light.png") ?? find(".png")
     const dark = find(".dark.svg") ?? find(".dark.png")
     const name = escapeAttr(base.split("/").pop()!.replace(EXCALIDRAW, ""))
     const width = alias?.match(/^\d+$/) ? ` style="max-width:${alias}px"` : ""
-    if (!light && !dark) {
-      const drawn = ctx.drawDrawing?.(file, ctx.dir)
+    // A part of the drawing (#^frame=…) can only be drawn, never taken from an export.
+    if ((!light && !dark) || fragment) {
+      const drawn = ctx.drawDrawing?.(file, ctx.dir, fragment)
       if (drawn) {
         assets.push(...drawn.assets)
+        // What the drawing links to counts as linked from the note, for backlinks and the graph.
+        for (const key of drawn.links) links.push({ key, context: plainLine(line) })
         // The SVG carries its own name for screen readers.
-        return `<span class="drawing generated"${width}>${drawn.svg.replace('role="img"', `role="img" aria-label="${name}"`)}</span>`
+        // Masked like code: later passes must not read `url(#clip)` as a #tag or `==` as a highlight.
+        return mask(`<span class="drawing generated"${width}>${drawn.svg.replace(/role="(img|group)"/, `role="$1" aria-label="${name}"`)}</span>`)
       }
       problems.push({ kind: "drawing", target: file })
       return `<span class="drawing-missing">✏️ ${name}: the drawing cannot be found or read</span>`
@@ -168,7 +176,7 @@ export function preprocess(
     const file = (hash >= 0 ? target.slice(0, hash) : target).trim()
     const fragment = hash >= 0 ? target.slice(hash + 1).trim() : ""
 
-    if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias)
+    if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias, fragment, lineOf(offset))
     if (DOC.test(file)) {
       const rel = ctx.resolveAsset(file, ctx.dir)
       const name = escapeAttr(alias ?? file.split("/").pop()!.replace(DOC, ""))

@@ -149,7 +149,8 @@ export function renderSearchBlock(source: string, lang: Lang): string {
       path: n.key + ".md",
       tags: n.tags,
       // Links are already HTML here; their text is what a reader sees.
-      text: n.md.replace(/<[^>]+>/g, ""),
+      // Drawings drawn inline are pictures, not text to search.
+      text: n.md.replace(/<svg[\s\S]*?<\/svg>/g, "").replace(/<[^>]+>/g, ""),
       url: n.url,
       key: n.key,
     }))

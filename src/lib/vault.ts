@@ -10,8 +10,10 @@ import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
 import { cite, parseBibtex, type BibEntry } from "./citations"
-import { parseDrawing, renderScene } from "./excalidraw"
-import type { DrawnDrawing } from "./obsidian"
+import katex from "katex"
+import crypto from "node:crypto"
+import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, type Scene } from "./excalidraw"
+import { urlPlaceholder, type DrawnDrawing } from "./obsidian"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -394,32 +396,96 @@ function buildVault(version: number): Vault {
     return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
   }
 
-  /** Draw a drawing once per build, whatever the number of notes and languages embedding it. */
+  const scenes = new Map<string, Scene>()
+  function sceneOf(rel: string): Scene {
+    let scene = scenes.get(rel)
+    if (!scene) {
+      scene = parseDrawing(fs.readFileSync(path.join(site.vault, rel), "utf8"))
+      scenes.set(rel, scene)
+    }
+    return scene
+  }
+
+  /** How deep drawings may embed drawings, so a drawing embedding itself still ends. */
+  const MAX_NESTING = 3
+
+  /**
+   * Resolvers of one drawing: its links lead to published notes (as URL
+   * placeholders, filled per language) and its embedded files show images,
+   * other drawings, notes or formulas. What it uses is gathered as it draws.
+   */
+  function drawingContext(rel: string, scene: Scene, used: { assets: string[]; links: string[] }, depth: number) {
+    const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
+    const resolveLink = (target: string): string | undefined => {
+      if (/^https?:\/\//.test(target)) return target
+      const note = resolveNote(target.replace(/#.*$/, ""), dir)
+      if (!note) {
+        linkProblem(rel, { kind: "link", target })
+        return undefined
+      }
+      used.links.push(note.key)
+      return urlPlaceholder(note.key)
+    }
+    const resolveFile = (id: string): FileView | undefined => {
+      const file = scene.files[id]
+      // Only pictures: a data URL of anything else is not followed.
+      if (file?.dataURL?.startsWith("data:image/")) return { kind: "image", href: file.dataURL }
+      const embed = file?.embed
+      if (!embed) return undefined
+      if (embed.kind === "url") return { kind: "image", href: embed.url }
+      if (embed.kind === "latex") {
+        return { kind: "math", mathml: katex.renderToString(embed.tex, { output: "mathml", displayMode: true, throwOnError: false }) }
+      }
+      const nested = /\.excalidraw(\.md)?$/i.test(embed.target) || !/\.\w+$/.test(embed.target) ? resolveDrawing(embed.target, dir) : undefined
+      if (nested && depth < MAX_NESTING) {
+        try {
+          const inner = sceneOf(nested)
+          const parts = renderParts(inner, { ...drawingContext(nested, inner, used, depth + 1), idPrefix: `ex${depth + 1}-${hash(nested)}` })
+          return { kind: "drawing", viewBox: parts.viewBox, body: parts.body }
+        } catch {
+          return undefined
+        }
+      }
+      const asset = resolveAsset(embed.target, dir)
+      if (asset && /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(asset)) {
+        used.assets.push(asset)
+        return { kind: "image", href: assetUrl(asset) }
+      }
+      const note = resolveNote(embed.target, dir)
+      if (note) {
+        used.links.push(note.key)
+        const title = typeof note.fm.title === "string" ? note.fm.title : note.stem
+        return { kind: "note", title, href: urlPlaceholder(note.key) }
+      }
+      // A private note embedded in a drawing shows as such, without its name.
+      return /\.\w+$/.test(embed.target) ? undefined : { kind: "note", title: "🔒" }
+    }
+    return { resolveLink, resolveFile }
+  }
+
+  const hash = (s: string) => crypto.createHash("sha1").update(s).digest("hex").slice(0, 8)
+
+  /** Draw a drawing (or the part a fragment names) once per build, whatever embeds it. */
   const drawn = new Map<string, DrawnDrawing | undefined>()
-  function drawDrawing(target: string, fromDir: string): DrawnDrawing | undefined {
+  function drawDrawing(target: string, fromDir: string, fragment = ""): DrawnDrawing | undefined {
     const rel = resolveDrawing(target, fromDir)
     if (!rel) return undefined
-    if (drawn.has(rel)) return drawn.get(rel)
+    const id = `${rel}#${fragment}`
+    if (drawn.has(id)) return drawn.get(id)
     let result: DrawnDrawing | undefined
     try {
-      const scene = parseDrawing(fs.readFileSync(path.join(site.vault, rel), "utf8"))
-      const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
-      const used: string[] = []
-      const svg = renderScene(scene, (id) => {
-        const file = scene.files[id]
-        // Only pictures: a data URL of anything else is not followed.
-        if (file?.dataURL?.startsWith("data:image/")) return file.dataURL
-        if (file?.link && /^https?:\/\//.test(file.link)) return file.link
-        const asset = file?.link ? resolveAsset(file.link, dir) : undefined
-        if (!asset) return undefined
-        used.push(asset)
-        return assetUrl(asset)
+      const scene = sceneOf(rel)
+      const used = { assets: [] as string[], links: [] as string[] }
+      const svg = renderScene(scene, {
+        ...drawingContext(rel, scene, used, 0),
+        select: parseSelection(fragment),
+        idPrefix: `ex-${hash(id)}`,
       })
-      result = { svg, assets: used }
+      result = { svg, assets: [...new Set(used.assets)], links: [...new Set(used.links)], rel }
     } catch (e) {
-      report("warning", rel, `drawing cannot be drawn: ${(e as Error).message}`)
+      report("warning", rel, `drawing${fragment ? ` #${fragment}` : ""} cannot be drawn: ${(e as Error).message}`)
     }
-    drawn.set(rel, result)
+    drawn.set(id, result)
     return result
   }
 

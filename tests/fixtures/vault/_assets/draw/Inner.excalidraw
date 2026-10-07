@@ -1,0 +1,30 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "elements": [
+    {
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "#ffec99",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "isDeleted": false,
+      "groupIds": [],
+      "frameId": null,
+      "id": "in1",
+      "type": "ellipse",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 80,
+      "seed": 2001
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
