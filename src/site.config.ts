@@ -116,6 +116,8 @@ const schema = z
         timelineTags: ["timeline", "type/event"],
       }),
     footer: z.record(z.string(), z.string()).default({}),
+    /** A small "grown with datme" line, with its sprout, at the end of the footer. */
+    poweredBy: z.boolean().default(true),
     /** Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs. */
     nav: z
       .array(
@@ -361,6 +363,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     home: c.home.replace(/^\/+/, ""),
     conventions: c.conventions,
     footerLinks: c.footer,
+    poweredBy: c.poweredBy,
     nav: c.nav.map((item): NavItem =>
       typeof item === "string"
         ? { kind: item }

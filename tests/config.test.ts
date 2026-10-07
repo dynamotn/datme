@@ -15,6 +15,11 @@ describe("defaults", () => {
     expect(c.stages).toEqual({})
   })
 
+  test("the footer credits datme unless told not to", () => {
+    expect(c.poweredBy).toBe(true)
+    expect(resolveConfig({ poweredBy: false }, "/v").poweredBy).toBe(false)
+  })
+
   test("common private folders are always ignored", () => {
     expect(c.ignore).toEqual(expect.arrayContaining([".obsidian", ".trash", "templates", "private"]))
   })

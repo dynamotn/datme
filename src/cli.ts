@@ -269,6 +269,7 @@ stages: {}
 
 footer: {}
 #  GitHub: https://github.com/you
+# poweredBy: false            # hide the "grown with datme" line
 `
 }
 

@@ -3237,3 +3237,22 @@ a.drawing-link tspan {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ---------- datme credit ---------- */
+.datme-credit {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+}
+.datme-mark {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.site-footer .datme-credit a {
+  color: var(--ink);
+  font-weight: 600;
+}

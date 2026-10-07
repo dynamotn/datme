@@ -1,4 +1,9 @@
+<p align="center"><img src="src/assets/datme.svg" width="120" alt=""></p>
+
 # datme
+
+*Đất mẹ*, mother soil: the ground where the seeds of what you know take root
+and grow.
 
 Publish an Obsidian vault as a digital garden: every note is an index card
 pinned on a notebook wall, with backlinks, a graph, full-text search and
@@ -87,6 +92,7 @@ appearance:
 
 footer:
   GitHub: https://github.com/me
+poweredBy: true               # the "grown with datme" line under the footer; false hides it
 
 analytics:                    # google { id }, plausible { host? }, umami { id, host }, goatcounter { id }
   provider: plausible

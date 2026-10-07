@@ -15,6 +15,7 @@ import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
 import DevProblems from "~/components/DevProblems.astro"
 import { serializeLd, type JsonLd } from "~/lib/jsonld"
+import datmeLogo from "~/assets/datme.svg?raw"
 
 interface Props {
   lang: Lang
@@ -66,6 +67,12 @@ const abs = (p: string) => (site.url ? new URL(p, site.url + "/").href : p)
 const canonical = abs(canonicalUrl ?? Astro.url.pathname)
 const rss = slugToUrl(langPrefix(lang) + "index.xml")
 const year = new Date().getFullYear()
+// The sprout is decoration next to its name; the link says "datme".
+const datmeMark = datmeLogo
+  .replace(/<title>[\s\S]*?<\/title>|<!--[\s\S]*?-->/g, "")
+  .replace(/>\s+</g, "><")
+  .trim().replace(/role="img" aria-label="datme"/, 'class="datme-mark" aria-hidden="true" focusable="false"')
+const credit = s.poweredBy.split("{datme}")
 ---
 
 <!doctype html>
@@ -259,6 +266,16 @@ const year = new Date().getFullYear()
               ))
             }
           </nav>
+          {
+            site.poweredBy && (
+              <p class="datme-credit">
+                <Fragment set:html={datmeMark} />
+                {credit[0]}
+                <a href="https://gitlab.com/dynamo-tools/datme" rel="noopener">datme</a>
+                {credit[1]}
+              </p>
+            )
+          }
         </footer>
       </main>
       {

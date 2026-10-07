@@ -32,6 +32,14 @@ describe("static build", () => {
     expect(read("en-US/index.html")).toContain("Welcome")
   })
 
+  test("the footer credits datme with its sprout, in the page's language", () => {
+    const vi = read("index.html").match(/<p class="datme-credit">[\s\S]*?<\/p>/)![0]
+    expect(vi).toMatch(/^<p class="datme-credit"><svg [^>]*class="datme-mark" aria-hidden="true" focusable="false"><path/)
+    expect(vi).not.toContain("<title>")
+    expect(vi).toMatch(/Ươm mầm cùng\s*<a href="https:\/\/gitlab.com\/dynamo-tools\/datme" rel="noopener">datme<\/a>/)
+    expect(read("en-US/index.html")).toMatch(/Grown with\s*<a [^>]*>datme<\/a>/)
+  })
+
   test("notes, folders and tags get pages", () => {
     for (const p of [
       "03_Atomic/Zettelkasten/index.html",
