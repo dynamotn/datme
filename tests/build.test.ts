@@ -52,6 +52,13 @@ describe("static build", () => {
     expect(read("tags/index.html")).not.toContain('class="subscribe"')
   })
 
+  test("Iconize icons show in the explorer and on folder cards; icon properties stay hidden", () => {
+    const home = read("index.html")
+    expect(home).toMatch(/<a class="folder-link" href="\/03_Atomic\/"><span class="iconize"><svg /)
+    expect(home).toContain('<span class="iconize" aria-hidden="true" style="color:#b5532c">📚</span>Reference</a>')
+    expect(read("06_Reference/Niklas-Luhmann/index.html")).not.toMatch(/>iconColor</)
+  })
+
   test("notes, folders and tags get pages", () => {
     for (const p of [
       "03_Atomic/Zettelkasten/index.html",

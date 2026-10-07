@@ -43,6 +43,8 @@ export const HIDDEN_PROPERTIES = [
   "AutoNoteMover",
   "sticker",
   "excalidraw-plugin",
+  "icon",
+  "iconColor",
 ]
 
 const WIKILINK = /^\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]$/

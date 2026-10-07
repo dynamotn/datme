@@ -1,0 +1,7 @@
+{
+  "settings": { "iconPacksPath": ".obsidian/icons" },
+  "03_Atomic": "LiBookOpen",
+  "06_Reference": { "iconName": "📚", "iconColor": "#b5532c" },
+  "07_Project/Poem.md": "TpLeaf",
+  "07_Project/Talk.md": "LiNoSuchIcon"
+}

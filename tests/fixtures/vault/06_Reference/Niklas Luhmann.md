@@ -1,5 +1,7 @@
 ---
 publish: true
+icon: LiUserRound
+iconColor: "#2d6a4f"
 uid: 20240101000000
 template: Person
 person:

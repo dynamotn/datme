@@ -3302,3 +3302,12 @@ a.drawing-link tspan {
   font-weight: 650;
   cursor: pointer;
 }
+
+/* ---------- Iconize icons ---------- */
+.iconize {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.35em;
+  vertical-align: -0.125em;
+  line-height: 1;
+}

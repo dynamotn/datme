@@ -6,6 +6,7 @@ import { renderNote } from "~/lib/markdown"
 import { t } from "~/lib/i18n"
 import { feedPath } from "~/lib/feed"
 import Subscribe from "../Subscribe.astro"
+import { folderIcon } from "~/lib/icons"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
@@ -40,7 +41,7 @@ const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastInd
         <div class="folder-grid">
           {folder.folders.map((f) => (
             <a class="folder-card" href={f.url}>
-              <Icon name="folder" />
+              {folderIcon(f.dir) ? <Fragment set:html={folderIcon(f.dir)} /> : <Icon name="folder" />}
               {f.name}
               <span>{countNotes(f)}</span>
             </a>

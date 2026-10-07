@@ -16,6 +16,7 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Marp Slides](#marp-slides)
 - [Kanban](#kanban)
 - [Charts](#charts)
+- [Iconize](#iconize)
 - [Spaced Repetition flashcards](#spaced-repetition-flashcards)
 
 ## Dataview
@@ -155,6 +156,18 @@ show their `##` lanes side by side, each list item a card.
 theme's colours. Supported: `type: bar|line|pie|doughnut|radar|polarArea`,
 `labels`, `series`, `stacked`, `fill`, `tension`, `beginAtZero`, `indexAxis`
 and `width`. The data is also given as a table, for screen readers and print.
+
+## Iconize
+
+Folders and notes keep the icons Iconize gives them in Obsidian, in the
+explorer and on folder cards. datme reads Iconize's own settings
+(`.obsidian/plugins/obsidian-icon-folder/data.json`) and a note's `icon`
+frontmatter (with `iconColor`):
+
+- Emoji show as they are.
+- Lucide icons (`LiBookOpen`), Iconize's built-in pack, are drawn inline.
+- Icons of other packs (`FaHouse`, `RiLeafLine`…) come from the SVGs Iconize
+  downloaded into `.obsidian/icons`.
 
 ## Spaced Repetition flashcards
 

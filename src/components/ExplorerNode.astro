@@ -3,6 +3,7 @@ import type { FolderNode } from "~/lib/vault"
 import { countNotes } from "~/lib/vault"
 import { site } from "~/site.config"
 import Icon from "./Icon.astro"
+import { folderIcon, noteIcon } from "~/lib/icons"
 
 interface Props {
   folder: FolderNode
@@ -24,6 +25,7 @@ const { folder } = Astro.props
           <Astro.self folder={f} />
         </details>
         <a class="folder-link" href={f.url}>
+          <Fragment set:html={folderIcon(f.dir)} />
           {f.name}
         </a>
         <span class="count">{countNotes(f)}</span>
@@ -35,6 +37,7 @@ const { folder } = Astro.props
       <li>
         <a href={n.url} title={n.title}>
           {n.stage && folder.dir === "" ? <span class="stage-icon">{site.stages[n.stage].icon}</span> : null}
+          <Fragment set:html={noteIcon(n.key, n.source.fm)} />
           {n.title}
         </a>
       </li>
