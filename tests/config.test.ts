@@ -188,7 +188,11 @@ describe("analytics, comments and CNAME", () => {
     expect(c.ogImages).toBe(true)
     expect(c.stackedPages).toBe(true)
     expect(c.lineBreaks).toEqual({ all: false, types: [], folders: [] })
-    expect(c.related).toEqual({ count: 5, mentions: true })
+    expect(c.related).toEqual({ count: 5, mentions: true, semantic: false })
+    expect(resolveConfig({ related: { semantic: true } }, "/v").related.semantic).toEqual({
+      model: "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      threshold: 0.55,
+    })
   })
 
   test("each provider checks its own fields", () => {

@@ -14,12 +14,34 @@ This is what someone visiting your garden can do. None of it needs setting up.
   colour notes by folder or type. Its time slider replays how the garden grew.
   Each note also has a local graph in its sidebar.
 - **Backlinks** under each note show who links to it, with the sentence around
-  the link. Related notes (shared tags and links) and unlinked mentions follow.
+  the link. Related notes (shared tags and links, and optionally
+  [closeness in meaning](#notes-close-in-meaning)) and unlinked mentions follow.
 - **Wandering:** `j` and `k` move to the next or previous note of the explorer,
   and 🎲 (or `r`) opens a random one.
 - **Overview pages:** `/tags`, `/archive` (with a yearly activity calendar),
   `/recent`, and `/timeline`, `/map`, `/stats` and `/calendar` (daily notes)
   when some note qualifies.
+
+### Notes close in meaning
+
+With `related: { semantic: true }`, related notes also include notes that are
+about the same thing in other words, marked "≈ similar idea", even across
+languages. datme reads each note with a small multilingual sentence model
+(`paraphrase-multilingual-MiniLM-L12-v2`, about 120 MB, downloaded once) on the
+machine that builds the site; nothing is sent to a service, and protected notes
+and locked parts are never read. Each note's result is cached, so later builds
+only read the notes that changed.
+
+The model runs on [transformers.js](https://huggingface.co/docs/transformers.js),
+an optional dependency to install next to datme:
+
+```bash
+bun add @huggingface/transformers          # in a project that depends on datme
+bunx --package @dynamotn/datme --package @huggingface/transformers datme build ~/MyVault
+```
+
+`threshold` (0.55 by default) sets how close two notes must be; `model` picks
+another feature-extraction model from Hugging Face.
 
 ## Reading
 

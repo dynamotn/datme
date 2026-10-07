@@ -92,6 +92,8 @@ history: false                # a page per note showing how it grew, from git (s
 related:                      # under each note: notes sharing tags or links,
   count: 5                    # and notes naming it without a link
   mentions: true
+  semantic: false             # true: also notes close in meaning (see The reader's side);
+                              # or { model: …, threshold: 0.55 }
 stackedPages: true            # a header button to open linked notes side by side
 
 strings:                      # override any UI text, per language

@@ -1,12 +1,15 @@
 import { site, type Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
+import { cosine, embed } from "./embeddings"
 
 export interface Related {
   note: Note
   score: number
-  /** Why the notes are related: shared tags and shared links. */
+  /** Why the notes are related: shared tags, shared links, and how close they are in meaning. */
   tags: string[]
   links: number
+  /** Cosine similarity of their embeddings, when semantic suggestions are on and it counted. */
+  similarity?: number
 }
 
 export interface Mention {
@@ -15,7 +18,7 @@ export interface Mention {
   context: string
 }
 
-const cache = new Map<string, { related: Map<string, Related[]>; mentions: Map<string, Mention[]> }>()
+const cache = new Map<string, Promise<{ related: Map<string, Related[]>; mentions: Map<string, Mention[]> }>>()
 
 /** Plain text of a note's markdown, without HTML, links' targets or markup. */
 function plain(md: string): string {
@@ -31,9 +34,18 @@ function plain(md: string): string {
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
-function compute(lang: Lang) {
+/** What a note is about, for its embedding: title, description and the start of its text. */
+const aboutText = (n: Note) => [n.title, n.description ?? "", plain(n.md)].join("\n").slice(0, 2000)
+
+/** Related notes and mentions of a language, computed afresh (data() caches them per build). */
+export async function computeRelated(lang: Lang) {
   const vault = getVault()
   const notes = vault.notes[lang].filter((n) => !n.isHome && !n.unlisted)
+  const semantic = site.related.semantic
+  // Protected notes have no text to compare, and must not reveal any.
+  const vectors = semantic
+    ? await embed(notes.filter((n) => !n.protected).map((n) => ({ id: n.key, text: aboutText(n) })), semantic.model)
+    : new Map<string, number[]>()
   const linksOf = (n: Note) => new Set(n.protected ? [] : n.links.map((l) => l.key))
   const out = new Map(notes.map((n) => [n.key, linksOf(n)]))
   const inbound = new Map<string, Set<string>>()
@@ -52,8 +64,15 @@ function compute(lang: Lang) {
       let links = 0
       for (const k of out.get(a.key)!) if (out.get(b.key)!.has(k)) links++
       for (const k of inbound.get(a.key) ?? []) if (inbound.get(b.key)?.has(k)) links++
-      const score = tagScore + links
-      if (score >= 2) scored.push({ note: b, score, tags: tags.filter((t) => !t.startsWith(typePrefix)), links })
+      // Closeness in meaning counts from the threshold up: 2 there, 6 for the same text.
+      const va = vectors.get(a.key)
+      const vb = vectors.get(b.key)
+      const sim = va && vb && semantic ? cosine(va, vb) : 0
+      const semScore = semantic && sim >= semantic.threshold ? 2 + (4 * (sim - semantic.threshold)) / (1 - semantic.threshold || 1) : 0
+      const score = tagScore + links + semScore
+      if (score >= 2) {
+        scored.push({ note: b, score, tags: tags.filter((t) => !t.startsWith(typePrefix)), links, ...(semScore ? { similarity: sim } : {}) })
+      }
     }
     scored.sort((x, y) => y.score - x.score || x.note.title.localeCompare(y.note.title, lang))
     related.set(a.key, scored.slice(0, site.related.count))
@@ -85,18 +104,20 @@ function data(lang: Lang) {
   const id = `${getVault().version}:${lang}`
   let hit = cache.get(id)
   if (!hit) {
-    hit = compute(lang)
+    hit = computeRelated(lang)
     cache.set(id, hit)
+    // A failure (no model) is reported once per build, then tried again on the next.
+    hit.catch(() => cache.delete(id))
   }
   return hit
 }
 
-/** Notes sharing tags or links with this one, best first, excluding those already linked. */
-export function relatedNotes(note: Note): Related[] {
-  return site.related.count > 0 ? (data(note.lang).related.get(note.key) ?? []) : []
+/** Notes sharing tags or links with this one, or close in meaning, best first, excluding those already linked. */
+export async function relatedNotes(note: Note): Promise<Related[]> {
+  return site.related.count > 0 ? ((await data(note.lang)).related.get(note.key) ?? []) : []
 }
 
 /** Notes that name this one (title or alias) without linking to it. */
-export function unlinkedMentions(note: Note): Mention[] {
-  return site.related.mentions ? (data(note.lang).mentions.get(note.key) ?? []) : []
+export async function unlinkedMentions(note: Note): Promise<Mention[]> {
+  return site.related.mentions ? ((await data(note.lang)).mentions.get(note.key) ?? []) : []
 }

@@ -4,6 +4,9 @@ import path from "node:path"
 import { load as loadYaml } from "js-yaml"
 import { z } from "astro/zod"
 
+/** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
+export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
+
 /** A BCP 47 language tag such as "en-US" or "vi-VN". */
 export type Lang = string
 
@@ -221,9 +224,26 @@ const schema = z
         count: z.number().int().min(0).default(5),
         /** List notes that name this one without linking to it. */
         mentions: z.boolean().default(true),
+        /**
+         * Also suggest notes similar in meaning, from embeddings computed on this
+         * machine at build time (needs @huggingface/transformers installed).
+         */
+        semantic: z
+          .union([
+            z.boolean(),
+            z
+              .object({
+                model: z.string().default(SEMANTIC_MODEL),
+                /** Cosine similarity from which two notes count as related, 0 to 1. */
+                threshold: z.number().min(0).max(1).default(0.55),
+              })
+              .strict(),
+          ])
+          .default(false)
+          .transform((v) => (v === true ? { model: SEMANTIC_MODEL, threshold: 0.55 } : v)),
       })
       .strict()
-      .default({ count: 5, mentions: true }),
+      .default({ count: 5, mentions: true, semantic: false }),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
     images: z
