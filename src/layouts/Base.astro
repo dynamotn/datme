@@ -80,7 +80,7 @@ const pluginHead = await userHead()
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`}>
+<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -134,8 +134,16 @@ const pluginHead = await userHead()
       )
     }
     {jsonLd.map((data) => <script type="application/ld+json" is:inline set:html={serializeLd(data)} />)}
-    <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)" />
+    {
+      site.theme.scheme === "auto" ? (
+        <>
+          <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)" />
+        </>
+      ) : (
+        <meta name="theme-color" content={site.theme.scheme === "dark" ? "#111210" : "#f6f3ec"} />
+      )
+    }
     <script is:inline>
       ;(() => {
         const apply = (doc) => {
@@ -148,7 +156,8 @@ const pluginHead = await userHead()
             hidden = localStorage.getItem("sidebars") || ""
             doc.documentElement.classList.toggle("stack-mode", localStorage.getItem("stack") === "1")
           } catch {}
-          theme ??= matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+          // A scheme set in datme.yaml comes on <html>; otherwise the system's.
+          theme ??= doc.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
           doc.documentElement.dataset.theme = theme
           doc.documentElement.classList.toggle("reader", reader === "1")
           doc.documentElement.classList.toggle("hide-left", hidden.includes("left"))

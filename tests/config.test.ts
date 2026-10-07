@@ -233,6 +233,7 @@ describe("note types", () => {
 describe("theme", () => {
   test("defaults to datme's own look with an optional datme.css", () => {
     expect(resolveConfig({}, "/v").theme).toEqual({
+      scheme: "auto",
       fonts: {},
       css: "datme.css",
       code: { light: "github-light", dark: "github-dark" },
@@ -240,6 +241,11 @@ describe("theme", () => {
       mermaid: { light: "neutral", dark: "dark" },
       d2: { light: 0, dark: 200 },
     })
+  })
+
+  test("the colour scheme readers start in is auto, light or dark", () => {
+    expect(resolveConfig({ theme: { scheme: "dark" } }, "/v").theme.scheme).toBe("dark")
+    expect(() => resolveConfig({ theme: { scheme: "sepia" } }, "/v")).toThrow()
   })
 
   test("tools take a theme per colour scheme, or one for both, checked against what they know", () => {

@@ -73,6 +73,7 @@ appearance:
   classic: [Writing]          # folders whose notes use the other style
 
 theme:
+  scheme: auto                # light or dark before readers use the toggle; auto follows their system
   accent: "#7c3aed"           # or { light: …, dark: … }
   fonts: { heading: Fraunces, body: Literata }   # Google Fonts families
   css: datme.css              # stylesheet in the vault, loaded after datme's own

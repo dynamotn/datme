@@ -296,6 +296,12 @@ describe("static build", () => {
     expect(home).toContain('"page_view"')
   })
 
+  test("without theme.scheme the reader's system picks light or dark", () => {
+    const home = read("index.html")
+    expect(home).not.toMatch(/<html[^>]* data-theme=/)
+    expect(home).toContain('<meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)">')
+  })
+
   test("code blocks and Mermaid diagrams take the configured themes", () => {
     const html = read("03_Atomic/Code/index.html")
     expect(html).toMatch(/<pre class="shiki shiki-themes github-light vitesse-dark/)

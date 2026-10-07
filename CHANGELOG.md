@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   diagrams, one for both colour schemes or a light and a dark one, and
   `map.darkTiles` gives maps their own dark tiles. Each follows the site's
   light/dark toggle.
+- `theme.scheme: dark` (or `light`) opens the site in that colour scheme
+  instead of the reader's system one; the toggle still switches it and
+  remembers their choice.
 
 ### Changed
 

@@ -58,7 +58,8 @@ another feature-extraction model from Hugging Face.
   legible font (Atkinson Hyperlegible) or high contrast. The choice stays in
   the reader's browser.
 - **Sidebars:** each one folds away on its own. Reader mode hides both.
-- **Theme:** light and dark follow the system, with a toggle.
+- **Theme:** light and dark follow the system, or `theme.scheme` in
+  `datme.yaml`, with a toggle that remembers the reader's choice.
 - **Images:** images and drawings open large in a lightbox; arrows move
   between them.
 - **Right-to-left:** Arabic, Hebrew, Persian, Urdu and other right-to-left

@@ -225,6 +225,8 @@ const schema = z
       .default({ all: false, types: [], folders: [] }),
     theme: z
       .object({
+        /** Colour scheme before the reader picks one with the toggle; auto follows their system. */
+        scheme: z.enum(["auto", "light", "dark"]).default("auto"),
         /** Accent colour of links and highlights; one value, or one per colour scheme. */
         accent: z.union([cssColor, z.object({ light: cssColor, dark: cssColor }).strict()]).optional(),
         /** Google Fonts families for headings and UI, reading text and code. */
@@ -244,7 +246,7 @@ const schema = z
         d2: themePair(d2Theme).default(TOOL_THEMES.d2),
       })
       .strict()
-      .default({ fonts: {}, css: "datme.css", ...TOOL_THEMES }),
+      .default({ scheme: "auto", fonts: {}, css: "datme.css", ...TOOL_THEMES }),
     related: z
       .object({
         /** How many related notes to suggest under each note; 0 turns them off. */
