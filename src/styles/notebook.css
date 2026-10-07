@@ -727,6 +727,25 @@
   background: var(--yellow);
   color: #050505;
 }
+/* Links in headings: the heading's ink with a thick underline, inverted on hover. */
+[data-look="notebook"] .prose :is(h1, h2, h3, h4, h5) a:not(.heading-anchor, .tag-link) {
+  color: inherit;
+  background: none;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.16em;
+}
+/* h2 sits on an inked strip, where the blue would not show. */
+[data-look="notebook"] .prose h2 a:not(.heading-anchor, .tag-link) {
+  text-decoration-color: color-mix(in srgb, currentColor 75%, transparent);
+}
+[data-look="notebook"] .prose :is(h1, h2, h3, h4, h5) a:not(.heading-anchor, .tag-link):hover {
+  background: var(--yellow);
+  color: #050505;
+  text-decoration-color: currentColor;
+}
 [data-look="notebook"] .prose a.tag-link {
   font-family: var(--font-mono);
   color: #050505;

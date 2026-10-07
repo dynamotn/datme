@@ -688,6 +688,22 @@ a.chip:hover {
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E") center / contain no-repeat;
 }
+/* A link in a heading keeps the heading's ink and is marked by its underline alone. */
+.prose :is(h1, h2, h3, h4, h5) a:not(.heading-anchor, .tag-link) {
+  color: inherit;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+.prose :is(h1, h2, h3, h4, h5) a:not(.heading-anchor, .tag-link):hover {
+  color: var(--accent);
+  background: none;
+  text-decoration-color: var(--accent);
+}
 .prose li:empty {
   display: none;
 }

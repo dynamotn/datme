@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code blocks of more than one line show a column of line numbers, left out
   when the code is copied. Blocks without a language get it too.
 
+### Fixed
+
+- Links inside headings are readable again: they keep the heading's colour
+  and are marked by an underline, instead of a pill or highlighter that hid
+  the text on the inked `##` strip of the notebook look.
+
 ## [2.0.0] - 2026-10-07
 
 ### Added
