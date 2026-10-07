@@ -10,6 +10,8 @@ import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
 import { cite, parseBibtex, type BibEntry } from "./citations"
+import { parseDrawing, renderScene } from "./excalidraw"
+import type { DrawnDrawing } from "./obsidian"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -281,6 +283,17 @@ function buildVault(version: number): Vault {
     assetByName.set(name, [...(assetByName.get(name) ?? []), rel])
   }
 
+  // Excalidraw sources, published or not: an embed is what makes a drawing public.
+  const drawingByPath = new Map<string, string>()
+  const drawingByName = new Map<string, string[]>()
+  for (const rel of [...found.md, ...found.files].filter((f) => /\.excalidraw(\.md)?$/i.test(f))) {
+    const lower = rel.toLowerCase()
+    drawingByPath.set(lower, rel)
+    drawingByPath.set(lower.replace(/\.md$/, ""), rel)
+    const name = path.posix.basename(lower).replace(/\.md$/, "")
+    drawingByName.set(name, [...(drawingByName.get(name) ?? []), rel])
+  }
+
   const problems: Problem[] = []
   const report = (level: Problem["level"], file: string, message: string) => void problems.push({ level, file, message })
   // Every note of the vault, published or not, to tell a private link target from a missing one.
@@ -372,6 +385,44 @@ function buildVault(version: number): Vault {
     return byAlias.get(lower)
   }
 
+  function resolveDrawing(target: string, fromDir: string): string | undefined {
+    const t = decodeURI(target.trim()).replace(/^\/+/, "").toLowerCase()
+    const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
+    const hit = drawingByPath.get(relative) ?? drawingByPath.get(t)
+    if (hit) return hit
+    const cands = drawingByName.get(path.posix.basename(t).replace(/\.md$/, ""))
+    return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
+  }
+
+  /** Draw a drawing once per build, whatever the number of notes and languages embedding it. */
+  const drawn = new Map<string, DrawnDrawing | undefined>()
+  function drawDrawing(target: string, fromDir: string): DrawnDrawing | undefined {
+    const rel = resolveDrawing(target, fromDir)
+    if (!rel) return undefined
+    if (drawn.has(rel)) return drawn.get(rel)
+    let result: DrawnDrawing | undefined
+    try {
+      const scene = parseDrawing(fs.readFileSync(path.join(site.vault, rel), "utf8"))
+      const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
+      const used: string[] = []
+      const svg = renderScene(scene, (id) => {
+        const file = scene.files[id]
+        // Only pictures: a data URL of anything else is not followed.
+        if (file?.dataURL?.startsWith("data:image/")) return file.dataURL
+        if (file?.link && /^https?:\/\//.test(file.link)) return file.link
+        const asset = file?.link ? resolveAsset(file.link, dir) : undefined
+        if (!asset) return undefined
+        used.push(asset)
+        return assetUrl(asset)
+      })
+      result = { svg, assets: used }
+    } catch (e) {
+      report("warning", rel, `drawing cannot be drawn: ${(e as Error).message}`)
+    }
+    drawn.set(rel, result)
+    return result
+  }
+
   function resolveAsset(target: string, fromDir: string): string | undefined {
     const t = decodeURI(target.trim()).replace(/^\/+/, "")
     const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
@@ -392,7 +443,7 @@ function buildVault(version: number): Vault {
     const name = t.replace(MD_EXT, "").toLowerCase()
     const relative = path.posix.normalize(path.posix.join(path.posix.dirname(file), name))
     if (p.kind === "drawing") {
-      report("warning", file, `drawing "${t}" has no exported SVG or PNG next to it, so it is not shown`)
+      report("warning", file, `drawing "${t}" is not in the vault, so it is not shown`)
     } else if (isNote && (anyNote.has(name) || anyNote.has(relative))) {
       report("info", file, `${p.kind} to unpublished note "${t}" is shown as plain text`)
     } else if (isNote) {
@@ -478,6 +529,7 @@ function buildVault(version: number): Vault {
         dir: s.dir,
         resolveNote,
         resolveAsset,
+        drawDrawing,
       })
       pre.assets.forEach((a) => assets.add(a))
       pre.docs.forEach((d) => docRefs.add(d))
@@ -553,7 +605,7 @@ function buildVault(version: number): Vault {
         doc.texts[lang] = {}
         for (const node of doc.canvas.nodes) {
           if (node.type === "text" && node.text) {
-            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset })
+            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset, drawDrawing })
             pre.assets.forEach((a) => assets.add(a))
             doc.texts[lang][node.id] = pre.md
           } else if (node.type === "file" && node.file && !resolveNote(node.file, "")) {

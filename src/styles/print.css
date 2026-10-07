@@ -147,6 +147,9 @@
   .prose .footnotes {
     display: block !important;
   }
+  .prose .drawing.generated svg {
+    filter: none !important;
+  }
   .drawing-dark {
     display: none !important;
   }

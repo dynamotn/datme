@@ -20,11 +20,19 @@ export interface LinkTarget {
   key: string
 }
 
+/** A drawing datme drew from its Excalidraw source, with the vault files it shows. */
+export interface DrawnDrawing {
+  svg: string
+  assets: string[]
+}
+
 interface Ctx {
   lang: Lang
   dir: string
   resolveNote(target: string, fromDir: string): LinkTarget | undefined
   resolveAsset(target: string, fromDir: string): string | undefined
+  /** Draw an Excalidraw drawing that has no exported image; undefined when it cannot be found or read. */
+  drawDrawing?(target: string, fromDir: string): DrawnDrawing | undefined
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -124,22 +132,28 @@ export function preprocess(
     return `<a href="${url}" class="attachment">${escapeAttr(alias ?? rel.split("/").pop()!)}</a>`
   }
 
-  // Excalidraw drawings are shown through the SVG/PNG the Obsidian plugin exports next to them.
+  // Excalidraw drawings: the SVG/PNG the Obsidian plugin exports next to them, or else drawn by datme.
   const embedDrawing = (file: string, alias: string | undefined): string => {
     const base = file.replace(/\.md$/i, "")
     const find = (suffix: string) => ctx.resolveAsset(base + suffix, ctx.dir)
     const light = find(".light.svg") ?? find(".svg") ?? find(".light.png") ?? find(".png")
     const dark = find(".dark.svg") ?? find(".dark.png")
     const name = escapeAttr(base.split("/").pop()!.replace(EXCALIDRAW, ""))
+    const width = alias?.match(/^\d+$/) ? ` style="max-width:${alias}px"` : ""
     if (!light && !dark) {
+      const drawn = ctx.drawDrawing?.(file, ctx.dir)
+      if (drawn) {
+        assets.push(...drawn.assets)
+        // The SVG carries its own name for screen readers.
+        return `<span class="drawing generated"${width}>${drawn.svg.replace('role="img"', `role="img" aria-label="${name}"`)}</span>`
+      }
       problems.push({ kind: "drawing", target: file })
-      return `<span class="drawing-missing">✏️ ${name}: export the drawing as SVG in the Excalidraw plugin to publish it</span>`
+      return `<span class="drawing-missing">✏️ ${name}: the drawing cannot be found or read</span>`
     }
     const img = (rel: string, cls: string) => {
       assets.push(rel)
       return `<img class="${cls}" src="${assetUrl(rel)}" alt="${name}" loading="lazy">`
     }
-    const width = alias?.match(/^\d+$/) ? ` style="max-width:${alias}px"` : ""
     const pics = light && dark ? img(light, "drawing-light") + img(dark, "drawing-dark") : img((light ?? dark)!, "")
     return `<span class="drawing"${width}>${pics}</span>`
   }

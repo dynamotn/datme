@@ -2659,6 +2659,18 @@ li > .flashcard {
   width: 100%;
   height: auto;
 }
+.prose .drawing.generated svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+/* Excalidraw's own dark mode: the drawing inverted, hues kept. */
+:root[data-theme="dark"] .prose .drawing.generated svg {
+  filter: invert(93%) hue-rotate(180deg);
+}
+:root[data-theme="dark"] .prose .drawing.generated svg image {
+  filter: invert(100%) hue-rotate(180deg);
+}
 .prose .drawing-dark,
 :root[data-theme="dark"] .prose .drawing-light {
   display: none !important;

@@ -19,3 +19,5 @@ See the [[Map.canvas|project map]].
 ![[Map.canvas]]
 
 ![[wide.png]]
+
+![[Sketch.excalidraw|300]]

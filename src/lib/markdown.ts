@@ -200,7 +200,8 @@ function deadLinks(): Set<string> {
   return dead.urls
 }
 
-const SKIP_CLASSES = ["heading-anchor", "katex-mathml", "block-id"]
+// A drawing's labels make a poor description of the note around it.
+const SKIP_CLASSES = ["heading-anchor", "katex-mathml", "block-id", "drawing"]
 
 /**
  * Text a reader would see, for search and descriptions: leaves out code blocks
