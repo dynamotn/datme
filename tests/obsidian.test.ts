@@ -7,7 +7,7 @@ const notes: Record<string, LinkTarget> = {
   "06_reference/target": target,
   "06_reference/target.md": target,
 }
-const assets: Record<string, string> = { "pic.png": "_assets/images/pic.png", "doc.pdf": "_assets/doc.pdf" }
+const assets: Record<string, string> = { "pic.png": "_assets/images/pic.png", "doc.pdf": "_assets/doc.pdf", "map.canvas": "07_Project/Map.canvas" }
 
 const run = (src: string) =>
   preprocess(src, {
@@ -75,6 +75,20 @@ describe("markdown links", () => {
 
   test("external links are left alone", () => {
     expect(run("[x](https://example.com)").md).toBe("[x](https://example.com)")
+  })
+
+  test("links to canvases and drawings open their pages, as wikilinks do", () => {
+    const canvas = run("[the map](Map.canvas)")
+    expect(canvas.md).toBe('<a href="/07_Project/Map.canvas" class="internal doc">the map</a>')
+    expect(canvas.docs).toEqual(["07_Project/Map.canvas"])
+    const drawing = preprocess("[plan](Plan.excalidraw)", {
+      lang: "vi-VN",
+      dir: "",
+      resolveNote: () => undefined,
+      resolveAsset: () => undefined,
+      drawingPage: () => "Plan.excalidraw.md",
+    })
+    expect(drawing.md).toBe('<a href="/Plan.excalidraw" class="internal doc">plan</a>')
   })
 })
 

@@ -1,3 +1,6 @@
+---
+title: "datme documentation"
+---
 # datme documentation
 
 datme publishes an Obsidian vault as a digital garden. These pages go from a
@@ -12,3 +15,7 @@ first preview to every setting there is. If you're new, start at the top.
 7. [Command line](cli.md): `dev`, `build`, `preview`, `check`, `deploy`, `export`, `init`.
 8. [Deploying](deploying.md): GitHub, GitLab, Netlify, Cloudflare or any static host.
 9. [Extending](extending.md): your own stylesheet and markdown plugins, and a map of the code for contributors.
+
+This documentation is itself a datme garden. The [Showcase](showcase/Showcase.md)
+shows what datme does with real notes: callouts, a slide deck, flashcards, a
+locked passage, a board, queries, a drawing and a canvas.

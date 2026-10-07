@@ -1,3 +1,6 @@
+---
+title: "The reader's side"
+---
 # The reader's side
 
 This is what someone visiting your garden can do. None of it needs setting up.

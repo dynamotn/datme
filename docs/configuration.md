@@ -1,3 +1,6 @@
+---
+title: "Configuration: datme.yaml"
+---
 # Configuration: `datme.yaml`
 
 The settings live in `datme.yaml` at the root of the vault, so they travel with

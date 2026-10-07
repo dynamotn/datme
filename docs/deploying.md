@@ -1,3 +1,6 @@
+---
+title: "Deploying"
+---
 # Deploying
 
 `datme build` writes a plain static site, so any static host can serve it.
@@ -27,7 +30,7 @@ Notes scheduled with `publish_date` need a build on their day to appear:
 
 ## By hand
 
-Hand-written equivalents live in [`examples/deploy/`](../examples/deploy):
+Hand-written equivalents live in [`examples/deploy/`](https://gitlab.com/dynamo-tools/datme/-/tree/main/examples/deploy):
 
 - `gitlab-pages.yml`: copy it to `.gitlab-ci.yml` to publish on GitLab Pages.
 - `github-pages.yml`: copy it to `.github/workflows/`, then choose "GitHub

@@ -1,3 +1,6 @@
+---
+title: "Command line"
+---
 # Command line
 
 ```bash

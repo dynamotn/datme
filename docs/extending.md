@@ -1,3 +1,6 @@
+---
+title: "Extending"
+---
 # Extending
 
 ## Your own look
@@ -37,6 +40,10 @@ bun run check           # type-check
 bun run test            # unit tests, end-to-end builds of tests/fixtures and axe
                         # accessibility checks; CI adds Lighthouse (lighthouserc.json)
 ```
+
+`bun run screenshots` rebuilds the screenshots of the README from this
+documentation garden (it needs `bunx playwright install chromium` once).
+`bun run dev docs` previews the documentation itself.
 
 A map of the code:
 

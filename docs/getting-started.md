@@ -1,3 +1,6 @@
+---
+title: "Getting started"
+---
 # Getting started
 
 This page takes you from an Obsidian vault to a garden online in four steps.

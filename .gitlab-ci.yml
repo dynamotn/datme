@@ -14,3 +14,20 @@ test:
     - bun install --frozen-lockfile
     - bunx astro check
     - bun test
+
+# The documentation is a datme garden; the default branch publishes it on GitLab Pages.
+pages:
+  needs: [test]
+  script:
+    - bun install --frozen-lockfile
+    - bun bin/datme.ts build docs --out public --strict
+  variables:
+    GIT_DEPTH: 0
+    DATME_CACHE: .datme-cache
+  cache:
+    - key: datme-docs
+      paths: [.datme-cache/]
+  artifacts:
+    paths: [public]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

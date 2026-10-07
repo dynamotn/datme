@@ -260,6 +260,14 @@ export function preprocess(
         links.push({ key: note.key, context: plainLine(lineOf(offset)) })
         return internalLink(note, (frag ?? "").slice(1), text)
       }
+      // Canvases, bases and drawings open on their own page, as their wikilinks do.
+      if (!bang && (DOC.test(decoded) || EXCALIDRAW.test(decoded))) {
+        const rel = EXCALIDRAW.test(decoded) ? ctx.drawingPage?.(decoded, ctx.dir) : ctx.resolveAsset(decoded, ctx.dir)
+        if (rel) {
+          docs.push(rel)
+          return `<a href="${docUrl(rel, ctx.lang)}" class="internal doc">${text}</a>`
+        }
+      }
       const asset = ctx.resolveAsset(decoded, ctx.dir)
       // Only targets that look like files: a bare word may be a route of the site itself.
       if (!asset) return /\.\w+$/.test(decoded) ? broken(bang ? "embed" : "link", decoded, m) : m

@@ -1,3 +1,6 @@
+---
+title: "Plugins"
+---
 # Plugins
 
 datme renders the output of popular Obsidian plugins at build time, so readers
@@ -16,6 +19,8 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Spaced Repetition flashcards](#spaced-repetition-flashcards)
 
 ## Dataview
+
+*Live example: [Reading list](showcase/Reading%20list.md).*
 
 ```` ```dataview ```` blocks run at build time:
 
@@ -48,6 +53,8 @@ with the line that matched.
 
 ## Canvas
 
+*Live example: [Garden map](showcase/Garden%20map.canvas).*
+
 Canvases (`.canvas`) that a published note links to or embeds become pages of
 their own, with pan and zoom. Text cards render markdown, file cards link to
 published notes or show images, and edges keep their labels and colours. With
@@ -64,6 +71,8 @@ embedded (`![[Books.base#Reading]]`). Supported:
 - `table`, `cards` and `list` views, with `order`, `sort` and `limit`.
 
 ## Excalidraw
+
+*Live example: [Sketch](showcase/Sketch.excalidraw).*
 
 Drawings (`![[Plan.excalidraw]]`) need no export. datme reads the scene the
 plugin stores in `.excalidraw.md` (compressed or not), or a plain `.excalidraw`
@@ -90,6 +99,8 @@ site theme.
   `[[Plan.excalidraw]]`, leads to a page of its own with pan and zoom.
 
 ## Marp Slides
+
+*Live example: [A slide deck](showcase/A%20slide%20deck.md).*
 
 Notes with `marp: true` (as written for the Marp Slides plugin or Marp for
 VS Code) are slide decks, rendered with Marp Core at build time.
@@ -125,10 +136,14 @@ footer: My talk
 
 ## Kanban
 
+*Live example: [Project board](showcase/Project%20board.md).*
+
 Boards of the Kanban plugin (notes with `kanban-plugin` in their frontmatter)
 show their `##` lanes side by side, each list item a card.
 
 ## Charts
+
+*Live example: [Reading list](showcase/Reading%20list.md).*
 
 ```` ```chart ```` blocks of the Charts plugin are drawn with Chart.js in the
 theme's colours. Supported: `type: bar|line|pie|doughnut|radar|polarArea`,
@@ -136,6 +151,8 @@ theme's colours. Supported: `type: bar|line|pie|doughnut|radar|polarArea`,
 and `width`. The data is also given as a table, for screen readers and print.
 
 ## Spaced Repetition flashcards
+
+*Live example: [Flashcards](showcase/Flashcards.md).*
 
 In notes tagged `#flashcards` (or the tags set in `conventions.flashcardTags`),
 the Spaced Repetition plugin's syntax works:

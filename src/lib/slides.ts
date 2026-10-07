@@ -14,7 +14,7 @@ export function isSlides(fm: Record<string, unknown>): boolean {
 }
 
 /** Global directives Marp reads from the frontmatter; every other field is the garden's own. */
-const GLOBAL = [
+export const GLOBAL = [
   "theme",
   "style",
   "headingDivider",

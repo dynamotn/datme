@@ -1,3 +1,6 @@
+---
+title: "Privacy"
+---
 # Privacy
 
 A vault holds more than you mean to share. datme starts from "nothing is
@@ -54,6 +57,8 @@ password: correct horse battery staple
 - The password is removed from the frontmatter before anything renders.
 
 ## Locked parts
+
+*Live example: [Locked part](showcase/Locked%20part.md), password `datme`.*
 
 To protect only a passage, wrap it the way language blocks are written:
 

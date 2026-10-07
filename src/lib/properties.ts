@@ -1,5 +1,6 @@
 import { site } from "../site.config"
 import { getVault, type Note } from "./vault"
+import { GLOBAL as MARP_DIRECTIVES } from "./slides"
 
 export type PropValue =
   | { kind: "text"; text: string; href?: string }
@@ -74,7 +75,9 @@ export function toProp(v: unknown, resolve: (target: string) => Note | undefined
 export function noteProperties(note: Note): [string, PropValue][] {
   if (note.protected) return []
   const vault = getVault()
-  const hidden = new Set([...HIDDEN_PROPERTIES, ...site.properties.hide].map((k) => k.toLowerCase()))
+  // A deck's directives style its slides; they say nothing to a reader.
+  const directives = note.slides ? ["marp", ...MARP_DIRECTIVES] : []
+  const hidden = new Set([...HIDDEN_PROPERTIES, ...directives, ...site.properties.hide].map((k) => k.toLowerCase()))
   const resolve = (target: string) => {
     const s = vault.resolveNote(target, note.dir)
     return s && vault.byKey[note.lang].get(s.key)

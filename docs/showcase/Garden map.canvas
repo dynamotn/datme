@@ -1,0 +1,76 @@
+{
+ "nodes": [
+  {
+   "id": "g",
+   "type": "group",
+   "x": -40,
+   "y": -60,
+   "width": 880,
+   "height": 360,
+   "label": "How a garden grows",
+   "color": "4"
+  },
+  {
+   "id": "t1",
+   "type": "text",
+   "x": 0,
+   "y": 0,
+   "width": 240,
+   "height": 140,
+   "text": "## Write\nNotes in Obsidian, linked with [[Callouts and math|wikilinks]]."
+  },
+  {
+   "id": "t2",
+   "type": "text",
+   "x": 300,
+   "y": 0,
+   "width": 240,
+   "height": 140,
+   "text": "## Build\n`datme build` turns them into pages."
+  },
+  {
+   "id": "f1",
+   "type": "file",
+   "x": 600,
+   "y": 0,
+   "width": 200,
+   "height": 140,
+   "file": "showcase/Reading list.md"
+  },
+  {
+   "id": "l1",
+   "type": "link",
+   "x": 300,
+   "y": 180,
+   "width": 240,
+   "height": 80,
+   "url": "https://gitlab.com/dynamo-tools/datme"
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "fromNode": "t1",
+   "fromSide": "right",
+   "toNode": "t2",
+   "toSide": "left",
+   "label": "publish: true"
+  },
+  {
+   "id": "e2",
+   "fromNode": "t2",
+   "fromSide": "right",
+   "toNode": "f1",
+   "toSide": "left",
+   "color": "4"
+  },
+  {
+   "id": "e3",
+   "fromNode": "t2",
+   "fromSide": "bottom",
+   "toNode": "l1",
+   "toSide": "top",
+   "toEnd": "none"
+  }
+ ]
+}

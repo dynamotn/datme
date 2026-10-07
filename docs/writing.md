@@ -1,9 +1,14 @@
+---
+title: "Writing notes"
+---
 # Writing notes
 
 Write in Obsidian the way you already do. This page covers what datme reads
 from a note, and the few extras it adds.
 
 ## Obsidian syntax
+
+*Live example: [Callouts and math](showcase/Callouts%20and%20math.md).*
 
 All of this works the same as in the app:
 

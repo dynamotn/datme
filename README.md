@@ -17,7 +17,8 @@
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
   <a href="#what-grows-in-it">Features</a> ·
-  <a href="docs/README.md">Documentation</a>
+  <a href="docs/README.md">Documentation</a> ·
+  <a href="https://dynamo-tools.gitlab.io/datme">Live demo</a>
 </p>
 
 ---
@@ -32,6 +33,20 @@ export anything or change a line.
 ```bash
 bunx @dynamotn/datme dev ~/MyVault
 ```
+
+<p align="center">
+  <img src="docs/assets/screenshots/home.png" alt="The home page of a datme garden: notes as index cards on a dotted notebook wall" width="100%">
+</p>
+
+| | |
+| --- | --- |
+| <img src="docs/assets/screenshots/note-dark.png" alt="A note in the dark theme, with callouts, KaTeX, Mermaid and a local graph"> | <img src="docs/assets/screenshots/graph.png" alt="The global graph of the garden"> |
+| A note in the dark theme, with its local graph | The global graph, filterable and replayable over time |
+| <img src="docs/assets/screenshots/slides.png" alt="A Marp slide deck with a Present button"> | <img src="docs/assets/screenshots/drawing.png" alt="An Excalidraw drawing rendered without any export"> |
+| A Marp deck, ready to present | An Excalidraw sketch, drawn from its scene |
+
+The [documentation](docs/README.md) is itself a datme garden; its
+[showcase](docs/showcase/Showcase.md) has a live example of each feature.
 
 ## Why datme
 

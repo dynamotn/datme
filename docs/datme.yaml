@@ -1,0 +1,21 @@
+# The documentation is itself a datme garden: `datme dev docs` previews it,
+# and the pages job of .gitlab-ci.yml publishes it.
+site:
+  title: datme
+  tagline: Grow an Obsidian vault into a digital garden
+  url: https://dynamo-tools.gitlab.io/datme
+  author: Trần Đức Nam
+  logo: 🌱
+languages: [en-US]
+publish: all
+home: README.md
+nav:
+  - home
+  - note: getting-started
+    label: Getting started
+  - note: Showcase
+  - tags
+  - stats
+footer:
+  GitLab: https://gitlab.com/dynamo-tools/datme
+  npm: https://www.npmjs.com/package/@dynamotn/datme
