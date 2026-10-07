@@ -604,8 +604,11 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
         : undefined
       const cached = diskKey && readCache("notes", import.meta.url, diskKey)
       let parts: Parts
-      if (cached) parts = JSON.parse(cached.toString("utf8"))
-      else {
+      if (cached) {
+        parts = JSON.parse(cached.toString("utf8"))
+        // The placeholders baked into the cached HTML stay in use, so the build must not prune them.
+        await Promise.all(note.assets.map((a) => placeholder(a)))
+      } else {
         const out: Partial<Rendered> = {}
         const file = await processorFor(note.lang, stack, out, note.hardBreaks, user).process(note.md)
         // A deck is drawn by Marp; the garden's rendering only gives its text, for search and cards.
