@@ -1,5 +1,6 @@
 import crypto from "node:crypto"
 import type { SiteConfig } from "../site.config"
+import { MONO_FONT_ORIGIN } from "./fonts"
 
 /** Hashes of the inline scripts of built pages, for a CSP without 'unsafe-inline'. */
 export function inlineScriptHashes(pages: string[]): string[] {
@@ -29,7 +30,7 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
   const script = new Set(["'self'", ...scriptHashes])
   const connect = new Set(["'self'"])
   const frame = new Set(["https://www.youtube-nocookie.com", "https://player.vimeo.com", "https://platform.twitter.com", "https://syndication.twitter.com"])
-  const style = new Set(["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"])
+  const style = new Set(["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", MONO_FONT_ORIGIN])
   const img = new Set(["'self'", "data:", "https:"])
   // Embedded tweets load their widget script.
   script.add("https://platform.twitter.com")
@@ -72,7 +73,7 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
     `script-src ${[...script].join(" ")}`,
     `style-src ${[...style].join(" ")}`,
     `img-src ${[...img].join(" ")}`,
-    "font-src 'self' data: https://fonts.gstatic.com",
+    `font-src 'self' data: https://fonts.gstatic.com ${MONO_FONT_ORIGIN}`,
     `connect-src ${[...connect].join(" ")}`,
     `frame-src ${[...frame].join(" ")}`,
     "media-src 'self' https:",

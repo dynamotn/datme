@@ -64,7 +64,7 @@ h1.chapter-title { page-break-before: always; break-before: page; margin-top: 2e
 section.chapter:first-of-type h1.chapter-title { page-break-before: auto; break-before: auto; }
 img, video { max-width: 100%; height: auto; }
 pre { white-space: pre-wrap; background: #f4f4f2; padding: 0.8em; border-radius: 4px; font-size: 0.85em; }
-code { font-family: "JetBrains Mono", ui-monospace, monospace; }
+code { font-family: "Iosevka Dynamo", ui-monospace, monospace; }
 .shiki span { color: var(--shiki-light); }
 blockquote, .callout { margin: 1em 0; padding: 0.4em 1em; border-left: 3px solid #999; background: #f7f7f4; }
 .callout-title { font-weight: bold; }

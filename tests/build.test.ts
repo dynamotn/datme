@@ -330,6 +330,7 @@ describe("static build", () => {
     expect(html).toContain(':root[data-theme="dark"][data-theme="dark"]{--accent:#c4b5fd')
     expect(html).toContain('--font-ui:"Fraunces", system-ui, sans-serif')
     expect(html).toContain("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;800&amp;display=swap")
+    expect(html).toContain('<link rel="stylesheet" href="https://dynamotn.github.io/Iosevka-Dynamo/iosevka-dynamo.css">')
     expect(html.indexOf('href="/custom.css"')).toBeGreaterThan(html.lastIndexOf('rel="stylesheet" href="/_astro/'))
     expect(read("custom.css")).toContain(".note-title { letter-spacing: 0.01em; }")
   })

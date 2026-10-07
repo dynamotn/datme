@@ -10,6 +10,7 @@ import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
 import { navLinks } from "~/lib/nav"
 import { ogPath } from "~/lib/og-url"
+import { MONO_FONT_CSS, MONO_FONT_ORIGIN } from "~/lib/fonts"
 import { customCssFile, fontsHref, themeCss } from "~/lib/theme"
 import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
@@ -85,6 +86,8 @@ const credit = s.poweredBy.split("{datme}")
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href={MONO_FONT_ORIGIN} crossorigin />
+    <link rel="stylesheet" href={MONO_FONT_CSS} />
     {fontsHref() && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
     {fontsHref() && <link rel="stylesheet" href={fontsHref()} />}
     {themeCss() && <style is:inline set:html={themeCss()} />}

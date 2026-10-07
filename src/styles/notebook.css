@@ -4,8 +4,6 @@
  * in the classic look keep global.css untouched.
  */
 @import "@fontsource-variable/bricolage-grotesque";
-@import "@fontsource/space-mono/400.css";
-@import "@fontsource/space-mono/700.css";
 
 [data-look="notebook"] {
   --bg: #f5f5f0;
@@ -38,7 +36,7 @@
   --header-h: 66px;
   --font-ui: "Bricolage Grotesque Variable", system-ui, sans-serif;
   --font-read: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, monospace;
+  --font-mono: "Iosevka Dynamo", ui-monospace, monospace;
   --ease: cubic-bezier(0.25, 1, 0.5, 1);
 }
 

@@ -29,6 +29,7 @@ describe("CSP", () => {
     expect(csp).toContain("script-src 'self' 'sha256-abc' https://platform.twitter.com https://plausible.io https://giscus.app")
     expect(csp).toContain("connect-src 'self' https://plausible.io https://webmention.io")
     expect(csp).toContain("frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://platform.twitter.com https://syndication.twitter.com https://giscus.app")
+    expect(csp).toContain("font-src 'self' data: https://fonts.gstatic.com https://dynamotn.github.io;")
     expect(csp).not.toContain("'unsafe-inline' 'unsafe-eval'")
     expect(headersFile(site, ["'sha256-abc'"])).toContain(`  Content-Security-Policy: ${csp}\n`)
   })
