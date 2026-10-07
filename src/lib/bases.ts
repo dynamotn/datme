@@ -210,6 +210,10 @@ function fileObject(page: Page, engine: Engine): Record<string, Value> {
   }
 }
 
+function thisObject(page: Page, engine: Engine): Value {
+  return { ...Object.fromEntries(Object.keys(page.fields).map((k) => [k, noteValue(page, k)])), file: fileObject(page, engine) }
+}
+
 function noteValue(page: Page, name: string): Value {
   const v = page.fields[name] ?? page.fields[name.toLowerCase()]
   if (v == null) return null
@@ -232,6 +236,8 @@ function evaluate(e: Expr, ctx: Ctx): Value {
       if (e.name === "file") return fileObject(ctx.page, ctx.engine)
       if (e.name === "note") return Object.fromEntries(Object.keys(ctx.page.fields).map((k) => [k, noteValue(ctx.page, k)]))
       if (e.name === "formula") return { __formulas: true } as unknown as Value
+      // `this` is the note holding the base: the one embedding it, or with the ```base block.
+      if (e.name === "this") return ctx.engine.current ? thisObject(ctx.engine.current, ctx.engine) : null
       return noteValue(ctx.page, e.name)
     case "member": {
       if (e.obj.k === "var" && e.obj.name === "formula") {
@@ -321,24 +327,32 @@ function globalFn(name: string, args: Value[]): Value {
   throw new BaseError(`unknown function ${name}()`)
 }
 
+const FILE_METHODS = new Set(["hasTag", "inFolder", "hasLink", "hasProperty"])
+
 function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
   const [a] = args
+  // A file method on nothing, as `this.file` where no note holds the base, matches nothing.
+  if (self == null && FILE_METHODS.has(name)) return false
   const fileOf = (v: Value) => (v && typeof v === "object" && (v as Record<string, Value>).link ? (v as Record<string, Value>) : null)
   const file = fileOf(self)
-  if (file) {
+  // The page a file method asks about: the row's, or another note's such as `this.file`.
+  const key = file && (file.link as Link).key
+  const page = key === ctx.page.key ? ctx.page : key ? ctx.engine.pages.find((p) => p.key === key) : undefined
+  if (page) {
     switch (name) {
       case "hasTag":
-        return args.some((t) => ctx.page.tags.some((tag) => tag === str(t).replace(/^#/, "") || tag.startsWith(str(t).replace(/^#/, "") + "/")))
+        return args.some((t) => page.tags.some((tag) => tag === str(t).replace(/^#/, "") || tag.startsWith(str(t).replace(/^#/, "") + "/")))
       case "inFolder": {
         const f = str(a).replace(/^\/+|\/+$/g, "")
-        return ctx.page.dir === f || ctx.page.dir.startsWith(f + "/")
+        return page.dir === f || page.dir.startsWith(f + "/")
       }
       case "hasLink": {
-        const target = isLink(a) ? a.key : ctx.engine.resolve(str(a))?.key
-        return !!target && ctx.page.outlinks.includes(target)
+        const link = isLink(a) ? a : (fileOf(a)?.link as Link | undefined)
+        const target = link ? link.key : ctx.engine.resolve(str(a))?.key
+        return !!target && page.outlinks.includes(target)
       }
       case "hasProperty":
-        return ctx.page.fields[str(a)] != null
+        return page.fields[str(a)] != null
     }
   }
   switch (name) {

@@ -26,7 +26,7 @@ import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
 import { renderDataview, renderDataviewJs, renderInlineQuery, renderContributionGraph, renderTasksBlock, renderSearchBlock } from "./dataview-render"
-import { renderBaseView } from "./base-render"
+import { renderBaseView, renderBaseBlock } from "./base-render"
 import { renderChart } from "./charts"
 import { linkTerms, glossarySignature } from "./glossary"
 import { readDeadLinks, deadLinksStamp, archiveUrl } from "./dead-links"
@@ -179,6 +179,7 @@ const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, k
     else if (node.lang === "chart") parent.children[index] = { type: "html", value: renderChart(node.value) }
     else if (node.lang === "leaflet") parent.children[index] = { type: "html", value: renderLeafletBlock(node.value, lang) }
     else if (node.lang === "contributionGraph") parent.children[index] = { type: "html", value: renderContributionGraph(node.value, lang, key) }
+    else if (node.lang === "base") parent.children[index] = { type: "html", value: renderBaseBlock(node.value, lang, key) }
   })
   // `= this.field` is an inline query; `$= …` (DataviewJS) stays code.
   visit(tree, "inlineCode", (node: InlineCode, index, parent) => {
@@ -438,7 +439,7 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
         type: "element",
         tagName: "div",
         properties: { className: ["base-embed"] },
-        children: doc ? (fromHtml(renderBaseView(doc, view, lang), { fragment: true }).children as ElementContent[]) : [],
+        children: doc ? (fromHtml(renderBaseView(doc, view, lang, stack[stack.length - 1]), { fragment: true }).children as ElementContent[]) : [],
       }
       return SKIP
     })
@@ -599,7 +600,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
  * protected note, whose content must not reach the disk unencrypted.
  */
 function isSelfContained(note: Note): boolean {
-  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet|contributionGraph)/im.test(note.md) && !/`=\s/.test(note.md)
+  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet|contributionGraph|base)/im.test(note.md) && !/`=\s/.test(note.md)
 }
 
 type Parts = Omit<Rendered, "description"> & { description?: string }

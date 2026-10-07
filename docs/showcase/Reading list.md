@@ -1,6 +1,6 @@
 ---
 tags: [type/demo]
-description: Dataview queries over the garden, a chart and a heatmap.
+description: Dataview queries and a base over the garden, a chart and a heatmap.
 ---
 # Reading list
 
@@ -10,6 +10,19 @@ Dataview queries run when the site is built, over published notes only.
 TABLE description AS "What it shows"
 FROM #type/demo
 SORT file.name
+```
+
+A base can live in the note too, as a `base` code block:
+
+```base
+filters: 'file.inFolder("showcase")'
+views:
+  - type: table
+    name: Showcase notes
+    order: [file.name, description]
+    sort:
+      - property: file.name
+        direction: ASC
 ```
 
 ```chart

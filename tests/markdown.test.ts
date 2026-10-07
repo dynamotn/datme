@@ -190,6 +190,22 @@ describe("dataview", () => {
     expect(block).not.toContain("Read")
   })
 
+  test("a base block renders every view, named, with `this` the note holding it", async () => {
+    const { html } = await queries
+    const block = html.match(/<div class="base-embed base-block">[\s\S]*?<\/table><\/div>/)![0]
+    expect(block).toContain('<p class="base-view-name">Linked here</p><ul class="dataview dv-list"><li><a href="/06_Reference/Niklas-Luhmann" class="internal" data-key="06_Reference/Niklas Luhmann">Niklas Luhmann</a></li></ul>')
+    expect(block).toContain('<p class="base-view-name">Rated</p><div class="table-wrap"><table class="dataview base-table"><thead><tr><th>Name</th><th>shout</th></tr>')
+    expect(block).toContain("<td>QUERIES</td>")
+  })
+
+  test("a base block with a single view has no view name, and errors say what is wrong", async () => {
+    const one = await renderMarkdown("```base\nviews: [{ type: table, filters: 'file.name == \"nothing\"' }]\n```", "en-US", "x")
+    expect(one).toContain('<div class="base-embed base-block"><p class="dataview dv-empty">')
+    expect(one).not.toContain("base-view-name")
+    const bad = await renderMarkdown("```base\nviews: [{ type: table, filters: 'nope()' }]\n```", "en-US", "x")
+    expect(bad).toContain('<p class="dataview dv-error">base: unknown function nope()</p>')
+  })
+
   test("a query block lists matching published notes with the line that matched", async () => {
     const { html } = await queries
     const block = html.match(/<ul class="dataview query-results">[\s\S]*?<\/ul>/)![0]

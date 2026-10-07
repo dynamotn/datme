@@ -72,13 +72,19 @@ published notes or show images, and edges keep their labels and colours. With
 
 ## Bases
 
+*Live example: [Reading list](showcase/Reading%20list.md).*
+
 Bases (`.base`) get a page with all their views, and render in place when
-embedded (`![[Books.base#Reading]]`). Supported:
+embedded (`![[Books.base#Reading]]`). A `` ```base `` code block holds a base
+written in the note itself, and shows each of its views, named when there are
+several. Supported:
 
 - `filters` with `and`, `or` and `not`, and expressions like
   `file.hasTag("book") && rating >= 4`.
 - `formulas` and `properties.displayName`.
 - `table`, `cards` and `list` views, with `order`, `sort` and `limit`.
+- `this`, the note that embeds the base or holds the block:
+  `file.hasLink(this.file)` lists the notes linking to it.
 
 ## Excalidraw
 

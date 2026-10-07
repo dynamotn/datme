@@ -70,6 +70,14 @@ views:
     expect(runView(base, base.views[0], engine).columns[1].name).toBe("Writer")
   })
 
+  test("`this` is the current note, and file methods ask about the file they are called on", () => {
+    const base = parseBase("views: [{ type: table, filters: 'this.file.hasLink(file)', order: [file.name, this.file.name, this.rating] }]")
+    const current = page("Notes/Here", { outlinks: ["Books/Emma"], fields: { rating: 2 } })
+    const res = runView(base, base.views[0], { ...engine, pages: [...pages, current], current })
+    expect(res.rows.map((r) => [r.page.stem, r.cells[1], r.cells[2]])).toEqual([["Emma", "Here", 2]])
+    expect(runView(base, base.views[0], engine).rows).toEqual([])
+  })
+
   test("errors explain what is wrong", () => {
     expect(() => parseExpr('file.hasTag("x"')).toThrow(BaseError)
     expect(() => property("nope()", pages[0], engine, {})).toThrow("unknown function nope()")

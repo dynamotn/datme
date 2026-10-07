@@ -40,3 +40,16 @@ dv.list(dv.pages().file.name)
 Rating:: 4
 
 Score: `= this.rating * 2`, by `= [[Niklas Luhmann]].file.name`; code stays `$= dv.current()`.
+
+```base
+views:
+  - type: list
+    name: Linked here
+    filters: 'this.file.hasLink(file) && file.name != this.file.name'
+  - type: table
+    name: Rated
+    filters: 'file.name == this.file.name'
+    order: [file.name, formula.shout]
+formulas:
+  shout: 'this.file.name.upper()'
+```

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code blocks of more than one line show a column of line numbers, left out
   when the code is copied. Blocks without a language get it too.
+- `` ```base `` code blocks render the base written inside them, every view in
+  turn, the way Obsidian shows a base in a note. In a block or an embed,
+  `this` is the note holding it, so `file.hasLink(this.file)` lists the notes
+  linking there.
 
 ### Changed
 

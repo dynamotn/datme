@@ -3043,6 +3043,16 @@ a.drawing-link tspan {
 .base-embed {
   margin: 0 0 1.2em;
 }
+.base-view-name {
+  margin: 1.2em 0 0.4em;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.base-view-name:first-child {
+  margin-top: 0;
+}
 .base-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
