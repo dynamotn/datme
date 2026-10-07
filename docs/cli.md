@@ -20,6 +20,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push (see [Deploying](deploying.md)) |
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or a printable page |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
+| `datme url <note> [vault]` | Prints the URL path of a published note, canvas or drawing (`--lang` picks the language); fails for a private one |
 
 ## Flags
 
@@ -30,6 +31,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `--strict` | check, build | Fails on warnings too, for CI |
 | `--fresh` | build | Ignores the build cache and starts from scratch |
 | `--verbose` | check | Also lists links to unpublished notes, and scheduled notes |
+| `--json` | check | Prints every problem, notices included, as JSON for other tools |
 | `--external` | check | Also checks that links to other websites still answer (404, 410 and unreachable hosts are reported) |
 | `--branch` | deploy | The branch to publish from (default: the current one) |
 | `--format html` | export | One self-contained page to print as PDF, instead of EPUB |

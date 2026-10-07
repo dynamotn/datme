@@ -27,6 +27,8 @@ Usage:
   datme build   [vault] [--out ./dist] [--fresh] build the static site (dev, build and preview take --drafts)
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose] [--external] report broken links and other problems
+                                                 (--json for tools)
+  datme url     <note> [vault] [--lang xx]       the URL path of a published note
   datme init    [vault]                          write a starter datme.yaml
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
                                                  hosts: github, gitlab, netlify, cloudflare
@@ -46,11 +48,12 @@ Options:
   --external     also check that links to other websites still answer
   --branch <b>   branch whose pushes publish the site (default: the current one)
   --format <f>   export as epub (default) or html
-  --lang <l>     language of the export (default: the first one)
+  --lang <l>     language of the export or url (default: the first one)
+  --json         print the problems of check as JSON
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "export" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "export" | "url" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -71,6 +74,9 @@ export interface Args {
   fresh?: boolean
   drafts?: boolean
   external?: boolean
+  json?: boolean
+  /** Vault-relative file of `datme url`. */
+  note?: string
 }
 
 export class CliError extends Error {
@@ -92,6 +98,7 @@ export function parseArgs(argv: string[]): Args {
         fresh: { type: "boolean" },
         drafts: { type: "boolean" },
         external: { type: "boolean" },
+        json: { type: "boolean" },
         branch: { type: "string", short: "b" },
         format: { type: "string", short: "f" },
         lang: { type: "string" },
@@ -107,7 +114,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", ...operands] = positionals
-  if (!["dev", "build", "preview", "check", "init", "deploy", "export", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "deploy", "export", "url", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   let target: Target | undefined
@@ -126,6 +133,11 @@ export function parseArgs(argv: string[]): Args {
       throw new CliError(`Unknown format "${values.format}"; choose epub or html.`)
     }
   }
+  let note: string | undefined
+  if (command === "url") {
+    note = operands.shift()
+    if (!note) throw new CliError("Missing note, as a path relative to the vault.")
+  }
   const [vault, ...rest] = operands
   if (rest.length) throw new CliError(`Unexpected argument "${rest[0]}".`)
   const port = values.port === undefined ? undefined : Number(values.port)
@@ -137,6 +149,8 @@ export function parseArgs(argv: string[]): Args {
     vault,
     ...(target ? { target, branch: values.branch } : {}),
     ...(folder ? { folder, format: (values.format ?? "epub") as "epub" | "html", lang: values.lang } : {}),
+    ...(note ? { note, lang: values.lang } : {}),
+    ...(values.json ? { json: true } : {}),
     out: values.out,
     site: values.site,
     port,
@@ -332,6 +346,21 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return void console.log(`Wrote ${out}`)
   }
 
+  if (args.command === "url") {
+    const { site } = await import("./site.config.ts")
+    const lang = args.lang ?? site.defaultLang
+    if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
+    const { getVault } = await import("./lib/vault.ts")
+    const { docUrl } = await import("./lib/obsidian.ts")
+    const vaultData = getVault()
+    const rel = args.note!.replace(/\\/g, "/").replace(/^\/+/, "")
+    const url = /\.(canvas|base|excalidraw(\.md)?)$/i.test(rel)
+      ? vaultData.docs.has(rel) ? docUrl(rel, lang) : undefined
+      : vaultData.byKey[lang].get(rel.replace(/\.md$/i, ""))?.url
+    if (!url) throw new CliError(`"${rel}" is not published.`)
+    return void console.log(url)
+  }
+
   if (args.command === "check" || args.command === "build") {
     // Imported only now: the config module reads the vault from the environment set above.
     const { checkVault, countProblems, formatReport, summarize, externalLinks, sortProblems } = await import("./lib/check.ts")
@@ -353,7 +382,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     const counts = countProblems(problems)
     const failed = counts.error > 0 || (args.strict && counts.warning > 0)
     if (args.command === "check") {
-      console.log(formatReport(problems, args.verbose))
+      // --json is for tools, such as the Obsidian plugin: every problem, notices included.
+      console.log(args.json ? JSON.stringify({ counts, problems }) : formatReport(problems, args.verbose))
       if (failed) throw new CliError(`check failed: ${summarize(counts)}.`)
       return
     }

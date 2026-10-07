@@ -66,8 +66,19 @@ describe("parseArgs", () => {
     expect(() => parseArgs(["dev", "--nope"])).toThrow(CliError);
   });
 
+  test("url takes a note, and check a --json switch", () => {
+    expect(parseArgs(["url", "Books/Dune.md", "~/Notes", "--lang", "vi-VN"])).toMatchObject({
+      command: "url",
+      note: "Books/Dune.md",
+      vault: "~/Notes",
+      lang: "vi-VN",
+    });
+    expect(() => parseArgs(["url"])).toThrow("Missing note");
+    expect(parseArgs(["check", "--json"]).json).toBe(true);
+  });
+
   test("the usage lists every command", () => {
-    for (const c of ["dev", "build", "preview", "check", "init", "deploy"])
+    for (const c of ["dev", "build", "preview", "check", "init", "deploy", "export", "url"])
       expect(USAGE).toContain(`datme ${c}`);
   });
 });
@@ -147,6 +158,33 @@ describe("publishOutput", () => {
     );
     expect(() => publishOutput(staging, "/", vault)).toThrow("Refusing");
   });
+});
+
+describe("url and check --json", () => {
+  const fixture = path.resolve(import.meta.dir, "fixtures/vault");
+  const cli = (...args: string[]) =>
+    Bun.spawnSync(["bun", "bin/datme.ts", ...args], {
+      cwd: PACKAGE_ROOT,
+      env: { ...process.env, DATME_VAULT: "", VAULT_PATH: "" },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+  test("url prints the path of a published note or doc, and fails on a private one", () => {
+    expect(cli("url", "07_Project/Blog post.md", fixture).stdout.toString().trim()).toBe("/07_Project/Blog-post");
+    expect(cli("url", "07_Project/Map.canvas", fixture, "--lang", "en-US").stdout.toString().trim()).toBe(
+      "/en-US/07_Project/Map.canvas",
+    );
+    const hidden = cli("url", "06_Reference/Private.md", fixture);
+    expect(hidden.exitCode).toBe(1);
+    expect(hidden.stderr.toString()).toContain("is not published");
+  }, 60_000);
+
+  test("check --json lists every problem with its counts", () => {
+    const out = JSON.parse(cli("check", fixture, "--json").stdout.toString());
+    expect(out.counts.error).toBeGreaterThan(0);
+    expect(out.problems.some((p: { level: string }) => p.level === "info")).toBe(true);
+  }, 60_000);
 });
 
 describe("init", () => {
