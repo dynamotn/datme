@@ -80,6 +80,10 @@ bunx @dynamotn/datme dev ~/MyVault          # http://localhost:4321, reloads as 
 bunx @dynamotn/datme deploy github ~/MyVault   # or gitlab, netlify, cloudflare
 ```
 
+Prefer to stay in Obsidian? The [companion plugin](obsidian-plugin/README.md)
+toggles publishing from the status bar, checks the garden and previews the
+current note.
+
 `npx` works just as well with Node 23.6+. Install it globally with
 `npm i -g @dynamotn/datme` and the command is simply `datme`.
 [Getting started](docs/getting-started.md) walks through the rest.

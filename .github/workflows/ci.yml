@@ -14,6 +14,19 @@ jobs:
       - run: bunx astro check
       - run: bun test
 
+  obsidian-plugin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: obsidian-plugin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run test
+      - run: bun run build
+
   # Accessibility (with colour contrast, which needs a real browser), best practices and SEO
   # of the fixture site, measured by Lighthouse; reports are kept as an artifact.
   lighthouse:

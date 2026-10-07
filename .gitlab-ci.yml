@@ -15,6 +15,16 @@ test:
     - bunx astro check
     - bun test
 
+obsidian-plugin:
+  script:
+    - cd obsidian-plugin
+    - bun install --frozen-lockfile
+    - bun run check
+    - bun run test
+    - bun run build
+  artifacts:
+    paths: [obsidian-plugin/main.js, obsidian-plugin/manifest.json]
+
 # The documentation is a datme garden; the default branch publishes it on GitLab Pages.
 pages:
   needs: [test]

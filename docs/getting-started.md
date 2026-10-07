@@ -79,6 +79,14 @@ frontmatter. Add `--external` to also find links to other websites that have
 died. Run `dev` or `build` with `--drafts` to see drafts and scheduled notes as
 they will look.
 
+## From inside Obsidian
+
+The [datme plugin for Obsidian](https://gitlab.com/dynamo-tools/datme/-/tree/main/obsidian-plugin)
+puts all this one click away: a **🌱 Published / 🔒 Private** switch in the
+status bar, *Check the garden for problems* with a clickable report, and
+*Preview the current note*, which starts `datme dev` and opens the note as the
+site will show it.
+
 ## Where next
 
 - [Writing notes](writing.md) shows everything a note can do.
