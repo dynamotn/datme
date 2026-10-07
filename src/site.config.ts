@@ -152,6 +152,23 @@ const schema = z
         z.object({ provider: z.literal("commento"), host: z.string().default("https://cdn.commento.io") }).strict(),
       ])
       .optional(),
+    /** A form to get new notes by email, under notes and on folder and tag pages. */
+    subscribe: z
+      .discriminatedUnion("provider", [
+        z.object({ provider: z.literal("buttondown"), username: z.string().regex(/^[\w-]+$/, "expected a Buttondown username") }).strict(),
+        z
+          .object({
+            provider: z.literal("form"),
+            /** Where the form posts, e.g. a Mailchimp, ConvertKit or listmonk URL. */
+            action: z.url(),
+            /** Name of the email field. */
+            field: z.string().default("email"),
+            /** Name of a hidden field carrying the topic (folder:…, tag:…), if the service takes one. */
+            topicField: z.string().optional(),
+          })
+          .strict(),
+      ])
+      .optional(),
     properties: z
       .object({
         /** Frontmatter keys left out of a note's properties block, on top of the built-in ones. */
@@ -374,6 +391,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     encryption: c.encryption,
     analytics: c.analytics,
     comments: c.comments,
+    subscribe: c.subscribe,
     cname: c.cname,
     redirects: c.redirects,
     headers: c.headers,

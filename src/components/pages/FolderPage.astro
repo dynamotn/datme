@@ -5,6 +5,7 @@ import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { t } from "~/lib/i18n"
 import { feedPath } from "~/lib/feed"
+import Subscribe from "../Subscribe.astro"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
@@ -63,5 +64,6 @@ const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastInd
           </ul>
         ))
     }
+    <Subscribe lang={lang} topic={{ kind: "folder", value: folder.dir, label: folder.name }} />
   </div>
 </Base>

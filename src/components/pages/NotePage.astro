@@ -15,6 +15,7 @@ import NoteMeta from "../NoteMeta.astro"
 import Toc from "../Toc.astro"
 import LocalGraph from "../LocalGraph.astro"
 import Comments from "../Comments.astro"
+import Subscribe from "../Subscribe.astro"
 import Webmentions from "../Webmentions.astro"
 import DevProblems from "../DevProblems.astro"
 import SeriesBox from "../SeriesBox.astro"
@@ -183,6 +184,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
   }
   </div>
   </div>
+  <Subscribe lang={note.lang} />
   <Webmentions lang={note.lang} url={note.url} />
   <Comments lang={note.lang} />
   <Fragment slot="rail">

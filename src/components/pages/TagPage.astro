@@ -5,6 +5,7 @@ import { getVault, byRecent } from "~/lib/vault"
 import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import { feedPath } from "~/lib/feed"
+import Subscribe from "../Subscribe.astro"
 import Base from "~/layouts/Base.astro"
 import NoteRow from "../NoteRow.astro"
 import NoteCard from "../NoteCard.astro"
@@ -91,5 +92,6 @@ const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
         </div>
       )
     }
+    {tag && <Subscribe lang={lang} topic={{ kind: "tag", value: tag, label: `#${tag}` }} />}
   </div>
 </Base>

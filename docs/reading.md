@@ -46,12 +46,47 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - Notes can show webmentions (likes, reposts, replies) and comments, when the
   site enables them.
 
+## Following the garden
+
+- **Feeds:** every folder and tag has an RSS feed, linked from its page.
+- **Email:** with `subscribe` set, a form under each note and on folder and tag
+  pages signs readers up for new notes. See [below](#email-subscriptions).
+
+### Email subscriptions
+
+```yaml
+subscribe:
+  provider: buttondown
+  username: my-garden
+```
+
+Each form sends its topic along: `folder:Books` on the Books folder, `tag:book`
+on the #book tag, nothing under a note. With Buttondown it becomes a tag on the
+subscriber, so one list serves every topic:
+
+1. In Buttondown, add an RSS-to-email automation for the feed of each topic
+   (`https://your.site/Books/index.xml`, `https://your.site/tags/book/index.xml`),
+   sent to subscribers with the matching tag.
+2. Add one for the garden's main feed, for subscribers without a tag.
+
+Any other service that takes a plain form post works with `provider: form`:
+
+```yaml
+subscribe:
+  provider: form
+  action: https://lists.example.com/subscription/form
+  field: email                # name of the email field (default: email)
+  topicField: list            # optional: a hidden field carrying the topic
+```
+
+With `headers: { csp: true }`, the Content Security Policy lets forms post to
+that service only.
+
 ## Taking it along
 
 - **Offline:** the site installs as an app, and pages a reader has opened stay
   readable without a connection.
 - **Print:** notes print cleanly. Footnotes return to the end, sidebars go
   away, and embeds show their links.
-- **Feeds:** every folder and tag has an RSS feed.
 - **Markdown:** with `llms: true`, every public note has a `.md` copy next to
   its page, listed in `/llms.txt`.

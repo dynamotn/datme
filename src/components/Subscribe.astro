@@ -1,0 +1,33 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t } from "~/lib/i18n"
+
+interface Props {
+  lang: Lang
+  /** What the reader subscribes to: a folder or a tag; the whole garden when absent. */
+  topic?: { kind: "folder" | "tag"; value: string; label: string }
+}
+const { lang, topic } = Astro.props
+const sub = site.subscribe
+const s = t(lang)
+const id = `subscribe-${topic ? `${topic.kind}-${topic.value}`.replace(/[^\w-]+/g, "-") : "all"}`
+// The topic lets one list serve every folder and tag: segment subscribers by it.
+const topicValue = topic ? `${topic.kind}:${topic.value}` : undefined
+const action = sub?.provider === "buttondown" ? `https://buttondown.com/api/emails/embed-subscribe/${sub.username}` : sub?.action
+const field = sub?.provider === "form" ? sub.field : "email"
+const topicField = sub?.provider === "buttondown" ? "tag" : sub?.topicField
+---
+
+{
+  sub && (
+    <form class="subscribe" action={action} method="post" target="_blank">
+      <label for={id}>{topic ? s.subscribeTo.replace("{topic}", topic.label) : s.subscribe}</label>
+      <div class="subscribe-row">
+        <input id={id} type="email" name={field} placeholder={s.emailPlaceholder} autocomplete="email" required aria-label={s.email} />
+        <button type="submit">{s.subscribeButton}</button>
+      </div>
+      {topicField && topicValue && <input type="hidden" name={topicField} value={topicValue} />}
+      {sub.provider === "buttondown" && <input type="hidden" name="embed" value="1" />}
+    </form>
+  )
+}

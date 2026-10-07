@@ -123,6 +123,9 @@ comments:                     # giscus { repo, repoId, category, categoryId } or
   categoryId: DIC_xxx
 webmentions: {}               # receive mentions via webmention.io ({ domain } defaults to
                               # the host of site.url) and list likes, reposts and replies under notes
+subscribe:                    # a form for new notes by email, under notes and on folder and tag pages
+  provider: buttondown        # buttondown { username } or form { action, field?, topicField? }
+  username: me
 ogImages: true                # social cards for the home page and notes without a banner
 llms: true                    # /llms.txt and a .md copy of every public note (without comments)
 offline: true                 # installable app; pages a reader opened stay readable offline

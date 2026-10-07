@@ -15,6 +15,16 @@ describe("defaults", () => {
     expect(c.stages).toEqual({})
   })
 
+  test("subscriptions are off unless a provider is set, and checked when it is", () => {
+    expect(c.subscribe).toBeUndefined()
+    expect(resolveConfig({ subscribe: { provider: "form", action: "https://x.example/s" } }, "/v").subscribe).toEqual({
+      provider: "form",
+      action: "https://x.example/s",
+      field: "email",
+    })
+    expect(() => resolveConfig({ subscribe: { provider: "buttondown", username: "a b" } }, "/v")).toThrow()
+  })
+
   test("the footer credits datme unless told not to", () => {
     expect(c.poweredBy).toBe(true)
     expect(resolveConfig({ poweredBy: false }, "/v").poweredBy).toBe(false)

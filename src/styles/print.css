@@ -48,6 +48,7 @@
   .heading-anchor,
   dialog,
   .locked,
+  .subscribe,
   .stack-col:not(:first-child) {
     display: none !important;
   }

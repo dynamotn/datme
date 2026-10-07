@@ -60,6 +60,13 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
     if (host) for (const set of [script, connect, frame, style]) set.add(host)
   }
   if (site.webmentions) connect.add("https://webmention.io")
+  const form = new Set(["'self'"])
+  const sub = site.subscribe
+  if (sub?.provider === "buttondown") form.add("https://buttondown.com")
+  else if (sub?.provider === "form") {
+    const host = origin(sub.action)
+    if (host) form.add(host)
+  }
   return [
     "default-src 'self'",
     `script-src ${[...script].join(" ")}`,
@@ -72,6 +79,7 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
     "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
+    `form-action ${[...form].join(" ")}`,
     "frame-ancestors 'self'",
   ].join("; ")
 }

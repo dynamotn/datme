@@ -33,6 +33,15 @@ describe("CSP", () => {
     expect(headersFile(site, ["'sha256-abc'"])).toContain(`  Content-Security-Policy: ${csp}\n`)
   })
 
+  test("forms may only post to the site and the subscription service", () => {
+    const base = { headers: { csp: true } }
+    expect(contentSecurityPolicy(resolveConfig(base, "/v"), [])).toContain("form-action 'self';")
+    const bd = resolveConfig({ ...base, subscribe: { provider: "buttondown", username: "me" } }, "/v")
+    expect(contentSecurityPolicy(bd, [])).toContain("form-action 'self' https://buttondown.com;")
+    const form = resolveConfig({ ...base, subscribe: { provider: "form", action: "https://list.example/subscribe?x=1" } }, "/v")
+    expect(contentSecurityPolicy(form, [])).toContain("form-action 'self' https://list.example;")
+  })
+
   test("off by default, and the whole file can be turned off", () => {
     expect(resolveConfig({}, "/v").headers).toEqual({ csp: false })
     expect(resolveConfig({ headers: false }, "/v").headers).toBe(false)

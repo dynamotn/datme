@@ -131,7 +131,8 @@ published note uses get copied.
 
 ### Ready for the open web
 
-Multilingual notes in one file · permalinks and redirects for old URLs · social
+Multilingual notes in one file · email subscriptions per folder or tag ·
+permalinks and redirects for old URLs · social
 cards · JSON-LD · sitemap · `llms.txt` · webmentions and comments · an
 installable offline app · dead links pointed at the Internet Archive · one-file
 EPUB or printable export of any folder.

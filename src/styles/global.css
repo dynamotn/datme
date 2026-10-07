@@ -3261,3 +3261,44 @@ a.drawing-link tspan {
 .prose .locked-part {
   margin: 1.2em 0;
 }
+
+/* ---------- email subscriptions ---------- */
+.subscribe {
+  max-width: var(--measure);
+  margin: 32px auto 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.subscribe label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.subscribe-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.subscribe input[type="email"] {
+  flex: 1;
+  min-width: 200px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+.subscribe button {
+  height: 40px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 650;
+  cursor: pointer;
+}

@@ -40,6 +40,18 @@ describe("static build", () => {
     expect(read("en-US/index.html")).toMatch(/Grown with\s*<a [^>]*>datme<\/a>/)
   })
 
+  test("subscription forms under notes and on folder and tag pages, each with its topic", () => {
+    const form = (page: string) => read(page).match(/<form class="subscribe"[\s\S]*?<\/form>/)?.[0] ?? ""
+    const note = form("03_Atomic/Zettelkasten/index.html")
+    expect(note).toContain('action="https://buttondown.com/api/emails/embed-subscribe/test-garden"')
+    expect(note).toContain("Nhận note mới qua email")
+    expect(note).not.toContain('name="tag"')
+    expect(form("06_Reference/index.html")).toContain('<input type="hidden" name="tag" value="folder:06_Reference">')
+    expect(form("en-US/tags/theme/pkm/index.html")).toContain('<input type="hidden" name="tag" value="tag:theme/pkm">')
+    expect(form("en-US/tags/theme/pkm/index.html")).toContain("New notes in #theme/pkm by email")
+    expect(read("tags/index.html")).not.toContain('class="subscribe"')
+  })
+
   test("notes, folders and tags get pages", () => {
     for (const p of [
       "03_Atomic/Zettelkasten/index.html",

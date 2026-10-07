@@ -49,6 +49,9 @@ comments:
   category: Comments
   categoryId: DIC_test
 cname: true
+subscribe:
+  provider: buttondown
+  username: test-garden
 types:
   person:
     icon: 🧑‍🔬
