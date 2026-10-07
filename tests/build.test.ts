@@ -62,6 +62,16 @@ describe("static build", () => {
     expect(search).not.toContain("Protected content")
   })
 
+  test("locked parts reach no file of the site in the clear, nor their passwords", () => {
+    for (const file of fs.readdirSync(out, { recursive: true }) as string[]) {
+      const p = path.join(out, file)
+      if (!fs.statSync(p).isFile() || !/\.(html|json|xml|md|txt|js)$/.test(file)) continue
+      const text = fs.readFileSync(p, "utf8")
+      expect(text.includes("hidden treasure") || text.includes("open sesame") ? file : "").toBe("")
+    }
+    expect(read("07_Project/Blog-post/index.html")).toContain('<form class="locked" data-payload=')
+  })
+
   test("protected notes ship only ciphertext that the password opens", async () => {
     const html = read("06_Reference/Secret/index.html")
     const payload = html.match(/data-payload="([^"]+)"/)![1]

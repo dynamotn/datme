@@ -2,7 +2,7 @@ import { openSearch, setupSearch } from "./search"
 import { mountGraph, openGraph, teardownGraphs } from "./graph"
 import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
-import { decrypt } from "./decrypt"
+import { setupLocked } from "./locked"
 import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
 import { setupWebmentions } from "./webmentions"
@@ -240,59 +240,17 @@ document.addEventListener("astro:before-swap", () => {
   root.classList.remove("nav-open")
 })
 
-// ---- protected notes: decrypt in the browser, remember the password for the session ----
-const PW_KEY = "datme:pw:"
-function readSession(key: string): string | null {
-  try {
-    return sessionStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
-
-async function unlock(form: HTMLFormElement, password: string, remember: boolean): Promise<boolean> {
-  const html = await decrypt(form.dataset.payload!, password, Number(form.dataset.iterations))
-  if (html == null) return false
-  const prose = form.nextElementSibling as HTMLElement
-  prose.innerHTML = html
-  prose.hidden = false
-  form.remove()
-  if (remember) {
-    try {
-      sessionStorage.setItem(PW_KEY + location.pathname, password)
-    } catch {
-      // the reader just types it again next time
-    }
-  }
+// ---- protected notes and locked parts: set up what unlocking reveals ----
+function revealed() {
   setupCode()
   setupPopovers()
   setupSlides()
   void renderMermaid()
-  return true
-}
-
-function setupLocked() {
-  const form = document.querySelector<HTMLFormElement>("form.locked")
-  if (!form) return
-  const saved = readSession(PW_KEY + location.pathname)
-  if (saved) void unlock(form, saved, false)
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault()
-    const input = form.querySelector("input")!
-    const button = form.querySelector("button")!
-    button.disabled = true
-    const ok = await unlock(form, input.value, true)
-    button.disabled = false
-    if (!ok) {
-      form.querySelector<HTMLElement>(".locked-error")!.hidden = false
-      input.select()
-    }
-  })
 }
 
 document.addEventListener("astro:page-load", () => {
   setupSearch()
-  setupLocked()
+  setupLocked(revealed)
   setupCanvas()
   setupStack(() => {
     setupCode()

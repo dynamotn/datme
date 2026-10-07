@@ -34,6 +34,8 @@ import { loadUserPlugins, type UserPlugins } from "./user-plugins"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { renderSlides } from "./slides"
+import { encrypt } from "./encrypt"
+import { lockedPlaceholder } from "./locked"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
 
 export interface Heading {
@@ -624,12 +626,36 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
         }
         if (diskKey) writeCache("notes", import.meta.url, diskKey, JSON.stringify(parts))
       }
+      // Locked parts are encrypted after the cache, so their text never reaches the disk.
+      const html = note.lockedParts.length ? await sealParts(parts.html, note, user) : parts.html
       // The frontmatter description is not part of the markdown, so it is applied after the cache.
-      return { ...parts, description: note.description ?? parts.description ?? "" }
+      return { ...parts, html, description: note.description ?? parts.description ?? "" }
     })()
     cache.set(id, hit)
   }
   return hit
+}
+
+const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
+
+/** Put each locked part in place of its placeholder, encrypted with its password behind a small unlock form. */
+async function sealParts(html: string, note: Note, user: UserPlugins): Promise<string> {
+  const s = t(note.lang)
+  for (const [i, part] of note.lockedParts.entries()) {
+    const inner = String(await processorFor(note.lang, [note.key], {}, note.hardBreaks, user).process(part.md))
+    const payload = await encrypt(inner, part.password, site.encryption.iterations)
+    const form =
+      `<div class="locked-part" data-lock="${i}">` +
+      `<form class="locked" data-payload="${payload}" data-iterations="${site.encryption.iterations}">` +
+      `<p>🔒 ${escapeHtml(s.lockedPart)}</p>` +
+      `<label><span class="sr-only">${escapeHtml(s.password)}</span>` +
+      `<input type="password" name="password" placeholder="${escapeHtml(s.password)}" autocomplete="current-password" required></label>` +
+      `<button type="submit">${escapeHtml(s.unlock)}</button>` +
+      `<p class="locked-error" hidden>${escapeHtml(s.wrongPassword)}</p></form>` +
+      `<div class="locked-content" hidden></div></div>`
+    html = html.replace(lockedPlaceholder(i), () => form)
+  }
+  return html
 }
 
 const SEALED: Rendered = { html: "", headings: [], text: "", words: 0, description: "" }

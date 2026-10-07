@@ -9,6 +9,7 @@ import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
+import { splitLocked, type LockedPart } from "./locked"
 import { isSlides, isTheme, slideDirectives } from "./slides"
 import { cite, parseBibtex, type BibEntry } from "./citations"
 import katex from "katex"
@@ -71,6 +72,8 @@ export interface Note {
   assets: string[]
   /** A flashcard deck: its cards and clozes can be practised. */
   deck: boolean
+  /** Parts written between <!--lock:password--> and <!--lock:*-->, preprocessed; published encrypted. */
+  lockedParts: LockedPart[]
   /** A Marp slide deck (`marp: true`): its global directives, from the frontmatter. */
   slides?: Record<string, unknown>
   /** Built only because of `--drafts`: shown as a draft and kept out of search engines. */
@@ -582,7 +585,8 @@ function buildVault(version: number): Vault {
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
-      const filtered = filterLanguage(s.raw, lang)
+      // Locked parts leave the note first, so nothing below can read them.
+      const { md: filtered, parts } = splitLocked(filterLanguage(s.raw, lang))
       const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
       const board = isKanban(s.fm)
       const slides = isSlides(s.fm)
@@ -607,6 +611,13 @@ function buildVault(version: number): Vault {
       })
       pre.assets.forEach((a) => assets.add(a))
       pre.docs.forEach((d) => docRefs.add(d))
+      // A locked part's links stay out of backlinks and the graph; its images are still needed to show it.
+      const lockedParts = parts.map((part) => {
+        const p = preprocess(part.md, { lang, dir: s.dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing })
+        p.assets.forEach((a) => assets.add(a))
+        for (const problem of p.problems) linkProblem(relFile, problem)
+        return { password: part.password, md: p.md }
+      })
       const directives = slides
         ? slideDirectives(s.fm, (target) => {
             const asset = resolveAsset(target, s.dir)
@@ -660,6 +671,7 @@ function buildVault(version: number): Vault {
         links: pre.links,
         assets: [...new Set(pre.assets)],
         deck,
+        lockedParts,
         slides: directives,
         source: s,
       }
@@ -731,7 +743,10 @@ function buildVault(version: number): Vault {
 
   const fillUrls = (md: string, lang: Lang) => md.replace(/\u0001URL:([^\u0001]+)\u0001/g, (_, k) => noteUrl(k, lang))
   for (const lang of site.langs) {
-    for (const n of notes[lang]) n.md = fillUrls(n.md, lang)
+    for (const n of notes[lang]) {
+      n.md = fillUrls(n.md, lang)
+      for (const part of n.lockedParts) part.md = fillUrls(part.md, lang)
+    }
     for (const d of docs.values()) {
       for (const id of Object.keys(d.texts[lang] ?? {})) d.texts[lang][id] = fillUrls(d.texts[lang][id], lang)
     }

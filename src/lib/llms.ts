@@ -2,6 +2,7 @@ import { site, type Lang } from "../site.config"
 import { listed, filterLanguage, type Note } from "./vault"
 import { langMeta } from "./i18n"
 import { renderNote } from "./markdown"
+import { withoutLocked } from "./locked"
 
 /** Notes offered as plain markdown: public, listed, not the home page. */
 export function plainNotes(lang: Lang): Note[] {
@@ -17,7 +18,7 @@ export const mdUrl = (n: Note) => `${n.url}.md`
  * what the published page does not show.
  */
 export function noteMarkdown(n: Note): string {
-  const body = filterLanguage(n.source.raw, n.lang)
+  const body = withoutLocked(filterLanguage(n.source.raw, n.lang))
     .replace(/%%[\s\S]*?%%/g, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/\n{3,}/g, "\n\n")

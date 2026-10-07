@@ -25,3 +25,13 @@ See the [[Map.canvas|project map]].
 ![[Sketch.excalidraw#Overview]]
 
 Open the [[Sketch.excalidraw|whole sketch]].
+
+<!--lock:open sesame-->
+## Behind the door
+
+The hidden treasure is next to [[Queries]].
+
+![[diagram.png]]
+<!--lock:*-->
+
+After the door.

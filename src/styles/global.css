@@ -3256,3 +3256,8 @@ a.drawing-link tspan {
   color: var(--ink);
   font-weight: 600;
 }
+
+/* ---------- locked parts ---------- */
+.prose .locked-part {
+  margin: 1.2em 0;
+}
