@@ -14,6 +14,7 @@ import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
 import { revealHash } from "./tabs"
+import { setupMedia } from "./media"
 
 const root = document.documentElement
 
@@ -250,6 +251,7 @@ document.addEventListener("astro:before-swap", () => {
 
 // ---- protected notes and locked parts: set up what unlocking reveals ----
 function revealed() {
+  setupMedia()
   setupCode()
   setupPopovers()
   setupSlides()
@@ -281,6 +283,7 @@ document.addEventListener("astro:page-load", () => {
   setupProgress()
   setupPrefs()
   setupPractice()
+  setupMedia()
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())

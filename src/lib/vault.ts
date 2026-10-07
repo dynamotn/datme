@@ -506,6 +506,15 @@ function buildVault(version: number): Vault {
     return result
   }
 
+  /** A vault file as text, such as the transcript of a video. */
+  function readText(rel: string): string | undefined {
+    try {
+      return fs.readFileSync(path.join(site.vault, rel), "utf8")
+    } catch {
+      return undefined
+    }
+  }
+
   function resolveAsset(target: string, fromDir: string): string | undefined {
     const t = decodeURI(target.trim()).replace(/^\/+/, "")
     const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
@@ -617,6 +626,7 @@ function buildVault(version: number): Vault {
         drawDrawing,
         drawingPage: resolveDrawing,
         slides,
+        readText,
       })
       // A protected note's files travel inside its ciphertext, so they are not published on their own.
       if (!s.password) pre.assets.forEach((a) => assets.add(a))
@@ -630,7 +640,7 @@ function buildVault(version: number): Vault {
           }
           return { md: "" }
         }
-        const p = preprocess(part.md, { lang, dir: s.dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing })
+        const p = preprocess(part.md, { lang, dir: s.dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing, readText })
         for (const problem of p.problems) linkProblem(relFile, problem)
         return { password, md: p.md }
       })
@@ -727,7 +737,7 @@ function buildVault(version: number): Vault {
         doc.texts[lang] = {}
         for (const node of doc.canvas.nodes) {
           if (node.type === "text" && node.text) {
-            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing })
+            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing, readText })
             pre.assets.forEach((a) => assets.add(a))
             doc.texts[lang][node.id] = pre.md
           } else if (node.type === "file" && node.file && !resolveNote(node.file, "")) {

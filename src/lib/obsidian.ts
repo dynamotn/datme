@@ -4,6 +4,8 @@ import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl } from "./slug"
 import { embedExternal } from "./media"
 import { tabsHtml, columnsHtml } from "./layouts"
+import { mediaFragment, parseCues, sidecars, transcriptHtml } from "./transcripts"
+import { t } from "./i18n"
 
 export interface LinkRef {
   key: string
@@ -42,6 +44,8 @@ interface Ctx {
   drawingPage?(target: string, fromDir: string): string | undefined
   /** A Marp deck: comments are directives, and images stay markdown so `![bg](…)` keeps working. */
   slides?: boolean
+  /** The text of a vault file, for the transcript of a media file. */
+  readText?(rel: string): string | undefined
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -151,7 +155,36 @@ export function preprocess(
   const internalLink = (src: LinkTarget, fragment: string, text: string) =>
     `<a href="${urlPlaceholder(src.key)}${escapeAttr(anchorOf(fragment))}" class="internal" data-key="${escapeAttr(src.key)}">${text}</a>`
 
-  const embedAsset = (rel: string, alias: string | undefined): string => {
+  /**
+   * An audio or video player, started at the fragment's time, with the
+   * transcript of a .vtt or .srt file of the same name next to it.
+   */
+  const embedMedia = (rel: string, fragment: string, video: boolean): string => {
+    const src = assetUrl(rel) + mediaFragment(fragment)
+    const wanted = sidecars(rel, ctx.lang)
+    // Only a file right next to the media: another file of that name elsewhere is not its transcript.
+    const sidecar = ctx.readText
+      ? wanted.map((c) => ctx.resolveAsset(c, "")).find((found, i) => found?.toLowerCase() === wanted[i].toLowerCase())
+      : undefined
+    const cues = sidecar ? parseCues(ctx.readText?.(sidecar) ?? "") : []
+    const tag = video ? "video" : "audio"
+    if (!cues.length) return `<${tag} src="${src}" controls></${tag}>`
+    const s = t(ctx.lang)
+    let track = ""
+    if (video && /\.vtt$/i.test(sidecar!)) {
+      assets.push(sidecar!)
+      track = `<track kind="captions" src="${assetUrl(sidecar!)}" srclang="${escapeAttr(ctx.lang)}" label="${escapeAttr(s.captions)}">`
+    }
+    // SubRip is not a format players read: the browser builds captions from the transcript instead.
+    const fromCues = video && !track ? " data-captions-from-cues" : ""
+    return (
+      `<figure class="media-transcript"><${tag} src="${src}" controls preload="metadata"${fromCues} data-captions-label="${escapeAttr(s.captions)}" data-captions-lang="${escapeAttr(ctx.lang)}">${track}</${tag}>` +
+      transcriptHtml(cues, s.transcript) +
+      `</figure>`
+    )
+  }
+
+  const embedAsset = (rel: string, alias: string | undefined, fragment = ""): string => {
     assets.push(rel)
     const url = assetUrl(rel)
     if (IMAGE.test(rel) && ctx.slides) {
@@ -166,6 +199,8 @@ export function preprocess(
       const dims = size ? ` width="${size[1]}"${size[2] ? ` height="${size[2]}"` : ""}` : ""
       return `<img src="${url}" alt="${escapeAttr(alt)}"${dims} loading="lazy">`
     }
+    if (AUDIO.test(rel) && !ctx.slides) return embedMedia(rel, fragment, false)
+    if (VIDEO.test(rel) && !ctx.slides) return embedMedia(rel, fragment, true)
     if (AUDIO.test(rel)) return `<audio src="${url}" controls></audio>`
     if (VIDEO.test(rel)) return `<video src="${url}" controls></video>`
     if (PDF.test(rel)) return `<iframe class="pdf" src="${url}" loading="lazy"></iframe>`
@@ -240,7 +275,7 @@ export function preprocess(
         return `<span class="transclude-ph" data-key="${escapeAttr(note.key)}" data-fragment="${escapeAttr(fragment)}"></span>`
       }
       const asset = file ? ctx.resolveAsset(file, ctx.dir) : undefined
-      if (asset) return embedAsset(asset, alias)
+      if (asset) return embedAsset(asset, alias, fragment)
       return broken("embed", file, `<span class="broken-link">${escapeAttr(alias ?? file)}</span>`)
     }
 
@@ -289,7 +324,7 @@ export function preprocess(
       const asset = ctx.resolveAsset(decoded, ctx.dir)
       // Only targets that look like files: a bare word may be a route of the site itself.
       if (!asset) return /\.\w+$/.test(decoded) ? broken(bang ? "embed" : "link", decoded, m) : m
-      if (bang) return embedAsset(asset, text || undefined)
+      if (bang) return embedAsset(asset, text || undefined, (frag ?? "").slice(1))
       assets.push(asset)
       return `<a href="${assetUrl(asset)}" class="attachment">${text}</a>`
     },

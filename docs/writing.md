@@ -64,6 +64,12 @@ gets a copy button; neither ends up in what you copy.
   sets the width, as in Obsidian. Printed pages show the link instead.
 - `datme check --external` finds links to sites that no longer answer, and
   later builds point those links at their Internet Archive copy.
+- `![[talk.mp4#t=1:30]]` starts a video or audio file at 1:30. `#t=90`,
+  `#t=1m30s` and a range like `#t=1:30,2:00` work too.
+- A `.vtt` or `.srt` file next to a video or audio file, with the same name
+  (`talk.vtt`, or `talk.en.vtt` for the English pages), becomes its captions
+  and a transcript under the player. Clicking a time plays from there, and the
+  line being spoken is marked as it plays. The transcript is searchable.
 
 ## Footnotes and citations
 

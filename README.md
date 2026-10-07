@@ -95,7 +95,7 @@ current note.
 `[[wikilinks]]` and `![[embeds]]` of notes, headings, blocks, images and PDFs ·
 callouts that fold · `==highlights==` · `%%comments%%` · tags · LaTeX ·
 Mermaid · footnotes as margin sidenotes · BibTeX citations · line breaks kept
-for poems.
+for poems · audio and video from a timestamp, with captions and transcripts.
 
 ### The plugins you rely on
 

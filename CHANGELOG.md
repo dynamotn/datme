@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ```` ```tabs ```` blocks of the Tabs plugins show one tab at a time, with
   full markdown inside each tab, and Multi-Column Markdown regions and
   `> [!multi-column]` callouts lay their content out in columns.
+- Audio and video embeds start at a time, as in `![[talk.mp4#t=1:30]]`, and a
+  `.vtt` or `.srt` file of the same name becomes captions and a searchable
+  transcript whose timestamps play from that line.
 
 ### Changed
 

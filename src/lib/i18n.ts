@@ -143,6 +143,8 @@ const builtin = {
     changeUpdated: "vừa tưới",
     offline: "Bạn đang ngoại tuyến",
     offlineLead: "Trang này chưa được lưu để đọc ngoại tuyến. Những ghi chú bạn đã mở vẫn đọc được.",
+    transcript: "Bản ghi lời",
+    captions: "Phụ đề",
   },
   en: {
     search: "Search",
@@ -285,6 +287,8 @@ const builtin = {
     changeUpdated: "updated",
     offline: "You are offline",
     offlineLead: "This page was not saved for offline reading. The notes you already opened still work.",
+    transcript: "Transcript",
+    captions: "Captions",
   },
 } satisfies Record<string, Record<string, string>>
 
