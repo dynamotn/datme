@@ -36,3 +36,7 @@ dv.list(dv.pages().file.name)
 ```dataview
 
 ```
+
+Rating:: 4
+
+Score: `= this.rating * 2`, by `= [[Niklas Luhmann]].file.name`; code stays `$= dv.current()`.

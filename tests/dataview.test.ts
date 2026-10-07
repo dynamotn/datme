@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseQuery, runQuery, extractTasks, DataviewError, Unsupported, type Engine, type Page } from "../src/lib/dataview"
+import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page } from "../src/lib/dataview"
 
 const page = (key: string, over: Partial<Page> = {}): Page => ({
   key,
@@ -156,5 +156,27 @@ describe("errors", () => {
   test("syntax errors and unknown functions are explained", () => {
     expect(() => parseQuery('LIST FROM "unterminated')).toThrow(DataviewError)
     expect(() => run("LIST WHERE nope(1)")).toThrow("unknown function nope()")
+  })
+})
+
+describe("inline queries", () => {
+  const at = (key: string): Engine => ({ ...engine, current: pages.find((p) => p.key === key) })
+
+  test("bare fields and this are the current page; links reach other pages", () => {
+    expect(evaluateInline("rating", at("Books/Dune"))).toBe(5)
+    expect(evaluateInline("this.book.author", at("Books/Dune"))).toBe("Herbert")
+    expect(evaluateInline("[[Emma]].book.year", at("Books/Dune"))).toBe(1815)
+    expect(evaluateInline("rating * 2", at("Books/Emma"))).toBe(8)
+    expect(evaluateInline("this.file.name", at("Books/Emma"))).toBe("Emma")
+  })
+
+  test("leftovers are an error, not ignored", () => {
+    expect(() => evaluateInline("rating rating", at("Books/Dune"))).toThrow(DataviewError)
+  })
+
+  test("inline fields of a note's text, outside code and comments", () => {
+    expect(
+      inlineFields("rating:: 5\n**author**:: [[Herbert]]\nRead it [mood:: happy] and (pages:: 412).\n```\nhidden:: no\n```\n%% secret:: no %%"),
+    ).toEqual({ rating: 5, author: "[[Herbert]]", mood: "happy", pages: 412 })
   })
 })

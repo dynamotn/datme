@@ -719,6 +719,35 @@ function taskRow(page: Page, task: Task, engine: Engine): Row {
   }
 }
 
+/**
+ * An inline query, `= this.rating` or `= [[Dune]].author`: one expression,
+ * where bare fields are those of the current page, as in Dataview.
+ */
+export function evaluateInline(src: string, engine: Engine): Value {
+  const p = new Parser(tokenize(src))
+  const e = p.expr()
+  const rest = p.peek()
+  if (rest) throw new DataviewError(`unexpected "${"v" in rest ? rest.v : rest.t}"`)
+  return evaluate(e, engine.current ? rowOf(engine.current, engine) : {}, engine)
+}
+
+/** Inline fields of a note's text: `key:: value` lines, and `[key:: value]` or `(key:: value)` within lines. */
+export function inlineFields(md: string): Record<string, string | number | boolean> {
+  const fields: Record<string, string | number | boolean> = {}
+  // As Dataview reads them: numbers and booleans are typed, the rest stays text.
+  const typed = (v: string) => (/^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v === "true" ? true : v === "false" ? false : v)
+  const text = md.replace(/^(\s*)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\s*\2[^\S\n]*$/gm, "").replace(/%%[\s\S]*?%%/g, "")
+  for (const line of text.split("\n")) {
+    const whole = line.match(/^\s*(?:[-*+]\s+)?\**([\p{L}\p{N}_ -]+?)\**::\s*(.*)$/u)
+    if (whole && !/^\s*\[/.test(line)) {
+      fields[whole[1].trim()] ??= typed(whole[2].trim())
+      continue
+    }
+    for (const f of line.matchAll(/[[(]([\p{L}\p{N}_ -]+)::\s*([^\])]*)[\])]/gu)) fields[f[1].trim()] ??= typed(f[2].trim())
+  }
+  return fields
+}
+
 export function runQuery(q: Query, engine: Engine): Result {
   const pages = q.from ? engine.pages.filter((p) => inSource(p, q.from!, engine)) : engine.pages
   let rows: Row[] =

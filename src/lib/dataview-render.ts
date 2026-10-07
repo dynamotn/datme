@@ -2,7 +2,9 @@ import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { formatDate, t } from "./i18n"
 import { escapeAttr } from "./obsidian"
-import { parseQuery, runQuery, extractTasks, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
+import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
+import { filterLanguage } from "./vault"
+import { withoutLocked } from "./locked"
 import { parseTasksQuery, runTasksQuery, groupOf, TasksQueryError, type TaskItem } from "./tasks-query"
 import { parseSearch, search, highlight, SearchQueryError, type Searchable } from "./search-query"
 import { listed } from "./vault"
@@ -27,7 +29,8 @@ export function engineFor(lang: Lang): Engine {
       explicitTags: n.tags,
       created: n.created,
       updated: n.updated,
-      fields: n.source.fm,
+      // Frontmatter wins over a field of the same name written in the text.
+      fields: { ...inlineFields(withoutLocked(filterLanguage(n.source.raw, lang))), ...n.source.fm },
       outlinks: [...new Set(n.links.map((l) => l.key))],
       inlinks: (back.get(n.key) ?? []).filter((b) => !b.note.protected).map((b) => b.note.key),
       tasks: extractTasks(n.md),
@@ -69,6 +72,20 @@ export function html(v: Value, lang: Lang): string {
  * TASK queries markdown, so the text of each task renders like the note it
  * comes from.
  */
+/** An inline query, `= expression`, as the HTML of its value; an error shows as Dataview shows it. */
+export function renderInlineQuery(source: string, lang: Lang, currentKey: string): string {
+  try {
+    const engine = engineFor(lang)
+    const value = evaluateInline(source, { ...engine, current: engine.pages.find((p) => p.key === currentKey) })
+    return `<span class="dataview dv-inline">${value == null ? "-" : html(value, lang)}</span>`
+  } catch (e) {
+    if (e instanceof DataviewError || e instanceof Unsupported) {
+      return `<code class="dataview dv-error" title="Dataview: ${escapeAttr(e.message)}">= ${escapeAttr(source)}</code>`
+    }
+    throw e
+  }
+}
+
 export function renderDataview(source: string, lang: Lang, currentKey: string): string | { markdown: string } {
   const s = t(lang)
   // An empty block shows nothing in Obsidian either.

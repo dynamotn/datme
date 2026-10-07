@@ -32,6 +32,12 @@ see **published** notes: a private note can't leak through a Dataview table.
 
 DataviewJS blocks show a notice, since they would need Obsidian to run.
 
+**Inline queries** work too: `` `= this.rating` `` shows a field of the note,
+`` `= [[Dune]].author` `` one of another note, and expressions like
+`` `= this.pages / 30` `` are computed. Fields come from the frontmatter and
+from `key:: value` lines (or `[key:: value]` within a line) in the text.
+Inline DataviewJS (`` `$= …` ``) stays code.
+
 ## Tasks
 
 ```` ```tasks ```` blocks list the published tasks that match:

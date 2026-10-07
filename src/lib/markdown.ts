@@ -18,13 +18,13 @@ import rehypeStringify from "rehype-stringify"
 import { visit, SKIP } from "unist-util-visit"
 import { toString as hastToString } from "hast-util-to-string"
 import { fromHtml } from "hast-util-from-html"
-import type { Root as MdRoot, Blockquote, Paragraph, PhrasingContent, Code, Text } from "mdast"
+import type { Root as MdRoot, Blockquote, Paragraph, PhrasingContent, Code, InlineCode, Text } from "mdast"
 import type { Root as HastRoot, Element, ElementContent } from "hast"
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
-import { renderDataview, renderDataviewJs, renderTasksBlock, renderSearchBlock } from "./dataview-render"
+import { renderDataview, renderDataviewJs, renderInlineQuery, renderTasksBlock, renderSearchBlock } from "./dataview-render"
 import { renderBaseView } from "./base-render"
 import { renderChart } from "./charts"
 import { linkTerms, glossarySignature } from "./glossary"
@@ -175,6 +175,11 @@ const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, k
     } else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
     else if (node.lang === "query") parent.children[index] = { type: "html", value: renderSearchBlock(node.value, lang) }
     else if (node.lang === "chart") parent.children[index] = { type: "html", value: renderChart(node.value) }
+  })
+  // `= this.field` is an inline query; `$= …` (DataviewJS) stays code.
+  visit(tree, "inlineCode", (node: InlineCode, index, parent) => {
+    if (!parent || index == null || !/^=\s/.test(node.value)) return
+    parent.children[index] = { type: "html", value: renderInlineQuery(node.value.slice(1).trim(), lang, key) }
   })
 }
 
