@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `codeBlocks`, add tags to the `<head>` of every page with `head`, and take
   `plugins` that bundle these with remark and rehype plugins, so a package can
   ship a whole feature.
+- `theme.code`, `theme.comments`, `theme.mermaid` and `theme.d2` choose the
+  themes of code blocks (any Shiki theme), giscus comments, Mermaid and D2
+  diagrams, one for both colour schemes or a light and a dark one, and
+  `map.darkTiles` gives maps their own dark tiles. Each follows the site's
+  light/dark toggle.
 
 ### Changed
 
@@ -44,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Comments open in the theme the page is in, not the system's, when the
+  reader has switched it with the toggle.
 - Links inside headings are readable again: they keep the heading's colour
   and are marked by an underline, instead of a pill or highlighter that hid
   the text on the inked `##` strip of the notebook look.

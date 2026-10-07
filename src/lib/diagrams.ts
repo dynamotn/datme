@@ -104,7 +104,9 @@ async function drawWith(engine: InstanceType<D2Module["D2"]>, source: string): P
     throw new Error(d2Message(e))
   }
   const { diagram, renderOptions } = compiled
-  const svg = await engine.render(diagram, { ...renderOptions, pad: 16, noXMLTag: true, darkThemeID: 200 })
+  // The configured themes, unless the diagram sets its own in `vars`.
+  const themes = { themeID: renderOptions.themeID ?? site.theme.d2.light, darkThemeID: renderOptions.darkThemeID ?? site.theme.d2.dark }
+  const svg = await engine.render(diagram, { ...renderOptions, ...themes, pad: 16, noXMLTag: true })
   return (
     svg
       .replace(/@media screen and \(prefers-color-scheme:\s*dark\)\s*\{/g, ':root[data-theme="dark"]{')

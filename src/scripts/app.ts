@@ -47,9 +47,10 @@ document.addEventListener("click", (e) => {
     store("theme", next)
     document.dispatchEvent(new Event("themechange"))
     // giscus lives in an iframe and only hears about theme changes by message.
+    const giscus = document.querySelector<HTMLElement>(".comments .giscus")
     document
       .querySelector<HTMLIFrameElement>("iframe.giscus-frame")
-      ?.contentWindow?.postMessage({ giscus: { setConfig: { theme: next } } }, "https://giscus.app")
+      ?.contentWindow?.postMessage({ giscus: { setConfig: { theme: giscus && themed(giscus) } } }, "https://giscus.app")
     renderMermaid(true)
   } else if (target.closest("[data-sidebar-toggle]")) {
     const side = (target.closest("[data-sidebar-toggle]") as HTMLElement).dataset.sidebarToggle!
@@ -178,11 +179,31 @@ function setupCode() {
   })
 }
 
+/** The theme an embedded tool takes for the page's colour scheme, from its `data-theme-light` and `-dark`. */
+function themed(el: HTMLElement): string {
+  return (root.dataset.theme === "dark" ? el.dataset.themeDark : el.dataset.themeLight) ?? ""
+}
+
+/** giscus, loaded in the theme the page is in rather than the system's. */
+function setupComments() {
+  const host = document.querySelector<HTMLElement>(".comments .giscus:not([data-mounted])")
+  if (!host) return
+  host.dataset.mounted = ""
+  const script = document.createElement("script")
+  script.src = "https://giscus.app/client.js"
+  script.async = true
+  script.crossOrigin = "anonymous"
+  for (const [k, v] of Object.entries(JSON.parse(host.dataset.giscus!) as Record<string, string>)) script.setAttribute(k, v)
+  script.dataset.theme = themed(host)
+  host.after(script)
+}
+
 async function renderMermaid(rerender = false) {
   const blocks = [...document.querySelectorAll<HTMLElement>(".prose pre.mermaid")]
   if (!blocks.length) return
   const { default: mermaid } = await import("mermaid")
-  mermaid.initialize({ startOnLoad: false, theme: root.dataset.theme === "dark" ? "dark" : "neutral" })
+  const [light, dark] = (root.dataset.mermaid ?? "neutral dark").split(" ")
+  mermaid.initialize({ startOnLoad: false, theme: (root.dataset.theme === "dark" ? dark : light) as "default" })
   for (const b of blocks) {
     b.dataset.src ??= b.textContent ?? ""
     if (rerender || !b.dataset.processed) {
@@ -241,6 +262,7 @@ window.addEventListener("afterprint", () => {
 
 document.addEventListener("themechange", () => {
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())
+  if (document.querySelector("[data-map][data-tiles-dark]")) void import("./map").then((m) => m.retileMaps())
 })
 
 document.addEventListener("astro:before-swap", () => {
@@ -295,6 +317,7 @@ document.addEventListener("astro:page-load", () => {
   const mapEls = document.querySelectorAll<HTMLElement>("[data-map]")
   if (mapEls.length) void import("./map").then((m) => mapEls.forEach((el) => m.mountMap(el)))
   void setupWebmentions()
+  setupComments()
   syncToggles()
   renderDiagrams()
   void renderMermaid()

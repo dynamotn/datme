@@ -58,11 +58,16 @@ types:
     label:
       vi-VN: Nhân vật
       en-US: Person
+map:
+  darkTiles: https://tiles.example/dark/{z}/{x}/{y}.png
 lineBreaks:
   types: [composition]
 theme:
   accent:
     light: "#7c3aed"
     dark: "#c4b5fd"
+  code: { light: github-light, dark: vitesse-dark }
+  comments: { light: light, dark: dark_dimmed }
+  mermaid: forest
   fonts:
     heading: Fraunces

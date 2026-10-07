@@ -296,11 +296,19 @@ describe("static build", () => {
     expect(home).toContain('"page_view"')
   })
 
+  test("code blocks and Mermaid diagrams take the configured themes", () => {
+    const html = read("03_Atomic/Code/index.html")
+    expect(html).toMatch(/<pre class="shiki shiki-themes github-light vitesse-dark/)
+    expect(read("index.html")).toContain('data-mermaid="forest forest"')
+  })
+
   test("note pages carry the comment widget, other pages do not", () => {
     const note = read("03_Atomic/Zettelkasten/index.html")
-    expect(note).toContain('src="https://giscus.app/client.js"')
-    expect(note).toContain('data-repo="example/garden"')
-    expect(note).toContain('data-lang="vi"')
+    const host = note.match(/<div class="giscus" data-giscus="([^"]+)" data-theme-light="light" data-theme-dark="dark_dimmed"/)!
+    const attrs = JSON.parse(host[1].replace(/&quot;|&#x22;/g, '"'))
+    expect(attrs).toMatchObject({ "data-repo": "example/garden", "data-lang": "vi" })
+    // The script is added by the page's own code, in the theme the reader is in.
+    expect(note).not.toContain("giscus.app/client.js")
     expect(read("tags/index.html")).not.toContain("giscus")
   })
 
@@ -453,6 +461,7 @@ describe("static build", () => {
     const data = JSON.parse(map.match(/data-map="([^"]+)"/)![1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))
     expect(data).toEqual([expect.objectContaining({ lat: 52.0302, url: "/en-US/06_Reference/Niklas-Luhmann-(sociologist)" })])
     expect(map).toContain('data-tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png"')
+    expect(map).toContain('data-tiles-dark="https://tiles.example/dark/{z}/{x}/{y}.png"')
     // Leaflet's stylesheet only loads on the map page.
     const css = (html: string) => [...html.matchAll(/<link rel="stylesheet" href="(\/_astro\/[^"]+)"/g)].map((m) => read(m[1].slice(1))).join("")
     expect(fs.readdirSync(path.join(out, "_astro")).some((f) => /^leaflet\..*\.css$/.test(f))).toBe(true)

@@ -600,7 +600,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(rehypeLinkCards)
     .use(rehypeSidenotes)
     .use(rehypeShiki, {
-      themes: { light: "github-light", dark: "github-dark" },
+      themes: site.theme.code,
       defaultColor: false,
       lazy: true,
       fallbackLanguage: "text",

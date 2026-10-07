@@ -2057,7 +2057,8 @@ dialog.graph-modal {
   columns: 2 16rem;
   padding-left: 1.2em;
 }
-:root[data-theme="dark"] .map-canvas .leaflet-tile-pane {
+/* Light tiles, darkened; a site with `map.darkTiles` shows those instead. */
+:root[data-theme="dark"] .map-canvas:not([data-tiles-dark]) .leaflet-tile-pane {
   filter: invert(0.9) hue-rotate(180deg) brightness(0.9);
 }
 

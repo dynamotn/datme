@@ -131,7 +131,7 @@ export function renderLeafletBlock(src: string, lang: Lang): string {
   return (
     `<figure class="leaflet-block">` +
     `<div class="map-canvas" role="region" aria-label="${escapeAttr(s.map)}" style="height:${escapeAttr(map.height)}"` +
-    ` data-map="${escapeAttr(JSON.stringify(map.markers))}" data-tiles="${escapeAttr(site.map.tiles)}" data-attribution="${escapeAttr(site.map.attribution)}"` +
+    ` data-map="${escapeAttr(JSON.stringify(map.markers))}" data-tiles="${escapeAttr(site.map.tiles)}"${site.map.darkTiles ? ` data-tiles-dark="${escapeAttr(site.map.darkTiles)}"` : ""} data-attribution="${escapeAttr(site.map.attribution)}"` +
     (map.center ? ` data-center="${map.center.join(",")}"` : "") +
     (map.zoom != null ? ` data-zoom="${map.zoom}"` : "") +
     `></div>` +

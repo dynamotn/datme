@@ -7,6 +7,9 @@ title: "Extending"
 
 - `theme.accent` and `theme.fonts` in `datme.yaml` change the colours and the
   Google Fonts families.
+- `theme.code`, `theme.comments`, `theme.mermaid` and `theme.d2` pick the
+  themes of code blocks, giscus comments and diagrams, light and dark, so they
+  match the rest of the site and switch with it.
 - `theme.css` (by default `datme.css` at the root of the vault) is a stylesheet
   loaded after datme's own, so it can restyle anything.
 - `cssclasses` in a note's frontmatter adds classes to that note, as in

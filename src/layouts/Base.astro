@@ -80,7 +80,7 @@ const pluginHead = await userHead()
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined}>
+<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -12,23 +12,23 @@ const c = site.comments
   c && (
     <section class="comments">
       {c.provider === "giscus" && (
-        <script
-          is:inline
-          data-astro-rerun
-          src="https://giscus.app/client.js"
-          data-repo={c.repo}
-          data-repo-id={c.repoId}
-          data-category={c.category}
-          data-category-id={c.categoryId}
-          data-mapping={c.mapping}
-          data-strict="1"
-          data-reactions-enabled={c.reactions ? "1" : "0"}
-          data-input-position="top"
-          data-theme="preferred_color_scheme"
-          data-lang={lang.split("-")[0]}
-          data-loading="lazy"
-          crossorigin="anonymous"
-          async
+        // Loaded by src/scripts/app.ts, in the theme the page is in.
+        <div
+          class="giscus"
+          data-giscus={JSON.stringify({
+            "data-repo": c.repo,
+            "data-repo-id": c.repoId,
+            "data-category": c.category,
+            "data-category-id": c.categoryId,
+            "data-mapping": c.mapping,
+            "data-strict": "1",
+            "data-reactions-enabled": c.reactions ? "1" : "0",
+            "data-input-position": "top",
+            "data-lang": lang.split("-")[0],
+            "data-loading": "lazy",
+          })}
+          data-theme-light={site.theme.comments.light}
+          data-theme-dark={site.theme.comments.dark}
         />
       )}
       {c.provider === "commento" && (

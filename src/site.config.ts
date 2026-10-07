@@ -3,6 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { load as loadYaml } from "js-yaml"
 import { z } from "astro/zod"
+import { bundledThemes } from "shiki"
 
 /** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
 export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
@@ -40,6 +41,24 @@ const cssColor = z
   .string()
   .regex(/^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([\d\s.,%/+-]+\)|[a-zA-Z]+)$/, "expected a CSS colour")
 const fontFamily = z.string().regex(/^[\p{L}\p{N} _-]+$/u, "expected a font family name")
+
+/** A theme per colour scheme, or one for both: embedded tools follow the site's scheme. */
+const themePair = <T extends z.ZodType<string | number>>(name: T) =>
+  z
+    .union([name, z.object({ light: name, dark: name }).strict()])
+    .transform((v) => (typeof v === "object" ? v : { light: v, dark: v }) as { light: z.output<T>; dark: z.output<T> })
+const shikiTheme = z.string().refine((n) => n in bundledThemes, { message: "expected a Shiki theme, see https://shiki.style/themes" })
+// giscus takes its own theme names, or the URL of a stylesheet.
+const giscusTheme = z.string().regex(/^([\w-]+|https:\/\/\S+)$/, "expected a giscus theme name or an https:// URL")
+const mermaidTheme = z.enum(["default", "neutral", "dark", "forest", "base"])
+// D2 numbers its themes: https://d2lang.com/tour/themes
+const d2Theme = z.number().int().min(0)
+const TOOL_THEMES = {
+  code: { light: "github-light", dark: "github-dark" },
+  comments: { light: "light", dark: "dark" },
+  mermaid: { light: "neutral", dark: "dark" },
+  d2: { light: 0, dark: 200 },
+} as const
 
 /** Icons for common note types (from tags like type/book); datme.yaml can add or override them. */
 const DEFAULT_TYPES: Record<string, string> = {
@@ -215,9 +234,17 @@ const schema = z
           .default({}),
         /** A stylesheet in the vault, loaded after datme's own. */
         css: z.string().default("datme.css"),
+        /** Shiki themes of code blocks. */
+        code: themePair(shikiTheme).default(TOOL_THEMES.code),
+        /** giscus themes of the comments. */
+        comments: themePair(giscusTheme).default(TOOL_THEMES.comments),
+        /** Mermaid themes of ```mermaid diagrams. */
+        mermaid: themePair(mermaidTheme).default(TOOL_THEMES.mermaid),
+        /** D2 theme ids of ```d2 diagrams, unless a diagram picks its own. */
+        d2: themePair(d2Theme).default(TOOL_THEMES.d2),
       })
       .strict()
-      .default({ fonts: {}, css: "datme.css" }),
+      .default({ fonts: {}, css: "datme.css", ...TOOL_THEMES }),
     related: z
       .object({
         /** How many related notes to suggest under each note; 0 turns them off. */
@@ -276,6 +303,8 @@ const schema = z
     map: z
       .object({
         tiles: z.string().default("https://tile.openstreetmap.org/{z}/{x}/{y}.png"),
+        /** Tiles drawn for the dark theme; without them the light tiles are inverted. */
+        darkTiles: z.string().optional(),
         attribution: z.string().default('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'),
       })
       .strict()

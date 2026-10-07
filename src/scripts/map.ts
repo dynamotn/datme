@@ -11,6 +11,10 @@ interface Place {
 }
 
 const maps = new Map<HTMLElement, L.Map>()
+const layers = new Map<HTMLElement, L.TileLayer>()
+
+/** Tiles for the page's colour scheme: the dark ones when there are, else the light ones, inverted by CSS. */
+const tilesOf = (el: HTMLElement) => (document.documentElement.dataset.theme === "dark" && el.dataset.tilesDark) || el.dataset.tiles!
 
 /**
  * Places as dots, on the map page or a ```leaflet block; a click shows the
@@ -28,7 +32,7 @@ export function mountMap(el: HTMLElement): void {
   const places = JSON.parse(el.dataset.map ?? "[]") as Place[]
   const map = L.map(el, { scrollWheelZoom: false })
   maps.set(el, map)
-  L.tileLayer(el.dataset.tiles!, { attribution: el.dataset.attribution, maxZoom: 18 }).addTo(map)
+  layers.set(el, L.tileLayer(tilesOf(el), { attribution: el.dataset.attribution, maxZoom: 18 }).addTo(map))
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2d6a4f"
   for (const p of places) {
     const popup = document.createElement("div")
@@ -53,7 +57,13 @@ export function mountMap(el: HTMLElement): void {
   else map.fitBounds(bounds, { padding: [32, 32], ...(zoom != null ? { maxZoom: zoom } : {}) })
 }
 
+/** Swap the tiles of every map when the theme changes and the site has dark ones. */
+export function retileMaps(): void {
+  for (const [el, layer] of layers) layer.setUrl(tilesOf(el))
+}
+
 export function unmountMap(): void {
   for (const map of maps.values()) map.remove()
   maps.clear()
+  layers.clear()
 }

@@ -76,6 +76,12 @@ theme:
   accent: "#7c3aed"           # or { light: …, dark: … }
   fonts: { heading: Fraunces, body: Literata }   # Google Fonts families
   css: datme.css              # stylesheet in the vault, loaded after datme's own
+  # Themes of embedded tools, one for both colour schemes or { light: …, dark: … };
+  # each follows the light/dark toggle of the site.
+  code: { light: github-light, dark: github-dark }   # Shiki: https://shiki.style/themes
+  comments: { light: light, dark: dark }             # giscus theme names, or an https:// stylesheet
+  mermaid: { light: neutral, dark: dark }            # default, neutral, dark, forest or base
+  d2: { light: 0, dark: 200 }                        # D2 theme ids, unless a diagram sets its own
 
 nav:                          # main menu in the header, in order
   - home                      # built-ins: home, tags, archive, recent, timeline, map, stats, calendar
@@ -111,6 +117,7 @@ images:                       # PNG/JPEG/WebP/AVIF get their size and resized We
   placeholders: true          # a tiny blurred copy shows while each image loads
 map:                          # tiles of /map (OpenStreetMap by default)
   tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+  darkTiles: https://…/{z}/{x}/{y}.png   # for the dark theme; else the light tiles are darkened
 ```
 
 ## Readers and the social web

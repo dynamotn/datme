@@ -34,7 +34,7 @@ describe("note rendering", () => {
   })
 
   test("code is highlighted by Shiki and left untouched", () => {
-    expect(zk.html).toContain('class="shiki shiki-themes github-light github-dark')
+    expect(zk.html).toContain('class="shiki shiki-themes github-light vitesse-dark')
     expect(zk.html).toContain("[[not a link]]")
   })
 

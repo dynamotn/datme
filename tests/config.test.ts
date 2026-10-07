@@ -232,7 +232,26 @@ describe("note types", () => {
 
 describe("theme", () => {
   test("defaults to datme's own look with an optional datme.css", () => {
-    expect(resolveConfig({}, "/v").theme).toEqual({ fonts: {}, css: "datme.css" })
+    expect(resolveConfig({}, "/v").theme).toEqual({
+      fonts: {},
+      css: "datme.css",
+      code: { light: "github-light", dark: "github-dark" },
+      comments: { light: "light", dark: "dark" },
+      mermaid: { light: "neutral", dark: "dark" },
+      d2: { light: 0, dark: 200 },
+    })
+  })
+
+  test("tools take a theme per colour scheme, or one for both, checked against what they know", () => {
+    const theme = resolveConfig({ theme: { code: "dracula", comments: { light: "noborder_light", dark: "https://example.com/g.css" }, mermaid: "forest", d2: { light: 1, dark: 201 } } }, "/v").theme
+    expect(theme.code).toEqual({ light: "dracula", dark: "dracula" })
+    expect(theme.comments).toEqual({ light: "noborder_light", dark: "https://example.com/g.css" })
+    expect(theme.mermaid).toEqual({ light: "forest", dark: "forest" })
+    expect(theme.d2).toEqual({ light: 1, dark: 201 })
+    expect(() => resolveConfig({ theme: { code: "nope" } }, "/v")).toThrow("expected a Shiki theme")
+    expect(() => resolveConfig({ theme: { comments: "x\" onload=\"y" } }, "/v")).toThrow("expected a giscus theme")
+    expect(() => resolveConfig({ theme: { mermaid: "pink" } }, "/v")).toThrow()
+    expect(() => resolveConfig({ theme: { code: { light: "github-light" } } }, "/v")).toThrow()
   })
 
   test("accents and font names are checked so they cannot break out of CSS", () => {

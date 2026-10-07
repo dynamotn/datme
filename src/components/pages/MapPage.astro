@@ -25,6 +25,7 @@ const alternates = Object.fromEntries(site.langs.filter(hasMap).map((l) => [l, s
       class="map-canvas"
       data-map={JSON.stringify(list)}
       data-tiles={site.map.tiles}
+      data-tiles-dark={site.map.darkTiles}
       data-attribution={site.map.attribution}
       role="region"
       aria-label={s.map}
