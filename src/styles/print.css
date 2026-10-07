@@ -49,6 +49,7 @@
   dialog,
   .locked,
   .subscribe,
+  .day-nav,
   .stack-col:not(:first-child) {
     display: none !important;
   }

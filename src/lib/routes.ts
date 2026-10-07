@@ -4,6 +4,7 @@ import { langPrefix } from "./i18n"
 import { sluggify, slugToUrl } from "./slug"
 import { docSlug } from "./obsidian"
 import { hasMap, hasTimeline } from "./places"
+import { hasJournal } from "./journal"
 
 export type Page =
   | { kind: "home"; lang: Lang }
@@ -19,6 +20,7 @@ export type Page =
   | { kind: "timeline"; lang: Lang }
   | { kind: "map"; lang: Lang }
   | { kind: "stats"; lang: Lang }
+  | { kind: "calendar"; lang: Lang }
 
 /**
  * Every page of the site by slug. First claim wins: notes, then folders, tags,
@@ -46,6 +48,7 @@ export function routes(): Map<string, Page> {
     // Only when some note has a date or a place to show.
     if (hasTimeline(lang)) claim(prefix + "timeline", { kind: "timeline", lang })
     if (hasMap(lang)) claim(prefix + "map", { kind: "map", lang })
+    if (hasJournal(lang)) claim(prefix + "calendar", { kind: "calendar", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
     for (const doc of vault.docs.values()) claim(prefix + docSlug(doc.rel), { kind: doc.kind, lang, doc })
     for (const note of vault.notes[lang]) {

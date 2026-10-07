@@ -17,6 +17,10 @@ describe("publishing rules", () => {
       "07_Project/Blog post",
       "07_Project/Poem",
       "07_Project/Talk",
+      "08_Journal/2026-09-28",
+      "08_Journal/2026-10-05",
+      "08_Journal/2026-10-07",
+      "08_Journal/Garden plans",
       "index",
     ])
   })

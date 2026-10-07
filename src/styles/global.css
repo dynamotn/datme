@@ -3311,3 +3311,56 @@ a.drawing-link tspan {
   vertical-align: -0.125em;
   line-height: 1;
 }
+
+/* ---------- daily notes ---------- */
+.calendar-months {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 24px;
+}
+.calendar-month h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  text-transform: capitalize;
+}
+.calendar-month table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: center;
+  font-size: 14px;
+}
+.calendar-month th {
+  padding: 4px 0;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+}
+.calendar-month td {
+  padding: 6px 0;
+  color: var(--muted);
+}
+.calendar-month td.has-note a {
+  display: inline-grid;
+  place-items: center;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+.calendar-month td.has-note a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.day-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line-strong);
+  font-size: 14px;
+}

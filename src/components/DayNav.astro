@@ -1,0 +1,37 @@
+---
+import type { Note } from "~/lib/vault"
+import { dayNeighbours } from "~/lib/journal"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const days = dayNeighbours(note)
+const s = t(note.lang)
+const label = (date: string) =>
+  new Date(`${date}T00:00:00Z`).toLocaleDateString(note.lang, { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })
+---
+
+{
+  days && (
+    <nav class="day-nav" aria-label={s.calendar}>
+      {days.prev ? (
+        <a class="internal" href={days.prev.note.url} rel="prev">
+          ← {label(days.prev.date)}
+        </a>
+      ) : (
+        <span />
+      )}
+      <a href={slugToUrl(langPrefix(note.lang) + "calendar")}>📅 {s.calendar}</a>
+      {days.next ? (
+        <a class="internal" href={days.next.note.url} rel="next">
+          {label(days.next.date)} →
+        </a>
+      ) : (
+        <span />
+      )}
+    </nav>
+  )
+}

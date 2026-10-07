@@ -18,7 +18,8 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - **Wandering:** `j` and `k` move to the next or previous note of the explorer,
   and 🎲 (or `r`) opens a random one.
 - **Overview pages:** `/tags`, `/archive` (with a yearly activity calendar),
-  `/recent`, and `/timeline`, `/map` and `/stats` when some note qualifies.
+  `/recent`, and `/timeline`, `/map`, `/stats` and `/calendar` (daily notes)
+  when some note qualifies.
 
 ## Reading
 

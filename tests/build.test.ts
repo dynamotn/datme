@@ -59,6 +59,16 @@ describe("static build", () => {
     expect(read("06_Reference/Niklas-Luhmann/index.html")).not.toMatch(/>iconColor</)
   })
 
+  test("daily notes get a calendar and links to the days around them", () => {
+    const cal = read("en-US/calendar/index.html")
+    expect(cal).toMatch(/<td class="has-note"><a class="internal" href="\/en-US\/08_Journal\/2026-10-05" title="2026-10-05">5<\/a><\/td>/)
+    expect(cal).toContain("October 2026")
+    const day = read("08_Journal/2026-10-05/index.html")
+    expect(day).toMatch(/<nav class="day-nav"[^>]*><a class="internal" href="\/08_Journal\/2026-09-28" rel="prev">/)
+    expect(day).toMatch(/href="\/08_Journal\/2026-10-07" rel="next">/)
+    expect(read("08_Journal/Garden-plans/index.html")).not.toContain('class="day-nav"')
+  })
+
   test("notes, folders and tags get pages", () => {
     for (const p of [
       "03_Atomic/Zettelkasten/index.html",

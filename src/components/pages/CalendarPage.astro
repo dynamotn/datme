@@ -1,0 +1,69 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { journal, months, hasJournal } from "~/lib/journal"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const days = journal(lang)
+const grid = months(days)
+// Monday first, in the reader's language: 2024-01-01 was a Monday.
+const weekdays = Array.from({ length: 7 }, (_, i) =>
+  new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }),
+)
+const monthName = (year: number, month: number) =>
+  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(lang, { month: "long", year: "numeric", timeZone: "UTC" })
+const alternates = Object.fromEntries(site.langs.filter(hasJournal).map((l) => [l, slugToUrl(langPrefix(l) + "calendar")]))
+---
+
+<Base lang={lang} title={s.calendar} alternates={alternates}>
+  <div class="note is-wide calendar-page">
+    <header class="page-head">
+      <span class="chip type">📅 {s.calendar}</span>
+      <h1>{s.calendar}</h1>
+      <p>{s.calendarLead} · {s.notesCount(days.length)}</p>
+    </header>
+    <div class="calendar-months">
+      {
+        grid.map((m) => (
+          <section class="calendar-month" aria-labelledby={`m${m.year}-${m.month}`}>
+            <h2 id={`m${m.year}-${m.month}`}>{monthName(m.year, m.month)}</h2>
+            <table>
+              <thead>
+                <tr>
+                  {weekdays.map((d) => (
+                    <th scope="col">{d}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {m.weeks.map((week) => (
+                  <tr>
+                    {week.map((cell) =>
+                      cell === null ? (
+                        <td />
+                      ) : cell.note ? (
+                        <td class="has-note">
+                          <a class="internal" href={cell.note.url} title={cell.note.title}>
+                            {cell.day}
+                          </a>
+                        </td>
+                      ) : (
+                        <td>{cell.day}</td>
+                      ),
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</Base>

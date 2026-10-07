@@ -78,7 +78,7 @@ theme:
   css: datme.css              # stylesheet in the vault, loaded after datme's own
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats
+  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats, calendar
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf

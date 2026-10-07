@@ -16,6 +16,7 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Marp Slides](#marp-slides)
 - [Kanban](#kanban)
 - [Charts](#charts)
+- [Daily notes and Periodic Notes](#daily-notes-and-periodic-notes)
 - [Iconize](#iconize)
 - [Leaflet](#leaflet)
 - [Spaced Repetition flashcards](#spaced-repetition-flashcards)
@@ -157,6 +158,19 @@ show their `##` lanes side by side, each list item a card.
 theme's colours. Supported: `type: bar|line|pie|doughnut|radar|polarArea`,
 `labels`, `series`, `stacked`, `fill`, `tension`, `beginAtZero`, `indexAxis`
 and `width`. The data is also given as a table, for screen readers and print.
+
+## Daily notes and Periodic Notes
+
+Published daily notes get a `/calendar` page, with a grid for each month and a
+link on every day that has a note. Each daily note links to the days before and
+after it, and back to the calendar. Add `calendar` to `nav` to put it in the
+menu.
+
+datme names days the way your vault does: it reads the folder and the date
+format from the Periodic Notes plugin, or else from the Daily notes core
+plugin, and defaults to `YYYY-MM-DD` anywhere in the vault. Formats with
+folders (`YYYY/MM/YYYY-MM-DD`), month names (`MMMM Do, YYYY`), weekdays and
+`[literal text]` all work.
 
 ## Iconize
 

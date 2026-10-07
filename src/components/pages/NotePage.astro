@@ -19,6 +19,7 @@ import Subscribe from "../Subscribe.astro"
 import Webmentions from "../Webmentions.astro"
 import DevProblems from "../DevProblems.astro"
 import SeriesBox from "../SeriesBox.astro"
+import DayNav from "../DayNav.astro"
 
 interface Props {
   note: Note
@@ -130,6 +131,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       )
     }
     <SeriesBox note={note} at="foot" />
+    <DayNav note={note} />
   </article>
   <section class="backlinks">
     <h2>{s.backlinks} <span class="count">{backlinks.length}</span></h2>
