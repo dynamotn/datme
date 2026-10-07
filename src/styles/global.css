@@ -3571,3 +3571,76 @@ a.drawing-link tspan {
   white-space: nowrap;
 }
 
+/* ---------- layouts: tabs and columns ---------- */
+.prose .tabs {
+  margin: 0 0 1.2em;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.prose .tab-list {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+.prose .tab-list [role="tab"] {
+  flex: none;
+  padding: 9px 12px 8px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: 600 0.78em var(--font-ui);
+  cursor: pointer;
+}
+.prose .tab-list [role="tab"]:hover {
+  color: var(--ink);
+}
+.prose .tab-list [role="tab"][aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.prose .tab-panel {
+  padding: 14px 16px 2px;
+}
+.prose .tab-panel > :last-child {
+  margin-bottom: 0.9em;
+}
+.prose .columns {
+  display: grid;
+  gap: 24px;
+  margin: 0 0 1.1em;
+}
+.prose .column > :last-child {
+  margin-bottom: 0;
+}
+/* `> [!multi-column]` lays the callouts it holds side by side. */
+/* :root raises it above the notebook look's frame, which belongs to the callouts inside. */
+:root .callout[data-callout="multi-column"] {
+  border: none;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.callout[data-callout="multi-column"] > .callout-title {
+  display: none;
+}
+:root .callout[data-callout="multi-column"] > .callout-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 0;
+}
+.callout[data-callout="multi-column"] > .callout-content > * {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .prose .columns {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+

@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   themes, ABC sheet music is typeset with abcjs, and ```` ```markmap ```` or
   ```` ```mindmap ```` blocks become interactive mind maps. D2 and Typst are
   optional dependencies, installed only by vaults that use them.
+- ```` ```tabs ```` blocks of the Tabs plugins show one tab at a time, with
+  full markdown inside each tab, and Multi-Column Markdown regions and
+  `> [!multi-column]` callouts lay their content out in columns.
 
 ### Changed
 

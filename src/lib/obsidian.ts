@@ -3,6 +3,7 @@ import type { Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl } from "./slug"
 import { embedExternal } from "./media"
+import { tabsHtml, columnsHtml } from "./layouts"
 
 export interface LinkRef {
   key: string
@@ -112,8 +113,12 @@ export function preprocess(
   const masks: string[] = []
   const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
 
-  let md = src
-    .replace(/^(\s*)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\s*\2[^\S\n]*$/gm, (m) => mask(m))
+  // ```tabs blocks hold markdown, not code: they become tabs whose content is converted like the rest.
+  const maskFences = (text: string): string =>
+    text.replace(/^(\s*)(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)\n\s*\2[^\S\n]*$/gm, (m, _indent, _fence, info: string, body: string, offset: number) =>
+      !ctx.slides && /^\s*tabs\s*$/i.test(info) ? maskFences(tabsHtml(body, `${ctx.dir}:${offset}`)) : mask(m),
+    )
+  let md = maskFences(src)
     .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
     .replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, (m) => mask(m))
     .replace(/%%[\s\S]*?%%/g, "")
@@ -121,6 +126,9 @@ export function preprocess(
   md = ctx.slides
     ? md.replace(/<!--[\s\S]*?-->|<style\b[\s\S]*?<\/style>/gi, (m) => mask(m))
     : md.replace(/<!--[\s\S]*?-->/g, "")
+
+  // Multi-Column Markdown regions; their settings block is masked like any code by now.
+  if (!ctx.slides) md = columnsHtml(md, (text) => masks[Number(text.match(/^\u0000(\d+)\u0000$/)?.[1] ?? NaN)])
 
   const links: LinkRef[] = []
   const assets: string[] = []

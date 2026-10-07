@@ -22,6 +22,8 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Leaflet](#leaflet)
 - [Spaced Repetition flashcards](#spaced-repetition-flashcards)
 - [Diagrams: D2, Typst, sheet music and mind maps](#diagrams-d2-typst-sheet-music-and-mind-maps)
+- [Tabs](#tabs)
+- [Columns](#columns)
 
 ## Dataview
 
@@ -272,3 +274,50 @@ bun add @terrastruct/d2                          # ```d2
 bun add @myriaddreamin/typst-ts-node-compiler    # ```typst
 ```
 
+## Tabs
+
+*Live example: [Tabs and columns](showcase/Tabs%20and%20columns.md).*
+
+```` ```tabs ```` blocks of the Tabs plugins show one tab at a time. Each tab
+starts with a title line, `--- Title` (also `---tab Title` or `tab: Title`),
+and holds ordinary markdown: links, embeds, callouts and code all work inside.
+Use a longer fence outside when a tab holds code:
+
+`````markdown
+````tabs
+--- Bun
+```bash
+bunx @dynamotn/datme dev ~/MyVault
+```
+--- Node
+```bash
+npx @dynamotn/datme dev ~/MyVault
+```
+````
+`````
+
+Arrow keys move between tabs, and a link to a heading inside a tab opens that
+tab. On paper every tab prints, under its title.
+
+## Columns
+
+*Live example: [Tabs and columns](showcase/Tabs%20and%20columns.md).*
+
+Regions of the Multi-Column Markdown plugin are laid out side by side, and
+stacked on small screens:
+
+````markdown
+--- start-multi-column: Intro
+```column-settings
+Number of Columns: 2
+Column Size: [30%, 70%]
+```
+Left column
+--- column-break ---
+Right column
+--- end-multi-column
+````
+
+`--- column-end ---` and the older `===` markers work too. A
+`> [!multi-column]` callout, as in the Modular CSS Layout snippet, puts the
+callouts it holds side by side.

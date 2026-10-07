@@ -11,6 +11,7 @@ compare.
 
 - [[Callouts and math]]: callouts, highlights, footnotes, LaTeX and Mermaid.
 - [[Diagrams]]: D2, Typst, sheet music and a mind map.
+- [[Tabs and columns]]: tabs and columns from plugins.
 - [[A slide deck]]: a Marp deck. Press ▶ Present.
 - [[Flashcards]]: Spaced Repetition cards and a practice mode.
 - [[Locked part]]: a passage only readers with the password can open (it's `datme`).

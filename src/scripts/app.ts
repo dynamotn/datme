@@ -13,6 +13,7 @@ import { setupShare } from "./share"
 import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
+import { revealHash } from "./tabs"
 
 const root = document.documentElement
 
@@ -290,4 +291,9 @@ document.addEventListener("astro:page-load", () => {
   syncToggles()
   renderDiagrams()
   void renderMermaid()
+  if (document.querySelector(".tab-panel[hidden]") && location.hash) revealHash()
+})
+
+window.addEventListener("hashchange", () => {
+  if (document.querySelector(".tab-panel[hidden]")) revealHash()
 })

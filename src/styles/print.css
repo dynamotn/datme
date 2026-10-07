@@ -167,6 +167,19 @@
   .present-button {
     display: none !important;
   }
+  /* Every tab prints, under its title. */
+  .prose .tab-list {
+    display: none !important;
+  }
+  .prose .tab-panel[hidden] {
+    display: block !important;
+  }
+  .prose .tab-panel::before {
+    content: attr(data-title);
+    display: block;
+    margin-bottom: 0.4em;
+    font-weight: 700;
+  }
   /* A mind map prints as its outline. */
   .prose figure.markmap svg {
     display: none !important;
