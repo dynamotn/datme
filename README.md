@@ -1,239 +1,148 @@
-<p align="center"><img src="src/assets/datme.svg" width="120" alt=""></p>
+<p align="center">
+  <img src="src/assets/datme.svg" width="128" alt="">
+</p>
 
-# datme
+<h1 align="center">datme</h1>
 
-*Đất mẹ*, mother soil: the ground where the seeds of what you know take root
-and grow.
+<p align="center">
+  <em>Đất mẹ</em>, mother soil: the ground where the seeds of what you know take root and grow.
+</p>
 
-Publish an Obsidian vault as a digital garden: every note is an index card
-pinned on a notebook wall, with backlinks, a graph, full-text search and
-optional multilingual notes. Long-form folders can keep a quiet serif blog look. Built with Astro; runs on [Bun](https://bun.sh) or Node 23.6+.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dynamotn/datme"><img alt="npm" src="https://img.shields.io/npm/v/@dynamotn/datme?color=2d6a4f&label=npm"></a>
+  <a href="LICENSE"><img alt="License: CC BY-SA 4.0" src="https://img.shields.io/badge/license-CC%20BY--SA%204.0-b5532c"></a>
+  <img alt="Runs on Bun or Node 23.6+" src="https://img.shields.io/badge/runs%20on-Bun%20%7C%20Node%2023.6%2B-4f8f5b">
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#what-grows-in-it">Features</a> ·
+  <a href="docs/README.md">Documentation</a>
+</p>
+
+---
+
+**datme turns an Obsidian vault into a digital garden.** Every note becomes an
+index card pinned on a notebook wall, linked to everything around it by
+backlinks, a living graph and full-text search. Point it at your vault and it
+reads what you wrote the way Obsidian does: wikilinks, embeds, callouts,
+Dataview queries, canvases, Excalidraw drawings, Marp decks. You don't have to
+export anything or change a line.
+
+```bash
+bunx @dynamotn/datme dev ~/MyVault
+```
+
+## Why datme
+
+🌱 **Your vault, as it is.** No export step, no second copy of your notes. datme
+understands Obsidian's syntax and the plugins people actually use, and renders
+them at build time.
+
+🔒 **Private by default.** Only notes that say `publish: true` leave the vault.
+Everything else stays home, and so do the parts you lock with a password or
+schedule for later.
+
+🧭 **Made for wandering.** Readers can follow backlinks, open linked notes side
+by side, hover a link to preview it, replay how the garden grew on the graph,
+or jump to a random note.
+
+⚡ **Fast, static, yours.** The output is plain HTML that any host can serve.
+Builds are incremental (a 300-note vault rebuilds in about 2.5 s), pages work
+offline, and one command sets up deployment to GitHub, GitLab, Netlify or
+Cloudflare.
 
 ## Quick start
 
 ```bash
-bunx @dynamotn/datme dev ~/MyVault                 # live preview at http://localhost:4321
-bunx @dynamotn/datme build ~/MyVault --out ./site  # static site, ready for any host
-npx @dynamotn/datme build ~/MyVault                # the same with Node 23.6+
+# 1. Write a commented datme.yaml into your vault (optional, every key has a default)
+bunx @dynamotn/datme init ~/MyVault
+
+# 2. Mark the notes to share with `publish: true` in their frontmatter, then preview
+bunx @dynamotn/datme dev ~/MyVault          # http://localhost:4321, reloads as you write
+
+# 3. Publish on every push
+bunx @dynamotn/datme deploy github ~/MyVault   # or gitlab, netlify, cloudflare
 ```
 
-Only notes with `publish: true` in their frontmatter are published, so nothing
-private leaks by default. Run `bunx @dynamotn/datme init ~/MyVault` to write a commented
-`datme.yaml` into the vault and adjust it.
+`npx` works just as well with Node 23.6+. Install it globally with
+`npm i -g @dynamotn/datme` and the command is simply `datme`.
+[Getting started](docs/getting-started.md) walks through the rest.
 
-## Commands
+## What grows in it
 
-Installed globally (`npm i -g @dynamotn/datme`) the command is simply `datme`.
+### Obsidian, faithfully
 
-| Command | What it does |
+`[[wikilinks]]` and `![[embeds]]` of notes, headings, blocks, images and PDFs ·
+callouts that fold · `==highlights==` · `%%comments%%` · tags · LaTeX ·
+Mermaid · footnotes as margin sidenotes · BibTeX citations · line breaks kept
+for poems.
+
+### The plugins you rely on
+
+| In your vault | On the site |
 | --- | --- |
-| `datme dev [vault]` | Live preview; reloads when a note changes. `--port`, `--host` |
-| `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is only replaced if datme created it. |
-| `datme preview [vault]` | Builds, then serves the result |
-| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases and invalid frontmatter; exits 1 on errors. `--verbose` also lists links to unpublished notes and scheduled notes; `--external` also checks that links to other websites still answer (404, 410 and unreachable hosts are reported); the next builds point those dead links at their Internet Archive copy (`archiveDeadLinks: false` to keep them). |
-| `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push: `github` (Pages), `gitlab` (Pages), `netlify` or `cloudflare` (Pages, through GitHub Actions). Goes at the root of the vault's git repository, never overwrites a file, and keeps the build cache between runs. `--branch` picks the branch (default: the current one). |
-| `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or with `--format html` into one self-contained page to print as PDF. Chapters follow the folder tree, links between them stay links, images are packed in; protected notes are left out. `--out`, `--lang` |
-| `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
+| **Dataview**, **Tasks** and `query` blocks | Run at build time, over published notes only |
+| **Canvas** and **Bases** | Pannable canvas pages; base views as tables, cards and lists |
+| **Excalidraw** | Drawn from the scene itself, hand-drawn lines and all, no export needed |
+| **Marp Slides** | Slide decks with your themes, and a ▶ Present button for full screen |
+| **Kanban** | Boards with their lanes side by side |
+| **Charts** | Chart.js charts in the site's colours, with the data as a table too |
+| **Spaced Repetition** | Flashcards, clozes and a practice mode that remembers progress |
 
-The vault defaults to `$DATME_VAULT`, then the current directory. `--site <url>`
-(or `$DATME_SITE_URL`) overrides the public URL, handy for preview deploys.
-`build` prints a one-line summary of the problems `check` would report;
-`--strict` makes `check` and `build` fail on warnings too, for CI.
-`--drafts` (dev, build, preview) also builds drafts and scheduled notes, marked as such and kept out of search engines, for preview deploys.
+### Made to be read
 
-Builds are incremental: rendered notes and social cards are cached and reused
-while their content, the config and datme stay the same (a 300-note vault goes
-from about 23 s to 2.5 s). Notes that embed others or run queries are always
-rendered again, and protected notes are never cached. The cache lives in
-datme's `.datme/cache`; `$DATME_CACHE` moves it (handy for CI caches), an
-empty value turns it off, and `--fresh` starts from scratch.
+Notebook or quiet serif blog look, per folder · light and dark themes · reading
+progress and time left · a reader menu for larger text, a legible font or high
+contrast · links to an exact passage · lightbox for images and drawings ·
+print stylesheet · right-to-left languages.
 
-## Configuration: `datme.yaml`
+### Made to be explored
 
-The file lives at the root of the vault, so the site settings travel with the
-notes. Every key is optional.
+Search with folder, type and tag filters (`Ctrl K`) · a global graph coloured by
+folder or type, with a time slider (`Ctrl G`) · stacked pages · related notes
+and unlinked mentions · a glossary that links the first mention of each term ·
+series · timeline, map and garden statistics · RSS for every folder and tag.
 
-```yaml
-site:
-  title: My Garden            # or one value per language: { en-US: …, vi-VN: … }
-  tagline: Notes in progress
-  url: https://notes.example.com   # enables the sitemap, absolute links and JSON-LD
-  author: Me
-  logo: 🌿                     # defaults to the first letter of the title
-  me: [https://mastodon.social/@me]   # rel="me" links, e.g. to verify the site on Mastodon
-  fediverse: "@me@mastodon.social"    # credited when a note is shared on Mastodon
+### Private where it matters
 
-languages: [en-US]            # the first is served at /, others under /<lang>/
-publish: explicit             # or `all`: everything except `publish: false`
-home: index.md                # note rendered as the home page
-ignore: [Archive, Journal]    # added to .obsidian, .trash, templates, private
+Whole notes or single passages encrypted with a password (AES-GCM, unlocked in
+the browser) · drafts and scheduled notes · unlisted notes · only the assets a
+published note uses get copied.
 
-conventions:
-  typePrefix: type/           # tags like type/book become chips on the note
-  blogTags: [type/blog, blog] # listed as posts on the home page
-  mapTags: [type/moc, moc]    # listed as maps of content
-  flashcardTags: [flashcards] # decks: Q::A, Q:::A and ?-separated cards flip open
-  timelineTags: [timeline, type/event]  # events dated by `date` on /timeline
+### Ready for the open web
 
-stages:                       # top-level folders shown as note maturity
-  Inbox: fleeting             # presets: fleeting, literature, atomic,
-  Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
+Multilingual notes in one file · permalinks and redirects for old URLs · social
+cards · JSON-LD · sitemap · `llms.txt` · webmentions and comments · an
+installable offline app · dead links pointed at the Internet Archive · one-file
+EPUB or printable export of any folder.
 
-nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats
-  - note: About me            # a note, found like a wikilink (aliases work)
-    label: About
-  - url: /cv.pdf
-    label: CV
+## Documentation
 
-appearance:
-  style: notebook             # index cards on dotted paper; or `classic`
-  classic: [Writing]          # folders whose notes use the other style
+| | |
+| --- | --- |
+| [Getting started](docs/getting-started.md) | From a vault to a site online, step by step |
+| [Writing notes](docs/writing.md) | Obsidian syntax, frontmatter, citations, series, languages |
+| [Plugins](docs/plugins.md) | Dataview, Tasks, Canvas, Bases, Excalidraw, Marp, Kanban, Charts, flashcards |
+| [Privacy](docs/privacy.md) | What gets published, drafts, schedules, passwords and locked parts |
+| [The reader's side](docs/reading.md) | Search, graph, shortcuts, reading preferences, offline |
+| [Configuration](docs/configuration.md) | Every key of `datme.yaml` |
+| [Command line](docs/cli.md) | `dev`, `build`, `check`, `deploy`, `export` and their flags |
+| [Deploying](docs/deploying.md) | GitHub, GitLab, Netlify, Cloudflare or any static host |
+| [Extending](docs/extending.md) | Your own CSS, remark/rehype plugins, and hacking on datme |
 
-footer:
-  GitHub: https://github.com/me
-poweredBy: true               # the "grown with datme" line under the footer; false hides it
-
-analytics:                    # google { id }, plausible { host? }, umami { id, host }, goatcounter { id }
-  provider: plausible
-comments:                     # giscus { repo, repoId, category, categoryId } or commento { host? }
-  provider: giscus
-  repo: me/garden
-  repoId: R_xxx
-  category: Comments
-  categoryId: DIC_xxx
-webmentions: {}               # receive mentions via webmention.io ({ domain } defaults to
-                              # the host of site.url) and list likes, reposts and replies under notes
-cname: true                   # write CNAME with the host of site.url
-redirects: true               # write _redirects (Netlify, Cloudflare) with 301s for aliases and old URLs
-images:                       # PNG/JPEG/WebP/AVIF get their size and resized WebP copies
-  optimize: true              # (srcset), so phones never download the full picture
-  widths: [480, 960, 1600]
-  quality: 80
-  placeholders: true          # a tiny blurred copy shows while each image loads
-search: { engine: minisearch } # or pagefind: indexes the built pages, loads only what a query needs
-bibliography: refs.bib        # BibTeX file(s) for [@key] citations
-map:                          # tiles of /map (OpenStreetMap by default)
-  tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
-headers: { csp: false }       # _headers: safe defaults and caching; csp: true adds a CSP derived
-                              # from the features in use (inline scripts allowed by hash)
-llms: true                    # /llms.txt and a .md copy of every public note (without comments)
-offline: true                 # installable app; pages a reader opened stay readable offline
-ogImages: true                # social cards for the home page and notes without a banner
-stackedPages: true            # a header button to open linked notes side by side
-theme:
-  accent: "#7c3aed"           # or { light: …, dark: … }
-  fonts: { heading: Fraunces, body: Literata }   # Google Fonts families
-  css: datme.css              # stylesheet in the vault, loaded after datme's own
-related:                      # under each note: notes sharing tags or links,
-  count: 5                    # and notes naming it without a link
-  mentions: true
-lineBreaks:                   # keep single line breaks, as Obsidian does (poems, lyrics)
-  types: [composition]        # also: all: true, folders: [Poems]; frontmatter lineBreaks overrides
-properties:
-  hide: [rating]              # frontmatter keys left out of the properties block
-types:                        # icons and labels for type/* tags (common ones built in)
-  recipe: { icon: 🍲, label: Recipe }
-
-strings:                      # override any UI text, per language
-  en-US: { blog: Essays }
-```
-
-An invalid file stops the build with the path of every problem, e.g.
-`languages: Too small: expected array to have >=1 items`.
-
-## Writing notes
-
-- Obsidian syntax works as in the app: `[[wikilinks]]`, `[[note#heading|alias]]`,
-  `![[embeds]]` of notes, sections, images and PDFs, callouts (`> [!tip]-` folds),
-  `==highlights==`, `%%comments%%`, `#tags`, `^block-ids`, LaTeX and Mermaid.
-- A paragraph that is only a pasted URL becomes a card with the page's title, description and image, read at build time and cached (`linkPreviews: false` to keep plain links; the image loads from the other site).
-- `![](https://…)` embeds YouTube (privacy-enhanced, `t=` kept), Vimeo, tweets from twitter.com or x.com, and remote video or audio files; `![Title|640](…)` sets the width, as in Obsidian. Printed pages show the link instead.
-- Flashcards in the Spaced Repetition plugin's syntax, in notes tagged `#flashcards`: `Question::Answer`, `Word:::Translation` (both ways), and multi-line cards with a `?` (or `??`) line between question and answer. They flip open on click, and `==highlights==` outside cards become clozes, hidden until clicked. A practice button runs the deck one card at a time, Leitner style (boxes of 0, 1, 3, 7 and 14 days), keeping progress in the reader's browser.
-- Code blocks: ```` ```ts title="app.ts" {2,4-5} ```` adds a file name and highlights lines; `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` work inline.
-- Frontmatter: `title`, `permalink` (a custom URL, or one per language; the old URL redirects), `aliases` (become redirects), `tags`, `created`, `updated`,
-  `banner` (+ `banner_x`, `banner_y`), `description`, `draft`, `unlisted`.
-- Scheduling: a note with `publish_date: 2025-01-31` in the future stays private until that day; the CI configs of `datme deploy` rebuild daily so it appears on time.
-- Footnotes (`[^1]`) move into the margin as sidenotes on wide screens in reader mode or with both sidebars hidden; footnotes holding lists or code stay at the end. Hovering a footnote number or a citation shows it in a popover.
-- Selecting text in a note offers a link to that passage (`#:~:text=`), which opens the page scrolled to it and highlighted.
-- Notes of 300 words or more show a reading progress bar and the minutes left.
-- The "Aa" menu lets readers enlarge the text, switch to a legible font (Atkinson Hyperlegible, fetched only then) or high contrast; their choice stays in their browser. Right-to-left languages (Arabic, Hebrew, Persian, Urdu…) get `dir="rtl"`.
-- Citations in Pandoc's syntax, `[@key]`, `[@key, p. 12]`, `[see @a; @b]` or `[-@key]`, are looked up in the `bibliography` files, shown author–date ("Luhmann 1992, p. 12") and listed in APA style at the end of the note. `datme check` reports keys missing from the bibliography.
-- Notes with `start` (and `end`) — `1927`, `1927-12` or `1927-12-08`, `-0500` for BCE — or tagged as events appear on `/timeline`; notes with `location: [lat, lng]` appear on `/map`. `/stats` shows the garden in numbers: notes, words, links, growth by month, folders and top tags. Each page exists only when some note qualifies; protected notes never do.
-- Series: notes sharing `series: Name` (or `series: "[[Intro note]]"`) show their part number, the list of parts and links to the previous and next part; `series_order` sets the order, otherwise the creation date does.
-- Notes with a `password` field are published encrypted (AES-GCM, PBKDF2 key; `encryption.iterations` in datme.yaml) and unlocked in the browser. Their content never reaches excerpts, search, feeds, embeds or the graph.
-- Part of a note can be locked the way language blocks are written: put it between `<!--lock:password-->` and `<!--lock:*-->` (one password per part). The part is taken out before anything else reads the note, so its text and links never reach search, excerpts, feeds, the graph or the markdown copies; the page carries it encrypted, with an unlock form in its place. A password that opens one part opens the others it fits, and is remembered for the session. Images in a locked part are still published as files.
-- Multilingual notes: wrap per-language parts in `<!--lang:vi-VN-->` …
-  `<!--lang:en-US-->` … `<!--lang:*-->`, and give `title` one value per language.
-  A note without a block for a language is shown in its original language there,
-  with a notice; `lang: en-US` in the frontmatter marks a note written in another
-  language than the default one.
-- Excalidraw drawings (`![[Plan.excalidraw]]`) need no export: datme reads the scene the plugin stores in `.excalidraw.md` (compressed or not) or a plain `.excalidraw` file and draws it at build time, with the same hand-drawn lines (roughjs, each shape's own seed), Excalifont text, arrows, freehand strokes and embedded images; in the dark theme it is inverted the way Excalidraw does it. If the plugin did export an SVG or PNG next to the drawing, that file is used instead, and with both `.light.svg` and `.dark.svg` it follows the site theme.
-  - As in the plugin, a shape's link and `[[wikilinks]]` or `[text](url)` in its text are clickable and count as links of the note (backlinks, graph); frames are drawn with their name and clip what they hold.
-  - Part of a drawing embeds like in the plugin: `![[Plan.excalidraw#^frame=id]]`, `#^clippedframe=id`, `#^group=id`, `#^area=id`, or a frame by name, `#Overview`.
-  - Embedded files are drawn too: images (cropped and rounded), other drawings, notes as cards linking to them, and LaTeX formulas.
-  - Frontmatter `excalidraw-export-transparent`, `excalidraw-export-dark` and `excalidraw-export-padding` are honoured; Nunito and Lilita One text loads its font only when used.
-  - A drawing opens large in the lightbox, and a plain link, `[[Plan.excalidraw]]`, leads to a page of its own with pan and zoom, like a canvas.
-- Search (`Ctrl K`) narrows by folder and note type, or by tag with `#tag`; the global graph (`Ctrl G`) filters by folder and tag, colours notes by folder or type, and its time slider replays how the garden grew. `j`/`k` move to the next or previous note of the explorer, and 🎲 (or `r`) opens a random one.
-- ```` ```dataview ```` blocks run at build time over the published notes only (never private ones): `LIST`/`TABLE [WITHOUT ID]`, `FROM` #tags, "folders" and [[links]] with `AND`/`OR`/`-`, `WHERE`, `FLATTEN`, `GROUP BY`, `SORT`, `LIMIT` and common functions, plus `TASK` queries over `- [ ]` items (with Tasks-plugin dates like 📅 and `[key:: value]` fields). DataviewJS shows a notice.
-- ```` ```tasks ```` blocks of the Tasks plugin list the published tasks that match: `done`/`not done`, `due|scheduled|starts|done before|after|on today|tomorrow|<date>`, `no|has due date`, `path|description|heading includes`, `tag includes`, `priority is`, `sort by`, `group by` and `limit`, each task linking to its note.
-- ```` ```query ```` blocks run Obsidian's search over the published notes — words, `"phrases"`, `OR`, `-word`, `( )`, `tag:`, `path:`, `file:`, `line:(…)`, ignoring case and accents — and list the matches with the line that matched.
-- ```` ```chart ```` blocks of the Charts plugin (`type: bar|line|pie|doughnut|radar|polarArea`, `labels`, `series`, `stacked`, `fill`, `tension`, `beginAtZero`, `indexAxis`, `width`) are drawn with Chart.js in the theme's colours, with the data as a table for screen readers and print.
-- Boards of the Kanban plugin (notes with `kanban-plugin` in their frontmatter) show their `##` lanes side by side, each list item a card.
-- Marp slide decks (notes with `marp: true`, as written for the Marp Slides plugin or Marp for VS Code) are rendered with Marp Core at build time: slides split by `---`, frontmatter directives (`theme`, `paginate`, `header`, `footer`, `size`, `backgroundColor`, …), comment directives such as `<!-- _class: lead -->`, `<style>` blocks and image keywords like `![bg left](…)` or `![w:300](…)` all work, and wikilinks keep working (`![[sky.png|bg left]]`, `![[logo.png|200]]` for `w:200`). Any vault CSS file with `/* @theme name */` is available as a theme. Speaker notes stay hidden, and a ▶ Present button shows the deck one slide at a time, full screen, moved with the arrow keys, space or a click.
-- Glossary: notes tagged `type/term` are terms. The first mention of a term (its title or an alias, as a whole word) in any other note links to it, with a preview on hover; links, code and headings are left alone. `glossary: false` turns it off.
-- Canvases (`.canvas`) linked or embedded from a published note become pannable, zoomable pages: text cards render markdown, file cards link to published notes or show images, and edges keep their labels and colours. With `publish: all`, every canvas is published.
-- Bases (`.base`) get a page with all their views and render in place when embedded (`![[Books.base#Reading]]`): `filters` with `and`/`or`/`not` and expressions like `file.hasTag("book") && rating >= 4`, `formulas`, `properties.displayName`, and `table`, `cards` or `list` views with `order`, `sort` and `limit`. Like Dataview, they only see published notes.
-- A note named after its folder (`Books/Books.md`) introduces that folder's page.
-- Every folder and tag has its own RSS feed (`/Books/index.xml`, `/tags/book/index.xml`), linked from its page; `/recent` lists the notes planted or watered lately.
-- Only assets referenced by a published note are copied to the site.
-
-## Deploying
-
-`datme build` writes a plain static site, so any static host works.
-`datme deploy github|gitlab|netlify|cloudflare` writes a pipeline into the
-vault's repository that runs the published package with
-`bunx @dynamotn/datme`. Hand-written equivalents live in `examples/deploy/`:
-
-- `gitlab-pages.yml`: copy to `.gitlab-ci.yml` to publish on GitLab Pages.
-- `github-pages.yml`: copy to `.github/workflows/` and choose "GitHub Actions"
-  as the Pages source.
-
-Both fetch the full git history so notes without `created`/`updated` get their
-real dates. Set `cname: true` when using a custom domain.
-
-## Your own syntax: `datme.config.mjs`
-
-A `datme.config.mjs` at the root of the vault adds remark and rehype plugins to
-the markdown pipeline, for syntax datme does not know. It runs as code during
-the build, so only use plugins you trust. Under Bun, `datme dev` picks up a
-changed file after a restart.
-
-```js
-import remarkEmoji from "remark-emoji"
-import rehypeExternalLinks from "rehype-external-links"
-
-export default {
-  remarkPlugins: [remarkEmoji],
-  rehypePlugins: [[rehypeExternalLinks, { rel: ["nofollow"] }]],
-}
-```
-
-## Development
+## Contributing
 
 ```bash
 bun install
 bun run dev ~/MyVault   # same as `datme dev`
 bun run check           # type-check
-bun run test            # unit tests, end-to-end builds of tests/fixtures and axe
-                        # accessibility checks; CI adds Lighthouse (lighthouserc.json)
+bun run test            # unit tests, end-to-end builds and accessibility checks
 ```
 
-- `src/site.config.ts` loads and validates `datme.yaml`.
-- `src/lib/vault.ts` scans the vault, resolves links, builds backlinks, tags and folders.
-- `src/lib/obsidian.ts` turns Obsidian syntax into standard markdown.
-- `src/lib/markdown.ts` is the unified pipeline: callouts, KaTeX, Shiki, transclusion.
-- `src/cli.ts` is the `datme` command; `src/scripts/` holds the browser code.
+Issues and merge requests are welcome on
+[GitLab](https://gitlab.com/dynamo-tools/datme). See [Extending](docs/extending.md#hacking-on-datme)
+for a map of the code.
 
 ## License
 
