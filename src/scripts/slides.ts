@@ -54,7 +54,7 @@ function start(host: HTMLElement) {
   host.requestFullscreen?.().catch(() => {})
 }
 
-document.addEventListener("keydown", (e) => {
+function onKey(e: KeyboardEvent) {
   if (!presenting || e.altKey || e.ctrlKey || e.metaKey) return
   const keys: Record<string, () => void> = {
     ArrowRight: () => show(presenting!.at + 1),
@@ -72,12 +72,19 @@ document.addEventListener("keydown", (e) => {
   if (!run) return
   e.preventDefault()
   run()
-})
+}
 
-// Leaving full screen with the browser's own controls ends the presentation too.
-document.addEventListener("fullscreenchange", () => {
-  if (presenting && document.fullscreenElement !== presenting.host) stop()
-})
+let listening = false
+/** Document listeners, added on first use so importing this module needs no DOM. */
+function listen() {
+  if (listening) return
+  listening = true
+  document.addEventListener("keydown", onKey)
+  // Leaving full screen with the browser's own controls ends the presentation too.
+  document.addEventListener("fullscreenchange", () => {
+    if (presenting && document.fullscreenElement !== presenting.host) stop()
+  })
+}
 
 /** Give the decks under `root` their slides, for copies of a page such as popovers. */
 export function attachDecks(root: ParentNode) {
@@ -85,6 +92,7 @@ export function attachDecks(root: ParentNode) {
 }
 
 export function setupSlides() {
+  listen()
   if (presenting && !presenting.host.isConnected) presenting = undefined
   document.querySelectorAll<HTMLElement>(".marp-deck").forEach((host) => {
     const root = attach(host)
