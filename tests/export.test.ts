@@ -58,6 +58,7 @@ describe("export", () => {
       "03_Atomic/Code",
       "03_Atomic/Queries",
       "03_Atomic/Zettelkasten",
+      "05_Structure/First walk",
       "06_Reference/Niklas Luhmann",
       "07_Project/Blog post",
       "07_Project/Poem",
@@ -72,10 +73,10 @@ describe("export", () => {
   test("EPUB: mimetype first, a chapter per note, links between chapters, images inside", async () => {
     const files = unzip(await exportEpub(".", "en-US"))
     expect([...files.keys()][0]).toBe("mimetype")
-    expect(files.get("OEBPS/content.opf")).toContain('<itemref idref="c6"/>')
-    expect(files.get("OEBPS/nav.xhtml")).toContain('<a href="chapter-5.xhtml">Niklas Luhmann (sociologist)</a>')
+    expect(files.get("OEBPS/content.opf")).toContain('<itemref idref="c7"/>')
+    expect(files.get("OEBPS/nav.xhtml")).toContain('<a href="chapter-6.xhtml">Niklas Luhmann (sociologist)</a>')
     const zettel = files.get("OEBPS/chapter-4.xhtml")!
-    expect(zettel).toContain('<a href="chapter-5.xhtml" class="internal" data-key="06_Reference/Niklas Luhmann">')
+    expect(zettel).toContain('<a href="chapter-6.xhtml" class="internal" data-key="06_Reference/Niklas Luhmann">')
     expect(zettel).toMatch(/<img src="images\/\d\.png"/)
     expect(zettel).not.toContain("srcset")
     expect([...files.keys()].some((f) => f.startsWith("OEBPS/images/"))).toBe(true)

@@ -15,6 +15,7 @@ import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
 import { revealHash } from "./tabs"
 import { setupMedia } from "./media"
+import { setupTrail, trailStep } from "./trail"
 
 const root = document.documentElement
 
@@ -85,6 +86,8 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "j") step(1)
     else if (e.key === "k") step(-1)
     else if (e.key === "r") void openRandom()
+    else if (e.key === "n") trailStep(1)
+    else if (e.key === "p") trailStep(-1)
   }
 })
 
@@ -284,6 +287,7 @@ document.addEventListener("astro:page-load", () => {
   setupPrefs()
   setupPractice()
   setupMedia()
+  setupTrail()
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())

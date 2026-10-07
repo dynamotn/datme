@@ -19,6 +19,7 @@ import Subscribe from "../Subscribe.astro"
 import Webmentions from "../Webmentions.astro"
 import DevProblems from "../DevProblems.astro"
 import SeriesBox from "../SeriesBox.astro"
+import TrailBar from "../TrailBar.astro"
 import DayNav from "../DayNav.astro"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 
@@ -85,6 +86,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
         <h1 class="note-title">{title}</h1>
       </NoteMeta>
     </header>
+    <TrailBar note={note} at="head" />
     <SeriesBox note={note} at="head" />
     {
       note.deck && !note.protected && (
@@ -131,6 +133,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
         </>
       )
     }
+    <TrailBar note={note} at="foot" />
     <SeriesBox note={note} at="foot" />
     <DayNav note={note} />
     {

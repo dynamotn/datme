@@ -9,6 +9,7 @@ is. Open one, then read its source on
 [GitLab](https://gitlab.com/dynamo-tools/datme/-/tree/main/docs/showcase) to
 compare.
 
+- [[A first walk]]: a guided trail through this showcase.
 - [[Callouts and math]]: callouts, highlights, footnotes, LaTeX and Mermaid.
 - [[Diagrams]]: D2, Typst, sheet music and a mind map.
 - [[Tabs and columns]]: tabs and columns from plugins.

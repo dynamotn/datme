@@ -18,6 +18,9 @@ This is what someone visiting your garden can do. None of it needs setting up.
   [closeness in meaning](#notes-close-in-meaning)) and unlinked mentions follow.
 - **Wandering:** `j` and `k` move to the next or previous note of the explorer,
   and 🎲 (or `r`) opens a random one.
+- **Trails:** a [trail](writing.md#trails) is a guided walk the author laid
+  out. Once started, every stop shows where you are on it; `n` and `p` go to
+  the next and previous stop.
 - **Overview pages:** `/tags`, `/archive` (with a yearly activity calendar),
   `/recent`, and `/timeline`, `/map`, `/stats` and `/calendar` (daily notes)
   when some note qualifies.

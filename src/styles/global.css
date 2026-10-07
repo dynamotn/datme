@@ -3685,3 +3685,78 @@ a.drawing-link tspan {
   cursor: pointer;
 }
 
+/* ---------- guided trails ---------- */
+.trail-start,
+.trail-bar {
+  margin: 0 0 24px;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  font-size: 14px;
+}
+.trail-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.trail-start-link {
+  font: 600 14px var(--font-ui);
+}
+.trail-label {
+  color: var(--muted);
+  font-family: var(--font-ui);
+}
+.trail-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+.trail-step {
+  font: 600 12px var(--font-ui);
+  color: var(--accent);
+}
+.trail-leave {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: 12px var(--font-ui);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.trail-says {
+  margin: 6px 0 0;
+  font-style: italic;
+  color: var(--ink-2);
+}
+.trail-dots {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.trail-dots li {
+  flex: 1;
+  max-width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+.trail-dots li.done,
+.trail-dots li.here {
+  background: var(--accent);
+}
+.trail-dots li.here {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.trail-bar[hidden],
+.trail-nav[hidden] {
+  display: none;
+}

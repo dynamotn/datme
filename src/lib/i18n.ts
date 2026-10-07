@@ -145,6 +145,13 @@ const builtin = {
     offlineLead: "Trang này chưa được lưu để đọc ngoại tuyến. Những ghi chú bạn đã mở vẫn đọc được.",
     transcript: "Bản ghi lời",
     captions: "Phụ đề",
+    trail: "Lối dạo",
+    trailSteps: "{n} bước",
+    trailStart: "Bắt đầu lối dạo",
+    trailPrev: "Bước trước",
+    trailNext: "Bước tiếp",
+    trailEnd: "Hết lối dạo",
+    trailLeave: "Rời lối dạo",
   },
   en: {
     search: "Search",
@@ -289,11 +296,18 @@ const builtin = {
     offlineLead: "This page was not saved for offline reading. The notes you already opened still work.",
     transcript: "Transcript",
     captions: "Captions",
+    trail: "Trail",
+    trailSteps: "{n} steps",
+    trailStart: "Start the trail",
+    trailPrev: "Previous step",
+    trailNext: "Next step",
+    trailEnd: "End of the trail",
+    trailLeave: "Leave the trail",
   },
 } satisfies Record<string, Record<string, string>>
 
 export type StringKey = keyof (typeof builtin)["en"]
-const COUNTED = ["readingTime", "words", "notesCount", "activityCount", "sharedLinks", "seriesPart"] as const
+const COUNTED = ["readingTime", "words", "notesCount", "activityCount", "sharedLinks", "seriesPart", "trailSteps"] as const
 type Counted = (typeof COUNTED)[number]
 export type Strings = Record<Exclude<StringKey, Counted>, string> & Record<Counted, (n: number) => string>
 

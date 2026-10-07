@@ -430,6 +430,22 @@ describe("static build", () => {
     expect(second).not.toContain("<dt>series")
   })
 
+  test("a trail starts from its note, and each stop shows where it stands, hidden until walked", () => {
+    const trail = read("05_Structure/First-walk/index.html")
+    expect(trail).toMatch(/<a class="internal trail-start-link" href="\/03_Atomic\/Zettelkasten\?trail=%2F05_Structure%2FFirst-walk" data-trail-start="\/05_Structure\/First-walk">/)
+    expect(trail).toContain("4 bước")
+    expect(trail).not.toContain("<dt>trail")
+    const stop = read("06_Reference/Niklas-Luhmann/index.html")
+    expect(stop).toMatch(/<aside class="trail-bar" data-trail="\/05_Structure\/First-walk" aria-label="Lối dạo: First walk" hidden>/)
+    expect(stop).toMatch(/<span class="trail-step">2 \/ 4<\/span>/)
+    expect(stop).toContain('<p class="trail-says">the man behind the slip box</p>')
+    expect(stop).toMatch(/<a class="internal series-prev" href="\/03_Atomic\/Zettelkasten\?trail=%2F05_Structure%2FFirst-walk" rel="prev" data-trail-prev>/)
+    expect(stop).toMatch(/<a class="internal series-next" href="\/03_Atomic\/Code\?trail=%2F05_Structure%2FFirst-walk" rel="next" data-trail-next>/)
+    // The last stop leads back to the trail; a note off the trail has no bar.
+    expect(read("poems/rain/index.html")).toMatch(/<a class="internal series-next" href="\/05_Structure\/First-walk" data-trail-end>/)
+    expect(read("08_Journal/Garden-plans/index.html")).not.toContain("trail-bar")
+  })
+
   test("the timeline and the map show the notes that have dates and places", () => {
     const tl = read("timeline/index.html")
     expect(tl).toMatch(/<span class="timeline-when">8 thg 12, 1927 – 6 thg 11, 1998<\/span><a class="internal" href="\/06_Reference\/Niklas-Luhmann">/)

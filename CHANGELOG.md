@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Audio and video embeds start at a time, as in `![[talk.mp4#t=1:30]]`, and a
   `.vtt` or `.srt` file of the same name becomes captions and a searchable
   transcript whose timestamps play from that line.
+- Guided trails: a note with `trail: true` lists stops through the garden,
+  each with the guide's words for it. Readers start the trail from its page, and
+  every stop then shows the step they are on, with `n` and `p` to move along.
 
 ### Changed
 

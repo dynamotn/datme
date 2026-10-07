@@ -12,6 +12,7 @@ describe("publishing rules", () => {
       "03_Atomic/Code",
       "03_Atomic/Queries",
       "03_Atomic/Zettelkasten",
+      "05_Structure/First walk",
       "06_Reference/Niklas Luhmann",
       "06_Reference/Secret",
       "07_Project/Blog post",

@@ -121,7 +121,7 @@ print stylesheet · right-to-left languages.
 ### Made to be explored
 
 Search with folder, type and tag filters (`Ctrl K`) · a global graph coloured by
-folder or type, with a time slider (`Ctrl G`) · stacked pages · related notes
+folder or type, with a time slider (`Ctrl G`) · guided trails · stacked pages · related notes
 and unlinked mentions · a glossary that links the first mention of each term ·
 related notes by meaning, computed locally · series · the history of each idea, from git · timeline, map and garden statistics · RSS for every folder and tag.
 

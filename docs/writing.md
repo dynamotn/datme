@@ -90,6 +90,29 @@ Notes that share `series: Name` (or `series: "[[Intro note]]"`) show their
 part number, the list of parts, and links to the previous and next part.
 `series_order` sets the order; otherwise the creation date does.
 
+## Trails
+
+A trail is a guided walk through the garden, across folders. Give a note
+`trail: true` and list its stops, one list item per stop, each starting with a
+link; the rest of the item is what you say about that stop:
+
+```markdown
+---
+trail: true
+---
+# First walk
+
+1. [[Zettelkasten]] — where it all starts
+2. [[Niklas Luhmann]]: the man behind the slip box
+3. [[Writing notes]]
+```
+
+The trail's page gets a **Start the trail** button. While a reader walks it,
+each stop shows the trail's name, the step (2 / 3), your words for it, and
+links to the previous and next stops; `n` and `p` move along. A note can be a
+stop on several trails, and readers can leave a trail at any time. Unlike a
+[series](#series), a trail leaves its notes untouched.
+
 ## Glossary
 
 Notes tagged `type/term` are terms. The first mention of a term (its title or

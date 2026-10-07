@@ -1,0 +1,81 @@
+---
+import type { Note } from "~/lib/vault"
+import { allTrails, trailsOf } from "~/lib/trails"
+import { t } from "~/lib/i18n"
+
+interface Props {
+  note: Note
+  /** head: the trail's name, the step and what the guide says; foot: the previous and next stops. */
+  at: "head" | "foot"
+}
+const { note, at } = Astro.props
+const s = t(note.lang)
+// Every trail the note is on is rendered hidden; the browser shows the one the reader is walking.
+const places = trailsOf(note)
+const own = at === "head" ? allTrails(note.lang).get(note.key) : undefined
+const onTrail = (url: string, trail: Note) => `${url}?trail=${encodeURIComponent(trail.url)}`
+---
+
+{
+  own && (
+    <div class="trail-start">
+      <span class="trail-label">
+        🥾 {s.trail} · {s.trailSteps(own.steps.length)}
+      </span>
+      <a class="internal trail-start-link" href={onTrail(own.steps[0].note.url, own.note)} data-trail-start={own.note.url}>
+        {s.trailStart} →
+      </a>
+    </div>
+  )
+}
+{
+  at === "head" &&
+    places.map(({ trail, index }) => (
+      <aside class="trail-bar" data-trail={trail.note.url} aria-label={`${s.trail}: ${trail.note.title}`} hidden>
+        <p class="trail-where">
+          <span class="trail-label">🥾 {s.trail}</span>{" "}
+          <a class="internal" href={trail.note.url}>
+            {trail.note.title}
+          </a>{" "}
+          <span class="trail-step">
+            {index + 1} / {trail.steps.length}
+          </span>
+          <button type="button" class="trail-leave" data-trail-leave>
+            {s.trailLeave}
+          </button>
+        </p>
+        {trail.steps[index].says && <p class="trail-says">{trail.steps[index].says}</p>}
+        <ol class="trail-dots" aria-hidden="true">
+          {trail.steps.map((_, i) => (
+            <li class:list={{ done: i < index, here: i === index }} />
+          ))}
+        </ol>
+      </aside>
+    ))
+}
+{
+  at === "foot" &&
+    places.map(({ trail, prev, next }) => (
+      <nav class="series-nav trail-nav" data-trail={trail.note.url} aria-label={`${s.trail}: ${trail.note.title}`} hidden>
+        {prev ? (
+          <a class="internal series-prev" href={onTrail(prev.url, trail.note)} rel="prev" data-trail-prev>
+            <small>← {s.trailPrev}</small>
+            {prev.title}
+          </a>
+        ) : (
+          <span />
+        )}
+        {next ? (
+          <a class="internal series-next" href={onTrail(next.url, trail.note)} rel="next" data-trail-next>
+            <small>{s.trailNext} →</small>
+            {next.title}
+          </a>
+        ) : (
+          <a class="internal series-next" href={trail.note.url} data-trail-end>
+            <small>{s.trailEnd} ✓</small>
+            {trail.note.title}
+          </a>
+        )}
+      </nav>
+    ))
+}
