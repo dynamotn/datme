@@ -7,6 +7,7 @@ import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
 import { setupWebmentions } from "./webmentions"
 import { setupLightbox } from "./lightbox"
+import { setupSlides } from "./slides"
 import { setupPractice, setupClozes } from "./practice"
 import { setupShare } from "./share"
 import { setupProgress } from "./progress"
@@ -265,6 +266,7 @@ async function unlock(form: HTMLFormElement, password: string, remember: boolean
   }
   setupCode()
   setupPopovers()
+  setupSlides()
   void renderMermaid()
   return true
 }
@@ -295,6 +297,7 @@ document.addEventListener("astro:page-load", () => {
   setupStack(() => {
     setupCode()
     setupPopovers()
+    setupSlides()
     void renderMermaid()
   })
   setupExplorer()
@@ -304,6 +307,7 @@ document.addEventListener("astro:page-load", () => {
   setupLocalGraph()
   setupTweets()
   setupLightbox()
+  setupSlides()
   setupClozes()
   setupShare()
   setupProgress()

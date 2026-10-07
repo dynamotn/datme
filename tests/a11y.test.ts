@@ -46,6 +46,7 @@ const PAGES = [
   "index.html",
   "03_Atomic/Zettelkasten/index.html",
   "07_Project/Blog-post/index.html",
+  "07_Project/Talk/index.html",
   "06_Reference/index.html",
   "tags/index.html",
   "tags/type/blog/index.html",

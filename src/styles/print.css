@@ -156,6 +156,9 @@
   .drawing-light {
     display: block !important;
   }
+  .present-button {
+    display: none !important;
+  }
 
   h1,
   h2,

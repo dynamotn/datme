@@ -9,6 +9,7 @@ import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
+import { isSlides, isTheme, slideDirectives } from "./slides"
 import { cite, parseBibtex, type BibEntry } from "./citations"
 import katex from "katex"
 import crypto from "node:crypto"
@@ -70,6 +71,8 @@ export interface Note {
   assets: string[]
   /** A flashcard deck: its cards and clozes can be practised. */
   deck: boolean
+  /** A Marp slide deck (`marp: true`): its global directives, from the frontmatter. */
+  slides?: Record<string, unknown>
   /** Built only because of `--drafts`: shown as a draft and kept out of search engines. */
   draft: boolean
   source: SourceNote
@@ -132,6 +135,8 @@ export interface Vault {
   folders: Record<Lang, Map<string, FolderNode>>
   /** Vault-relative paths of every asset referenced by a published note. */
   assets: Set<string>
+  /** CSS of the vault's Marp themes, for slide decks that name one. */
+  slideThemes: string[]
   resolveNote(target: string, fromDir: string): SourceNote | undefined
   resolveAsset(target: string, fromDir: string): string | undefined
 }
@@ -580,6 +585,7 @@ function buildVault(version: number): Vault {
       const filtered = filterLanguage(s.raw, lang)
       const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
       const board = isKanban(s.fm)
+      const slides = isSlides(s.fm)
       let body = deck ? flashcards(filtered, t(lang).showAnswer) : board ? kanban(filtered) : filtered
       if (body.includes("@")) {
         const cited = cite(body, bib, t(lang).references)
@@ -597,9 +603,17 @@ function buildVault(version: number): Vault {
         resolveAsset,
         drawDrawing,
         drawingPage: resolveDrawing,
+        slides,
       })
       pre.assets.forEach((a) => assets.add(a))
       pre.docs.forEach((d) => docRefs.add(d))
+      const directives = slides
+        ? slideDirectives(s.fm, (target) => {
+            const asset = resolveAsset(target, s.dir)
+            if (asset) assets.add(asset)
+            return asset && assetUrl(asset)
+          })
+        : undefined
       for (const p of pre.problems) linkProblem(relFile, p)
 
       const { typePrefix, blogTags, mapTags } = site.conventions
@@ -618,8 +632,12 @@ function buildVault(version: number): Vault {
         updated,
         banner,
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
-        // A board needs the width of the page.
-        cssclasses: [...toArray(s.fm.cssclasses ?? s.fm.cssclass), ...(board ? ["kanban-board"] : [])],
+        // A board or a deck needs the width of the page.
+        cssclasses: [
+          ...toArray(s.fm.cssclasses ?? s.fm.cssclass),
+          ...(board ? ["kanban-board"] : []),
+          ...(slides ? ["slide-deck"] : []),
+        ],
         description: typeof s.fm.description === "string" ? s.fm.description : undefined,
         stage: site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
         types,
@@ -642,6 +660,7 @@ function buildVault(version: number): Vault {
         links: pre.links,
         assets: [...new Set(pre.assets)],
         deck,
+        slides: directives,
         source: s,
       }
       notes[lang].push(note)
@@ -767,6 +786,14 @@ function buildVault(version: number): Vault {
     )
   }
 
+  // Marp themes are CSS files anywhere in the vault, read only when a deck may use one.
+  const slideThemes = Object.values(notes).some((ns) => ns.some((n) => n.slides))
+    ? found.files.filter((f) => /\.css$/i.test(f)).flatMap((f) => {
+        const css = fs.readFileSync(path.join(site.vault, f), "utf8")
+        return isTheme(css) ? [css] : []
+      })
+    : []
+
   return {
     version,
     problems,
@@ -780,6 +807,7 @@ function buildVault(version: number): Vault {
     trees,
     folders,
     assets,
+    slideThemes,
     resolveNote,
     resolveAsset,
   }

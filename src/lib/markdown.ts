@@ -33,6 +33,7 @@ import { linkPreview, previewCard } from "./link-preview"
 import { loadUserPlugins, type UserPlugins } from "./user-plugins"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
+import { renderSlides } from "./slides"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
 
 export interface Heading {
@@ -595,6 +596,7 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
             glossarySignature(note.lang),
             deadLinksStamp(),
             user.signature,
+            ...(note.slides ? [JSON.stringify(note.slides), ...getVault().slideThemes] : []),
             ...note.assets.map((a) => `${a}@${stamp(a)}`),
           ]
         : undefined
@@ -604,10 +606,18 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
       else {
         const out: Partial<Rendered> = {}
         const file = await processorFor(note.lang, stack, out, note.hardBreaks, user).process(note.md)
+        // A deck is drawn by Marp; the garden's rendering only gives its text, for search and cards.
+        const deck =
+          note.slides &&
+          renderSlides(note.md, note.slides, getVault().slideThemes, {
+            present: t(note.lang).present,
+            slides: t(note.lang).slides,
+          })
         parts = {
-          html: String(file),
-          h1: out.h1,
-          headings: out.headings ?? [],
+          html: deck ? deck.html : String(file),
+          // Slides have no page anchors to list, and their first heading is a slide, not the title.
+          h1: deck ? undefined : out.h1,
+          headings: deck ? [] : (out.headings ?? []),
           text: out.text ?? "",
           words: out.words ?? 0,
           description: out.description,

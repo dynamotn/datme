@@ -39,6 +39,8 @@ interface Ctx {
   drawDrawing?(target: string, fromDir: string, fragment?: string): DrawnDrawing | undefined
   /** The vault file of a drawing a note links to, which then gets a page of its own. */
   drawingPage?(target: string, fromDir: string): string | undefined
+  /** A Marp deck: comments are directives, and images stay markdown so `![bg](…)` keeps working. */
+  slides?: boolean
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -105,7 +107,10 @@ export function preprocess(
     .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
     .replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, (m) => mask(m))
     .replace(/%%[\s\S]*?%%/g, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
+  // A deck keeps its comments (directives, speaker notes) and styles, untouched by tags and highlights.
+  md = ctx.slides
+    ? md.replace(/<!--[\s\S]*?-->|<style\b[\s\S]*?<\/style>/gi, (m) => mask(m))
+    : md.replace(/<!--[\s\S]*?-->/g, "")
 
   const links: LinkRef[] = []
   const assets: string[] = []
@@ -131,6 +136,12 @@ export function preprocess(
   const embedAsset = (rel: string, alias: string | undefined): string => {
     assets.push(rel)
     const url = assetUrl(rel)
+    if (IMAGE.test(rel) && ctx.slides) {
+      // Marp reads sizes and backgrounds from the alt text: ![[a.png|300]] is ![w:300](a.png).
+      const size = alias?.match(/^(\d+)(?:x(\d+))?$/)
+      const alt = size ? `w:${size[1]}${size[2] ? ` h:${size[2]}` : ""}` : (alias ?? "")
+      return `![${alt}](${url})`
+    }
     if (IMAGE.test(rel)) {
       const size = alias?.match(/^(\d+)(?:x(\d+))?$/)
       const alt = size ? "" : (alias ?? "")

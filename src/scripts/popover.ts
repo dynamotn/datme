@@ -1,4 +1,5 @@
 import { samePath } from "./data"
+import { attachDecks } from "./slides"
 
 const pages = new Map<string, Promise<Document | null>>()
 
@@ -41,6 +42,7 @@ async function show(link: HTMLAnchorElement) {
       n.setAttribute("data-id", n.id)
       n.removeAttribute("id")
     })
+    attachDecks(prose)
     el.append(prose)
   }
   document.body.append(el)

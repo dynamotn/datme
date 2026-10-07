@@ -16,6 +16,7 @@ describe("publishing rules", () => {
       "06_Reference/Secret",
       "07_Project/Blog post",
       "07_Project/Poem",
+      "07_Project/Talk",
       "index",
     ])
   })
