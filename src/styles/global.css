@@ -3513,3 +3513,61 @@ a.drawing-link tspan {
   color: var(--muted);
   font-size: 13px;
 }
+
+/* ---------- diagrams: D2, Typst, sheet music, mind maps ---------- */
+.prose figure.diagram {
+  overflow-x: auto;
+  text-align: center;
+}
+.prose figure.diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+.prose figure.diagram-typst {
+  color: var(--ink);
+}
+.prose .diagram-missing pre {
+  margin-top: 0.4em;
+}
+.prose pre.abc[data-drawn] {
+  display: none;
+}
+.prose .abc-score {
+  color: var(--ink);
+  margin: 0 0 1.1em;
+}
+.prose figure.markmap {
+  position: relative;
+  height: 420px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+/* On the SVG itself: markmap sets its own colours there. */
+.prose figure.markmap svg {
+  --markmap-text-color: var(--ink);
+  --markmap-a-color: var(--accent);
+  --markmap-code-bg: var(--surface-2);
+  --markmap-code-color: var(--ink);
+  --markmap-circle-open-bg: var(--surface);
+  --markmap-font: 400 15px/20px var(--font-ui);
+  width: 100%;
+  height: 100%;
+}
+/* The outline stands in for the map until it is drawn, and for screen readers after. */
+.prose figure.markmap:not([data-drawn]) svg {
+  display: none;
+}
+.prose figure.markmap:not([data-drawn]) {
+  height: auto;
+  padding: 12px 16px;
+}
+.prose figure.markmap[data-drawn] .markmap-outline {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+

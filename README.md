@@ -108,6 +108,7 @@ for poems.
 | **Kanban** | Boards with their lanes side by side |
 | **Charts** | Chart.js charts in the site's colours, with the data as a table too |
 | **Spaced Repetition** | Flashcards, clozes and a practice mode that remembers progress |
+| **D2**, **Typst**, **ABC** and mind maps | Diagrams, formulas, sheet music and mind maps drawn from text |
 
 ### Made to be read
 

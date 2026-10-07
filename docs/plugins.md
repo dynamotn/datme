@@ -21,6 +21,7 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Iconize](#iconize)
 - [Leaflet](#leaflet)
 - [Spaced Repetition flashcards](#spaced-repetition-flashcards)
+- [Diagrams: D2, Typst, sheet music and mind maps](#diagrams-d2-typst-sheet-music-and-mind-maps)
 
 ## Dataview
 
@@ -244,3 +245,30 @@ Cards flip open on click. `==Highlights==` outside cards become clozes, hidden
 until clicked. A practice button runs the deck one card at a time, Leitner
 style (boxes of 0, 1, 3, 7 and 14 days), and keeps progress in the reader's
 browser.
+
+## Diagrams: D2, Typst, sheet music and mind maps
+
+*Live example: [Diagrams](showcase/Diagrams.md).*
+
+Besides Mermaid, these fenced blocks become pictures:
+
+| Block | Drawn | With |
+| --- | --- | --- |
+| ```` ```d2 ```` | at build time, as SVG | [D2](https://d2lang.com) |
+| ```` ```typst ```` | at build time, as SVG | [Typst](https://typst.app) |
+| ```` ```abc ```` | in the browser | [abcjs](https://www.abcjs.net), sheet music in ABC notation |
+| ```` ```markmap ```` or ```` ```mindmap ```` | in the browser | [markmap](https://markmap.js.org), from headings and lists |
+
+D2 diagrams follow the light and dark themes. Typst blocks are typeset on a
+page that fits their content, in the text colour of the page; `#image("…")`
+and other file reads look in the vault. A mind map is also given as an
+outline, for screen readers and print.
+
+D2 and Typst are optional dependencies, installed next to datme only when a
+vault uses them. Without them, the block shows its source with a notice:
+
+```bash
+bun add @terrastruct/d2                          # ```d2
+bun add @myriaddreamin/typst-ts-node-compiler    # ```typst
+```
+

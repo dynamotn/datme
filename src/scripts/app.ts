@@ -203,6 +203,12 @@ function setupTweets() {
   document.head.append(s)
 }
 
+/** Sheet music and mind maps: their libraries load only on pages that have one. */
+function renderDiagrams() {
+  if (document.querySelector(".prose pre.abc")) void import("./diagrams").then((m) => m.renderAbc())
+  if (document.querySelector(".prose figure.markmap")) void import("./diagrams").then((m) => m.renderMarkmaps())
+}
+
 function setupLocalGraph() {
   document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach((c) => void mountGraph(c, "local"))
 }
@@ -236,6 +242,7 @@ document.addEventListener("astro:before-swap", () => {
   teardownGraphs()
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.teardownCharts())
   if (document.querySelector("[data-map]")) void import("./map").then((m) => m.unmountMap())
+  if (document.querySelector(".prose figure.markmap")) void import("./diagrams").then((m) => m.teardownMarkmaps())
   hidePopover()
   root.classList.remove("nav-open")
 })
@@ -245,6 +252,7 @@ function revealed() {
   setupCode()
   setupPopovers()
   setupSlides()
+  renderDiagrams()
   void renderMermaid()
 }
 
@@ -256,6 +264,7 @@ document.addEventListener("astro:page-load", () => {
     setupCode()
     setupPopovers()
     setupSlides()
+    renderDiagrams()
     void renderMermaid()
   })
   setupExplorer()
@@ -279,5 +288,6 @@ document.addEventListener("astro:page-load", () => {
   if (mapEls.length) void import("./map").then((m) => mapEls.forEach((el) => m.mountMap(el)))
   void setupWebmentions()
   syncToggles()
+  renderDiagrams()
   void renderMermaid()
 })

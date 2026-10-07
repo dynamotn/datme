@@ -167,6 +167,21 @@
   .present-button {
     display: none !important;
   }
+  /* A mind map prints as its outline. */
+  .prose figure.markmap svg {
+    display: none !important;
+  }
+  .prose figure.markmap {
+    height: auto !important;
+    border: none;
+  }
+  .prose figure.markmap .markmap-outline {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    clip: auto !important;
+    white-space: normal !important;
+  }
 
   h1,
   h2,

@@ -60,6 +60,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@shikijs/rehype": "^4.4.3",
     "@shikijs/transformers": "^4.4.3",
+    "abcjs": "^6.7.1",
     "astro": "^7.3.5",
     "chart.js": "^4",
     "d3-force": "^3.0.0",
@@ -72,6 +73,8 @@
     "leaflet": "^1.9.4",
     "lucide-static": "^1.52.0",
     "lz-string": "^1.5.0",
+    "markmap-lib": "^0.18.12",
+    "markmap-view": "^0.18.12",
     "mermaid": "^12.0.0",
     "minisearch": "^7.2.0",
     "pagefind": "^1",
@@ -95,6 +98,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
+    "@terrastruct/d2": "^0.1.33",
     "@types/bun": "^1.4.2",
     "@types/d3-force": "^3.0.10",
     "@types/hast": "^3.0.5",
@@ -107,10 +112,18 @@
     "typescript": "6"
   },
   "peerDependencies": {
-    "@huggingface/transformers": "^4.3.1"
+    "@huggingface/transformers": "^4.3.1",
+    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
+    "@terrastruct/d2": "^0.1.33"
   },
   "peerDependenciesMeta": {
     "@huggingface/transformers": {
+      "optional": true
+    },
+    "@myriaddreamin/typst-ts-node-compiler": {
+      "optional": true
+    },
+    "@terrastruct/d2": {
       "optional": true
     }
   },

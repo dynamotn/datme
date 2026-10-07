@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Coloured highlights from Obsidian 1.14: a colour emoji right after the
   opening `==` (🔴 🟠 🟡 🟢 🔵 🟣) paints the highlight in that colour, in both
   themes, the notebook look and print, and the emoji itself is not shown.
+- D2 diagrams and Typst documents are drawn into SVG at build time, in both
+  themes, ABC sheet music is typeset with abcjs, and ```` ```markmap ```` or
+  ```` ```mindmap ```` blocks become interactive mind maps. D2 and Typst are
+  optional dependencies, installed only by vaults that use them.
 
 ### Changed
 

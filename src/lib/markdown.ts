@@ -36,6 +36,7 @@ import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { renderSlides } from "./slides"
 import { renderLeafletBlock } from "./leaflet-block"
+import { remarkDiagrams, READS_FILES } from "./diagrams"
 import { encrypt } from "./encrypt"
 import { lockedPlaceholder } from "./locked"
 import { inlineAssets } from "./inline-assets"
@@ -560,6 +561,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(remarkMath)
     .use(remarkCallouts)
     .use(remarkDataview, { lang, key: stack[stack.length - 1] })
+    .use(remarkDiagrams)
     .use(remarkMermaid)
     .use(user.remark)
     .use(remarkRehype, { allowDangerousHtml: true })
@@ -600,7 +602,12 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
  * protected note, whose content must not reach the disk unencrypted.
  */
 function isSelfContained(note: Note): boolean {
-  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet|contributionGraph|base)/im.test(note.md) && !/`=\s/.test(note.md)
+  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet|contributionGraph|base)/im.test(note.md) && !/`=\s/.test(note.md) && !typstReadsFiles(note.md)
+}
+
+/** Whether a ```typst block of the note reads files of the vault, which can change without the note. */
+function typstReadsFiles(md: string): boolean {
+  return [...md.matchAll(/^\s*(`{3,}|~{3,})\s*typst\b[^\n]*\n([\s\S]*?)^\s*\1/gim)].some((m) => READS_FILES.test(m[2]))
 }
 
 type Parts = Omit<Rendered, "description"> & { description?: string }
