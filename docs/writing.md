@@ -66,7 +66,8 @@ gets a copy button; neither ends up in what you copy.
 ## Footnotes and citations
 
 Footnotes (`[^1]`) move into the margin as sidenotes on wide screens, in
-reader mode or when both sidebars are hidden. Footnotes that hold lists or code
+reader mode or when both sidebars are hidden, each tied to its line by a
+dashed leader. Footnotes that hold lists or code
 stay at the end. Hovering a footnote number shows it in a popover.
 
 Citations use Pandoc's syntax: `[@key]`, `[@key, p. 12]`, `[see @a; @b]`, or

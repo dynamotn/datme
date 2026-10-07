@@ -1841,6 +1841,9 @@ dialog.graph-modal {
 /* ---------- sidenotes: footnotes in the margin when there is room ---------- */
 .prose .sidenote {
   display: none;
+  /* Its width, and its distance from the edge of the text. */
+  --sidenote-w: 15rem;
+  --sidenote-gap: 2.5rem;
 }
 @media (min-width: 1360px) {
   :root.reader .prose .sidenote,
@@ -1849,12 +1852,33 @@ dialog.graph-modal {
     float: right;
     clear: right;
     position: relative;
-    width: 15rem;
-    margin: 0.3em -17.5rem 0.8em 0;
+    width: var(--sidenote-w);
+    margin: 0.3em calc(-1 * (var(--sidenote-w) + var(--sidenote-gap))) 0.8em 0;
     font-family: var(--font-ui);
     font-size: 0.78rem;
     line-height: 1.45;
     color: var(--ink-2);
+  }
+  /* A dashed leader from the edge of the text to the note, level with its first line. */
+  :root.reader .prose .sidenote::before,
+  :root.hide-left.hide-right .prose .sidenote::before {
+    content: "";
+    position: absolute;
+    top: 0.725em;
+    right: calc(100% + 0.4rem);
+    width: calc(var(--sidenote-gap) - 0.6rem);
+    border-top: 1px dashed var(--muted);
+    opacity: 0.6;
+  }
+  /* Pointing at a reference or its note picks out the pair. */
+  .prose sup:hover + .sidenote,
+  .prose .sidenote:hover {
+    color: var(--ink);
+  }
+  .prose sup:hover + .sidenote::before,
+  .prose .sidenote:hover::before {
+    border-top-color: var(--accent);
+    opacity: 1;
   }
   :root.reader .prose:has(.sidenote) .footnotes,
   :root.hide-left.hide-right .prose:has(.sidenote) .footnotes {

@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code blocks of more than one line show a column of line numbers, left out
   when the code is copied. Blocks without a language get it too.
 
+### Changed
+
+- Sidenotes in the margin are tied to their line by a dashed leader, and
+  pointing at a footnote number picks out its note. In the notebook look they
+  stand clear of the page's frame instead of touching it.
+
 ### Fixed
 
 - Links inside headings are readable again: they keep the heading's colour

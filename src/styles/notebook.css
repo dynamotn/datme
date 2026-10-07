@@ -727,6 +727,11 @@
   background: var(--yellow);
   color: #050505;
 }
+/* Sidenotes stand clear of the page's frame, past its padding and border. */
+[data-look="notebook"] .prose .sidenote {
+  --sidenote-w: 13rem;
+  --sidenote-gap: calc(36px + var(--bw) + 1.75rem);
+}
 /* Links in headings: the heading's ink with a thick underline, inverted on hover. */
 [data-look="notebook"] .prose :is(h1, h2, h3, h4, h5) a:not(.heading-anchor, .tag-link) {
   color: inherit;
