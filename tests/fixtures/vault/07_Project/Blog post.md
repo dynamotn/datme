@@ -32,6 +32,11 @@ Open the [[Sketch.excalidraw|whole sketch]].
 The hidden treasure is next to [[Queries]].
 
 ![[diagram.png]]
+![[vault-key.png]]
+<!--lock:@testers-->
+Only testers read this group secret.
+<!--lock:@nobody-->
+Nobody may read this unset group secret.
 <!--lock:*-->
 
 After the door.

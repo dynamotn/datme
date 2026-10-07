@@ -61,6 +61,8 @@ jobs:
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
       DATME_CACHE: .datme-cache
+      # Group passwords (<!--lock:@friends-->) come from repository secrets:
+      # DATME_LOCK_FRIENDS: \${{ secrets.DATME_LOCK_FRIENDS }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -161,6 +163,8 @@ jobs:
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
       DATME_CACHE: .datme-cache
+      # Group passwords (<!--lock:@friends-->) come from repository secrets:
+      # DATME_LOCK_FRIENDS: \${{ secrets.DATME_LOCK_FRIENDS }}
     steps:
       - uses: actions/checkout@v4
         with:

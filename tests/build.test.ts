@@ -67,9 +67,13 @@ describe("static build", () => {
       const p = path.join(out, file)
       if (!fs.statSync(p).isFile() || !/\.(html|json|xml|md|txt|js)$/.test(file)) continue
       const text = fs.readFileSync(p, "utf8")
-      expect(text.includes("hidden treasure") || text.includes("open sesame") ? file : "").toBe("")
+      const leaked = ["hidden treasure", "open sesame", "group secret", "tester-password", "Club content"].some((x) => text.includes(x))
+      expect(leaked ? file : "").toBe("")
     }
     expect(read("07_Project/Blog-post/index.html")).toContain('<form class="locked" data-payload=')
+    for (const file of ["vault-key.png", "secret-map.png"]) expect(exists(`assets/_assets/images/${file}`)).toBe(false)
+    expect(exists("assets/_assets/images/diagram.png")).toBe(true)
+    expect(exists("06_Reference/Club/index.html")).toBe(false)
   })
 
   test("protected notes ship only ciphertext that the password opens", async () => {

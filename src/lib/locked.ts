@@ -51,6 +51,21 @@ export function splitLocked(src: string): { md: string; parts: LockedPart[] } {
   return { md: out.join("\n"), parts }
 }
 
+/** The environment variable holding the password of a group: `@close-friends` → DATME_LOCK_CLOSE_FRIENDS. */
+export const groupVariable = (group: string) => `DATME_LOCK_${group.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_|_$/g, "")}`
+
+/**
+ * The password a note or part names: written out, or `@group` for one kept in
+ * the environment (a CI secret), so it never sits in the vault. A group whose
+ * variable is unset or empty gives no password, and its content is left out.
+ */
+export function resolvePassword(spec: string, env: NodeJS.ProcessEnv = process.env): { password?: string; variable?: string } {
+  const group = spec.match(/^@([\w-]+)$/)?.[1]
+  if (!group) return { password: spec }
+  const variable = groupVariable(group)
+  return { password: env[variable] || undefined, variable }
+}
+
 /** A note with its locked parts left out entirely, for copies that cannot be locked. */
 export function withoutLocked(src: string): string {
   return splitLocked(src).md.replace(/<div class="locked-part" data-lock="\d+"><\/div>/g, "")

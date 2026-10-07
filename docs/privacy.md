@@ -14,7 +14,7 @@ public", and gives you several ways to share a little more.
 - **Folders:** `.obsidian`, `.trash`, `templates`, `private`, and anything
   listed in `ignore`, are never read.
 - **Files:** only the images and attachments a published note uses are copied
-  to the site.
+  to the site; those that only encrypted content uses travel inside it.
 - **Canvases and bases:** only those a published note links to or embeds, or
   all of them with `publish: all`.
 - **Queries:** Dataview, Tasks, `query` blocks and Bases only see published
@@ -77,16 +77,45 @@ And this is public again.
   and links never reach search, excerpts, feeds, the graph, the build cache or
   the markdown copies.
 - The page carries the part encrypted, with an unlock form in its place.
-- A note can hold several parts, each with its own password. A password that
+- A note can hold several parts, each with its own password or
+  [group](#group-passwords-kept-out-of-the-vault). A password that
   opens one part also opens the others it fits.
 - Once a password works, it's remembered for the rest of the session.
 - Locked parts work inside language blocks. Keep them at the top level of the
   note, not inside a callout or a list.
 
-> [!note]
-> Images inside a locked part are still published as files; only the text is
-> encrypted. Passwords live in the vault as plain text, like the `password`
-> field. The vault stays private; only the built site is public.
+## Group passwords, kept out of the vault
+
+A password written in a note sits in the vault as plain text. To keep it out,
+name a group instead, with `@`:
+
+```markdown
+<!--lock:@friends-->
+For friends only.
+<!--lock:*-->
+```
+
+or `password: "@friends"` in the frontmatter of a whole note. The password is
+read from the environment variable `DATME_LOCK_FRIENDS` (`@close-friends` reads
+`DATME_LOCK_CLOSE_FRIENDS`), so it can live in your CI secrets:
+
+- **GitLab:** add a masked CI/CD variable; pipelines see it as is.
+- **GitHub and Cloudflare:** add a repository secret, then uncomment the
+  `DATME_LOCK_…` line that `datme deploy` wrote into the workflow's `env`.
+- **Netlify:** add an environment variable to the site.
+
+Changing a group's password is then one setting, for every note that uses it.
+
+If the variable is missing, nothing is published in the clear: a locked part
+is left out of the page, a protected note is not published at all, and
+`datme check` reports it as an error.
+
+## Files of encrypted content
+
+An image, a PDF or any other file that only a locked part or a protected note
+uses is never published as a file of its own. It travels inside the ciphertext,
+as a data URI, and appears once the reader unlocks. A file that a public note
+also uses stays an ordinary file, since it is public anyway.
 
 ## What the site loads from elsewhere
 

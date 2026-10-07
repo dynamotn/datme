@@ -9,7 +9,7 @@ import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
-import { splitLocked, type LockedPart } from "./locked"
+import { resolvePassword, splitLocked } from "./locked"
 import { isSlides, isTheme, slideDirectives } from "./slides"
 import { cite, parseBibtex, type BibEntry } from "./citations"
 import katex from "katex"
@@ -72,8 +72,11 @@ export interface Note {
   assets: string[]
   /** A flashcard deck: its cards and clozes can be practised. */
   deck: boolean
-  /** Parts written between <!--lock:password--> and <!--lock:*-->, preprocessed; published encrypted. */
-  lockedParts: LockedPart[]
+  /**
+   * Parts written between <!--lock:password--> and <!--lock:*-->, preprocessed;
+   * published encrypted. A part without a password (its group is not set) is left out.
+   */
+  lockedParts: { password?: string; md: string }[]
   /** A Marp slide deck (`marp: true`): its global directives, from the frontmatter. */
   slides?: Record<string, unknown>
   /** Built only because of `--drafts`: shown as a draft and kept out of search engines. */
@@ -330,8 +333,14 @@ function buildVault(version: number): Vault {
       continue
     }
     // The password never stays in the frontmatter, so nothing can render it by accident.
-    const password = fm.password != null && fm.password !== "" ? String(fm.password) : undefined
+    const spec = fm.password != null && fm.password !== "" ? String(fm.password) : undefined
     delete fm.password
+    const { password, variable } = spec ? resolvePassword(spec) : {}
+    // A note whose group password is missing would otherwise go out in the clear.
+    if (spec && !password) {
+      report("error", rel, `password ${spec} needs the ${variable} environment variable; the note is not published`)
+      continue
+    }
     const key = rel.replace(MD_EXT, "")
     const isHome = rel.toLowerCase() === site.home.toLowerCase()
     if (isHome) {
@@ -609,14 +618,21 @@ function buildVault(version: number): Vault {
         drawingPage: resolveDrawing,
         slides,
       })
-      pre.assets.forEach((a) => assets.add(a))
+      // A protected note's files travel inside its ciphertext, so they are not published on their own.
+      if (!s.password) pre.assets.forEach((a) => assets.add(a))
       pre.docs.forEach((d) => docRefs.add(d))
-      // A locked part's links stay out of backlinks and the graph; its images are still needed to show it.
+      // A locked part's links stay out of backlinks and the graph, and its files out of the site.
       const lockedParts = parts.map((part) => {
+        const { password, variable } = resolvePassword(part.password)
+        if (!password) {
+          if (lang === site.defaultLang) {
+            report("error", relFile, `locked part ${part.password} needs the ${variable} environment variable; it is left out`)
+          }
+          return { md: "" }
+        }
         const p = preprocess(part.md, { lang, dir: s.dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing })
-        p.assets.forEach((a) => assets.add(a))
         for (const problem of p.problems) linkProblem(relFile, problem)
-        return { password: part.password, md: p.md }
+        return { password, md: p.md }
       })
       const directives = slides
         ? slideDirectives(s.fm, (target) => {

@@ -36,6 +36,7 @@ import { readCache, writeCache } from "./render-cache"
 import { renderSlides } from "./slides"
 import { encrypt } from "./encrypt"
 import { lockedPlaceholder } from "./locked"
+import { inlineAssets } from "./inline-assets"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
 
 export interface Heading {
@@ -641,11 +642,22 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
 
 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
 
+/** Files that only encrypted content uses, put inside it as data URIs. */
+function sealedFiles(html: string): string {
+  const published = getVault().assets
+  return inlineAssets(html, site.vault, (rel) => published.has(rel)).html
+}
+
 /** Put each locked part in place of its placeholder, encrypted with its password behind a small unlock form. */
 async function sealParts(html: string, note: Note, user: UserPlugins): Promise<string> {
   const s = t(note.lang)
   for (const [i, part] of note.lockedParts.entries()) {
-    const inner = String(await processorFor(note.lang, [note.key], {}, note.hardBreaks, user).process(part.md))
+    if (!part.password) {
+      html = html.replace(lockedPlaceholder(i), "")
+      continue
+    }
+    const rendered = String(await processorFor(note.lang, [note.key], {}, note.hardBreaks, user).process(part.md))
+    const inner = sealedFiles(rendered)
     const payload = await encrypt(inner, part.password, site.encryption.iterations)
     const form =
       `<div class="locked-part" data-lock="${i}">` +
@@ -677,7 +689,8 @@ export async function renderMarkdown(md: string, lang: Lang, key: string): Promi
   return String(await processorFor(lang, [key], {}, false, await plugins()).process(md))
 }
 
-/** The full rendering of a protected note, only for encrypting its page. */
-export function renderSecret(note: Note): Promise<Rendered> {
-  return renderFull(note, [note.key])
+/** The full rendering of a protected note, only for encrypting its page; its own files are inside. */
+export async function renderSecret(note: Note): Promise<Rendered> {
+  const r = await renderFull(note, [note.key])
+  return { ...r, html: sealedFiles(r.html) }
 }
