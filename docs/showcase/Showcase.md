@@ -15,6 +15,7 @@ compare.
 - [[Locked part]]: a passage only readers with the password can open (it's `datme`).
 - [[Project board]]: a Kanban board.
 - [[Reading list]]: Dataview queries and a chart.
+- [[Places]]: a Leaflet map with markers.
 - [[Sketch.excalidraw|A sketch]]: an Excalidraw drawing, drawn from its scene.
 - [[Garden map.canvas|A canvas]]: an Obsidian canvas, with pan and zoom.
 

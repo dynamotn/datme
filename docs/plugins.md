@@ -17,6 +17,7 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Kanban](#kanban)
 - [Charts](#charts)
 - [Iconize](#iconize)
+- [Leaflet](#leaflet)
 - [Spaced Repetition flashcards](#spaced-repetition-flashcards)
 
 ## Dataview
@@ -168,6 +169,24 @@ frontmatter (with `iconColor`):
 - Lucide icons (`LiBookOpen`), Iconize's built-in pack, are drawn inline.
 - Icons of other packs (`FaHouse`, `RiLeafLine`…) come from the SVGs Iconize
   downloaded into `.obsidian/icons`.
+
+## Leaflet
+
+*Live example: [Places](showcase/Places.md).*
+
+```` ```leaflet ```` blocks of the Leaflet plugin become maps of the real world,
+drawn with the tiles of `map.tiles` (OpenStreetMap by default):
+
+- `lat` and `long` (or `coordinates: [lat, long]`), `defaultZoom` and
+  `height` set the view.
+- `marker: type, lat, long, [[Note]], description` adds a marker linking to a
+  note, or to a web page. Every marker type is drawn as the same dot.
+- `markerFile: [[Note]]` and `markerTag: #travel` place notes by their
+  `location` frontmatter, as on [`/map`](writing.md#timeline-map-and-stats).
+- Without a view, the map fits its markers.
+
+The places are also listed under the map, for readers without scripts and for
+print. Image maps and GeoJSON overlays need Obsidian.
 
 ## Spaced Repetition flashcards
 
