@@ -727,7 +727,7 @@ export function evaluateInline(src: string, engine: Engine): Value {
   const p = new Parser(tokenize(src))
   const e = p.expr()
   const rest = p.peek()
-  if (rest) throw new DataviewError(`unexpected "${"v" in rest ? rest.v : rest.t}"`)
+  if (rest) throw new DataviewError(`unexpected "${rest.v}"`)
   return evaluate(e, engine.current ? rowOf(engine.current, engine) : {}, engine)
 }
 
