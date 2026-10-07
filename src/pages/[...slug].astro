@@ -13,6 +13,7 @@ import ArchivePage from "~/components/pages/ArchivePage.astro"
 import RecentPage from "~/components/pages/RecentPage.astro"
 import TimelinePage from "~/components/pages/TimelinePage.astro"
 import CalendarPage from "~/components/pages/CalendarPage.astro"
+import HistoryPage from "~/components/pages/HistoryPage.astro"
 import MapPage from "~/components/pages/MapPage.astro"
 import StatsPage from "~/components/pages/StatsPage.astro"
 
@@ -35,5 +36,6 @@ const { page } = Astro.props as { page: Page }
 {page.kind === "recent" && <RecentPage lang={page.lang} />}
 {page.kind === "timeline" && <TimelinePage lang={page.lang} />}
 {page.kind === "calendar" && <CalendarPage lang={page.lang} />}
+{page.kind === "history" && <HistoryPage note={page.note} />}
 {page.kind === "map" && <MapPage lang={page.lang} />}
 {page.kind === "stats" && <StatsPage lang={page.lang} />}

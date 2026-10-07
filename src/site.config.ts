@@ -152,6 +152,11 @@ const schema = z
         z.object({ provider: z.literal("commento"), host: z.string().default("https://cdn.commento.io") }).strict(),
       ])
       .optional(),
+    /**
+     * A page per note showing how it grew, from its git history. Off by default:
+     * it publishes what was later deleted. `history: false` in a note opts it out.
+     */
+    history: z.boolean().default(false),
     /** A form to get new notes by email, under notes and on folder and tag pages. */
     subscribe: z
       .discriminatedUnion("provider", [
@@ -392,6 +397,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     analytics: c.analytics,
     comments: c.comments,
     subscribe: c.subscribe,
+    history: c.history,
     cname: c.cname,
     redirects: c.redirects,
     headers: c.headers,

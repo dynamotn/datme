@@ -45,6 +45,7 @@ export const HIDDEN_PROPERTIES = [
   "excalidraw-plugin",
   "icon",
   "iconColor",
+  "history",
 ]
 
 const WIKILINK = /^\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]$/

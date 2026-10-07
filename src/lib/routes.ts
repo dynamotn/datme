@@ -5,6 +5,7 @@ import { sluggify, slugToUrl } from "./slug"
 import { docSlug } from "./obsidian"
 import { hasMap, hasTimeline } from "./places"
 import { hasJournal } from "./journal"
+import { hasHistory } from "./history"
 
 export type Page =
   | { kind: "home"; lang: Lang }
@@ -21,6 +22,7 @@ export type Page =
   | { kind: "map"; lang: Lang }
   | { kind: "stats"; lang: Lang }
   | { kind: "calendar"; lang: Lang }
+  | { kind: "history"; lang: Lang; note: Note }
 
 /**
  * Every page of the site by slug. First claim wins: notes, then folders, tags,
@@ -50,6 +52,9 @@ export function routes(): Map<string, Page> {
     if (hasMap(lang)) claim(prefix + "map", { kind: "map", lang })
     if (hasJournal(lang)) claim(prefix + "calendar", { kind: "calendar", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
+    if (site.history) {
+      for (const note of vault.notes[lang]) if (!note.isHome && hasHistory(note)) claim(note.slug + "/history", { kind: "history", lang, note })
+    }
     for (const doc of vault.docs.values()) claim(prefix + docSlug(doc.rel), { kind: doc.kind, lang, doc })
     for (const note of vault.notes[lang]) {
       if (note.formerUrl) {

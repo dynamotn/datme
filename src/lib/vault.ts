@@ -174,7 +174,7 @@ function walk(dir: string, out: { md: string[]; files: string[] }, rel = ""): vo
 
 const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
-function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string; error?: string } {
+export function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string; error?: string } {
   const m = src.match(FM_RE)
   if (!m) return { fm: {}, body: src }
   let fm: Record<string, unknown> = {}

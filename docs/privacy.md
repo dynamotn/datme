@@ -117,6 +117,23 @@ uses is never published as a file of its own. It travels inside the ciphertext,
 as a data URI, and appears once the reader unlocks. A file that a public note
 also uses stays an ordinary file, since it is public anyway.
 
+## Note history
+
+`history: true` gives each note that changed a page showing how it grew: every
+version, newest first, with the paragraphs added and removed. It's built from
+the vault's git history, and it's off by default for a reason: **it publishes
+what you later deleted.**
+
+What it never shows is what readers could not have seen on that day:
+
+- Versions where the note was private, a draft or protected are skipped.
+- Each version is cleaned like the note itself: no frontmatter, comments,
+  locked parts or other languages.
+- Commit messages are never shown, only dates.
+
+A note opts out with `history: false` in its frontmatter. History pages are
+kept out of search engines.
+
 ## What the site loads from elsewhere
 
 A built site is self-contained, apart from what you opt into:

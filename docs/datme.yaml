@@ -19,3 +19,4 @@ nav:
 footer:
   GitLab: https://gitlab.com/dynamo-tools/datme
   npm: https://www.npmjs.com/package/@dynamotn/datme
+history: true

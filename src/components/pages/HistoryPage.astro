@@ -1,0 +1,71 @@
+---
+import type { Note } from "~/lib/vault"
+import { getVault } from "~/lib/vault"
+import { t, formatDate } from "~/lib/i18n"
+import { diffParagraphs, historyUrl, noteVersions, hasHistory } from "~/lib/history"
+import Base from "~/layouts/Base.astro"
+import Breadcrumbs from "../Breadcrumbs.astro"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const s = t(note.lang)
+const versions = noteVersions(note)
+// Newest first, each with what changed since the one before; the first one was planted whole.
+const steps = versions
+  .map((v, i) => ({ date: v.date, changes: diffParagraphs(i ? versions[i - 1].text : "", v.text), first: i === 0 }))
+  .reverse()
+const vault = getVault()
+const alternates = Object.fromEntries(
+  Object.entries(vault.byKey)
+    .map(([l, m]) => [l, m.get(note.key)] as const)
+    .filter(([, n]) => n && hasHistory(n))
+    .map(([l, n]) => [l, historyUrl(n!)]),
+)
+// Runs of unchanged paragraphs fold into one line.
+type Block = { kind: "add" | "del"; text: string } | { kind: "same"; count: number }
+const blocks = (changes: ReturnType<typeof diffParagraphs>): Block[] => {
+  const out: Block[] = []
+  for (const c of changes) {
+    const last = out.at(-1)
+    if (c.kind === "same") {
+      if (last?.kind === "same") last.count++
+      else out.push({ kind: "same", count: 1 })
+    } else out.push({ kind: c.kind, text: c.text })
+  }
+  return out
+}
+---
+
+<Base lang={note.lang} title={`${s.history}: ${note.title}`} description={s.historyLead} alternates={alternates} noindex>
+  <div class="note history-page">
+    <Breadcrumbs lang={note.lang} dir={note.dir} />
+    <header class="page-head">
+      <span class="chip type">🌱 {s.history}</span>
+      <h1><a class="internal" href={note.url}>{note.title}</a></h1>
+      <p>{s.historyLead}</p>
+    </header>
+    <ol class="history">
+      {
+        steps.map((step) => (
+          <li class="history-step">
+            <h2>
+              <time datetime={step.date.toISOString()}>{formatDate(step.date, note.lang)}</time>
+              {step.first && <span class="chip">{s.planted}</span>}
+            </h2>
+            {blocks(step.changes).map((b) =>
+              b.kind === "same" ? (
+                <p class="history-same">⋯ {s.unchanged.replace("{n}", String(b.count))}</p>
+              ) : b.kind === "add" ? (
+                <ins class="history-add">{b.text}</ins>
+              ) : (
+                <del class="history-del">{b.text}</del>
+              ),
+            )}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Base>

@@ -88,6 +88,7 @@ footer:
   GitHub: https://github.com/me
 poweredBy: true               # the "grown with datme" line under the footer; false hides it
 
+history: false                # a page per note showing how it grew, from git (see Privacy)
 related:                      # under each note: notes sharing tags or links,
   count: 5                    # and notes naming it without a link
   mentions: true

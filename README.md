@@ -121,7 +121,7 @@ print stylesheet · right-to-left languages.
 Search with folder, type and tag filters (`Ctrl K`) · a global graph coloured by
 folder or type, with a time slider (`Ctrl G`) · stacked pages · related notes
 and unlinked mentions · a glossary that links the first mention of each term ·
-series · timeline, map and garden statistics · RSS for every folder and tag.
+series · the history of each idea, from git · timeline, map and garden statistics · RSS for every folder and tag.
 
 ### Private where it matters
 

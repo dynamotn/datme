@@ -39,6 +39,12 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - **Right-to-left:** Arabic, Hebrew, Persian, Urdu and other right-to-left
   languages get `dir="rtl"`.
 
+## Watching an idea grow
+
+With `history: true`, a note that changed links to its history page: each
+version, newest first, with the paragraphs added and removed since the one
+before. See [Privacy](privacy.md#note-history) before turning it on.
+
 ## Sharing
 
 - Select text in a note to copy a link to that exact passage (`#:~:text=`). The
