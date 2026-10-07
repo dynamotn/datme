@@ -17,6 +17,7 @@ import Filters from "~/components/Filters.astro"
 import DevProblems from "~/components/DevProblems.astro"
 import { serializeLd, type JsonLd } from "~/lib/jsonld"
 import datmeLogo from "~/assets/datme.svg?raw"
+import { userHead } from "~/lib/markdown"
 
 interface Props {
   lang: Lang
@@ -74,6 +75,8 @@ const datmeMark = datmeLogo
   .replace(/>\s+</g, "><")
   .trim().replace(/role="img" aria-label="datme"/, 'class="datme-mark" aria-hidden="true" focusable="false"')
 const credit = s.poweredBy.split("{datme}")
+// Tags the vault's datme.config.mjs adds to every page.
+const pluginHead = await userHead()
 ---
 
 <!doctype html>
@@ -165,6 +168,7 @@ const credit = s.poweredBy.split("{datme}")
     </script>
     <ClientRouter fallback="swap" />
     <Analytics />
+    {pluginHead && <Fragment set:html={pluginHead} />}
   </head>
   <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}

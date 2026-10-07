@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Guided trails: a note with `trail: true` lists stops through the garden,
   each with the guide's words for it. Readers start the trail from its page, and
   every stop then shows the step they are on, with `n` and `p` to move along.
+- `datme.config.mjs` can render fenced code blocks of its own with
+  `codeBlocks`, add tags to the `<head>` of every page with `head`, and take
+  `plugins` that bundle these with remark and rehype plugins, so a package can
+  ship a whole feature.
 
 ### Changed
 

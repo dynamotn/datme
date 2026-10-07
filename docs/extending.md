@@ -15,21 +15,66 @@ title: "Extending"
 
 ## Your own syntax: `datme.config.mjs`
 
-A `datme.config.mjs` at the root of the vault adds remark and rehype plugins to
-the markdown pipeline, for syntax datme doesn't know:
+A `datme.config.mjs` at the root of the vault extends the build:
 
 ```js
 import remarkEmoji from "remark-emoji"
 import rehypeExternalLinks from "rehype-external-links"
 
 export default {
+  // Plugins of the markdown pipeline, for syntax datme doesn't know.
   remarkPlugins: [remarkEmoji],
   rehypePlugins: [[rehypeExternalLinks, { rel: ["nofollow"] }]],
+
+  // Fenced blocks of your own: ```greet becomes the HTML returned.
+  codeBlocks: {
+    greet: (source, { lang, key, meta }) => `<p class="greeting">Hello, ${source}</p>`,
+  },
+
+  // Tags added to the <head> of every page.
+  head: ['<link rel="me" href="https://example.social/@me">'],
 }
 ```
 
-The file runs as code during the build, so only use plugins you trust. Under
-Bun, `datme dev` picks up a changed file after a restart.
+- **`codeBlocks`** maps a fence language to a function that gets the block's
+  text and `{ lang, key, meta }`: the page's language, the note's key in the
+  vault, and the rest of the fence line (`loud` in ```` ```greet loud ````).
+  It returns HTML, or a promise of it. Your renderers run before datme's own,
+  so they can also replace a built-in block. An error is shown in place of
+  the block.
+- **`head`** is a string or a list of strings of HTML.
+
+### Plugins
+
+The same fields can come bundled, so a package can ship a whole feature.
+A plugin is an object with a `name` and any of the fields above; list them in
+`plugins`:
+
+```js
+// datme-plugin-kroki/index.js
+export default function kroki({ server = "https://kroki.io" } = {}) {
+  const block = (type) => async (source) => {
+    const res = await fetch(`${server}/${type}/svg`, { method: "POST", body: source })
+    if (!res.ok) throw new Error(await res.text())
+    return `<figure class="diagram">${await res.text()}</figure>`
+  }
+  return { name: "kroki", codeBlocks: { plantuml: block("plantuml"), graphviz: block("graphviz") } }
+}
+```
+
+```js
+// datme.config.mjs
+import kroki from "datme-plugin-kroki"
+export default { plugins: [kroki()] }
+```
+
+Two plugins can't render the same block language; datme says which one
+clashes.
+
+The file runs as code during the build, so only use plugins you trust. Pages
+are cached by the file and the code of its plugins; a renderer should give the
+same HTML for the same block. Under Bun, `datme dev` picks up a changed file
+after a restart.
 
 ## Hacking on datme
 

@@ -189,6 +189,30 @@ const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, k
   })
 }
 
+/** Fenced blocks of a language the vault's plugins render; they go first, so they can replace datme's own. */
+const remarkUserCodeBlocks: Plugin<[{ user: UserPlugins; lang: Lang; key: string }], MdRoot> =
+  ({ user, lang, key }) =>
+  async (tree) => {
+    if (!user.codeBlocks.size) return
+    const jobs: Promise<void>[] = []
+    visit(tree, "code", (node: Code, index, parent) => {
+      const render = node.lang && user.codeBlocks.get(node.lang.toLowerCase())
+      if (!render || !parent || index == null) return
+      jobs.push(
+        (async () => {
+          let value: string
+          try {
+            value = String(await render(node.value, { lang, key, meta: node.meta ?? "" }))
+          } catch (e) {
+            value = `<p class="dataview dv-error">${escapeAttr(node.lang!)}: ${escapeAttr((e as Error).message)}</p>`
+          }
+          parent.children[parent.children.indexOf(node)] = { type: "html", value }
+        })(),
+      )
+    })
+    await Promise.all(jobs)
+  }
+
 /** ```mermaid blocks are rendered in the browser; other blocks keep their meta string. */
 const remarkMermaid: Plugin<[], MdRoot> = () => (tree) => {
   visit(tree, "code", (node: Code, index, parent) => {
@@ -560,6 +584,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(remarkHardBreaks, { enabled: hardBreaks })
     .use(remarkMath)
     .use(remarkCallouts)
+    .use(remarkUserCodeBlocks, { user, lang, key: stack[stack.length - 1] })
     .use(remarkDataview, { lang, key: stack[stack.length - 1] })
     .use(remarkDiagrams)
     .use(remarkMermaid)
@@ -712,6 +737,11 @@ const SEALED: Rendered = { html: "", headings: [], text: "", words: 0, descripti
  */
 export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
   return note.protected ? Promise.resolve(SEALED) : renderFull(note, stack)
+}
+
+/** HTML the vault's plugins add to the `<head>` of every page. */
+export async function userHead(): Promise<string> {
+  return (await plugins()).head
 }
 
 /** Render already preprocessed markdown that is not a note, such as a canvas card. */
