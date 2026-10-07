@@ -37,6 +37,8 @@ interface Ctx {
   resolveAsset(target: string, fromDir: string): string | undefined
   /** Draw an Excalidraw drawing that has no exported image; undefined when it cannot be found or read. */
   drawDrawing?(target: string, fromDir: string, fragment?: string): DrawnDrawing | undefined
+  /** The vault file of a drawing a note links to, which then gets a page of its own. */
+  drawingPage?(target: string, fromDir: string): string | undefined
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -47,9 +49,14 @@ const EXCALIDRAW = /\.excalidraw(\.md)?$/i
 /** Obsidian Canvas and Bases files, published as pages of their own. */
 export const DOC = /\.(canvas|base)$/i
 
-/** URL of the page of a published canvas or base, which keeps its extension. */
+/** Slug of a canvas, base or drawing page: its path with its extension, a drawing's `.md` dropped. */
+export function docSlug(rel: string): string {
+  return sluggify(rel.replace(/\.excalidraw\.md$/i, ".excalidraw"))
+}
+
+/** URL of the page of a published canvas, base or drawing, which keeps its extension. */
 export function docUrl(rel: string, lang: Lang): string {
-  return slugToUrl(langPrefix(lang) + sluggify(rel))
+  return slugToUrl(langPrefix(lang) + docSlug(rel))
 }
 
 /** Placeholder for a note URL; replaced once every slug of the language is known. */
@@ -177,6 +184,14 @@ export function preprocess(
     const fragment = hash >= 0 ? target.slice(hash + 1).trim() : ""
 
     if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias, fragment, lineOf(offset))
+    // A link (not an embed) to a drawing opens it on a page of its own, as the plugin opens it in a tab.
+    if (!bang && EXCALIDRAW.test(file) && ctx.drawingPage) {
+      const rel = ctx.drawingPage(file, ctx.dir)
+      const name = escapeAttr(alias ?? file.split("/").pop()!.replace(EXCALIDRAW, ""))
+      if (!rel) return broken("link", file, `<span class="broken-link">${name}</span>`)
+      docs.push(rel)
+      return `<a href="${docUrl(rel, ctx.lang)}" class="internal doc">${name}</a>`
+    }
     if (DOC.test(file)) {
       const rel = ctx.resolveAsset(file, ctx.dir)
       const name = escapeAttr(alias ?? file.split("/").pop()!.replace(DOC, ""))

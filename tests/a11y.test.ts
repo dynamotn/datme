@@ -55,6 +55,7 @@ const PAGES = [
   "map/index.html",
   "stats/index.html",
   "06_Reference/Secret/index.html",
+  "_assets/draw/Sketch.excalidraw/index.html",
 ]
 
 describe("accessibility", () => {

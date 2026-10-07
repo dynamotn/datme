@@ -185,6 +185,16 @@ describe("in the vault", () => {
     expect(md).not.toMatch(/<span class="drawing generated"><svg[\s\S]*?Luhmann[\s\S]*?<\/svg>/)
   })
 
+  test("a link to a drawing opens it on a page of its own", () => {
+    expect(md).toContain('<a href="/_assets/draw/Sketch.excalidraw" class="internal doc">whole sketch</a>')
+    const doc = vault.docs.get("_assets/draw/Sketch.excalidraw.md")!
+    expect(doc.kind).toBe("drawing")
+    expect(doc.name).toBe("Sketch")
+    expect(doc.texts["vi-VN"].svg).toMatch(/^<svg /)
+    expect(doc.texts["vi-VN"].svg).toContain('<a href="/03_Atomic/Zettelkasten" class="drawing-link"')
+    expect(doc.texts["en-US"].svg).toContain('<a href="/en-US/03_Atomic/Zettelkasten-method" class="drawing-link"')
+  })
+
   test("drawings with exports still use them", () => {
     const zettel = vault.byKey["vi-VN"].get("03_Atomic/Zettelkasten")!.md
     expect(zettel).toContain('<img class="drawing-light" src="/assets/_assets/draw/Flow.excalidraw.light.svg"')

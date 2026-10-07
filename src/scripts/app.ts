@@ -309,7 +309,7 @@ document.addEventListener("astro:page-load", () => {
   setupProgress()
   setupPrefs()
   setupPractice()
-  if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadExcalifont())
+  if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())
   // Leaflet is only fetched on the map page.

@@ -1,0 +1,39 @@
+---
+import { site, type Lang } from "~/site.config"
+import type { Doc } from "~/lib/vault"
+import { docUrl } from "~/lib/obsidian"
+import { t } from "~/lib/i18n"
+import Base from "~/layouts/Base.astro"
+import Breadcrumbs from "../Breadcrumbs.astro"
+import Icon from "../Icon.astro"
+
+interface Props {
+  lang: Lang
+  doc: Doc
+}
+const { lang, doc } = Astro.props
+const s = t(lang)
+const svg = (doc.texts[lang]?.svg ?? "").replace(/role="(img|group)"/, `role="$1" aria-label="${doc.name.replace(/"/g, "&quot;")}"`)
+// The board takes the drawing's own size; the viewport scales it to fit.
+const width = Number(svg.match(/\bwidth="(\d+)"/)?.[1] ?? 800)
+const height = Number(svg.match(/\bheight="(\d+)"/)?.[1] ?? 600)
+const alternates = Object.fromEntries(site.langs.map((l) => [l, docUrl(doc.rel, l)]))
+---
+
+<Base lang={lang} title={doc.name} alternates={alternates}>
+  <div class="note is-wide canvas-page drawing-page">
+    <Breadcrumbs lang={lang} dir={doc.dir} />
+    <header class="page-head">
+      <span class="chip type">✏️ Excalidraw</span>
+      <h1>{doc.name}</h1>
+    </header>
+    <div class="canvas-viewport" data-canvas>
+      <div class="canvas-board drawing generated" style={`width:${width}px;height:${height}px`} set:html={svg} />
+      <div class="canvas-controls">
+        <button type="button" class="icon-btn" data-canvas-zoom="in" aria-label="Zoom in">+</button>
+        <button type="button" class="icon-btn" data-canvas-zoom="out" aria-label="Zoom out">−</button>
+        <button type="button" class="icon-btn" data-canvas-zoom="fit" aria-label={s.canvasFit}><Icon name="expand" /></button>
+      </div>
+    </div>
+  </div>
+</Base>

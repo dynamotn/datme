@@ -46,4 +46,17 @@ describe("lightbox", () => {
     click(document.getElementById("linked")!)
     expect(d.open).toBe(false)
   })
+
+  test("a drawing opens as a copy of itself, unless one of its links was clicked", () => {
+    document.body.innerHTML = `<div class="prose"><span class="drawing generated"><svg role="group" aria-label="Sketch" width="300" height="100" viewBox="0 0 300 100"><a href="/note" class="drawing-link"><rect id="r" width="10" height="10"/></a><circle id="c" r="5"/></svg></span></div>`
+    click(document.getElementById("r")!)
+    expect(dialog()?.open ?? false).toBe(false)
+    click(document.getElementById("c")!)
+    const d = dialog()
+    expect(d.open).toBe(true)
+    const svg = d.querySelector("svg.lightbox-drawing")!
+    expect(svg.getAttribute("viewBox")).toBe("0 0 300 100")
+    expect(svg.hasAttribute("width")).toBe(false)
+    expect(d.querySelector("figcaption")!.textContent).toBe("Sketch")
+  })
 })

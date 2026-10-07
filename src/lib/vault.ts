@@ -94,7 +94,7 @@ export interface FolderNode {
 /** A published Obsidian canvas or base, shown as a page of its own. */
 export interface Doc {
   rel: string
-  kind: "canvas" | "base"
+  kind: "canvas" | "base" | "drawing"
   name: string
   dir: string
   /** Raw source: JSON for a canvas, YAML for a base. */
@@ -596,6 +596,7 @@ function buildVault(version: number): Vault {
         resolveNote,
         resolveAsset,
         drawDrawing,
+        drawingPage: resolveDrawing,
       })
       pre.assets.forEach((a) => assets.add(a))
       pre.docs.forEach((d) => docRefs.add(d))
@@ -657,8 +658,16 @@ function buildVault(version: number): Vault {
   for (const rel of docRefs) {
     const src = fs.readFileSync(path.join(site.vault, rel), "utf8")
     const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
-    const kind = rel.toLowerCase().endsWith(".canvas") ? "canvas" : "base"
-    const doc: Doc = { rel, kind, name: path.posix.basename(rel).replace(DOC, ""), dir, src, texts: {} }
+    const kind = /\.excalidraw(\.md)?$/i.test(rel) ? "drawing" : rel.toLowerCase().endsWith(".canvas") ? "canvas" : "base"
+    const name = path.posix.basename(rel).replace(DOC, "").replace(/\.excalidraw(\.md)?$/i, "")
+    const doc: Doc = { rel, kind, name, dir, src, texts: {} }
+    if (kind === "drawing") {
+      // The whole drawing; its links are URL placeholders, filled per language below.
+      const drawing = drawDrawing(rel, "")
+      if (!drawing) continue
+      drawing.assets.forEach((a) => assets.add(a))
+      for (const lang of site.langs) doc.texts[lang] = { svg: drawing.svg }
+    }
     if (kind === "canvas") {
       try {
         doc.canvas = parseCanvas(src)
@@ -671,7 +680,7 @@ function buildVault(version: number): Vault {
         doc.texts[lang] = {}
         for (const node of doc.canvas.nodes) {
           if (node.type === "text" && node.text) {
-            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset, drawDrawing })
+            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing })
             pre.assets.forEach((a) => assets.add(a))
             doc.texts[lang][node.id] = pre.md
           } else if (node.type === "file" && node.file && !resolveNote(node.file, "")) {

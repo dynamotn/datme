@@ -2,6 +2,7 @@ import { site, type Lang } from "../site.config"
 import { getVault, type Note, type FolderNode, type Doc } from "./vault"
 import { langPrefix } from "./i18n"
 import { sluggify, slugToUrl } from "./slug"
+import { docSlug } from "./obsidian"
 import { hasMap, hasTimeline } from "./places"
 
 export type Page =
@@ -12,6 +13,7 @@ export type Page =
   | { kind: "alias"; lang: Lang; note: Note }
   | { kind: "canvas"; lang: Lang; doc: Doc }
   | { kind: "base"; lang: Lang; doc: Doc }
+  | { kind: "drawing"; lang: Lang; doc: Doc }
   | { kind: "archive"; lang: Lang }
   | { kind: "recent"; lang: Lang }
   | { kind: "timeline"; lang: Lang }
@@ -45,7 +47,7 @@ export function routes(): Map<string, Page> {
     if (hasTimeline(lang)) claim(prefix + "timeline", { kind: "timeline", lang })
     if (hasMap(lang)) claim(prefix + "map", { kind: "map", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
-    for (const doc of vault.docs.values()) claim(prefix + sluggify(doc.rel), { kind: doc.kind, lang, doc })
+    for (const doc of vault.docs.values()) claim(prefix + docSlug(doc.rel), { kind: doc.kind, lang, doc })
     for (const note of vault.notes[lang]) {
       if (note.formerUrl) {
         claim(note.formerUrl.replace(/^\//, "").split("/").map(decodeURIComponent).join("/"), { kind: "alias", lang, note })

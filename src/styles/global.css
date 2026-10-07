@@ -2050,6 +2050,22 @@ dialog.graph-modal {
   font: 14px/1.4 var(--font-ui);
   text-align: center;
 }
+.prose .drawing.generated > svg {
+  cursor: zoom-in;
+}
+/* A drawing page fills its pannable board. */
+.canvas-board.drawing.generated > svg {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+.lightbox svg.lightbox-drawing {
+  width: min(100%, 1400px);
+  height: auto;
+  max-height: calc(100vh - 140px);
+  border-radius: 4px;
+  background: #fff;
+}
 .lightbox-btn {
   position: fixed;
   width: 44px;
@@ -2659,33 +2675,33 @@ li > .flashcard {
   width: 100%;
   height: auto;
 }
-.prose .drawing.generated svg {
+.drawing.generated > svg {
   display: block;
   max-width: 100%;
   height: auto;
 }
 /* Excalidraw's own dark mode: the drawing inverted, hues kept. */
-:root[data-theme="dark"] .prose .drawing.generated svg {
+:root[data-theme="dark"] .drawing.generated > svg {
   filter: invert(93%) hue-rotate(180deg);
 }
-:root[data-theme="dark"] .prose .drawing.generated svg image {
+:root[data-theme="dark"] .drawing.generated > svg image {
   filter: invert(100%) hue-rotate(180deg);
 }
 /* A drawing exported dark (excalidraw-export-dark) is dark in both themes. */
-.prose .drawing.generated svg[data-dark] {
+.drawing.generated > svg[data-dark] {
   filter: invert(93%) hue-rotate(180deg);
 }
-:root[data-theme="dark"] .prose .drawing.generated svg[data-dark] {
+:root[data-theme="dark"] .drawing.generated > svg[data-dark] {
   filter: none;
 }
-.prose .drawing-link {
+.drawing-link {
   cursor: pointer;
 }
-.prose .drawing-link:hover,
-.prose .drawing-link:focus-visible {
+.drawing-link:hover,
+.drawing-link:focus-visible {
   opacity: 0.75;
 }
-.prose a.drawing-link tspan {
+a.drawing-link tspan {
   text-decoration: underline;
 }
 .prose .drawing-dark,
