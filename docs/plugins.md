@@ -16,6 +16,7 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Marp Slides](#marp-slides)
 - [Kanban](#kanban)
 - [Charts](#charts)
+- [Contribution Graph](#contribution-graph)
 - [Daily notes and Periodic Notes](#daily-notes-and-periodic-notes)
 - [Iconize](#iconize)
 - [Leaflet](#leaflet)
@@ -158,6 +159,26 @@ show their `##` lanes side by side, each list item a card.
 theme's colours. Supported: `type: bar|line|pie|doughnut|radar|polarArea`,
 `labels`, `series`, `stacked`, `fill`, `tension`, `beginAtZero`, `indexAxis`
 and `width`. The data is also given as a table, for screen readers and print.
+
+## Contribution Graph
+
+*Live example: [Reading list](showcase/Reading%20list.md).*
+
+```` ```contributionGraph ```` blocks become GitHub-style heatmaps of the
+published notes:
+
+- `title`, and the range: `dateRangeValue` with `dateRangeType`
+  (`LATEST_DAYS`, `LATEST_MONTH`, `LATEST_YEAR`), or `FIXED_DATE_RANGE` with
+  `fromDate` and `toDate`.
+- `dataSource.value` picks notes with a Dataview source (`'#run'`,
+  `'"Journal"'`); `dataSource.type: ALL_TASK` counts completed tasks on the day
+  they were done (✅) instead.
+- `dateField`: `FILE_CTIME` (the default), `FILE_MTIME`, or `PAGE_PROPERTY`
+  with the property's name. `countField`: one per note, or `PAGE_PROPERTY` for
+  a number such as kilometres or pages.
+- `cellStyleRules` colour the cells, as in the plugin.
+
+The Heatmap Calendar plugin is drawn by DataviewJS, so it needs Obsidian.
 
 ## Daily notes and Periodic Notes
 

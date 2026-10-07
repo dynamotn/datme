@@ -24,7 +24,7 @@ import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { anchorOf, escapeAttr } from "./obsidian"
 import { t } from "./i18n"
-import { renderDataview, renderDataviewJs, renderInlineQuery, renderTasksBlock, renderSearchBlock } from "./dataview-render"
+import { renderDataview, renderDataviewJs, renderInlineQuery, renderContributionGraph, renderTasksBlock, renderSearchBlock } from "./dataview-render"
 import { renderBaseView } from "./base-render"
 import { renderChart } from "./charts"
 import { linkTerms, glossarySignature } from "./glossary"
@@ -177,6 +177,7 @@ const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, k
     else if (node.lang === "query") parent.children[index] = { type: "html", value: renderSearchBlock(node.value, lang) }
     else if (node.lang === "chart") parent.children[index] = { type: "html", value: renderChart(node.value) }
     else if (node.lang === "leaflet") parent.children[index] = { type: "html", value: renderLeafletBlock(node.value, lang) }
+    else if (node.lang === "contributionGraph") parent.children[index] = { type: "html", value: renderContributionGraph(node.value, lang, key) }
   })
   // `= this.field` is an inline query; `$= …` (DataviewJS) stays code.
   visit(tree, "inlineCode", (node: InlineCode, index, parent) => {
@@ -584,7 +585,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
  * protected note, whose content must not reach the disk unencrypted.
  */
 function isSelfContained(note: Note): boolean {
-  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet)/im.test(note.md) && !/`=\s/.test(note.md)
+  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet|contributionGraph)/im.test(note.md) && !/`=\s/.test(note.md)
 }
 
 type Parts = Omit<Rendered, "description"> & { description?: string }

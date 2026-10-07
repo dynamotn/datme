@@ -1,6 +1,6 @@
 ---
 tags: [type/demo]
-description: Dataview queries over the garden, and a chart.
+description: Dataview queries over the garden, a chart and a heatmap.
 ---
 # Reading list
 
@@ -19,4 +19,16 @@ series:
   - title: Ideas
     data: [2, 1, 2]
 beginAtZero: true
+```
+
+This note was written `= this.file.ctime`, and the garden has
+`= length(this.file.inlinks)` notes pointing here.
+
+```contributionGraph
+title: Notes planted in the docs
+dateRangeValue: 1
+dateRangeType: LATEST_YEAR
+dataSource:
+  type: PAGE
+  value: '"showcase"'
 ```

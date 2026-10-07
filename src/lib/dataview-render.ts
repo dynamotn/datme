@@ -5,6 +5,7 @@ import { escapeAttr } from "./obsidian"
 import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
 import { filterLanguage } from "./vault"
 import { withoutLocked } from "./locked"
+import { renderGraph } from "./contribution-graph"
 import { parseTasksQuery, runTasksQuery, groupOf, TasksQueryError, type TaskItem } from "./tasks-query"
 import { parseSearch, search, highlight, SearchQueryError, type Searchable } from "./search-query"
 import { listed } from "./vault"
@@ -72,6 +73,12 @@ export function html(v: Value, lang: Lang): string {
  * TASK queries markdown, so the text of each task renders like the note it
  * comes from.
  */
+/** A ```contributionGraph block, over the published notes of a language. */
+export function renderContributionGraph(source: string, lang: Lang, currentKey: string): string {
+  const engine = engineFor(lang)
+  return renderGraph(source, lang, { ...engine, current: engine.pages.find((p) => p.key === currentKey) })
+}
+
 /** An inline query, `= expression`, as the HTML of its value; an error shows as Dataview shows it. */
 export function renderInlineQuery(source: string, lang: Lang, currentKey: string): string {
   try {
