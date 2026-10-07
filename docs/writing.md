@@ -49,7 +49,8 @@ that folder's page.
 
 This adds a file name and highlights lines 2, 4 and 5. Inline, comments like
 `// [!code highlight]`, `[!code ++]`, `[!code --]` and `[!code focus]` mark
-single lines. Every block gets a copy button.
+single lines. Blocks of more than one line number their lines, and every block
+gets a copy button; neither ends up in what you copy.
 
 ## Links and media
 

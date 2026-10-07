@@ -122,6 +122,18 @@ describe("code blocks", () => {
     expect(html).toContain('class="line focused"')
     expect(html).not.toContain("[!code")
   })
+
+  test("blocks of several lines get a line-number gutter sized to their count", async () => {
+    const { html } = await code
+    expect(html).toMatch(/<pre class="shiki shiki-themes [^"]* line-numbers"[^>]*style="[^"]*;--ln-digits:1"[^>]*><code class="language-ts"/)
+    const long = await renderMarkdown("```\n" + Array.from({ length: 12 }, (_, i) => `l${i}`).join("\n") + "\n```", "en-US", "x")
+    expect(long).toContain("--ln-digits:2")
+  })
+
+  test("a one-line block has no gutter", async () => {
+    const { html } = await code
+    expect(html).toMatch(/<pre class="shiki shiki-themes [^"]*"(?![^>]*line-numbers)[^>]*><code class="language-py"/)
+  })
 })
 
 describe("dataview", () => {

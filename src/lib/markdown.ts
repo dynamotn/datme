@@ -14,6 +14,7 @@ import {
   transformerNotationFocus,
   transformerNotationHighlight,
 } from "@shikijs/transformers"
+import type { ShikiTransformer } from "shiki"
 import rehypeStringify from "rehype-stringify"
 import { visit, SKIP } from "unist-util-visit"
 import { toString as hastToString } from "hast-util-to-string"
@@ -523,6 +524,17 @@ const rehypeImages: Plugin<[], HastRoot> = () => async (tree) => {
   )
 }
 
+/** Blocks of more than one line get a gutter of line numbers, drawn by CSS so copying skips them. */
+const transformerLineNumbers = (): ShikiTransformer => ({
+  name: "datme:line-numbers",
+  pre(node) {
+    const count = this.lines.length
+    if (count < 2) return
+    this.addClassToHast(node, "line-numbers")
+    node.properties.style = `${node.properties.style ?? ""};--ln-digits:${String(count).length}`
+  },
+})
+
 const autolink: AutolinkOptions = {
   behavior: "append",
   properties: { className: ["heading-anchor"], ariaHidden: "true", tabIndex: -1 },
@@ -564,6 +576,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
       defaultColor: false,
       lazy: true,
       fallbackLanguage: "text",
+      defaultLanguage: "text",
       addLanguageClass: true,
       // ```ts {2,4-5} marks lines; // [!code highlight|++|--|focus] comments mark them inline.
       transformers: [
@@ -571,6 +584,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
         transformerNotationHighlight(),
         transformerNotationDiff(),
         transformerNotationFocus(),
+        transformerLineNumbers(),
       ],
     })
     .use(user.rehype)

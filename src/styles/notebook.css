@@ -1045,6 +1045,12 @@
   background: rgb(255 232 0 / 0.18);
   box-shadow: inset 4px 0 0 #ffe800;
 }
+/* Line numbers on the dark sheet, whatever the theme. */
+[data-look="notebook"] .prose pre.line-numbers .line::before {
+  border-right-color: #3a3a36;
+  color: #8a8a80;
+  opacity: 1;
+}
 
 /* ---------- filters ---------- */
 [data-look="notebook"] .search-input-row + .filters {
