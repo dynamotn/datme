@@ -1,6 +1,6 @@
 {
   "name": "@dynamotn/datme",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Publish an Obsidian vault as a digital garden: notes as index cards on a notebook wall, with backlinks, graph, search and multilingual pages.",
   "keywords": [
     "obsidian",
@@ -16,7 +16,7 @@
   "homepage": "https://gitlab.com/dynamo-tools/datme",
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/dynamo-tools/datme.git"
+    "url": "git+https://github.com/dynamotn/datme.git"
   },
   "bugs": {
     "url": "https://gitlab.com/dynamo-tools/datme/-/issues"
