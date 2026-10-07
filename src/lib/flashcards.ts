@@ -6,6 +6,7 @@
  * Only notes tagged as a deck are converted, since `key:: value` is also a
  * Dataview inline field.
  */
+import { highlightOf } from "./obsidian"
 
 /** Whether a note is a deck: a frontmatter tag, or an inline #tag in its body. */
 export function isDeck(tags: string[], body: string, deckTags: string[]): boolean {
@@ -30,7 +31,7 @@ function cloze(line: string): string {
   const code: string[] = []
   return line
     .replace(/(`+)[^`]*?\1/g, (m) => `\u0002${code.push(m) - 1}\u0002`)
-    .replace(/==([^=\n]+)==/g, '<span class="cloze" tabindex="0">$1</span>')
+    .replace(/==([^=\n]+)==/g, (_m, inner: string) => `<span class="cloze" tabindex="0">${highlightOf(inner).text}</span>`)
     .replace(/\u0002(\d+)\u0002/g, (_, n) => code[Number(n)])
 }
 

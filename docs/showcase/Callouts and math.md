@@ -10,7 +10,8 @@ description: Callouts, highlights, footnotes, LaTeX and Mermaid, as in Obsidian.
 > [!example]- Folded callouts open on click
 > A `-` after the type folds the callout.
 
-A ==highlight== stands out, and a footnote moves into the margin on wide
+A ==highlight== stands out, in ==🔴red==, ==🟠orange==, ==🟡yellow==,
+==🟢green==, ==🔵blue== or ==🟣purple== too, and a footnote moves into the margin on wide
 screens.[^luhmann]
 
 Euler's identity, $e^{i\pi} + 1 = 0$, renders with KaTeX, and so do blocks:

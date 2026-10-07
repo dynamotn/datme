@@ -21,6 +21,12 @@
   --clay: #b5532c;
   --clay-soft: rgb(181 83 44 / 0.1);
   --mark: rgb(234 179 8 / 0.32);
+  --mark-red: rgb(239 68 68 / 0.24);
+  --mark-orange: rgb(249 115 22 / 0.26);
+  --mark-yellow: rgb(234 179 8 / 0.32);
+  --mark-green: rgb(34 197 94 / 0.24);
+  --mark-blue: rgb(59 130 246 / 0.22);
+  --mark-purple: rgb(168 85 247 / 0.22);
   --shadow: 0 1px 2px rgb(40 30 10 / 0.04), 0 8px 24px -12px rgb(40 30 10 / 0.18);
   --shadow-lg: 0 24px 60px -20px rgb(30 20 5 / 0.35);
   --title-grad: linear-gradient(100deg, #2d6a4f 0%, #4f8f5b 35%, #b5532c 100%);
@@ -54,6 +60,12 @@
   --clay: #e69168;
   --clay-soft: rgb(230 145 104 / 0.12);
   --mark: rgb(234 179 8 / 0.25);
+  --mark-red: rgb(248 113 113 / 0.28);
+  --mark-orange: rgb(251 146 60 / 0.28);
+  --mark-yellow: rgb(234 179 8 / 0.25);
+  --mark-green: rgb(74 222 128 / 0.24);
+  --mark-blue: rgb(96 165 250 / 0.26);
+  --mark-purple: rgb(192 132 252 / 0.26);
   --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -12px rgb(0 0 0 / 0.6);
   --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.7);
   --title-grad: linear-gradient(100deg, #82c7a0 0%, #c5d98a 45%, #e69168 100%);
@@ -729,6 +741,25 @@ a.chip:hover {
   color: inherit;
   padding: 0 2px;
   border-radius: 3px;
+}
+/* Obsidian's coloured highlights, ==🔴text== and the like. */
+.prose mark.mark-red {
+  background: var(--mark-red);
+}
+.prose mark.mark-orange {
+  background: var(--mark-orange);
+}
+.prose mark.mark-yellow {
+  background: var(--mark-yellow);
+}
+.prose mark.mark-green {
+  background: var(--mark-green);
+}
+.prose mark.mark-blue {
+  background: var(--mark-blue);
+}
+.prose mark.mark-purple {
+  background: var(--mark-purple);
 }
 .prose ul,
 .prose ol {

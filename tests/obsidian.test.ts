@@ -101,6 +101,13 @@ describe("inline syntax", () => {
     expect(md).toContain('<span class="block-id" id="^block-1"></span>')
   })
 
+  test("a colour emoji after == colours the highlight and is not shown", () => {
+    const { md } = run("==🔴Important== ==🟠a== ==🟡b== ==🟢c== ==🔵 d== ==🟣e== ==plain 🔴==")
+    expect(md).toBe(
+      '<mark class="mark-red">Important</mark> <mark class="mark-orange">a</mark> <mark class="mark-yellow">b</mark> <mark class="mark-green">c</mark> <mark class="mark-blue">d</mark> <mark class="mark-purple">e</mark> <mark>plain 🔴</mark>',
+    )
+  })
+
   test("headings are not mistaken for tags", () => {
     expect(run("# Title").md).toBe("# Title")
   })

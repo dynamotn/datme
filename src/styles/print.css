@@ -25,6 +25,12 @@
     --clay: #000;
     --clay-soft: transparent;
     --mark: #fff1a8;
+    --mark-red: #ffd2cc;
+    --mark-orange: #ffe0bf;
+    --mark-yellow: #fff1a8;
+    --mark-green: #d3f5d6;
+    --mark-blue: #d6e4ff;
+    --mark-purple: #ecdcff;
     --shadow-sm: none;
     --shadow: none;
     --shadow-lg: none;

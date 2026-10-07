@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   turn, the way Obsidian shows a base in a note. In a block or an embed,
   `this` is the note holding it, so `file.hasLink(this.file)` lists the notes
   linking there.
+- Coloured highlights from Obsidian 1.14: a colour emoji right after the
+  opening `==` (🔴 🟠 🟡 🟢 🔵 🟣) paints the highlight in that colour, in both
+  themes, the notebook look and print, and the emoji itself is not shown.
 
 ### Changed
 

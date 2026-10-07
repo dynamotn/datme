@@ -25,6 +25,12 @@
   --green: #00ff85;
   --pink: #ffa3e5;
   --mark: #ffe800;
+  --mark-red: #ff8a7a;
+  --mark-orange: #ffb347;
+  --mark-yellow: #ffe800;
+  --mark-green: #00ff85;
+  --mark-blue: #8fb4ff;
+  --mark-purple: #d4a8ff;
   --rule: rgb(0 71 255 / 0.14);
   --margin-line: rgb(255 59 40 / 0.45);
   --bw: 3px;
@@ -57,6 +63,13 @@
   --clay: #ff6b5b;
   --clay-soft: rgb(255 107 91 / 0.16);
   --mark: rgb(255 232 0 / 0.35);
+  /* Solid in the dark too: marked text stays dark ink, as on the yellow marker. */
+  --mark-red: #ff8a7a;
+  --mark-orange: #ffb347;
+  --mark-yellow: #ffe800;
+  --mark-green: #00ff85;
+  --mark-blue: #8fb4ff;
+  --mark-purple: #d4a8ff;
   --rule: rgb(108 141 255 / 0.16);
   --margin-line: rgb(255 107 91 / 0.4);
 }
@@ -761,6 +774,25 @@
 [data-look="notebook"] .prose mark {
   background: var(--yellow);
   color: #050505;
+}
+/* Coloured highlights as solid markers, like the yellow one; the plain rule above would hide them. */
+[data-look="notebook"] .prose mark.mark-red {
+  background: var(--mark-red);
+}
+[data-look="notebook"] .prose mark.mark-orange {
+  background: var(--mark-orange);
+}
+[data-look="notebook"] .prose mark.mark-yellow {
+  background: var(--mark-yellow);
+}
+[data-look="notebook"] .prose mark.mark-green {
+  background: var(--mark-green);
+}
+[data-look="notebook"] .prose mark.mark-blue {
+  background: var(--mark-blue);
+}
+[data-look="notebook"] .prose mark.mark-purple {
+  background: var(--mark-purple);
 }
 [data-look="notebook"] .prose blockquote {
   border-left: 6px solid var(--ink);

@@ -156,6 +156,11 @@ describe("dataview", () => {
     expect(html).not.toContain("dv-error")
   })
 
+  test("coloured highlights keep their class through the pipeline", async () => {
+    const { html } = await queries
+    expect(html).toContain('Status: <mark class="mark-green">done</mark>.')
+  })
+
   test("plain footnotes are copied next to their reference as sidenotes", async () => {
     const html = await renderMarkdown("Text[^1] and more[^2].\n\n[^1]: First *note*.\n[^2]: Second.", "en-US", "x")
     expect(html).toContain(

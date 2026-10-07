@@ -51,6 +51,16 @@ const EXCALIDRAW = /\.excalidraw(\.md)?$/i
 /** Obsidian Canvas and Bases files, published as pages of their own. */
 export const DOC = /\.(canvas|base)$/i
 
+/** Obsidian's highlight colours, chosen by an emoji right after the opening `==`. */
+const MARK_COLORS: Record<string, string> = { "🔴": "red", "🟠": "orange", "🟡": "yellow", "🟢": "green", "🔵": "blue", "🟣": "purple" }
+const MARK_COLOR = new RegExp(`^(${Object.keys(MARK_COLORS).join("|")})\\uFE0F?\\s*`, "u")
+
+/** The text of a highlight without its colour emoji, and the colour it names (none for the theme's own). */
+export function highlightOf(inner: string): { color?: string; text: string } {
+  const m = inner.match(MARK_COLOR)
+  return m ? { color: MARK_COLORS[m[1]], text: inner.slice(m[0].length) } : { text: inner }
+}
+
 /** Slug of a canvas, base or drawing page: its path with its extension, a drawing's `.md` dropped. */
 export function docSlug(rel: string): string {
   return sluggify(rel.replace(/\.excalidraw\.md$/i, ".excalidraw"))
@@ -286,7 +296,10 @@ export function preprocess(
   })
 
   md = md
-    .replace(/==([^=\n]+)==/g, "<mark>$1</mark>")
+    .replace(/==([^=\n]+)==/g, (_m, inner: string) => {
+      const { color, text } = highlightOf(inner)
+      return color ? `<mark class="mark-${color}">${text}</mark>` : `<mark>${text}</mark>`
+    })
     .replace(/(^|[\s(])#([\p{L}_][\p{L}\p{N}_/-]*)/gu, (_m, pre: string, tag: string) => {
       const url = slugToUrl(langPrefix(ctx.lang) + "tags/" + slugTag(tag))
       return `${pre}<a href="${url}" class="tag-link">#${tag}</a>`

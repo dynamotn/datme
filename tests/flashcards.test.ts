@@ -53,6 +53,12 @@ describe("flashcards", () => {
     expect(cards("What is `std::vector`?::A growable array")).toContain("<summary data-hint=\"Show\">\n\nWhat is `std::vector`?\n\n</summary>")
   })
 
+  test("highlights become clozes, without their colour emoji", () => {
+    expect(cards("The ==🔴mitochondria== and the ==cell==")).toBe(
+      'The <span class="cloze" tabindex="0">mitochondria</span> and the <span class="cloze" tabindex="0">cell</span>',
+    )
+  })
+
   test("headings, quotes, tables and four colons are left alone", () => {
     for (const md of ["# Title::x", "> a::b", "| a::b |", "a::::b", "::b", "a::"]) expect(cards(md)).toBe(md)
   })

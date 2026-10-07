@@ -15,7 +15,9 @@ All of this works the same as in the app:
 - `[[wikilinks]]`, `[[note#heading|alias]]` and `[[note#^block-id]]`.
 - `![[embeds]]` of whole notes, sections, blocks, images, audio, video and PDFs.
 - Callouts (`> [!tip]`), folded with `> [!tip]-`.
-- `==highlights==`, `%%comments%%`, `#tags` and `^block-ids`.
+- `==highlights==`, `%%comments%%`, `#tags` and `^block-ids`. A colour emoji
+  right after the opening `==` colours the highlight, as in Obsidian 1.14:
+  `==🔴Important==`, with 🔴 🟠 🟡 🟢 🔵 🟣.
 - LaTeX (`$…$`, `$$…$$`) and Mermaid diagrams.
 - Standard markdown links to notes and files, with relative paths.
 
