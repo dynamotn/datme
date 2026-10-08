@@ -61,6 +61,13 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
     if (host) for (const set of [script, connect, frame, style]) set.add(host)
   }
   if (site.webmentions) connect.add("https://webmention.io")
+  // Search by meaning runs transformers.js from the CDN, with the model from Hugging Face, in WebAssembly.
+  const worker = new Set(["'self'"])
+  if (site.search.meaning) {
+    script.add("https://cdn.jsdelivr.net").add("'wasm-unsafe-eval'")
+    connect.add("https://cdn.jsdelivr.net").add("https://huggingface.co").add("https://*.huggingface.co").add("https://*.hf.co")
+    worker.add("blob:")
+  }
   const form = new Set(["'self'"])
   const sub = site.subscribe
   if (sub?.provider === "buttondown") form.add("https://buttondown.com")
@@ -77,7 +84,7 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
     `connect-src ${[...connect].join(" ")}`,
     `frame-src ${[...frame].join(" ")}`,
     "media-src 'self' https:",
-    "worker-src 'self'",
+    `worker-src ${[...worker].join(" ")}`,
     "object-src 'none'",
     "base-uri 'self'",
     `form-action ${[...form].join(" ")}`,

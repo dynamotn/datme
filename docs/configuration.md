@@ -111,7 +111,9 @@ strings:                      # override any UI text, per language
 ## Search, images and maps
 
 ```yaml
-search: { engine: minisearch } # or pagefind: indexes the built pages, loads only what a query needs
+search:
+  engine: minisearch          # or pagefind: indexes the built pages, loads only what a query needs
+  meaning: false              # true: readers may also search by meaning (needs related.semantic)
 images:                       # PNG/JPEG/WebP/AVIF get their size and resized WebP copies
   optimize: true              # (srcset), so phones never download the full picture
   widths: [480, 960, 1600]

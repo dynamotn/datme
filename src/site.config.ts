@@ -297,9 +297,16 @@ const schema = z
      * gardens; pagefind indexes the built pages and loads only what a query needs, for large ones.
      */
     search: z
-      .object({ engine: z.enum(["minisearch", "pagefind"]).default("minisearch") })
+      .object({
+        engine: z.enum(["minisearch", "pagefind"]).default("minisearch"),
+        /**
+         * Offer readers to search by meaning too: their browser downloads the model of
+         * related.semantic (about 120 MB, once) and blends closeness in meaning with the words.
+         */
+        meaning: z.boolean().default(false),
+      })
       .strict()
-      .default({ engine: "minisearch" }),
+      .default({ engine: "minisearch", meaning: false }),
     /** Turn a paragraph that is only a URL into a card with the page's title and image. */
     linkPreviews: z.boolean().default(true),
     /** Point links that `datme check --external` found dead at the Internet Archive's copy. */
@@ -410,6 +417,9 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     const domain = c.webmentions.domain ?? (url ? new URL(url).host : undefined)
     if (!domain) throw new ConfigError(`Invalid datme config in ${vault}:\n  - webmentions: needs site.url or webmentions.domain`)
     webmentions = { domain }
+  }
+  if (c.search.meaning && !c.related.semantic) {
+    throw new ConfigError(`Invalid datme config in ${vault}:\n  - search.meaning: needs related.semantic, whose model it uses`)
   }
   for (const [folder, def] of Object.entries(c.stages)) {
     const base = typeof def === "string" ? STAGE_PRESETS[def] : def

@@ -47,6 +47,7 @@ export function outsideHosts(
     subscribe?: { provider: string; action?: string }
     map: { tiles: string; darkTiles?: string }
     linkPreviews: boolean
+    search?: { meaning: boolean }
   },
   monoFont: string,
   embedded: Iterable<string>,
@@ -77,6 +78,10 @@ export function outsideHosts(
   if (hasMap) {
     add(config.map.tiles, "map tiles")
     add(config.map.darkTiles, "map tiles")
+  }
+  if (config.search?.meaning) {
+    add("https://cdn.jsdelivr.net", "search by meaning, once a reader turns it on")
+    add("https://huggingface.co", "search by meaning, once a reader turns it on")
   }
   for (const url of embedded) add(url, "embedded in a note")
   const out = [...hosts].map(([host, why]) => ({ host, why })).sort((x, y) => x.host.localeCompare(y.host))

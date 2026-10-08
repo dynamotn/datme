@@ -35,7 +35,7 @@ function plain(md: string): string {
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 /** What a note is about, for its embedding: title, description and the start of its text. */
-const aboutText = (n: Note) => [n.title, n.description ?? "", plain(n.md)].join("\n").slice(0, 2000)
+export const aboutText = (n: Note) => [n.title, n.description ?? "", plain(n.md)].join("\n").slice(0, 2000)
 
 /** Related notes and mentions of a language, computed afresh (data() caches them per build). */
 export async function computeRelated(lang: Lang) {

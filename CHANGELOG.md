@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- With `related.semantic`, the search dialog opened on a note lists the notes
+  closest to it in meaning, from vectors the build writes next to the search
+  index. No model is downloaded for it.
+- `search.meaning: true` lets readers search by meaning: a ✨ button downloads
+  the model into their browser once, then results blend the words typed with
+  closeness in meaning. Queries never leave the page.
+
 - `privateLinks` chooses what a link to an unpublished note leaves on the page:
   its words as written (`text`, the default), a neutral "a private note"
   (`placeholder`), or nothing unless the link has an alias (`hide`). It covers

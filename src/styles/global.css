@@ -1549,6 +1549,42 @@ dialog.modal[open] {
   padding: 28px;
   text-align: center;
 }
+.search-results .group {
+  padding: 8px 12px 4px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.search-results .r-sim {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.search-meaning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-meaning[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.search-meaning[aria-busy="true"] {
+  cursor: progress;
+}
 .modal-foot {
   display: flex;
   gap: 16px;

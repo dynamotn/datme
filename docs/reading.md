@@ -46,6 +46,21 @@ bunx --package @dynamotn/datme --package @huggingface/transformers datme build ~
 `threshold` (0.55 by default) sets how close two notes must be; `model` picks
 another feature-extraction model from Hugging Face.
 
+The same vectors serve search. Opened on a note with nothing typed, the search
+dialog lists the notes closest to it in meaning, with how close each one is.
+The site ships one small vector per note (384 bytes with the default model) and
+no model, so nothing is downloaded for this.
+
+### Searching by meaning
+
+`search: { meaning: true }` adds a ✨ button to the search dialog. A reader who
+presses it gets results that blend the words they typed with closeness in
+meaning, so "how to take notes" finds a note about the slip box. Their browser
+downloads the same model the build used (about 120 MB, once, from Hugging Face,
+with transformers.js from jsDelivr) and embeds each query itself: what they
+type never leaves the page. Nothing loads until they press the button. It needs
+`related.semantic`, and the `minisearch` engine.
+
 ## Reading
 
 - **Previews:** hover an internal link to read the note in a popover. Hover a

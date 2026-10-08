@@ -303,10 +303,26 @@ const pluginHead = await userHead()
       }
     </div>
 
-    <dialog class="modal" data-search-dialog data-lang={lang} data-engine={site.search.engine} transition:persist={`search-${lang}`}>
+    <dialog
+      class="modal"
+      data-search-dialog
+      data-lang={lang}
+      data-engine={site.search.engine}
+      data-similar={site.related.semantic ? s.similarNotes : undefined}
+      data-threshold={site.related.semantic ? site.related.semantic.threshold : undefined}
+      data-model={site.search.meaning && site.related.semantic ? site.related.semantic.model : undefined}
+      transition:persist={`search-${lang}`}
+    >
       <div class="search-input-row">
         <Icon name="search" />
         <input type="search" placeholder={s.searchPlaceholder} aria-label={s.search} autocomplete="off" spellcheck="false" />
+        {
+          site.search.meaning && site.related.semantic && site.search.engine === "minisearch" && (
+            <button class="search-meaning" type="button" aria-pressed="false" data-search-meaning title={s.searchMeaningHint} data-loading={s.searchMeaningLoading}>
+              ✨ <span>{s.searchMeaning}</span>
+            </button>
+          )
+        }
         <kbd>Esc</kbd>
       </div>
       <Filters lang={lang} kinds={["folder", "type"]} scope="search" />
