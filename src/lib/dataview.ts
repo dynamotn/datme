@@ -664,6 +664,16 @@ function call(fn: string, args: Value[], engine: Engine): Value {
   throw new DataviewError(`unknown function ${fn}()`)
 }
 
+/**
+ * The pages a query reads, when its FROM names only tags and folders; undefined
+ * when it reads every page, or when a link source makes its scope depend on links.
+ */
+export function scopeOf(q: Query, engine: Engine): Page[] | undefined {
+  const plain = (s: Source): boolean =>
+    s.k === "tag" || s.k === "folder" ? true : s.k === "not" ? plain(s.s) : s.k === "link" ? false : plain(s.a) && plain(s.b)
+  return q.from && plain(q.from) ? engine.pages.filter((p) => inSource(p, q.from!, engine)) : undefined
+}
+
 function inSource(page: Page, s: Source, engine: Engine): boolean {
   switch (s.k) {
     case "tag":

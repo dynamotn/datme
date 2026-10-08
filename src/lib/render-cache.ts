@@ -67,3 +67,28 @@ export function writeCache(kind: string, source: string, parts: string[], data: 
     // a read-only or full disk only makes the next build slower
   }
 }
+
+/** How many notes a build reused from the cache and rendered, for `datme build --verbose`. */
+export interface CacheStats {
+  /** Reused, with nothing outside the note in their key. */
+  reused: number
+  /** Reused, keyed by the notes they embed and the pages their queries read too. */
+  reusedWithDeps: number
+  rendered: number
+  /** Rendered because they are never cached: protected, or reading the time or files. */
+  uncached: number
+}
+
+/** The counts of this process; shared through globalThis, since Astro loads its own copy of this module. */
+export function cacheStats(): CacheStats {
+  const g = globalThis as { __datmeCacheStats?: CacheStats }
+  return (g.__datmeCacheStats ??= { reused: 0, reusedWithDeps: 0, rendered: 0, uncached: 0 })
+}
+
+/** One line such as "Notes: 40 reused (12 with embeds or queries), 3 rendered, 1 never cached". */
+export function formatCacheStats(s: CacheStats): string {
+  const reused = s.reused + s.reusedWithDeps
+  const total = reused + s.rendered + s.uncached
+  const rate = total ? Math.round((reused / total) * 100) : 0
+  return `Notes: ${reused} reused (${s.reusedWithDeps} with embeds or queries), ${s.rendered} rendered, ${s.uncached} never cached; ${rate}% from the cache`
+}

@@ -44,7 +44,8 @@ Options:
   --fresh        ignore the cache of rendered notes and social cards
   --drafts       also build drafts and scheduled notes, marked and kept out of search engines
   --strict       fail check and build on warnings too, not only on errors
-  --verbose      also list notices: links to unpublished notes, scheduled notes
+  --verbose      also list notices: links to unpublished notes, scheduled notes;
+                 with build, how many notes came from the cache
   --external     also check that links to other websites still answer
   --branch <b>   branch whose pushes publish the site (default: the current one)
   --format <f>   export as epub (default) or html
@@ -427,6 +428,10 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   if (args.command === "build") {
     publishOutput(STAGING, out, vault)
     console.log(`Site written to ${out}`)
+    if (args.verbose) {
+      const { cacheStats, formatCacheStats } = await import("./lib/render-cache.ts")
+      console.log(formatCacheStats(cacheStats()))
+    }
     return
   }
   await astro.preview({ root: PACKAGE_ROOT, outDir: STAGING, server })

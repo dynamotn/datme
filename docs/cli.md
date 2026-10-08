@@ -30,7 +30,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `--drafts` | dev, build, preview | Also builds drafts and scheduled notes, marked as such and kept out of search engines |
 | `--strict` | check, build | Fails on warnings too, for CI |
 | `--fresh` | build | Ignores the build cache and starts from scratch |
-| `--verbose` | check | Also lists links to unpublished notes, and scheduled notes |
+| `--verbose` | check, build | Also lists links to unpublished notes, and scheduled notes; with build, how many notes came from the cache |
 | `--json` | check | Prints every problem, notices included, as JSON for other tools |
 | `--privacy` | check | Lists what leaves the vault instead of the problems (see [Privacy](privacy.md#auditing-what-leaves-the-vault)); JSON with `--json` |
 | `--external` | check | Also checks that links to other websites still answer (404, 410 and unreachable hosts are reported) |
@@ -60,8 +60,20 @@ page instead, ready to print as a PDF.
 
 Builds are incremental. Rendered notes and social cards are cached and reused
 as long as their content, the config and datme stay the same; a 300-note vault
-goes from about 23 s to 2.5 s. Notes that embed others or run queries are always
-rendered again. Protected notes and locked parts are never written to the cache.
+goes from about 23 s to 2.5 s. Protected notes and locked parts are never written
+to the cache.
+
+Notes that embed others or run queries are cached too, keyed by what they read:
+
+- An embed: the embedded note, and whatever that one embeds or queries.
+- A Dataview query whose `FROM` names only folders and tags: the notes in
+  them. A note added to one of those folders counts, one added elsewhere doesn't.
+- Any other query, base or map: every published note, so any change renders
+  them again.
+- A query that reads `today` is rendered again each day. One that reads `now`,
+  or a Typst block that reads files, is never cached.
+
+`datme build --verbose` ends with how many notes came from the cache.
 
 The cache lives in datme's `.datme/cache`. `$DATME_CACHE` moves it (handy for
 CI caches), an empty value turns it off, and `--fresh` starts from scratch.

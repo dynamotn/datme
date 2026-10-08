@@ -57,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Notes that embed others or run queries are cached between builds as well,
+  and rendered again only when what they read changes: the embedded notes, or
+  the pages a query can see (just its folders and tags, for a Dataview `FROM`
+  that names only those). Queries reading `today` are rendered again each day.
+  `datme build --verbose` reports how many notes came from the cache.
 - Sidenotes in the margin are tied to their line by a dashed leader, and
   pointing at a footnote number picks out its note. In the notebook look they
   stand clear of the page's frame instead of touching it.

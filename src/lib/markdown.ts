@@ -33,7 +33,7 @@ import { readDeadLinks, deadLinksStamp, archiveUrl } from "./dead-links"
 import { linkPreview, previewCard } from "./link-preview"
 import { loadUserPlugins, type UserPlugins } from "./user-plugins"
 import { site } from "../site.config"
-import { readCache, writeCache } from "./render-cache"
+import { cacheStats, readCache, writeCache } from "./render-cache"
 import { renderSlides } from "./slides"
 import { renderLeafletBlock } from "./leaflet-block"
 import { remarkDiagrams, READS_FILES } from "./diagrams"
@@ -41,6 +41,7 @@ import { encrypt } from "./encrypt"
 import { lockedPlaceholder } from "./locked"
 import { inlineAssets } from "./inline-assets"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
+import { dependencies } from "./render-deps"
 
 export interface Heading {
   depth: number
@@ -622,12 +623,14 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
 }
 
 /**
- * Whether a note renders the same whatever the rest of the vault holds, so its
- * HTML can be reused across builds: no embeds, queries or bases, and never a
- * protected note, whose content must not reach the disk unencrypted.
+ * What a note's HTML depends on beyond its own markdown, so it can be reused
+ * across builds: the notes it embeds and the pages its queries read. Undefined
+ * when it cannot be cached: a protected note, whose content must not reach the
+ * disk unencrypted, and notes reading files or the time, which change unseen.
  */
-function isSelfContained(note: Note): boolean {
-  return !note.protected && !/transclude-ph|base-ph/.test(note.md) && !/^\s*(`{3,}|~{3,})\s*(dataview|tasks|query|leaflet|contributionGraph|base)/im.test(note.md) && !/`=\s/.test(note.md) && !typstReadsFiles(note.md)
+function cacheDeps(note: Note): string[] | undefined {
+  if (note.protected || typstReadsFiles(note.md)) return undefined
+  return dependencies(note)
 }
 
 /** Whether a ```typst block of the note reads files of the vault, which can change without the note. */
@@ -645,7 +648,8 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
     hit = (async () => {
       const user = await plugins()
       // Image sizes end up in the HTML, so a replaced image must invalidate it too.
-      const diskKey = isSelfContained(note)
+      const deps = cacheDeps(note)
+      const diskKey = deps
         ? [
             note.lang,
             variant,
@@ -656,10 +660,14 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
             user.signature,
             ...(note.slides ? [JSON.stringify(note.slides), ...getVault().slideThemes] : []),
             ...note.assets.map((a) => `${a}@${stamp(a)}`),
+            ...deps,
           ]
         : undefined
       const cached = diskKey && readCache("notes", import.meta.url, diskKey)
       let parts: Parts
+      const stats = cacheStats()
+      if (cached) stats[deps?.length ? "reusedWithDeps" : "reused"]++
+      else stats[diskKey ? "rendered" : "uncached"]++
       if (cached) {
         parts = JSON.parse(cached.toString("utf8"))
         // The placeholders baked into the cached HTML stay in use, so the build must not prune them.
