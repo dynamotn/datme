@@ -29,6 +29,8 @@ Usage:
   datme check   [vault] [--verbose] [--external] report broken links and other problems
                                                  (--json for tools, --privacy for what leaves the vault)
   datme url     <note> [vault] [--lang xx]       the URL path of a published note
+  datme related <note> [vault] [--json]          notes related to one, and the published
+                                                 notes its text names without a link
   datme init    [vault]                          write a starter datme.yaml
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
                                                  hosts: github, gitlab, netlify, cloudflare
@@ -56,7 +58,7 @@ Options:
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "export" | "url" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "export" | "url" | "related" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -80,7 +82,7 @@ export interface Args {
   json?: boolean
   /** `datme check --privacy`: what leaves the vault, instead of the problems. */
   privacy?: boolean
-  /** Vault-relative file of `datme url`. */
+  /** Vault-relative file of `datme url` and `datme related`. */
   note?: string
 }
 
@@ -120,7 +122,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", ...operands] = positionals
-  if (!["dev", "build", "preview", "check", "init", "deploy", "export", "url", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "deploy", "export", "url", "related", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   let target: Target | undefined
@@ -140,7 +142,7 @@ export function parseArgs(argv: string[]): Args {
     }
   }
   let note: string | undefined
-  if (command === "url") {
+  if (command === "url" || command === "related") {
     note = operands.shift()
     if (!note) throw new CliError("Missing note, as a path relative to the vault.")
   }
@@ -366,6 +368,17 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       : vaultData.byKey[lang].get(rel.replace(/\.md$/i, ""))?.url
     if (!url) throw new CliError(`"${rel}" is not published.`)
     return void console.log(url)
+  }
+
+  if (args.command === "related") {
+    const { site } = await import("./site.config.ts")
+    const lang = args.lang ?? site.defaultLang
+    if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
+    const rel = args.note!.replace(/\\/g, "/").replace(/^\/+/, "")
+    if (!fs.existsSync(path.join(vault, rel))) throw new CliError(`"${rel}" is not a note of the vault.`)
+    const { suggestionsFor, formatSuggestions } = await import("./lib/suggest.ts")
+    const found = await suggestionsFor(rel, lang)
+    return void console.log(args.json ? JSON.stringify(found) : formatSuggestions(found))
   }
 
   if (args.command === "check" && args.privacy) {

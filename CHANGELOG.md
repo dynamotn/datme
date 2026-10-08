@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `datme related <note>` lists the published notes related to a note, even a
+  private one, and the places where its text names a published note without
+  linking to it. The Obsidian plugin shows both in a *link suggestions* pane
+  beside the note being written, where one click turns a mention into a link.
+
 - `datme check --verbose` points at the shape of the garden: orphan notes no
   one links to, dead ends that link nowhere, and hubs with far more links than
   the rest, which a map of content could split. `check.structure: false` turns
