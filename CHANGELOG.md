@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The Obsidian plugin runs on phones and tablets. There it shows and flips
+  whether a note is published, from the note's menu as well, and shows the
+  last check report, which each check on a computer (or CI) saves in
+  `.datme/check.json`.
+
 - `datme related <note>` lists the published notes related to a note, even a
   private one, and the places where its text names a published note without
   linking to it. The Obsidian plugin shows both in a *link suggestions* pane
