@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The Obsidian plugin has a garden dashboard: counts of published, unlisted,
+  private, draft and scheduled notes (with the dates of the scheduled ones),
+  the problems of the last check and how old it is, and links to the site and
+  to the current note on it. It works on phones too.
+
 - The Obsidian plugin runs on phones and tablets. There it shows and flips
   whether a note is published, from the note's menu as well, and shows the
   last check report, which each check on a computer (or CI) saves in
