@@ -56,9 +56,10 @@ export function html(v: Value, lang: Lang): string {
   if (typeof v === "object") {
     if ((v as { kind?: string }).kind === "link") {
       const l = v as { key?: string; title: string; url?: string }
-      return l.url
-        ? `<a href="${escapeAttr(l.url)}" class="internal" data-key="${escapeAttr(l.key ?? "")}">${escapeAttr(l.title)}</a>`
-        : `<span class="broken-link">${escapeAttr(l.title)}</span>`
+      if (l.url) return `<a href="${escapeAttr(l.url)}" class="internal" data-key="${escapeAttr(l.key ?? "")}">${escapeAttr(l.title)}</a>`
+      // A field naming a private note follows privateLinks, as links in the text do.
+      const shown = getVault().privateLink(l.title, "", undefined, lang) ?? l.title
+      return shown ? `<span class="broken-link">${escapeAttr(shown)}</span>` : ""
     }
     return Object.entries(v)
       .map(([k, x]) => `${escapeAttr(k)}: ${html(x, lang)}`)

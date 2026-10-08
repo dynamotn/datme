@@ -32,6 +32,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `--fresh` | build | Ignores the build cache and starts from scratch |
 | `--verbose` | check | Also lists links to unpublished notes, and scheduled notes |
 | `--json` | check | Prints every problem, notices included, as JSON for other tools |
+| `--privacy` | check | Lists what leaves the vault instead of the problems (see [Privacy](privacy.md#auditing-what-leaves-the-vault)); JSON with `--json` |
 | `--external` | check | Also checks that links to other websites still answer (404, 410 and unreachable hosts are reported) |
 | `--branch` | deploy | The branch to publish from (default: the current one) |
 | `--format html` | export | One self-contained page to print as PDF, instead of EPUB |

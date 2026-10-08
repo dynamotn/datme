@@ -27,7 +27,7 @@ Usage:
   datme build   [vault] [--out ./dist] [--fresh] build the static site (dev, build and preview take --drafts)
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose] [--external] report broken links and other problems
-                                                 (--json for tools)
+                                                 (--json for tools, --privacy for what leaves the vault)
   datme url     <note> [vault] [--lang xx]       the URL path of a published note
   datme init    [vault]                          write a starter datme.yaml
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
@@ -49,6 +49,8 @@ Options:
   --branch <b>   branch whose pushes publish the site (default: the current one)
   --format <f>   export as epub (default) or html
   --lang <l>     language of the export or url (default: the first one)
+  --privacy      list what check would publish: notes, files, properties, links to
+                 private notes and outside hosts
   --json         print the problems of check as JSON
   -h, --help     show this help
   -v, --version  show the version`
@@ -75,6 +77,8 @@ export interface Args {
   drafts?: boolean
   external?: boolean
   json?: boolean
+  /** `datme check --privacy`: what leaves the vault, instead of the problems. */
+  privacy?: boolean
   /** Vault-relative file of `datme url`. */
   note?: string
 }
@@ -99,6 +103,7 @@ export function parseArgs(argv: string[]): Args {
         drafts: { type: "boolean" },
         external: { type: "boolean" },
         json: { type: "boolean" },
+        privacy: { type: "boolean" },
         branch: { type: "string", short: "b" },
         format: { type: "string", short: "f" },
         lang: { type: "string" },
@@ -151,6 +156,7 @@ export function parseArgs(argv: string[]): Args {
     ...(folder ? { folder, format: (values.format ?? "epub") as "epub" | "html", lang: values.lang } : {}),
     ...(note ? { note, lang: values.lang } : {}),
     ...(values.json ? { json: true } : {}),
+    ...(values.privacy && command === "check" ? { privacy: true } : {}),
     out: values.out,
     site: values.site,
     port,
@@ -359,6 +365,12 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       : vaultData.byKey[lang].get(rel.replace(/\.md$/i, ""))?.url
     if (!url) throw new CliError(`"${rel}" is not published.`)
     return void console.log(url)
+  }
+
+  if (args.command === "check" && args.privacy) {
+    const { privacyReport, formatPrivacy } = await import("./lib/check.ts")
+    const report = privacyReport()
+    return void console.log(args.json ? JSON.stringify(report) : formatPrivacy(report))
   }
 
   if (args.command === "check" || args.command === "build") {

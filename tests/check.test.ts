@@ -10,7 +10,9 @@ describe("datme check", () => {
   })
 
   test("a link to a private note is only informational", () => {
-    expect(messages("03_Atomic/Zettelkasten.md")).toContain('info: link to unpublished note "Private" is shown as plain text')
+    expect(messages("03_Atomic/Zettelkasten.md")).toContain(
+      'info: link to unpublished note "Private" shows its name as plain text; privateLinks: placeholder or hide keeps it off the site',
+    )
   })
 
   test("broken frontmatter is reported, since the note silently stays private", () => {

@@ -16,6 +16,7 @@ import katex from "katex"
 import crypto from "node:crypto"
 import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, type Scene } from "./excalidraw"
 import { urlPlaceholder, type DrawnDrawing } from "./obsidian"
+import { privateLinkText, showsName } from "./privacy"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -143,8 +144,20 @@ export interface Vault {
   assets: Set<string>
   /** CSS of the vault's Marp themes, for slide decks that name one. */
   slideThemes: string[]
+  /** Links of published notes to private ones, with the words each left on the page. */
+  privateLinks: PrivateLinkUse[]
   resolveNote(target: string, fromDir: string): SourceNote | undefined
   resolveAsset(target: string, fromDir: string): string | undefined
+  /** The words a link to a private note shows in a language ("" for none); undefined for any other target. */
+  privateLink(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined
+}
+
+/** A link from a published note to a private one. */
+export interface PrivateLinkUse {
+  file: string
+  target: string
+  /** The words it left on the page, in the default language; "" for none. */
+  shown: string
 }
 
 const MD_EXT = /\.md$/i
@@ -524,20 +537,42 @@ function buildVault(version: number): Vault {
     return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
   }
 
+  /** Whether a link target names a note of the vault that is not published. */
+  function isPrivateNote(target: string, fromDir: string): boolean {
+    const t = target.trim().replace(/^\/+/, "")
+    if (!t || (/\.\w+$/.test(t) && !MD_EXT.test(t))) return false
+    const name = t.replace(MD_EXT, "").toLowerCase()
+    return anyNote.has(name) || anyNote.has(path.posix.normalize(path.posix.join(fromDir, name)))
+  }
+
+  function privateLink(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined {
+    if (resolveNote(target, fromDir) || !isPrivateNote(target, fromDir)) return undefined
+    return privateLinkText(site.privateLinks, target, alias, t(lang).privateNote)
+  }
+
   // The same broken link shows up once per language; report it once.
   const seenProblems = new Set<string>()
+  const privateLinks: PrivateLinkUse[] = []
   function linkProblem(file: string, p: LinkProblem): void {
     const id = `${file}\0${p.kind}\0${p.target}`
     if (seenProblems.has(id)) return
     seenProblems.add(id)
     const t = p.target.trim().replace(/^\/+/, "")
     const isNote = !/\.\w+$/.test(t) || MD_EXT.test(t)
-    const name = t.replace(MD_EXT, "").toLowerCase()
-    const relative = path.posix.normalize(path.posix.join(path.posix.dirname(file), name))
     if (p.kind === "drawing") {
       report("warning", file, `drawing "${t}" is not in the vault, so it is not shown`)
-    } else if (isNote && (anyNote.has(name) || anyNote.has(relative))) {
-      report("info", file, `${p.kind} to unpublished note "${t}" is shown as plain text`)
+    } else if (isNote && isPrivateNote(t, path.posix.dirname(file))) {
+      const shown = p.shown ?? t
+      privateLinks.push({ file, target: t, shown })
+      report(
+        "info",
+        file,
+        !shown
+          ? `${p.kind} to unpublished note "${t}" is left out`
+          : showsName(t, shown)
+            ? `${p.kind} to unpublished note "${t}" shows its name as plain text; privateLinks: placeholder or hide keeps it off the site`
+            : `${p.kind} to unpublished note "${t}" is shown as plain text`,
+      )
     } else if (isNote) {
       report("error", file, `${p.kind} to missing note "${t}"`)
     } else {
@@ -627,6 +662,7 @@ function buildVault(version: number): Vault {
         drawingPage: resolveDrawing,
         slides,
         readText,
+        privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
       })
       // A protected note's files travel inside its ciphertext, so they are not published on their own.
       if (!s.password) pre.assets.forEach((a) => assets.add(a))
@@ -640,7 +676,16 @@ function buildVault(version: number): Vault {
           }
           return { md: "" }
         }
-        const p = preprocess(part.md, { lang, dir: s.dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing, readText })
+        const p = preprocess(part.md, {
+          lang,
+          dir: s.dir,
+          resolveNote,
+          resolveAsset,
+          drawDrawing,
+          drawingPage: resolveDrawing,
+          readText,
+          privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
+        })
         for (const problem of p.problems) linkProblem(relFile, problem)
         return { password, md: p.md }
       })
@@ -737,7 +782,16 @@ function buildVault(version: number): Vault {
         doc.texts[lang] = {}
         for (const node of doc.canvas.nodes) {
           if (node.type === "text" && node.text) {
-            const pre = preprocess(filterLanguage(node.text, lang), { lang, dir, resolveNote, resolveAsset, drawDrawing, drawingPage: resolveDrawing, readText })
+            const pre = preprocess(filterLanguage(node.text, lang), {
+              lang,
+              dir,
+              resolveNote,
+              resolveAsset,
+              drawDrawing,
+              drawingPage: resolveDrawing,
+              readText,
+              privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
+            })
             pre.assets.forEach((a) => assets.add(a))
             doc.texts[lang][node.id] = pre.md
           } else if (node.type === "file" && node.file && !resolveNote(node.file, "")) {
@@ -849,8 +903,10 @@ function buildVault(version: number): Vault {
     folders,
     assets,
     slideThemes,
+    privateLinks,
     resolveNote,
     resolveAsset,
+    privateLink,
   }
 }
 

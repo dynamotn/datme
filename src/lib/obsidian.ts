@@ -16,6 +16,8 @@ export interface LinkRef {
 export interface LinkProblem {
   kind: "link" | "embed" | "drawing"
   target: string
+  /** For a link to a private note, the words it left on the page ("" for none). */
+  shown?: string
 }
 
 /** The only thing the converter needs to know about a resolved note. */
@@ -46,6 +48,8 @@ interface Ctx {
   slides?: boolean
   /** The text of a vault file, for the transcript of a media file. */
   readText?(rel: string): string | undefined
+  /** The words a link to a private note leaves ("" for none); undefined when the target is not one. */
+  privateLink?(target: string, fromDir: string, alias: string | undefined): string | undefined
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -92,11 +96,14 @@ function assetUrl(rel: string): string {
   return "/assets/" + rel.split("/").map(encodeURIComponent).join("/")
 }
 
+/** The words of a link in plain text: its alias or target, unless it points at a private note. */
+type LinkWords = (target: string, alias: string | undefined) => string
+
 /** Plain-text rendering of a markdown line, used as backlink context. */
-function plainLine(line: string): string {
+function plainLine(line: string, words: LinkWords = (t, a) => a ?? t): string {
   return line
-    .replace(/!?\[\[([^\]|]+?)(?:\\?\|([^\]]+))?\]\]/g, (_, t, a) => a ?? t.split("#")[0])
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/!?\[\[([^\]|]+?)(?:\\?\|([^\]]+))?\]\]/g, (_, t: string, a?: string) => words(t.split("#")[0], a))
+    .replace(/\[([^\]]*)\]\(([^)]*)\)/g, (_, text: string, href: string) => (/\.md(#|$)/i.test(href) ? words(href.replace(/#.*$/, ""), text) : text))
     .replace(/<[^>]+>/g, "")
     .replace(/^\s*(?:[-*+]|\d+\.|>|#+|\|)\s*/g, "")
     .replace(/\[!\w+\][+-]?/g, "")
@@ -138,10 +145,24 @@ export function preprocess(
   const assets: string[] = []
   const docs: string[] = []
   const problems: LinkProblem[] = []
-  const broken = (kind: LinkProblem["kind"], target: string, html: string) => {
-    problems.push({ kind, target })
+  const broken = (kind: LinkProblem["kind"], target: string, html: string, shown?: string) => {
+    problems.push(shown === undefined ? { kind, target } : { kind, target, shown })
     return html
   }
+  /** The words of a link to a private note, or undefined for any other target. */
+  const privateWords = (target: string, alias: string | undefined): string | undefined => {
+    let decoded = target
+    try {
+      decoded = decodeURI(target)
+    } catch {
+      // keep the raw target
+    }
+    return decoded.trim() ? ctx.privateLink?.(decoded.trim(), ctx.dir, alias) : undefined
+  }
+  const contextOf = (line: string) => plainLine(line, (t, a) => privateWords(t, a) ?? a ?? t)
+  /** A link to a private note as plain words, or nothing when it shows none. */
+  const privateSpan = (kind: LinkProblem["kind"], target: string, shown: string) =>
+    broken(kind, target, shown ? `<span class="broken-link" title="Not published">${shown}</span>` : "", shown)
   const lines = md.split("\n")
   const lineOf = (offset: number) => {
     let n = 0
@@ -221,7 +242,7 @@ export function preprocess(
       if (drawn) {
         assets.push(...drawn.assets)
         // What the drawing links to counts as linked from the note, for backlinks and the graph.
-        for (const key of drawn.links) links.push({ key, context: plainLine(line) })
+        for (const key of drawn.links) links.push({ key, context: contextOf(line) })
         // The SVG carries its own name for screen readers.
         // Masked like code: later passes must not read `url(#clip)` as a #tag or `==` as a highlight.
         return mask(`<span class="drawing generated"${width}>${drawn.svg.replace(/role="(img|group)"/, `role="$1" aria-label="${name}"`)}</span>`)
@@ -271,11 +292,13 @@ export function preprocess(
     if (bang) {
       const note = file ? ctx.resolveNote(file, ctx.dir) : undefined
       if (note && !IMAGE.test(file)) {
-        links.push({ key: note.key, context: plainLine(lineOf(offset)) })
+        links.push({ key: note.key, context: contextOf(lineOf(offset)) })
         return `<span class="transclude-ph" data-key="${escapeAttr(note.key)}" data-fragment="${escapeAttr(fragment)}"></span>`
       }
       const asset = file ? ctx.resolveAsset(file, ctx.dir) : undefined
       if (asset) return embedAsset(asset, alias, fragment)
+      const shown = privateWords(file, alias)
+      if (shown !== undefined) return privateSpan("embed", file, escapeAttr(shown))
       return broken("embed", file, `<span class="broken-link">${escapeAttr(alias ?? file)}</span>`)
     }
 
@@ -288,9 +311,11 @@ export function preprocess(
         assets.push(asset)
         return `<a href="${assetUrl(asset)}" class="attachment">${text}</a>`
       }
+      const shown = privateWords(file, alias)
+      if (shown !== undefined) return privateSpan("link", file, shown)
       return broken("link", file, `<span class="broken-link" title="Not published">${text}</span>`)
     }
-    links.push({ key: note.key, context: plainLine(lineOf(offset)) })
+    links.push({ key: note.key, context: contextOf(lineOf(offset)) })
     return internalLink(note, fragment, text)
   })
 
@@ -309,8 +334,12 @@ export function preprocess(
       }
       if (!bang && /\.md$/i.test(decoded)) {
         const note = ctx.resolveNote(decoded, ctx.dir)
-        if (!note) return broken("link", decoded, `<span class="broken-link">${text}</span>`)
-        links.push({ key: note.key, context: plainLine(lineOf(offset)) })
+        if (!note) {
+          const shown = privateWords(decoded, text)
+          if (shown !== undefined) return privateSpan("link", decoded, shown)
+          return broken("link", decoded, `<span class="broken-link">${text}</span>`)
+        }
+        links.push({ key: note.key, context: contextOf(lineOf(offset)) })
         return internalLink(note, (frag ?? "").slice(1), text)
       }
       // Canvases, bases and drawings open on their own page, as their wikilinks do.

@@ -1,6 +1,11 @@
 import { site } from "../site.config"
-import { getVault, type Problem } from "./vault"
+import { getVault, type PrivateLinkUse, type Problem } from "./vault"
 import { externalUrls } from "./links"
+import { docUrl } from "./obsidian"
+import { noteProperties } from "./properties"
+import { outsideHosts, type Host } from "./privacy"
+import { parseLocation } from "./places"
+import { MONO_FONT_CSS } from "./fonts"
 
 /** Every problem of the vault and of datme.yaml, sorted by file. */
 export function checkVault(): Problem[] {
@@ -73,4 +78,66 @@ export function formatReport(problems: Problem[], verbose = false): string {
   lines.push("", summarize(counts))
   if (!verbose && counts.info) lines.push('Notices (links to unpublished notes, scheduled notes) are expected; "--verbose" lists them.')
   return lines.join("\n").replace(/^\n/, "")
+}
+
+/** Everything that leaves the vault when the site is built, for `datme check --privacy`. */
+export interface PrivacyReport {
+  notes: { file: string; url: string; protected: boolean; unlisted: boolean }[]
+  /** Canvases, bases and drawings published as pages. */
+  docs: { file: string; url: string }[]
+  /** Vault files copied to the site. */
+  files: string[]
+  /** Frontmatter keys shown in the properties block of notes, with the notes showing each. */
+  properties: { key: string; files: string[] }[]
+  privateLinks: PrivateLinkUse[]
+  hosts: Host[]
+}
+
+export function privacyReport(): PrivacyReport {
+  const vault = getVault()
+  const lang = site.defaultLang
+  const notes = vault.notes[lang]
+  const byKey = new Map<string, string[]>()
+  const embedded: string[] = []
+  for (const n of notes) {
+    if (n.protected) continue
+    for (const [key] of noteProperties(n)) byKey.set(key, [...(byKey.get(key) ?? []), n.key + ".md"])
+    for (const m of n.md.matchAll(/\bsrc="(https:\/\/[^"]+)"/g)) embedded.push(m[1])
+  }
+  const hasMap = notes.some((n) => !n.protected && parseLocation(n.source.fm.location ?? n.source.fm.coordinates))
+  return {
+    notes: notes
+      .map((n) => ({ file: n.key + ".md", url: n.url, protected: n.protected, unlisted: n.unlisted }))
+      .sort((a, b) => a.file.localeCompare(b.file)),
+    docs: [...vault.docs.keys()].sort().map((file) => ({ file, url: docUrl(file, lang) })),
+    files: [...vault.assets].sort(),
+    properties: [...byKey].map(([key, files]) => ({ key, files })).sort((a, b) => a.key.localeCompare(b.key)),
+    privateLinks: [...vault.privateLinks].sort((a, b) => a.file.localeCompare(b.file) || a.target.localeCompare(b.target)),
+    hosts: outsideHosts(site, MONO_FONT_CSS, embedded, hasMap),
+  }
+}
+
+/** The report of `datme check --privacy`, one section per kind of thing published. */
+export function formatPrivacy(r: PrivacyReport): string {
+  const out: string[] = []
+  const section = (title: string, lines: string[]) => {
+    out.push("", `${title} (${lines.length})`)
+    out.push(...(lines.length ? lines.map((l) => `  ${l}`) : ["  none"]))
+  }
+  section(
+    "Published notes",
+    r.notes.map((n) => `${n.file}  ${n.url}${n.protected ? "  [password]" : ""}${n.unlisted ? "  [unlisted]" : ""}`),
+  )
+  section("Canvases, bases and drawings", r.docs.map((d) => `${d.file}  ${d.url}`))
+  section("Files copied", r.files)
+  section(
+    "Properties shown",
+    r.properties.map((p) => `${p.key}: ${p.files.length === 1 ? p.files[0] : `${p.files.length} notes`}`),
+  )
+  section(
+    "Links to private notes",
+    r.privateLinks.map((l) => `${l.file}  "${l.target}" ${l.shown ? `shows "${l.shown}"` : "shows nothing"}`),
+  )
+  section("Outside hosts", r.hosts.map((h) => `${h.host}  ${h.why}`))
+  return out.join("\n").replace(/^\n/, "")
 }

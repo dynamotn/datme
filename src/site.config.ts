@@ -114,6 +114,11 @@ const schema = z
       .default({}),
     /** explicit: only notes with `publish: true`; all: every note except `publish: false`. */
     publish: z.enum(["explicit", "all"]).default("explicit"),
+    /**
+     * What a link to a note that is not published shows: text, its words as written;
+     * placeholder, a neutral "a private note"; hide, nothing unless the link has an alias.
+     */
+    privateLinks: z.enum(["text", "placeholder", "hide"]).default("text"),
     /** Vault-relative note rendered as the home page. */
     home: z.string().default("index.md"),
     conventions: z
@@ -433,6 +438,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ],
     stages,
     publish: c.publish,
+    privateLinks: c.privateLinks,
     home: c.home.replace(/^\/+/, ""),
     conventions: c.conventions,
     footerLinks: c.footer,

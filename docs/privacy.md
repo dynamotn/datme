@@ -22,6 +22,37 @@ public", and gives you several ways to share a little more.
 - **Comments:** `%%comments%%` and HTML comments never reach the page, nor the
   markdown copies made for `llms.txt`.
 
+## Links to private notes
+
+A published note may link to one that is not. The link can't lead anywhere,
+so its words stay as plain text. Those words are often the private note's
+title, and a title such as "Job interview at X" says a lot on its own.
+`privateLinks` chooses what the page shows:
+
+```yaml
+privateLinks: text            # the words as written (the default)
+privateLinks: placeholder     # "a private note", whatever the words were
+privateLinks: hide            # nothing for [[Job interview]]; an alias, as in [[Job interview|that day]], stays
+```
+
+The setting also covers embeds, the backlink snippets of other notes,
+properties, and Dataview fields. `datme check --verbose` lists every link to a
+private note that still shows its name.
+
+## Auditing what leaves the vault
+
+`datme check --privacy` lists everything a build would publish, so you can
+read it through before the first deploy:
+
+- the published notes and their URLs, marked when protected or unlisted
+- the canvases, bases and drawings published as pages
+- every file copied to the site
+- the frontmatter keys shown in properties blocks, and the notes showing each
+- the links to private notes, with the words each leaves on the page
+- the outside hosts the site loads from, and why
+
+`--json` prints the same as JSON.
+
 ## Unlisted notes
 
 `unlisted: true` publishes the note but leaves it out of the explorer, folder

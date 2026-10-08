@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `privateLinks` chooses what a link to an unpublished note leaves on the page:
+  its words as written (`text`, the default), a neutral "a private note"
+  (`placeholder`), or nothing unless the link has an alias (`hide`). It covers
+  links, embeds, backlink snippets, properties and Dataview fields, and
+  `datme check --verbose` names every link that still shows a private note's
+  name.
+- `datme check --privacy` lists everything that leaves the vault: published
+  notes and their URLs, pages of canvases, bases and drawings, copied files,
+  the properties shown, the words of links to private notes, and the outside
+  hosts the site loads from. `--json` prints it as JSON.
+
 - Code blocks of more than one line show a column of line numbers, left out
   when the code is copied. Blocks without a language get it too.
 - `` ```base `` code blocks render the base written inside them, every view in

@@ -51,16 +51,23 @@ export const HIDDEN_PROPERTIES = [
 
 const WIKILINK = /^\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]$/
 
-/** A frontmatter value made displayable; undefined when it is empty. */
-export function toProp(v: unknown, resolve: (target: string) => Note | undefined): PropValue | undefined {
+/**
+ * A frontmatter value made displayable; undefined when it is empty. `hidden`
+ * gives the words of a link to a private note, undefined for any other target.
+ */
+export function toProp(
+  v: unknown,
+  resolve: (target: string) => Note | undefined,
+  hidden: (target: string, alias: string | undefined) => string | undefined = () => undefined,
+): PropValue | undefined {
   if (v == null || v === "") return undefined
   if (Array.isArray(v)) {
-    const items = v.map((x) => toProp(x, resolve)).filter((x): x is PropValue => x !== undefined)
+    const items = v.map((x) => toProp(x, resolve, hidden)).filter((x): x is PropValue => x !== undefined)
     return items.length ? { kind: "list", items } : undefined
   }
   if (typeof v === "object") {
     const entries = Object.entries(v as Record<string, unknown>)
-      .map(([k, x]) => [k, toProp(x, resolve)] as const)
+      .map(([k, x]) => [k, toProp(x, resolve, hidden)] as const)
       .filter((e): e is [string, PropValue] => e[1] !== undefined)
     return entries.length ? { kind: "map", entries } : undefined
   }
@@ -69,6 +76,8 @@ export function toProp(v: unknown, resolve: (target: string) => Note | undefined
   const link = text.match(WIKILINK)
   if (link) {
     const note = resolve(link[1])
+    const shown = note ? undefined : hidden(link[1], link[2])
+    if (shown !== undefined) return shown ? { kind: "text", text: shown } : undefined
     return { kind: "text", text: link[2] ?? note?.title ?? link[1], href: note?.url }
   }
   if (/^(https?:\/\/|mailto:)/.test(text)) return { kind: "text", text: text.replace(/^mailto:/, ""), href: text }
@@ -89,7 +98,7 @@ export function noteProperties(note: Note): [string, PropValue][] {
   const out: [string, PropValue][] = []
   for (const [key, value] of Object.entries(note.source.fm)) {
     if (hidden.has(key.toLowerCase())) continue
-    const prop = toProp(value, resolve)
+    const prop = toProp(value, resolve, (target, alias) => vault.privateLink(target, note.dir, alias, note.lang))
     if (prop) out.push([key === "aliases" ? "aliases" : key, prop])
   }
   return out.sort(([a], [b]) => (a === "aliases" ? -1 : b === "aliases" ? 1 : 0))
