@@ -3797,3 +3797,54 @@ a.drawing-link tspan {
 .trail-nav[hidden] {
   display: none;
 }
+
+/* Listening to a note: the bar above it, and the sentence being read. */
+.listen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+.listen button,
+.listen select {
+  font: inherit;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.listen .listen-play[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.listen-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.listen-controls[hidden] {
+  display: none;
+}
+::highlight(listen) {
+  background-color: var(--mark);
+  color: inherit;
+}
+.prose .listening {
+  scroll-margin: 30vh;
+}
+@supports not selector(::highlight(listen)) {
+  .prose .listening {
+    background: var(--accent-soft);
+    border-radius: 4px;
+  }
+}
+@media print {
+  .listen {
+    display: none !important;
+  }
+}

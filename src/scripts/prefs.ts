@@ -1,7 +1,8 @@
 /**
  * Reading preferences kept in the reader's browser: text size, a font made
- * for legibility, and high contrast. The <head> script of the layout applies
- * them before the first paint; this module offers the controls.
+ * for legibility, high contrast, and the speed notes are read aloud at. The
+ * <head> script of the layout applies them before the first paint; this
+ * module offers the controls.
  */
 
 export interface Prefs {
@@ -9,18 +10,26 @@ export interface Prefs {
   size: number
   legible: boolean
   contrast: boolean
+  /** Speed of reading a note aloud, as a factor of the voice's own. */
+  rate: number
 }
 
 export const SIZES = [0.85, 1, 1.15, 1.3, 1.5]
+export const RATES = [0.75, 1, 1.25, 1.5, 1.75, 2]
 const KEY = "prefs"
 const FONT_URL = "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap"
 
 export function parsePrefs(raw: string | null): Prefs {
   try {
     const p = JSON.parse(raw ?? "{}") as Partial<Prefs>
-    return { size: SIZES.includes(Number(p.size)) ? Number(p.size) : 1, legible: p.legible === true, contrast: p.contrast === true }
+    return {
+      size: SIZES.includes(Number(p.size)) ? Number(p.size) : 1,
+      legible: p.legible === true,
+      contrast: p.contrast === true,
+      rate: RATES.includes(Number(p.rate)) ? Number(p.rate) : 1,
+    }
   } catch {
-    return { size: 1, legible: false, contrast: false }
+    return { size: 1, legible: false, contrast: false, rate: 1 }
   }
 }
 
@@ -45,7 +54,7 @@ export function applyPrefs(root: HTMLElement, p: Prefs): void {
   }
 }
 
-function load(): Prefs {
+export function loadPrefs(): Prefs {
   try {
     return parsePrefs(localStorage.getItem(KEY))
   } catch {
@@ -53,7 +62,7 @@ function load(): Prefs {
   }
 }
 
-function save(p: Prefs) {
+export function savePrefs(p: Prefs) {
   try {
     localStorage.setItem(KEY, JSON.stringify(p))
   } catch {
@@ -68,7 +77,7 @@ export function setupPrefs(): void {
   if (!toggle || !panel || panel.dataset.bound) return
   panel.dataset.bound = "1"
   const root = document.documentElement
-  let prefs = load()
+  let prefs = loadPrefs()
   const sync = () => {
     applyPrefs(root, prefs)
     panel.querySelector("[data-pref-size-out]")!.textContent = `${Math.round(prefs.size * 100)}%`
@@ -83,14 +92,14 @@ export function setupPrefs(): void {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-pref-size]")
     if (!b) return
     prefs = { ...prefs, size: step(prefs.size, Number(b.dataset.prefSize)) }
-    save(prefs)
+    savePrefs(prefs)
     sync()
   })
   panel.addEventListener("change", (e) => {
     const i = e.target as HTMLInputElement
     if (!i.dataset.pref) return
     prefs = { ...prefs, [i.dataset.pref]: i.checked }
-    save(prefs)
+    savePrefs(prefs)
     sync()
   })
   document.addEventListener("click", (e) => {

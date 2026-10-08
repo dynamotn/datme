@@ -72,6 +72,12 @@ type never leaves the page. Nothing loads until they press the button. It needs
 - **Reading preferences:** the "Aa" menu enlarges the text, switches to a
   legible font (Atkinson Hyperlegible) or high contrast. The choice stays in
   the reader's browser.
+- **Listening:** ▶ *Listen* above a note reads it aloud with the browser's
+  own voices, in the note's language. The sentence being read is highlighted
+  and the page follows it. Headings and callout titles are read; code,
+  diagrams, math, footnote markers and locked parts are skipped. ⏮ and ⏭ move
+  by paragraph, and the reading speed is remembered with the other
+  preferences. Browsers without speech don't show the button.
 - **Sidebars:** each one folds away on its own. Reader mode hides both.
 - **Theme:** light and dark follow the system, or `theme.scheme` in
   `datme.yaml`, with a toggle that remembers the reader's choice.
