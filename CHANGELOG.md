@@ -105,6 +105,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Note counts of stages on the home page, and of folders in the explorer,
+  filters, folder pages and stats, no longer count the folder note that
+  introduces a folder as one of its notes.
 - Comments open in the theme the page is in, not the system's, when the
   reader has switched it with the toggle.
 - Links inside headings are readable again: they keep the heading's colour

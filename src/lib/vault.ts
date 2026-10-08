@@ -957,9 +957,9 @@ export function assetUrl(rel: string): string {
   return "/assets/" + rel.split("/").map(encodeURIComponent).join("/")
 }
 
-/** Number of notes under a folder, recursively. */
+/** Number of notes under a folder, recursively; folder notes introduce their folder and are not counted. */
 export function countNotes(f: FolderNode): number {
-  return f.notes.length + (f.folderNote ? 1 : 0) + f.folders.reduce((acc, c) => acc + countNotes(c), 0)
+  return f.notes.length + f.folders.reduce((acc, c) => acc + countNotes(c), 0)
 }
 
 let cached: Vault | undefined

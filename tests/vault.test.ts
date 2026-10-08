@@ -161,7 +161,14 @@ describe("graph of notes", () => {
     expect(fleeting.folderNote?.key).toBe("01_Fleeting/01_Fleeting")
     expect(fleeting.notes).toHaveLength(0)
     expect(fleeting.name).toBe("Fleeting")
-    expect(countNotes(fleeting)).toBe(1)
+    expect(countNotes(fleeting)).toBe(0)
+  })
+
+  test("note counts leave out folder notes at every depth", () => {
+    const [intro, a, b] = vault.notes["vi-VN"]
+    const leaf = { ...vault.folders["vi-VN"].get("01_Fleeting")!, folderNote: intro, notes: [a, b], folders: [] }
+    const stage = { ...leaf, folderNote: intro, notes: [a], folders: [leaf] }
+    expect(countNotes(stage)).toBe(3)
   })
 
   test("the folder tree hides the home note", () => {
