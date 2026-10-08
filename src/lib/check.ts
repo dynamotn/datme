@@ -6,11 +6,60 @@ import { noteProperties } from "./properties"
 import { outsideHosts, type Host } from "./privacy"
 import { parseLocation } from "./places"
 import { MONO_FONT_CSS } from "./fonts"
+import { journal } from "./journal"
+
+/** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
+const HUB_FACTOR = 5
+const HUB_MIN = 15
+
+/** The median of the notes that link somewhere; notes linking nowhere would pull it to zero. */
+export function linkMedian(counts: number[]): number {
+  const linking = counts.filter((c) => c > 0).sort((a, b) => a - b)
+  return linking.length ? linking[Math.floor(linking.length / 2)] : 0
+}
+
+/** Whether a note's outgoing links make it a hub among notes of this median. */
+export const isHub = (links: number, median: number) => median > 0 && links >= HUB_MIN && links >= HUB_FACTOR * median
+
+/**
+ * Notices about the shape of the garden, in the default language: notes no
+ * one links to (orphans), notes linking nowhere (dead ends), and notes with
+ * far more links than the others (hubs, which a map of content could split).
+ */
+export function structureProblems(): Problem[] {
+  const vault = getVault()
+  const lang = site.defaultLang
+  const notes = vault.notes[lang]
+  const backlinks = vault.backlinks[lang]
+  // Notes the menu leads to are found without a link.
+  const inNav = new Set(
+    site.nav.flatMap((item) => (item.kind === "note" ? [vault.resolveNote(item.target!, "")?.key] : [])).filter((k): k is string => !!k),
+  )
+  // Daily notes are reached by the calendar and from day to day, and folder notes from the explorer.
+  const days = new Set(journal(lang).map((d) => d.note.key))
+  const folderNotes = new Set([...vault.folders[lang].values()].flatMap((f) => (f.folderNote ? [f.folderNote.key] : [])))
+  const outgoing = new Map(notes.map((n) => [n.key, new Set(n.protected ? [] : n.links.map((l) => l.key).filter((k) => k !== n.key))]))
+  const median = linkMedian([...outgoing.values()].map((s) => s.size))
+  const problems: Problem[] = []
+  for (const n of notes) {
+    const file = n.key + ".md"
+    const links = outgoing.get(n.key)!.size
+    if (days.has(n.key)) continue
+    if (!n.isHome && !n.unlisted && !inNav.has(n.key) && !folderNotes.has(n.key) && !(backlinks.get(n.key) ?? []).length) {
+      problems.push({ level: "info", file, message: "orphan: no published note links here, and the menu does not either" })
+    }
+    if (!n.protected && links === 0) problems.push({ level: "info", file, message: "dead end: links to no published note" })
+    if (!n.isHome && !n.isMoc && isHub(links, median)) {
+      problems.push({ level: "info", file, message: `hub: links to ${links} notes, ${Math.round(links / median)} times the median of ${median}; a map of content could split it` })
+    }
+  }
+  return problems
+}
 
 /** Every problem of the vault and of datme.yaml, sorted by file. */
 export function checkVault(): Problem[] {
   const vault = getVault()
-  const problems = [...vault.problems]
+  const problems = [...vault.problems, ...(site.check.structure ? structureProblems() : [])]
   for (const item of site.nav) {
     if (item.kind !== "note") continue
     const source = vault.resolveNote(item.target!, "")
@@ -76,7 +125,9 @@ export function formatReport(problems: Problem[], verbose = false): string {
   }
   const counts = countProblems(problems)
   lines.push("", summarize(counts))
-  if (!verbose && counts.info) lines.push('Notices (links to unpublished notes, scheduled notes) are expected; "--verbose" lists them.')
+  if (!verbose && counts.info) {
+    lines.push('Notices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs) are expected; "--verbose" lists them.')
+  }
   return lines.join("\n").replace(/^\n/, "")
 }
 

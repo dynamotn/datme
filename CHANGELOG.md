@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `datme check --verbose` points at the shape of the garden: orphan notes no
+  one links to, dead ends that link nowhere, and hubs with far more links than
+  the rest, which a map of content could split. `check.structure: false` turns
+  these notices off.
+
 - With `related.semantic`, the search dialog opened on a note lists the notes
   closest to it in meaning, from vectors the build writes next to the search
   index. No model is downloaded for it.

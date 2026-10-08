@@ -33,6 +33,8 @@ publish: explicit             # or `all`: everything except `publish: false`
 home: index.md                # note rendered as the home page
 ignore: [Archive, Journal]    # added to .obsidian, .trash, templates, private
 privateLinks: text            # links to private notes: text, placeholder or hide
+check:
+  structure: true             # datme check notices orphan notes, dead ends and hubs
 encryption:
   iterations: 600000          # PBKDF2 rounds for passwords (at least 100000)
 ```

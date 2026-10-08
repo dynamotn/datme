@@ -42,6 +42,18 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 
 ## Checking a vault
 
+Besides what is broken, `check --verbose` lists notices about the shape of the
+garden, in its first language:
+
+- **Orphans:** notes no published note links to and the menu doesn't lead to.
+  The home page, folder notes, daily notes and unlisted notes are left out.
+- **Dead ends:** notes that link to no published note (daily notes aside).
+- **Hubs:** notes linking to at least 15 notes and five times as many as the
+  median note; a map of content could split them.
+
+`check: { structure: false }` in `datme.yaml` turns these off. The Obsidian
+plugin lists them too when its *Show notices* setting is on.
+
 `build` prints a one-line summary of the problems `check` would report.
 `datme dev` also shows a note's problems on its page.
 

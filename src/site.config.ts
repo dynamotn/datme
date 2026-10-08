@@ -309,6 +309,13 @@ const schema = z
       .default({ engine: "minisearch", meaning: false }),
     /** Turn a paragraph that is only a URL into a card with the page's title and image. */
     linkPreviews: z.boolean().default(true),
+    check: z
+      .object({
+        /** Notices about the shape of the garden: orphan notes, dead ends and hubs. */
+        structure: z.boolean().default(true),
+      })
+      .strict()
+      .default({ structure: true }),
     /** Point links that `datme check --external` found dead at the Internet Archive's copy. */
     archiveDeadLinks: z.boolean().default(true),
     /** Link the first mention of a term (a note tagged type/term) to its note. */
@@ -475,6 +482,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     map: c.map,
     glossary: c.glossary,
     archiveDeadLinks: c.archiveDeadLinks,
+    check: c.check,
     linkPreviews: c.linkPreviews,
     search: c.search,
     bibliography: (typeof c.bibliography === "string" ? [c.bibliography] : (c.bibliography ?? [])).map((p) => p.replace(/^\/+/, "")),
