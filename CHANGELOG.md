@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `datme doctor` checks the machine and the vault before a build: the Bun or
+  Node version, the optional packages the published notes need, git, the
+  `DATME_LOCK_…` variables of group passwords (names only, never values) and
+  `site.url`, each with the command that fixes it.
+
 - The Obsidian plugin has a garden dashboard: counts of published, unlisted,
   private, draft and scheduled notes (with the dates of the scheduled ones),
   the problems of the last check and how old it is, and links to the site and

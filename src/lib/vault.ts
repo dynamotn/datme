@@ -185,6 +185,13 @@ function walk(dir: string, out: { md: string[]; files: string[] }, rel = ""): vo
   }
 }
 
+/** Vault-relative paths of every markdown file datme reads, published or not. */
+export function markdownFiles(): string[] {
+  const found = { md: [] as string[], files: [] as string[] }
+  walk(site.vault, found)
+  return found.md
+}
+
 const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
 export function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string; error?: string } {

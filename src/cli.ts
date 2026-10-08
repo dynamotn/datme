@@ -32,6 +32,7 @@ Usage:
   datme related <note> [vault] [--json]          notes related to one, and the published
                                                  notes its text names without a link
   datme init    [vault]                          write a starter datme.yaml
+  datme doctor  [vault]                          check the machine and the vault before a build
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
                                                  hosts: github, gitlab, netlify, cloudflare
   datme export  <folder> [vault] [--format epub|html] [--out file] [--lang xx]
@@ -58,7 +59,7 @@ Options:
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "deploy" | "export" | "url" | "related" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "doctor" | "deploy" | "export" | "url" | "related" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -122,7 +123,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", ...operands] = positionals
-  if (!["dev", "build", "preview", "check", "init", "deploy", "export", "url", "related", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "doctor", "deploy", "export", "url", "related", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   let target: Target | undefined
@@ -368,6 +369,35 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       : vaultData.byKey[lang].get(rel.replace(/\.md$/i, ""))?.url
     if (!url) throw new CliError(`"${rel}" is not published.`)
     return void console.log(url)
+  }
+
+  if (args.command === "doctor") {
+    const { diagnose, formatDiagnosis } = await import("./lib/doctor.ts")
+    const pkg = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8"))
+    const findings = diagnose({
+      env,
+      runtime: { bun: process.versions.bun, node: process.versions.node },
+      engines: pkg.engines ?? {},
+      resolves(name) {
+        try {
+          import.meta.resolve(name)
+          return true
+        } catch {
+          return false
+        }
+      },
+      git: () => {
+        try {
+          return execFileSync("git", ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
+        } catch {
+          return undefined
+        }
+      },
+      gitTop: (dir) => git(dir, "rev-parse", "--show-toplevel"),
+    })
+    console.log(formatDiagnosis(findings))
+    if (findings.some((f) => f.level === "fail")) throw new CliError("doctor found something to fix.")
+    return
   }
 
   if (args.command === "related") {

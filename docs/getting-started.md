@@ -71,10 +71,13 @@ push rebuilds the site, and the build cache is kept between runs.
 ## Before you publish
 
 ```bash
+bunx @dynamotn/datme doctor ~/MyVault
 bunx @dynamotn/datme check ~/MyVault
 ```
 
-`check` lists broken links, missing files, clashing URLs and invalid
+`doctor` checks that this machine can build the vault: the Bun or Node
+version, the optional packages your notes need, git, and the variables of
+group passwords. `check` lists broken links, missing files, clashing URLs and invalid
 frontmatter. Add `--external` to also find links to other websites that have
 died. Run `dev` or `build` with `--drafts` to see drafts and scheduled notes as
 they will look.

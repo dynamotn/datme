@@ -19,6 +19,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases, and invalid frontmatter; exits 1 on errors |
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push (see [Deploying](deploying.md)) |
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or a printable page |
+| `datme doctor [vault]` | Checks the machine and the vault before a build: the Bun or Node version, the optional packages the vault's notes need (D2, Typst, transformers.js), git, the `DATME_LOCK_…` variables of group passwords, and `site.url`. Each problem comes with the command that fixes it; exits 1 if one must be fixed |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
 | `datme related <note> [vault]` | Lists the published notes related to a note (published or not), and the places where its text names one without a link; `--json` for tools such as the Obsidian plugin |
 | `datme url <note> [vault]` | Prints the URL path of a published note, canvas or drawing (`--lang` picks the language); fails for a private one |
