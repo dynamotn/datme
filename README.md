@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@dynamotn/datme"><img alt="npm" src="https://img.shields.io/npm/v/@dynamotn/datme?color=2d6a4f&label=npm"></a>
-  <a href="LICENSE"><img alt="License: CC BY-SA 4.0" src="https://img.shields.io/badge/license-CC%20BY--SA%204.0-b5532c"></a>
+  <a href="LICENSE"><img alt="License: MPL 2.0" src="https://img.shields.io/badge/license-MPL%202.0-b5532c"></a>
   <img alt="Runs on Bun or Node 23.6+" src="https://img.shields.io/badge/runs%20on-Bun%20%7C%20Node%2023.6%2B-4f8f5b">
 </p>
 
@@ -168,5 +168,7 @@ for a map of the code.
 
 ## License
 
-[CC BY-SA 4.0](LICENSE): share and adapt freely, with attribution, under the
-same license.
+[MPL 2.0](LICENSE): use, change and ship datme freely; changes to datme's own
+files are shared back under the same license. Your notes and your own files stay
+yours, under any license you choose. Releases up to 2.0.1 remain under
+CC BY-SA 4.0.

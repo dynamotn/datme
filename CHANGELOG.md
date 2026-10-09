@@ -89,6 +89,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- datme and its Obsidian plugin are now licensed under the Mozilla Public
+  License 2.0 instead of CC BY-SA 4.0: a license written for software, with a
+  patent grant, that asks only for changes to datme's own files to be shared
+  back and leaves a garden's notes and other files free. Releases up to 2.0.1
+  keep CC BY-SA 4.0.
 - Notes that embed others or run queries are cached between builds as well,
   and rendered again only when what they read changes: the embedded notes, or
   the pages a query can see (just its folders and tags, for a Dataview `FROM`

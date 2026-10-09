@@ -11,7 +11,7 @@
     "zettelkasten",
     "notes"
   ],
-  "license": "CC-BY-SA-4.0",
+  "license": "MPL-2.0",
   "author": "Trần Đức Nam <me@dynamotn.dev>",
   "homepage": "https://gitlab.com/dynamo-tools/datme",
   "repository": {
