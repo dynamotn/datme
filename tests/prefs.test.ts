@@ -5,9 +5,9 @@ import { langDir } from "../src/lib/i18n"
 
 describe("reading preferences", () => {
   test("stored preferences are read defensively", () => {
-    expect(parsePrefs('{"size":1.3,"legible":true}')).toEqual({ size: 1.3, legible: true, contrast: false, rate: 1 })
-    expect(parsePrefs('{"size":9}')).toEqual({ size: 1, legible: false, contrast: false, rate: 1 })
-    expect(parsePrefs("not json")).toEqual({ size: 1, legible: false, contrast: false, rate: 1 })
+    expect(parsePrefs('{"size":1.3,"legible":true}')).toEqual({ size: 1.3, legible: true, contrast: false })
+    expect(parsePrefs('{"size":9}')).toEqual({ size: 1, legible: false, contrast: false })
+    expect(parsePrefs("not json")).toEqual({ size: 1, legible: false, contrast: false })
   })
 
   test("sizes step up and down and stop at the ends", () => {
@@ -20,12 +20,12 @@ describe("reading preferences", () => {
   test("applying sets the text scale and classes, and fetches the legible font once", () => {
     const window = new Window({ url: "https://garden.example/" }) as unknown as globalThis.Window
     const root = window.document.documentElement
-    applyPrefs(root, { size: 1.3, legible: true, contrast: true, rate: 1 })
-    applyPrefs(root, { size: 1.3, legible: true, contrast: true, rate: 1 })
+    applyPrefs(root, { size: 1.3, legible: true, contrast: true })
+    applyPrefs(root, { size: 1.3, legible: true, contrast: true })
     expect(root.style.getPropertyValue("--reading-scale")).toBe("1.3")
     expect([...root.classList].sort()).toEqual(["font-legible", "high-contrast"])
     expect(window.document.querySelectorAll("link[data-legible-font]")).toHaveLength(1)
-    applyPrefs(root, { size: 1, legible: false, contrast: false, rate: 1 })
+    applyPrefs(root, { size: 1, legible: false, contrast: false })
     expect(root.classList.length).toBe(0)
   })
 })

@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- ▶ *Listen* reads a note aloud with the browser's own voices, in the note's
-  language, highlighting the sentence being read and following it down the
-  page. Code, diagrams, math, footnote markers and locked parts are skipped;
-  readers can pause, move by paragraph and pick a speed, which is remembered.
-
 - `datme doctor` checks the machine and the vault before a build: the Bun or
   Node version, the optional packages the published notes need, git, the
   `DATME_LOCK_…` variables of group passwords (names only, never values) and

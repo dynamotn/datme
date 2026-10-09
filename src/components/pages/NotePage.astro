@@ -104,32 +104,6 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       )
     }
     {
-      !note.slides && (
-        <div class="listen" data-listen hidden>
-          <button
-            type="button"
-            class="listen-play"
-            data-listen-play
-            aria-pressed="false"
-            data-listen={s.listen}
-            data-pause={s.listenPause}
-            data-resume={s.listenResume}
-          >
-            <i aria-hidden="true">▶</i> <span>{s.listen}</span>
-          </button>
-          <span class="listen-controls" data-listen-controls hidden>
-            <button type="button" data-listen-prev aria-label={s.listenPrev} title={s.listenPrev}>⏮</button>
-            <button type="button" data-listen-next aria-label={s.listenNext} title={s.listenNext}>⏭</button>
-            <label>
-              <span class="sr-only">{s.listenSpeed}</span>
-              <select data-listen-rate />
-            </label>
-            <button type="button" data-listen-stop aria-label={s.listenStop} title={s.listenStop}>⏹</button>
-          </span>
-        </div>
-      )
-    }
-    {
       payload ? (
         <>
           <form class="locked" data-payload={payload} data-iterations={site.encryption.iterations}>
