@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [2.1.0] - 2026-10-10
 
 - `datme doctor` checks the machine and the vault before a build: the Bun or
   Node version, the optional packages the published notes need, git, the
