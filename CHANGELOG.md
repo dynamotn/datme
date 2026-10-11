@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   just a `<!--lang:xx-->` marker: a block a template filled with headings or
   empty list items is untranslated, so the page falls back and the language is
   left out of `hreflang`.
+- The Obsidian companion plugin lives in its own repository,
+  [obsidian-datme](https://github.com/dynamotn/obsidian-datme), with its own
+  releases.
 
 ## [2.1.0] - 2026-10-10
 

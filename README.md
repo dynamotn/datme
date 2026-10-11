@@ -80,7 +80,7 @@ bunx @dynamotn/datme dev ~/MyVault          # http://localhost:4321, reloads as 
 bunx @dynamotn/datme deploy github ~/MyVault   # or gitlab, netlify, cloudflare
 ```
 
-Prefer to stay in Obsidian? The [companion plugin](obsidian-plugin/README.md)
+Prefer to stay in Obsidian? The [companion plugin](https://github.com/dynamotn/obsidian-datme)
 toggles publishing from the status bar, checks the garden and previews the
 current note.
 

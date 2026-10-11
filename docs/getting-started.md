@@ -84,7 +84,7 @@ they will look.
 
 ## From inside Obsidian
 
-The [datme plugin for Obsidian](https://gitlab.com/dynamo-tools/datme/-/tree/main/obsidian-plugin)
+The [datme plugin for Obsidian](https://github.com/dynamotn/obsidian-datme)
 puts all this one click away: a **🌱 Published / 🔒 Private** switch in the
 status bar, *Check the garden for problems* with a clickable report, and
 *Preview the current note*, which starts `datme dev` and opens the note as the
