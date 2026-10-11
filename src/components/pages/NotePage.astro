@@ -32,9 +32,11 @@ const r = await renderNote(note)
 const title = r.h1 ?? note.title
 const backlinks = vault.backlinks[note.lang].get(note.key) ?? []
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.byKey[l].get(note.key)?.url]))
-// An untranslated page shows the original text: hreflang lists only real versions,
-// and the canonical URL is the original's.
-const original = note.translated ? undefined : vault.byKey[note.sourceLang]?.get(note.key)
+// An untranslated page shows the text of its fallback language, the original by
+// default: hreflang lists only real versions, and the canonical URL is that page's.
+const original = note.translated
+  ? undefined
+  : (vault.byKey[note.contentLang]?.get(note.key) ?? vault.byKey[note.sourceLang]?.get(note.key))
 const translatedIn = site.langs.filter((l) => vault.byKey[l].get(note.key)?.translated)
 const s = t(note.lang)
 const related = await relatedNotes(note)

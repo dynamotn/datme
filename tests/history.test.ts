@@ -6,8 +6,14 @@ import { diffParagraphs, publicText } from "../src/lib/history"
 
 describe("what a version showed", () => {
   test("the public text only: no frontmatter, comments, locked parts or other languages", () => {
-    const raw = "---\npublish: true\nsecret: x\n---\nSeen.\n\n%%hidden%%\n<!-- note to self -->\n<!--lock:pw-->\nLocked.\n<!--lock:*-->\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:*-->\nEnd."
-    expect(publicText(raw, "en-US")).toBe("Seen.\n\nEnd.")
+    const raw = "---\npublish: true\nsecret: x\n---\nSeen.\n\n%%hidden%%\n<!-- note to self -->\n<!--lock:pw-->\nLocked.\n<!--lock:*-->\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:en-US-->\nEnglish.\n<!--lang:*-->\nEnd."
+    expect(publicText(raw, "en-US")).toBe("Seen.\n\nEnglish.\nEnd.")
+  })
+
+  test("an untranslated version showed its fallback language, as the page did", () => {
+    const raw = "---\npublish: true\n---\nSeen.\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:*-->\nEnd."
+    expect(publicText(raw, "en-US")).toBe("Seen.\nTiếng Việt.\nEnd.")
+    expect(publicText(raw.replace("publish: true", "publish: true\nfallback_lang: none"), "en-US")).toBe("Seen.\nEnd.")
   })
 
   test("a private or protected version showed nothing", () => {

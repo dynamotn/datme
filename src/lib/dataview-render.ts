@@ -31,7 +31,7 @@ export function engineFor(lang: Lang): Engine {
       created: n.created,
       updated: n.updated,
       // Frontmatter wins over a field of the same name written in the text.
-      fields: { ...inlineFields(withoutLocked(filterLanguage(n.source.raw, lang))), ...n.source.fm },
+      fields: { ...inlineFields(withoutLocked(filterLanguage(n.source.raw, n.contentLang))), ...n.source.fm },
       outlinks: [...new Set(n.links.map((l) => l.key))],
       inlinks: (back.get(n.key) ?? []).filter((b) => !b.note.protected).map((b) => b.note.key),
       tasks: extractTasks(n.md),

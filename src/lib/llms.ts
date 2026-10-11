@@ -18,7 +18,7 @@ export const mdUrl = (n: Note) => `${n.url}.md`
  * what the published page does not show.
  */
 export function noteMarkdown(n: Note): string {
-  const body = withoutLocked(filterLanguage(n.source.raw, n.lang))
+  const body = withoutLocked(filterLanguage(n.source.raw, n.contentLang))
     .replace(/%%[\s\S]*?%%/g, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/\n{3,}/g, "\n\n")

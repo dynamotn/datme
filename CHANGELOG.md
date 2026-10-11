@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- An untranslated note falls back to another language instead of showing only
+  its shared text: its page in that language shows the blocks of the note's
+  original language, or of the one named by `fallback_lang` in its
+  frontmatter, with the untranslated notice; `fallback_lang: none` keeps only
+  the shared text. The `.md` copy for language models, Dataview fields and the
+  note's history fall back the same way.
+
+### Changed
+
+- A language counts as translated only when its block holds real text, not
+  just a `<!--lang:xx-->` marker: a block a template filled with headings or
+  empty list items is untranslated, so the page falls back and the language is
+  left out of `hreflang`.
+
 ## [2.1.0] - 2026-10-10
 
 - `datme doctor` checks the machine and the vault before a build: the Bun or

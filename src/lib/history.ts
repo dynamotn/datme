@@ -9,7 +9,16 @@
  */
 import { execFileSync } from "node:child_process"
 import { site, type Lang } from "../site.config"
-import { filterLanguage, getVault, isPublished, parseFrontmatter, type Note } from "./vault"
+import {
+  contentLanguage,
+  fallbackOf,
+  filterLanguage,
+  getVault,
+  isPublished,
+  parseFrontmatter,
+  sourceLangOf,
+  type Note,
+} from "./vault"
 import { withoutLocked } from "./locked"
 
 export interface Version {
@@ -26,7 +35,9 @@ const git = (args: string[]) => execFileSync("git", ["-C", site.vault, "-c", "co
 export function publicText(raw: string, lang: Lang): string | undefined {
   const { fm, body } = parseFrontmatter(raw)
   if (!isPublished(fm, site.publish) || (fm.password != null && fm.password !== "")) return undefined
-  return withoutLocked(filterLanguage(body, lang))
+  // Each version falls back the way the note does today.
+  const shown = contentLanguage(body, lang, fallbackOf(fm, sourceLangOf(fm)))
+  return withoutLocked(filterLanguage(body, shown))
     .replace(/%%[\s\S]*?%%/g, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/\n{3,}/g, "\n\n")

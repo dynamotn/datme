@@ -205,6 +205,16 @@ describe("static build", () => {
     expect(read("en-US/06_Reference/index.html")).toContain('<span class="lang-badge" title="Tiếng Việt">VI</span>')
   })
 
+  test("an untranslated page shows its fallback language's text, marked as such", () => {
+    const html = read("en-US/03_Atomic/Vietnamese-only/index.html")
+    expect(html).toContain('<p class="untranslated">')
+    expect(html).toContain('<div class="prose" lang="vi-VN">')
+    expect(html).toContain("Nội dung chỉ được viết bằng tiếng Việt.")
+    expect(html).not.toContain("A heading alone is not a translation")
+    // The canonical page is the Vietnamese one: no /en-US/ prefix.
+    expect(html).toMatch(/<link rel="canonical" href="https:\/\/notes\.dynamotn\.dev\/03_Atomic\/[^"]+">/)
+  })
+
   test("the note page shows its backlinks and language alternates", () => {
     const html = read("06_Reference/Niklas-Luhmann/index.html")
     expect(html).toContain('class="backlink internal" href="/03_Atomic/Zettelkasten"')
@@ -232,7 +242,7 @@ describe("static build", () => {
     const home = read("index.html")
     const search = home.match(/<div class="filters" data-filters="search">[\s\S]*?<\/div>/)![0]
     expect(search).toContain('data-filter="folder"')
-    expect(search).toContain('<option value="03_Atomic">⚛️ Nguyên tử (3)</option>')
+    expect(search).toContain('<option value="03_Atomic">⚛️ Nguyên tử (4)</option>')
     expect(search).toContain('<option value="notion">notion (1)</option>')
     const graph = home.match(/<div class="filters" data-filters="graph">[\s\S]*?<\/div>/)![0]
     expect(graph).toContain('data-filter="tag"')

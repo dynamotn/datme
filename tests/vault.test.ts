@@ -1,5 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { getVault, filterLanguage, listed, byRecent, countNotes, isPublished } from "../src/lib/vault"
+import {
+  getVault,
+  filterLanguage,
+  listed,
+  byRecent,
+  countNotes,
+  isPublished,
+  textLanguages,
+  fallbackOf,
+  contentLanguage,
+} from "../src/lib/vault"
 
 const vault = getVault()
 const vi = vault.byKey["vi-VN"]
@@ -10,6 +20,7 @@ describe("publishing rules", () => {
     expect([...vault.sources.keys()].sort()).toEqual([
       "01_Fleeting/01_Fleeting",
       "03_Atomic/Code",
+      "03_Atomic/Fallback",
       "03_Atomic/Queries",
       "03_Atomic/Zettelkasten",
       "05_Structure/First walk",
@@ -43,6 +54,17 @@ describe("publishing rules", () => {
     expect(en.get("06_Reference/Niklas Luhmann")!.translated).toBe(false)
     expect(vi.get("06_Reference/Niklas Luhmann")!.translated).toBe(true)
     expect(en.get("06_Reference/Niklas Luhmann")!.sourceLang).toBe("vi-VN")
+  })
+
+  test("an untranslated note shows its fallback language's blocks", () => {
+    const fallback = en.get("03_Atomic/Fallback")!
+    expect(fallback.translated).toBe(false)
+    expect(fallback.contentLang).toBe("vi-VN")
+    expect(fallback.md).toContain("Nội dung chỉ được viết bằng tiếng Việt.")
+    expect(fallback.md).not.toContain("A heading alone")
+    expect(fallback.md).toContain("Shared introduction.")
+    expect(vi.get("03_Atomic/Fallback")!.contentLang).toBe("vi-VN")
+    expect(en.get("03_Atomic/Zettelkasten")!.contentLang).toBe("en-US")
   })
 
   test("lineBreaks applies to configured types and yields to frontmatter", () => {
@@ -189,5 +211,47 @@ describe("helpers", () => {
     const g = globalThis as { __vaultVersion?: number }
     g.__vaultVersion = (g.__vaultVersion ?? 0) + 1
     expect(getVault()).not.toBe(vault)
+  })
+})
+
+describe("fallback language", () => {
+  test("textLanguages counts real text only", () => {
+    const src = [
+      "<!--lang:vi-VN-->",
+      "Đã viết.",
+      "<!--lang:en-US-->",
+      "## Goals",
+      "<!--",
+      "a long comment",
+      "-->",
+      "- [ ]",
+      "-",
+      "<!--lang:fr-FR-->",
+      "- [ ] Appeler la banque",
+      "<!--lang:*-->",
+      "Shared text belongs to no language.",
+    ].join("\n")
+    expect(textLanguages(src)).toEqual(["vi-VN", "fr-FR"])
+  })
+
+  test("textLanguages ignores markers inside a code fence", () => {
+    expect(textLanguages("```\n<!--lang:en-US-->\ncode\n```")).toEqual([])
+  })
+
+  test("fallbackOf takes fallback_lang, else the source language", () => {
+    expect(fallbackOf({}, "vi-VN")).toBe("vi-VN")
+    expect(fallbackOf({ fallback_lang: "en-US" }, "vi-VN")).toBe("en-US")
+    expect(fallbackOf({ fallback_lang: "none" }, "vi-VN")).toBeNull()
+    expect(fallbackOf({ fallback_lang: "" }, "vi-VN")).toBeNull()
+    expect(fallbackOf({ fallback_lang: null }, "vi-VN")).toBeNull()
+  })
+
+  test("contentLanguage falls back only to a language with text", () => {
+    const viOnly = "<!--lang:vi-VN-->\nĐã viết.\n<!--lang:en-US-->\n## Goals\n<!--lang:*-->"
+    expect(contentLanguage(viOnly, "en-US", "vi-VN")).toBe("vi-VN")
+    expect(contentLanguage(viOnly, "vi-VN", "en-US")).toBe("vi-VN")
+    expect(contentLanguage(viOnly, "en-US", null)).toBe("en-US")
+    expect(contentLanguage(viOnly, "en-US", "fr-FR")).toBe("en-US")
+    expect(contentLanguage("No blocks here.", "en-US", "vi-VN")).toBe("en-US")
   })
 })

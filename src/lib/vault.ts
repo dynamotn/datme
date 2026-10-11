@@ -59,8 +59,13 @@ export interface Note {
   unlisted: boolean
   /** Language the note is written in: `lang` frontmatter, else the site's default language. */
   sourceLang: Lang
-  /** Whether this language has its own text: the source language or a <!--lang:xx--> block. */
+  /** Whether this language has its own text: the source language, or a <!--lang:xx--> block holding real text. */
   translated: boolean
+  /**
+   * Language of the blocks the page shows: `lang` when translated, else the
+   * note's fallback (`fallback_lang`, or its source language) when that has text.
+   */
+  contentLang: Lang
   /** Single line breaks are kept (poems), from datme.yaml lineBreaks or `lineBreaks` frontmatter. */
   hardBreaks: boolean
   /** Encrypted with its password: no content may leak into excerpts, search or feeds. */
@@ -241,6 +246,72 @@ export function isPublished(fm: Record<string, unknown>, mode: "explicit" | "all
   if (!drafts && isDraft(fm, now)) return false
   const publish = flag(fm.publish)
   return mode === "explicit" ? publish === true : publish !== false
+}
+
+/** Language a note is written in: its `lang` frontmatter when the site has it, else the site's default. */
+export function sourceLangOf(fm: Record<string, unknown>): Lang {
+  return typeof fm.lang === "string" && site.langs.includes(fm.lang) ? fm.lang : site.defaultLang
+}
+
+/**
+ * Languages whose <!--lang:xx--> blocks hold real text, in order of first
+ * appearance. Blank lines, headings, HTML comments (even over several lines)
+ * and empty list items such as `-` or `- [ ]` don't count, so a block a
+ * template filled with headings is still untranslated. Same rules as the
+ * lang-blocks Obsidian plugin, so the vault and the site agree.
+ */
+export function textLanguages(src: string): Lang[] {
+  let inFence = false
+  let inComment = false
+  let current: Lang | null = null
+  const found: Lang[] = []
+  for (let line of src.split("\n")) {
+    line = line.replace(/[\t\r ]*$/, "")
+    if (line.includes("```")) inFence = !inFence
+    if (!inFence) {
+      const m = line.match(/<!--lang:(.*)-->/)
+      if (m) {
+        current = m[1] === "*" ? null : m[1]
+        continue
+      }
+    }
+    const text = line.trim()
+    if (inComment) {
+      if (text.includes("-->")) inComment = false
+      continue
+    }
+    if (!inFence && text.startsWith("<!--")) {
+      if (!text.includes("-->")) inComment = true
+      continue
+    }
+    if (current === null || found.includes(current)) continue
+    if (text === "" || /^#{1,6}(\s|$)/.test(text) || /^([-*+]|\d+[.)])(\s+\[.\])?$/.test(text)) continue
+    found.push(current)
+  }
+  return found
+}
+
+/**
+ * Fallback language of a note: its `fallback_lang` frontmatter (the name
+ * PolyglotMarkdown uses), else its source language. An empty value or `none`
+ * turns the fallback off.
+ */
+export function fallbackOf(fm: Record<string, unknown>, sourceLang: Lang): Lang | null {
+  if (!("fallback_lang" in fm)) return sourceLang
+  const v = fm.fallback_lang
+  if (typeof v !== "string") return null
+  const value = v.trim()
+  return value === "" || value.toLowerCase() === "none" ? null : value
+}
+
+/**
+ * Language whose blocks a page in `lang` shows. A note without text in `lang`
+ * shows its fallback language instead, when that has text, rather than only
+ * its shared text; a note without language blocks shows everything anyway.
+ */
+export function contentLanguage(src: string, lang: Lang, fallback: Lang | null, texts = textLanguages(src)): Lang {
+  if (texts.includes(lang) || !src.includes("<!--lang:")) return lang
+  return fallback !== null && fallback !== lang && texts.includes(fallback) ? fallback : lang
 }
 
 /** Port of the fork's MultiLanguage transformer: keeps blocks of one language. */
@@ -645,8 +716,15 @@ function buildVault(version: number): Vault {
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
+      // An untranslated note shows its fallback language's blocks, not only its shared text.
+      const sourceLang = sourceLangOf(s.fm)
+      const texts = textLanguages(s.raw)
+      // A note without language blocks is all source-language text.
+      const contentLang = s.raw.includes("<!--lang:")
+        ? contentLanguage(s.raw, lang, fallbackOf(s.fm, sourceLang), texts)
+        : sourceLang
       // Locked parts leave the note first, so nothing below can read them.
-      const { md: filtered, parts } = splitLocked(filterLanguage(s.raw, lang))
+      const { md: filtered, parts } = splitLocked(filterLanguage(s.raw, contentLang))
       const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
       const board = isKanban(s.fm)
       const slides = isSlides(s.fm)
@@ -706,7 +784,6 @@ function buildVault(version: number): Vault {
       for (const p of pre.problems) linkProblem(relFile, p)
 
       const { typePrefix, blogTags, mapTags } = site.conventions
-      const sourceLang = typeof s.fm.lang === "string" && site.langs.includes(s.fm.lang) ? s.fm.lang : site.defaultLang
       const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
       const note: Note = {
         key: s.key,
@@ -733,7 +810,8 @@ function buildVault(version: number): Vault {
         isBlog: tags.some((x) => blogTags.includes(x)),
         isMoc: tags.some((x) => mapTags.includes(x)),
         sourceLang,
-        translated: lang === sourceLang || s.raw.includes(`<!--lang:${lang}-->`),
+        translated: lang === sourceLang || texts.includes(lang),
+        contentLang,
         hardBreaks:
           typeof s.fm.lineBreaks === "boolean"
             ? s.fm.lineBreaks

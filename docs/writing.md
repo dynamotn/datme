@@ -157,10 +157,25 @@ Text for every language.
 ```
 
 The first language in `languages` is served at `/`, and the others under
-`/<lang>/`. A note with no block for some language is shown there in its
-original language, with a notice. Put `lang: en-US` in the frontmatter of a
-note written in a language other than the default one. Locked parts use the
-same kind of markers; see [Privacy](privacy.md#locked-parts).
+`/<lang>/`. Put `lang: en-US` in the frontmatter of a note written in a
+language other than the default one. Locked parts use the same kind of
+markers; see [Privacy](privacy.md#locked-parts).
+
+A note with no text for some language is shown there in its fallback language,
+with a notice: the blocks of that language replace the missing ones, and the
+shared text stays. The fallback is the note's original language unless its
+frontmatter says otherwise:
+
+```yaml
+fallback_lang: en-US   # show English where a translation is missing
+fallback_lang: none    # show only the shared text instead
+```
+
+A block counts as a translation only when it holds real text: blank lines,
+headings, comments and empty list items such as `- [ ]` alone don't count, so a
+block a template filled with headings still falls back. The
+[Lang Blocks](https://github.com/dynamotn/obsidian-lang-blocks) Obsidian plugin
+follows the same rules, so a note reads the same in Obsidian and on the site.
 
 ## Feeds
 
