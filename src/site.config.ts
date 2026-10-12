@@ -280,6 +280,13 @@ const schema = z
       .default({ count: 5, mentions: true, semantic: false }),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
+    graph: z
+      .object({
+        /** Links the local graph of a note follows: 1 for its own links, 2 for theirs too; readers can switch. */
+        depth: z.union([z.literal(1), z.literal(2)]).default(1),
+      })
+      .strict()
+      .default({ depth: 1 }),
     images: z
       .object({
         /** Resize raster images into WebP copies and let browsers pick the smallest that fits. */
@@ -488,6 +495,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     bibliography: (typeof c.bibliography === "string" ? [c.bibliography] : (c.bibliography ?? [])).map((p) => p.replace(/^\/+/, "")),
     images: { ...c.images, widths: [...new Set(c.images.widths)].sort((a, b) => a - b) },
     stackedPages: c.stackedPages,
+    graph: c.graph,
     related: c.related,
     theme: { ...c.theme, css: c.theme.css.replace(/^\/+/, "") },
     lineBreaks: { ...c.lineBreaks, folders: c.lineBreaks.folders.map((p) => p.replace(/^\/+|\/+$/g, "")) },

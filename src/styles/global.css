@@ -1077,6 +1077,33 @@ details.callout[open] > summary::after {
   background: var(--surface);
   border: 1px solid var(--line);
 }
+.graph-depth {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.graph-depth button {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 600 12px var(--font-ui);
+  cursor: pointer;
+}
+.graph-depth button + button {
+  border-left: 1px solid var(--line);
+}
+.graph-depth button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--surface);
+}
 
 /* ---------- backlinks ---------- */
 .backlinks {

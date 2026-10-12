@@ -10,6 +10,7 @@ import {
 import { navigate } from "astro:transitions/client"
 import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
 import { groupColors } from "./graph-colors"
+import { neighbourhood, parseDepth, type Depth } from "./graph-hops"
 
 interface GNode extends SimulationNodeDatum {
   i: number
@@ -21,6 +22,8 @@ interface GNode extends SimulationNodeDatum {
   k: number | null
   /** Group it is coloured by: its top folder or its first type. */
   g: string
+  /** Links away from the current note, in the local graph. */
+  hop: number
 }
 
 interface GLink {
@@ -49,7 +52,7 @@ function palette() {
   }
 }
 
-export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "global", filter: NoteFilter = {}) {
+export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "global", filter: NoteFilter = {}, depth: Depth = 1) {
   const lang = canvas.dataset.lang!
   const current = canvas.dataset.current ?? location.pathname
   const data = await loadIndex(lang)
@@ -57,24 +60,16 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
 
   const colorBy = canvas.dataset.colorBy
   const all = data.notes.map(
-    (n, i) => ({ i, u: n.u, t: n.t, deg: 0, r: 4, k: n.k ?? null, g: colorBy === "type" ? (n.y[0] ?? "") : colorBy === "folder" ? n.p : "" }) as GNode,
+    (n, i) => ({ i, u: n.u, t: n.t, deg: 0, r: 4, hop: 0, k: n.k ?? null, g: colorBy === "type" ? (n.y[0] ?? "") : colorBy === "folder" ? n.p : "" }) as GNode,
   )
   for (const [a, b] of data.links) (all[a].deg++, all[b].deg++)
   const cur = all.find((n) => samePath(n.u, current))
 
   let keep = new Set(all.filter((n) => matchesFilter(data.notes[n.i], filter)).map((n) => n.i))
   if (mode === "local") {
-    keep = new Set(cur ? [cur.i] : [])
-    for (let depth = 0; depth < 2; depth++) {
-      const next = new Set(keep)
-      for (const [a, b] of data.links) {
-        if (keep.has(a)) next.add(b)
-        if (keep.has(b)) next.add(a)
-      }
-      // Stay readable: only expand to depth 2 while the graph is small.
-      if (depth === 1 && next.size > 40) break
-      keep = next
-    }
+    const hops = cur ? neighbourhood(data.links, cur.i, depth) : new Map<number, number>()
+    hops.forEach((hop, i) => (all[i].hop = hop))
+    keep = new Set(hops.keys())
   }
   const nodes = all.filter((n) => keep.has(n.i))
   nodes.forEach((n) => (n.r = 3 + Math.sqrt(n.deg) * 1.6))
@@ -139,7 +134,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
       if (!shown(l.source) || !shown(l.target)) continue
       const on = hover && (l.source === hover || l.target === hover)
       ctx.strokeStyle = on ? colors.accent : colors.line
-      ctx.globalAlpha = hover && !on ? 0.25 : on ? 0.9 : 0.6
+      ctx.globalAlpha = hover && !on ? 0.25 : on ? 0.9 : l.source.hop > 1 || l.target.hop > 1 ? 0.35 : 0.6
       ctx.lineWidth = (on ? 1.6 : 1) / view.k
       ctx.beginPath()
       ctx.moveTo(l.source.x!, l.source.y!)
@@ -150,7 +145,8 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
       if (!shown(n)) continue
       const isCur = n === cur
       const on = n === hover || lit?.has(n)
-      ctx.globalAlpha = hover && !on && n !== hover ? 0.3 : 1
+      // Notes two links away stay fainter, so the note's own links stand out.
+      ctx.globalAlpha = hover && !on && n !== hover ? 0.3 : !hover && n.hop > 1 ? 0.55 : 1
       ctx.fillStyle = isCur ? colors.current : on ? colors.accent : (groups.get(n.g) ?? colors.node)
       ctx.beginPath()
       ctx.arc(n.x!, n.y!, n.r, 0, Math.PI * 2)
@@ -268,10 +264,48 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const stop = () => {
     sim.stop()
     ro.disconnect()
+    canvas.removeEventListener("redraw", draw)
+    live.delete(stop)
     document.removeEventListener("themechange", onTheme)
   }
   live.add(stop)
   return stop
+}
+
+const DEPTH_KEY = "graphDepth"
+
+/** The local graph of a note, as many links deep as the reader last chose, or as the site sets. */
+export function mountLocalGraph(canvas: HTMLCanvasElement) {
+  const buttons = canvas.closest(".graph-box")?.querySelectorAll<HTMLButtonElement>("[data-graph-depth]") ?? []
+  let stop: (() => void) | undefined
+  let latest = 0
+  const show = async (depth: Depth) => {
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.graphDepth === String(depth))))
+    stop?.()
+    const mine = ++latest
+    const next = await mountGraph(canvas, "local", {}, depth)
+    // A quicker second click may have mounted another graph meanwhile.
+    if (mine === latest) stop = next
+    else next?.()
+  }
+  buttons.forEach((b) =>
+    b.addEventListener("click", () => {
+      const depth = parseDepth(b.dataset.graphDepth, 1)
+      try {
+        localStorage.setItem(DEPTH_KEY, String(depth))
+      } catch {
+        // private mode: the choice lasts for this page only
+      }
+      void show(depth)
+    }),
+  )
+  let saved: string | null = null
+  try {
+    saved = localStorage.getItem(DEPTH_KEY)
+  } catch {
+    // storage blocked: use the site's default
+  }
+  void show(parseDepth(saved, parseDepth(canvas.dataset.depth, 1)))
 }
 
 /** The colours of the groups, under the global graph. */

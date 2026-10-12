@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The local graph of a note can show its own links or, one click away, the
+  links of those notes too; notes two links away are drawn fainter. Readers'
+  choice is remembered, and `graph: { depth: 1 | 2 }` sets the default. The
+  local graph no longer switches between one and two links by itself.
 - An untranslated note falls back to another language instead of showing only
   its shared text: its page in that language shows the blocks of the note's
   original language, or of the one named by `fallback_lang` in its

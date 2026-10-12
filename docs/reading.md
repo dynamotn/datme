@@ -12,7 +12,8 @@ This is what someone visiting your garden can do. None of it needs setting up.
   loads only what each query needs.
 - **Graph** (`Ctrl G`) shows the whole garden. Filter it by folder and tag, and
   colour notes by folder or type. Its time slider replays how the garden grew.
-  Each note also has a local graph in its sidebar.
+  Each note also has a local graph in its sidebar, showing its own links (1)
+  or their links too (2); the reader's choice is remembered.
 - **Backlinks** under each note show who links to it, with the sentence around
   the link. Related notes (shared tags and links, and optionally
   [closeness in meaning](#notes-close-in-meaning)) and unlinked mentions follow.

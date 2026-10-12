@@ -105,6 +105,8 @@ related:                      # under each note: notes sharing tags or links,
   semantic: false             # true: also notes close in meaning (see The reader's side);
                               # or { model: …, threshold: 0.55 }
 stackedPages: true            # a header button to open linked notes side by side
+graph:
+  depth: 1                    # links the local graph follows: 1, or 2 for links of links
 
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }

@@ -1,5 +1,5 @@
 import { openSearch, setupSearch } from "./search"
-import { mountGraph, openGraph, teardownGraphs } from "./graph"
+import { mountLocalGraph, openGraph, teardownGraphs } from "./graph"
 import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
 import { setupLocked } from "./locked"
@@ -236,7 +236,7 @@ function renderDiagrams() {
 }
 
 function setupLocalGraph() {
-  document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach((c) => void mountGraph(c, "local"))
+  document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach(mountLocalGraph)
 }
 
 // ---- offline reading: register the service worker, or drop one a previous config installed ----

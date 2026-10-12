@@ -187,6 +187,9 @@ describe("analytics, comments and CNAME", () => {
     expect(c.cname).toBe(false)
     expect(c.ogImages).toBe(true)
     expect(c.stackedPages).toBe(true)
+    expect(c.graph).toEqual({ depth: 1 })
+    expect(resolveConfig({ graph: { depth: 2 } }, "/v").graph.depth).toBe(2)
+    expect(() => resolveConfig({ graph: { depth: 3 } }, "/v")).toThrow(ConfigError)
     expect(c.lineBreaks).toEqual({ all: false, types: [], folders: [] })
     expect(c.related).toEqual({ count: 5, mentions: true, semantic: false })
     expect(resolveConfig({ related: { semantic: true } }, "/v").related.semantic).toEqual({
