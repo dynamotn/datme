@@ -64,6 +64,7 @@
     "astro": "^7.3.5",
     "chart.js": "^4",
     "d3-force": "^3.0.0",
+    "d3-force-3d": "^3.0.6",
     "excalifont": "^1.0.0",
     "github-slugger": "^2.0.0",
     "hast-util-from-html": "^2.0.3",

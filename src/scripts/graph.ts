@@ -1,16 +1,9 @@
-import {
-  forceSimulation,
-  forceLink,
-  forceManyBody,
-  forceCenter,
-  forceCollide,
-  type Simulation,
-  type SimulationNodeDatum,
-} from "d3-force"
+import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type Simulation, type SimulationNodeDatum } from "d3-force"
 import { navigate } from "astro:transitions/client"
 import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
 import { groupColors } from "./graph-colors"
 import { neighbourhood, parseDepth, type Depth } from "./graph-hops"
+import { bounds, project, tilt, type Camera } from "./graph-3d"
 
 interface GNode extends SimulationNodeDatum {
   i: number
@@ -24,12 +17,27 @@ interface GNode extends SimulationNodeDatum {
   g: string
   /** Links away from the current note, in the local graph. */
   hop: number
+  z?: number
+  vz?: number
+  /** Where the note is drawn on the canvas, how much it is enlarged, and how near it is (0 far, 1 near). */
+  sx: number
+  sy: number
+  ss: number
+  near: number
 }
 
 interface GLink {
   source: GNode
   target: GNode
 }
+
+export interface GraphOptions {
+  depth?: Depth
+  /** Lay the graph out in space, turned by dragging, rather than flat. */
+  space?: boolean
+}
+
+type Forces = Pick<typeof import("d3-force"), "forceLink" | "forceManyBody" | "forceCenter" | "forceCollide">
 
 const live = new Set<() => void>()
 
@@ -52,7 +60,15 @@ function palette() {
   }
 }
 
-export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "global", filter: NoteFilter = {}, depth: Depth = 1) {
+/** The force layout: d3-force for a flat graph; its 3D sibling is fetched only once someone asks for space. */
+async function layout(nodes: GNode[], space: boolean): Promise<{ sim: Simulation<GNode, GLink>; d3: Forces }> {
+  if (!space) return { sim: forceSimulation<GNode, GLink>(nodes), d3: { forceLink, forceManyBody, forceCenter, forceCollide } }
+  const d3 = await import("d3-force-3d")
+  return { sim: d3.forceSimulation<GNode, GLink>(nodes, 3), d3 }
+}
+
+export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "global", filter: NoteFilter = {}, opts: GraphOptions = {}) {
+  const { depth = 1, space = false } = opts
   const lang = canvas.dataset.lang!
   const current = canvas.dataset.current ?? location.pathname
   const data = await loadIndex(lang)
@@ -60,7 +76,21 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
 
   const colorBy = canvas.dataset.colorBy
   const all = data.notes.map(
-    (n, i) => ({ i, u: n.u, t: n.t, deg: 0, r: 4, hop: 0, k: n.k ?? null, g: colorBy === "type" ? (n.y[0] ?? "") : colorBy === "folder" ? n.p : "" }) as GNode,
+    (n, i) =>
+      ({
+        i,
+        u: n.u,
+        t: n.t,
+        deg: 0,
+        r: 4,
+        hop: 0,
+        k: n.k ?? null,
+        g: colorBy === "type" ? (n.y[0] ?? "") : colorBy === "folder" ? n.p : "",
+        sx: 0,
+        sy: 0,
+        ss: 1,
+        near: 1,
+      }) as GNode,
   )
   for (const [a, b] of data.links) (all[a].deg++, all[b].deg++)
   const cur = all.find((n) => samePath(n.u, current))
@@ -82,6 +112,9 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     neighbours.set(l.target, (neighbours.get(l.target) ?? new Set()).add(l.source))
   }
 
+  const { sim, d3 } = await layout(nodes, space)
+  if (!canvas.isConnected) return void sim.stop()
+
   const ctx = canvas.getContext("2d")!
   let colors = palette()
   const groups = groupColors(nodes.map((n) => n.g))
@@ -93,9 +126,13 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   let width = 0
   let height = 0
   const view = { k: mode === "local" ? 1 : 0.8, x: 0, y: 0 }
+  const cam: Camera = { yaw: 0.6, pitch: -0.35 }
   let hover: GNode | undefined
   // Keep the whole graph in view until the reader pans or zooms by hand.
   let autoFit = true
+  // Wider horizontal padding leaves room for labels drawn around the outer nodes.
+  const padX = mode === "local" ? 70 : 60
+  const padY = mode === "local" ? 30 : 40
   const fit = () => {
     if (!autoFit || !nodes.length || !width) return
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
@@ -105,13 +142,40 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
       x1 = Math.max(x1, n.x! + n.r)
       y1 = Math.max(y1, n.y! + n.r)
     }
-    // Wider horizontal padding leaves room for labels drawn around the outer nodes.
-    const padX = mode === "local" ? 70 : 60
-    const padY = mode === "local" ? 30 : 40
     view.k = Math.min(1.6, (width - padX * 2) / Math.max(1, x1 - x0), (height - padY * 2) / Math.max(1, y1 - y0))
     view.x = -((x0 + x1) / 2) * view.k
     view.y = -((y0 + y1) / 2) * view.k
   }
+
+  /** Place every note on the canvas: flat, or turned by the camera and seen in perspective. */
+  const place = () => {
+    if (!space) {
+      fit()
+      for (const n of nodes) {
+        n.sx = width / 2 + view.x + n.x! * view.k
+        n.sy = height / 2 + view.y + n.y! * view.k
+        n.ss = view.k
+      }
+      return
+    }
+    const { centre, radius } = bounds(nodes.map((n) => ({ x: n.x!, y: n.y!, z: n.z ?? 0 })))
+    const r = Math.max(radius, 1)
+    // The eye stands three radii away: depth reads clearly without distorting the near side.
+    const dist = r * 3
+    if (autoFit && width) {
+      view.k = Math.min(1.6, Math.min(width - padX * 2, height - padY * 2) / 2 / (r * 1.1))
+      view.x = view.y = 0
+    }
+    for (const n of nodes) {
+      const p = project({ x: n.x! - centre.x, y: n.y! - centre.y, z: (n.z ?? 0) - centre.z }, cam, dist)
+      n.sx = width / 2 + view.x + p.x * view.k
+      n.sy = height / 2 + view.y + p.y * view.k
+      n.ss = p.s * view.k
+      n.near = Math.max(0, Math.min(1, (p.z / r + 1) / 2))
+    }
+  }
+  // In space, far notes fade and are drawn first, so near ones cover them.
+  const depthCue = (n: GNode) => (space ? 0.3 + 0.7 * n.near : 1)
 
   const resize = () => {
     const dpr = window.devicePixelRatio || 1
@@ -124,80 +188,96 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   }
 
   function draw() {
-    fit()
+    place()
     ctx.clearRect(0, 0, width, height)
-    ctx.save()
-    ctx.translate(width / 2 + view.x, height / 2 + view.y)
-    ctx.scale(view.k, view.k)
     const lit = hover ? (neighbours.get(hover) ?? new Set()) : undefined
     for (const l of links) {
       if (!shown(l.source) || !shown(l.target)) continue
       const on = hover && (l.source === hover || l.target === hover)
       ctx.strokeStyle = on ? colors.accent : colors.line
-      ctx.globalAlpha = hover && !on ? 0.25 : on ? 0.9 : l.source.hop > 1 || l.target.hop > 1 ? 0.35 : 0.6
-      ctx.lineWidth = (on ? 1.6 : 1) / view.k
+      const alpha = hover && !on ? 0.25 : on ? 0.9 : l.source.hop > 1 || l.target.hop > 1 ? 0.35 : 0.6
+      ctx.globalAlpha = on ? alpha : alpha * Math.min(depthCue(l.source), depthCue(l.target))
+      ctx.lineWidth = on ? 1.6 : 1
       ctx.beginPath()
-      ctx.moveTo(l.source.x!, l.source.y!)
-      ctx.lineTo(l.target.x!, l.target.y!)
+      ctx.moveTo(l.source.sx, l.source.sy)
+      ctx.lineTo(l.target.sx, l.target.sy)
       ctx.stroke()
     }
-    for (const n of nodes) {
+    const order = space ? [...nodes].sort((a, b) => a.near - b.near) : nodes
+    for (const n of order) {
       if (!shown(n)) continue
       const isCur = n === cur
       const on = n === hover || lit?.has(n)
       // Notes two links away stay fainter, so the note's own links stand out.
-      ctx.globalAlpha = hover && !on && n !== hover ? 0.3 : !hover && n.hop > 1 ? 0.55 : 1
+      const alpha = hover && !on && n !== hover ? 0.3 : !hover && n.hop > 1 ? 0.55 : 1
+      ctx.globalAlpha = on ? alpha : alpha * depthCue(n)
       ctx.fillStyle = isCur ? colors.current : on ? colors.accent : (groups.get(n.g) ?? colors.node)
       ctx.beginPath()
-      ctx.arc(n.x!, n.y!, n.r, 0, Math.PI * 2)
+      ctx.arc(n.sx, n.sy, n.r * n.ss, 0, Math.PI * 2)
       ctx.fill()
       if (isCur) {
         ctx.strokeStyle = colors.current
         ctx.globalAlpha = 0.3
-        ctx.lineWidth = 4 / view.k
+        ctx.lineWidth = 4
         ctx.stroke()
       }
     }
     // Labels: current, hovered and its neighbours, or everything once zoomed in.
     ctx.globalAlpha = 1
-    ctx.font = `${12 / view.k}px Inter Variable, sans-serif`
+    ctx.font = "12px Inter Variable, sans-serif"
     ctx.textAlign = "center"
-    for (const n of nodes) {
+    for (const n of order) {
       if (!shown(n)) continue
       const show = n === cur || n === hover || lit?.has(n) || view.k > 1.6 || nodes.length < (mode === "local" ? 14 : 30)
       if (!show) continue
-      ctx.globalAlpha = hover && n !== hover && !lit?.has(n) ? 0.3 : 0.95
+      const on = n === hover || lit?.has(n)
+      const alpha = hover && !on ? 0.3 : 0.95
+      ctx.globalAlpha = on ? alpha : alpha * depthCue(n)
       const label = n.t.length > 32 ? n.t.slice(0, 30) + "…" : n.t
-      ctx.lineWidth = 3 / view.k
+      const y = n.sy - n.r * n.ss - 5
+      ctx.lineWidth = 3
       ctx.strokeStyle = colors.bg
-      ctx.strokeText(label, n.x!, n.y! - n.r - 5 / view.k)
+      ctx.strokeText(label, n.sx, y)
       ctx.fillStyle = colors.ink
-      ctx.fillText(label, n.x!, n.y! - n.r - 5 / view.k)
+      ctx.fillText(label, n.sx, y)
     }
-    ctx.restore()
   }
 
-  const sim: Simulation<GNode, GLink> = forceSimulation(nodes)
-    .force("link", forceLink<GNode, GLink>(links).distance(mode === "local" ? 46 : 36))
-    .force("charge", forceManyBody().strength(mode === "local" ? -120 : -70))
-    .force("center", forceCenter(0, 0))
-    .force("collide", forceCollide<GNode>((n) => n.r + 3))
+  sim
+    .force("link", d3.forceLink<GNode, GLink>(links).distance(mode === "local" ? 46 : 36))
+    .force("charge", d3.forceManyBody<GNode>().strength(mode === "local" ? -120 : -70))
+    .force("center", d3.forceCenter<GNode>(0, 0))
+    .force("collide", d3.forceCollide<GNode>((n) => n.r + 3))
     .on("tick", draw)
 
-  const toWorld = (e: PointerEvent | WheelEvent) => {
+  // In space the graph turns slowly by itself until the reader takes over, unless they want less motion.
+  let spinning = space && !matchMedia("(prefers-reduced-motion: reduce)").matches
+  let frame = 0
+  const spin = () => {
+    if (!hover) cam.yaw += 0.003
+    draw()
+    frame = requestAnimationFrame(spin)
+  }
+  const still = () => {
+    spinning = false
+    cancelAnimationFrame(frame)
+  }
+  if (spinning) frame = requestAnimationFrame(spin)
+
+  const at = (e: PointerEvent | WheelEvent) => {
     const rect = canvas.getBoundingClientRect()
-    return {
-      x: (e.clientX - rect.left - width / 2 - view.x) / view.k,
-      y: (e.clientY - rect.top - height / 2 - view.y) / view.k,
-    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
   }
   const pick = (e: PointerEvent) => {
-    const p = toWorld(e)
+    const p = at(e)
     let best: GNode | undefined
     let dist = Infinity
     for (const n of nodes) {
-      const d = Math.hypot(n.x! - p.x, n.y! - p.y)
-      if (d < n.r + 6 / view.k && d < dist) (best = n), (dist = d)
+      if (!shown(n)) continue
+      const d = Math.hypot(n.sx - p.x, n.sy - p.y)
+      // Where notes overlap in space, the nearer one wins.
+      const score = d - n.near * 4
+      if (d < n.r * n.ss + 6 && score < dist) (best = n), (dist = score)
     }
     return best
   }
@@ -213,9 +293,16 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
       const dy = e.clientY - drag.y
       if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true
       if (drag.moved) {
-        autoFit = false
-        view.x += dx
-        view.y += dy
+        // A flat graph pans; one in space turns.
+        if (space) {
+          if (spinning) still()
+          cam.yaw += dx * 0.008
+          cam.pitch = tilt(cam.pitch, -dy * 0.008)
+        } else {
+          autoFit = false
+          view.x += dx
+          view.y += dy
+        }
         drag.x = e.clientX
         drag.y = e.clientY
         draw()
@@ -247,11 +334,12 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   canvas.onwheel = (e) => {
     e.preventDefault()
     autoFit = false
-    const before = toWorld(e)
-    view.k = Math.min(4, Math.max(0.2, view.k * Math.exp(-e.deltaY * 0.0015)))
-    const after = toWorld(e)
-    view.x += (after.x - before.x) * view.k
-    view.y += (after.y - before.y) * view.k
+    // Zoom around the pointer: what lies under it stays there.
+    const p = at(e)
+    const k = Math.min(4, Math.max(0.2, view.k * Math.exp(-e.deltaY * 0.0015)))
+    view.x = p.x - width / 2 - ((p.x - width / 2 - view.x) * k) / view.k
+    view.y = p.y - height / 2 - ((p.y - height / 2 - view.y) * k) / view.k
+    view.k = k
     draw()
   }
 
@@ -263,16 +351,35 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   document.addEventListener("themechange", onTheme)
   const stop = () => {
     sim.stop()
+    still()
     ro.disconnect()
     canvas.removeEventListener("redraw", draw)
-    live.delete(stop)
     document.removeEventListener("themechange", onTheme)
+    live.delete(stop)
   }
   live.add(stop)
   return stop
 }
 
 const DEPTH_KEY = "graphDepth"
+const SPACE_KEY = "graphView"
+
+function recall(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    // storage blocked: use the site's default
+    return null
+  }
+}
+
+function remember(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // private mode: the choice lasts for this page only
+  }
+}
 
 /** The local graph of a note, as many links deep as the reader last chose, or as the site sets. */
 export function mountLocalGraph(canvas: HTMLCanvasElement) {
@@ -283,7 +390,7 @@ export function mountLocalGraph(canvas: HTMLCanvasElement) {
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.graphDepth === String(depth))))
     stop?.()
     const mine = ++latest
-    const next = await mountGraph(canvas, "local", {}, depth)
+    const next = await mountGraph(canvas, "local", {}, { depth })
     // A quicker second click may have mounted another graph meanwhile.
     if (mine === latest) stop = next
     else next?.()
@@ -291,21 +398,11 @@ export function mountLocalGraph(canvas: HTMLCanvasElement) {
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
       const depth = parseDepth(b.dataset.graphDepth, 1)
-      try {
-        localStorage.setItem(DEPTH_KEY, String(depth))
-      } catch {
-        // private mode: the choice lasts for this page only
-      }
+      remember(DEPTH_KEY, String(depth))
       void show(depth)
     }),
   )
-  let saved: string | null = null
-  try {
-    saved = localStorage.getItem(DEPTH_KEY)
-  } catch {
-    // storage blocked: use the site's default
-  }
-  void show(parseDepth(saved, parseDepth(canvas.dataset.depth, 1)))
+  void show(parseDepth(recall(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1)))
 }
 
 /** The colours of the groups, under the global graph. */
@@ -324,13 +421,21 @@ function legend(canvas: HTMLCanvasElement, groups: Map<string, string>) {
 }
 
 let stopGlobal: (() => void) | undefined
+let globalDraws = 0
 
-/** (Re)draw the global graph with the filters currently chosen in its dialog. */
+/** (Re)draw the global graph with the filters and view currently chosen in its dialog. */
 async function drawGlobal(dialog: HTMLDialogElement) {
   stopGlobal?.()
+  stopGlobal = undefined
+  const mine = ++globalDraws
   const canvas = dialog.querySelector<HTMLCanvasElement>("canvas")!
   canvas.dataset.colorBy = dialog.querySelector<HTMLSelectElement>("[data-graph-color]")?.value ?? ""
-  stopGlobal = await mountGraph(canvas, "global", readFilters(dialog))
+  const space = (recall(SPACE_KEY) ?? dialog.dataset.view) === "3d"
+  dialog.querySelector("[data-graph-3d]")?.setAttribute("aria-pressed", String(space))
+  const stop = await mountGraph(canvas, "global", readFilters(dialog), { space })
+  // Filters changed or the dialog closed while the graph was loading.
+  if (mine !== globalDraws || !dialog.open) return void stop?.()
+  stopGlobal = stop
   await setupTime(dialog, canvas)
 }
 
@@ -362,6 +467,11 @@ export function openGraph() {
   if (!dialog.dataset.bound) {
     dialog.dataset.bound = "1"
     dialog.querySelectorAll("select[data-filter], select[data-graph-color]").forEach((sel) => sel.addEventListener("change", () => drawGlobal(dialog)))
+    dialog.querySelector("[data-graph-3d]")?.addEventListener("click", (e) => {
+      const on = (e.currentTarget as HTMLElement).getAttribute("aria-pressed") === "true"
+      remember(SPACE_KEY, on ? "2d" : "3d")
+      void drawGlobal(dialog)
+    })
     dialog.addEventListener("close", () => {
       stopGlobal?.()
       stopGlobal = undefined

@@ -1,6 +1,55 @@
 import { describe, expect, test } from "bun:test"
 import { groupColors, GROUP_COLORS } from "../src/scripts/graph-colors"
 import { neighbourhood, parseDepth } from "../src/scripts/graph-hops"
+import { bounds, MAX_PITCH, project, tilt } from "../src/scripts/graph-3d"
+
+describe("3D graph", () => {
+  const front = { yaw: 0, pitch: 0 }
+
+  test("seen from the front, a point on the centre plane stays where it is", () => {
+    const p = project({ x: 10, y: -5, z: 0 }, front, 100)
+    expect(p.x).toBeCloseTo(10)
+    expect(p.y).toBeCloseTo(-5)
+    expect(p.s).toBeCloseTo(1)
+  })
+
+  test("nearer points are drawn larger, farther ones smaller", () => {
+    const near = project({ x: 10, y: 0, z: 50 }, front, 100)
+    const far = project({ x: 10, y: 0, z: -50 }, front, 100)
+    expect(near.s).toBeGreaterThan(1)
+    expect(far.s).toBeLessThan(1)
+    expect(near.x).toBeGreaterThan(far.x)
+    expect(near.z).toBeGreaterThan(far.z)
+  })
+
+  test("a quarter turn brings a point on the side to the front", () => {
+    const p = project({ x: 10, y: 0, z: 0 }, { yaw: -Math.PI / 2, pitch: 0 }, 100)
+    expect(p.x).toBeCloseTo(0)
+    expect(p.z).toBeCloseTo(10)
+  })
+
+  test("a point behind the eye does not blow up", () => {
+    expect(Number.isFinite(project({ x: 1, y: 1, z: 500 }, front, 100).s)).toBe(true)
+  })
+
+  test("tilting stops short of looking straight down or up", () => {
+    expect(tilt(0, 10)).toBe(MAX_PITCH)
+    expect(tilt(0, -10)).toBe(-MAX_PITCH)
+    expect(tilt(0.2, 0.1)).toBeCloseTo(0.3)
+  })
+
+  test("the bounds of a cloud are its centre and the distance to its farthest point", () => {
+    expect(bounds([])).toEqual({ centre: { x: 0, y: 0, z: 0 }, radius: 0 })
+    const b = bounds([
+      { x: 2, y: 0, z: 0 },
+      { x: -2, y: 0, z: 0 },
+      { x: 0, y: 3, z: 0 },
+      { x: 0, y: -3, z: 4 },
+    ])
+    expect(b.centre).toEqual({ x: 0, y: 0, z: 1 })
+    expect(b.radius).toBeCloseTo(Math.hypot(3, 3))
+  })
+})
 
 describe("graph colours", () => {
   test("each group gets a colour of its own, the same whatever order notes come in", () => {

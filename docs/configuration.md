@@ -107,6 +107,7 @@ related:                      # under each note: notes sharing tags or links,
 stackedPages: true            # a header button to open linked notes side by side
 graph:
   depth: 1                    # links the local graph follows: 1, or 2 for links of links
+  view: 2d                    # how the global graph opens: 2d, or 3d (turned by dragging)
 
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }

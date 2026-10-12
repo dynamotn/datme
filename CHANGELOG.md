@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The global graph has a 3D view: notes are laid out in space, which turns
+  slowly by itself until dragged (and stays still for readers who prefer less
+  motion); scroll zooms, and nearer notes are drawn larger and brighter.
+  Readers' choice is remembered, and `graph: { view: 3d }` opens it that way.
+
 - The local graph of a note can show its own links or, one click away, the
   links of those notes too; notes two links away are drawn fainter. Readers'
   choice is remembered, and `graph: { depth: 1 | 2 }` sets the default. The

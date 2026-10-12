@@ -284,9 +284,11 @@ const schema = z
       .object({
         /** Links the local graph of a note follows: 1 for its own links, 2 for theirs too; readers can switch. */
         depth: z.union([z.literal(1), z.literal(2)]).default(1),
+        /** How the global graph opens: flat, or laid out in space and turned by dragging; readers can switch. */
+        view: z.enum(["2d", "3d"]).default("2d"),
       })
       .strict()
-      .default({ depth: 1 }),
+      .default({ depth: 1, view: "2d" }),
     images: z
       .object({
         /** Resize raster images into WebP copies and let browsers pick the smallest that fits. */
