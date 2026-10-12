@@ -212,6 +212,10 @@ export function setupSearch() {
       if (a) (e.preventDefault(), dialog.close(), navigate(a.getAttribute("href")!))
     }
   })
+  // A search field spends Esc on clearing itself, so the dialog never hears it: close here instead.
+  dialog.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !e.defaultPrevented) (e.preventDefault(), dialog.close())
+  })
   setupMeaning(dialog, input)
   dialog.querySelectorAll("select[data-filter]").forEach((sel) => sel.addEventListener("change", () => run(dialog, input.value)))
   list.addEventListener("click", (e) => {

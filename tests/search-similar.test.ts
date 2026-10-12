@@ -43,3 +43,17 @@ describe("the search dialog with nothing typed", () => {
     expect(list.querySelector(".r-sim")?.textContent).toMatch(/≈ 9\d%/)
   })
 })
+
+describe("the search dialog and Esc", () => {
+  test("Esc in the search field closes the dialog, even with text typed", async () => {
+    const dialog = document.querySelector("dialog") as unknown as HTMLDialogElement
+    let closed = false
+    dialog.close = () => void (closed = true)
+    const input = dialog.querySelector("input")!
+    input.value = "slip"
+    const esc = new happy.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })
+    input.dispatchEvent(esc as unknown as Event)
+    expect(closed).toBe(true)
+    expect(esc.defaultPrevented).toBe(true)
+  })
+})
