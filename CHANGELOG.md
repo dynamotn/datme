@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   field, instead of only clearing it.
 - A build no longer hangs when two notes embed each other and both are
   embedded elsewhere.
+- A link or embed whose name holds a `%`, such as `[[The 50% rule]]`, no
+  longer stops `build`, `check` and `dev` with a URIError.
 - Bases understand `filter()`, `map()` and `replace()`, so formulas such as
   `file.tags.filter(value.startsWith("x/")).map(value.replace("x/", ""))`
   render instead of failing with an unknown method.

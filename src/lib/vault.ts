@@ -253,6 +253,15 @@ export function sourceLangOf(fm: Record<string, unknown>): Lang {
   return typeof fm.lang === "string" && site.langs.includes(fm.lang) ? fm.lang : site.defaultLang
 }
 
+/** A link target with %20 and the like decoded; a lone % as in "50% rule" is taken as written. */
+function decodeTarget(target: string): string {
+  try {
+    return decodeURI(target)
+  } catch {
+    return target
+  }
+}
+
 /** A <!--lang:xx--> marker alone on its line; one quoted in a sentence or a table is text. */
 const LANG_MARKER = /^\s*<!--lang:([^\s>]+)-->$/
 
@@ -499,7 +508,7 @@ function buildVault(version: number): Vault {
   }
 
   function resolveDrawing(target: string, fromDir: string): string | undefined {
-    const t = decodeURI(target.trim()).replace(/^\/+/, "").toLowerCase()
+    const t = decodeTarget(target.trim()).replace(/^\/+/, "").toLowerCase()
     const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
     const hit = drawingByPath.get(relative) ?? drawingByPath.get(t)
     if (hit) return hit
@@ -610,7 +619,7 @@ function buildVault(version: number): Vault {
   }
 
   function resolveAsset(target: string, fromDir: string): string | undefined {
-    const t = decodeURI(target.trim()).replace(/^\/+/, "")
+    const t = decodeTarget(target.trim()).replace(/^\/+/, "")
     const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
     const hit = assetByPath.get(relative) ?? assetByPath.get(t.toLowerCase())
     if (hit) return hit

@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import {
   getVault,
   filterLanguage,
@@ -260,4 +263,19 @@ describe("fallback language", () => {
     expect(contentLanguage(viOnly, "en-US", "fr-FR")).toBe("en-US")
     expect(contentLanguage("No blocks here.", "en-US", "vi-VN")).toBe("en-US")
   })
+})
+
+describe("link targets", () => {
+  test("a % that is not an escape, as in a 50% rule, is taken as written", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-percent-"))
+    fs.writeFileSync(path.join(dir, "Note.md"), "---\npublish: true\n---\nSee [[The 50% rule]] and ![[100% done.png]].\n")
+    const proc = Bun.spawnSync(["bun", "bin/datme.ts", "check", dir], {
+      cwd: path.resolve(import.meta.dir, ".."),
+      env: { ...process.env, VAULT_PATH: "", DATME_VAULT: "", DATME_CACHE: "" },
+    })
+    fs.rmSync(dir, { recursive: true, force: true })
+    const out = proc.stdout.toString() + proc.stderr.toString()
+    expect(out).not.toContain("URIError")
+    expect(out).toContain("The 50% rule")
+  }, 60_000)
 })
