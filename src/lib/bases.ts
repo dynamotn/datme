@@ -394,7 +394,10 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
   }
   switch (name) {
     case "__index":
-      return Array.isArray(self) && typeof a === "number" ? (self[a] ?? null) : null
+      if (Array.isArray(self)) return typeof a === "number" ? (self[a] ?? null) : null
+      // note["due date"]: a property whose name is not a plain identifier.
+      if (self && typeof self === "object" && !(self instanceof Date) && !isLink(self) && typeof a === "string") return self[a] ?? null
+      return null
     case "contains":
       return Array.isArray(self) ? self.some((x) => str(x) === str(a)) : str(self).includes(str(a))
     case "containsAny":

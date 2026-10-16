@@ -97,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   works instead of stopping the build.
 - Dataview `FROM #tag` and Bases `hasTag()` match tags whatever their case,
   as Obsidian does.
+- Bases read a property whose name holds a space with `note["due date"]`.
 
 ### Security
 

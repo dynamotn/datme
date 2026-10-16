@@ -101,6 +101,13 @@ views:
     expect(parseExpr("rating * 2")).toBe(parseExpr("rating * 2"))
   })
 
+  test("a property can be read by its name in brackets", () => {
+    const spaced = page("Notes/Spaced", { fields: { "due date": "2024-01-05", tags: ["a", "b"] } })
+    expect(property('note["due date"]', spaced, engine, {})).toEqual(new Date("2024-01-05"))
+    expect(property('note["missing"]', spaced, engine, {})).toBeNull()
+    expect(property("note.tags[1]", spaced, engine, {})).toBe("b")
+  })
+
   test("today() is a date-only value in any time zone", () => {
     const tz = process.env.TZ
     try {
