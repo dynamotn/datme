@@ -1,6 +1,6 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
 import { Window } from "happy-dom"
-import { applyPrefs, parsePrefs, step, SIZES } from "../src/scripts/prefs"
+import { applyPrefs, parsePrefs, setupPrefs, step, SIZES } from "../src/scripts/prefs"
 import { langDir } from "../src/lib/i18n"
 
 describe("reading preferences", () => {
@@ -37,5 +37,31 @@ describe("writing direction", () => {
     expect(langDir("fa-IR")).toBe("rtl")
     expect(langDir("vi-VN")).toBe("ltr")
     expect(langDir("en-US")).toBe("ltr")
+  })
+})
+
+describe("the preferences menu", () => {
+  test("a click elsewhere closes it, with one listener however often the header is swapped", () => {
+    const window = new Window({ url: "https://garden.example/" }) as unknown as globalThis.Window & typeof globalThis
+    const document = window.document
+    const saved = globalThis.document
+    globalThis.document = document
+    const listen = spyOn(document, "addEventListener")
+    try {
+      const header = `<button data-prefs-toggle aria-expanded="false"></button><div data-prefs-panel hidden><output data-pref-size-out></output></div><p>elsewhere</p>`
+      for (let i = 0; i < 3; i++) {
+        document.body.innerHTML = header
+        setupPrefs()
+      }
+      expect(listen.mock.calls.filter(([type]) => type === "click")).toHaveLength(1)
+      document.querySelector<HTMLElement>("[data-prefs-toggle]")!.click()
+      expect(document.querySelector<HTMLElement>("[data-prefs-panel]")!.hidden).toBe(false)
+      document.querySelector<HTMLElement>("p")!.click()
+      expect(document.querySelector<HTMLElement>("[data-prefs-panel]")!.hidden).toBe(true)
+      expect(document.querySelector("[data-prefs-toggle]")!.getAttribute("aria-expanded")).toBe("false")
+    } finally {
+      listen.mockRestore()
+      globalThis.document = saved
+    }
   })
 })

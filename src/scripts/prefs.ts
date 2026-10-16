@@ -61,6 +61,8 @@ function save(p: Prefs) {
   }
 }
 
+let closesOutside = false
+
 /** The "Aa" menu of the header; header nodes are swapped on navigation, so it re-binds each time. */
 export function setupPrefs(): void {
   const toggle = document.querySelector<HTMLButtonElement>("[data-prefs-toggle]")
@@ -93,10 +95,13 @@ export function setupPrefs(): void {
     save(prefs)
     sync()
   })
+  if (closesOutside) return
+  closesOutside = true
+  // Bound once, so it looks up the menu of whichever page is showing.
   document.addEventListener("click", (e) => {
-    if (!panel.hidden && !(e.target as HTMLElement).closest("[data-prefs-panel], [data-prefs-toggle]")) {
-      panel.hidden = true
-      toggle.setAttribute("aria-expanded", "false")
-    }
+    const panel = document.querySelector<HTMLElement>("[data-prefs-panel]")
+    if (!panel || panel.hidden || (e.target as HTMLElement).closest("[data-prefs-panel], [data-prefs-toggle]")) return
+    panel.hidden = true
+    document.querySelector("[data-prefs-toggle]")?.setAttribute("aria-expanded", "false")
   })
 }
