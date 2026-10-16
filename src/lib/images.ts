@@ -70,16 +70,22 @@ export function variantPath(rel: string, width: number): string {
   return `${assetPath(rel)}.w${width}.webp`
 }
 
-/** The resized copy as WebP; EXIF orientation is applied, since metadata is dropped. */
+/**
+ * The resized copy as WebP; EXIF orientation is applied, since metadata is dropped.
+ * An image that fails to decode (say, a truncated file) is served as its original bytes.
+ */
 export async function renderVariant(rel: string, width: number): Promise<Buffer> {
   const key = [rel, stamp(rel), String(width), String(site.images.quality)]
   const cached = readCache("img", import.meta.url, key)
   if (cached) return cached
-  const out = await sharp(path.join(site.vault, rel))
-    .rotate()
-    .resize({ width, withoutEnlargement: true })
-    .webp({ quality: site.images.quality })
-    .toBuffer()
+  const file = path.join(site.vault, rel)
+  let out: Buffer
+  try {
+    out = await sharp(file).rotate().resize({ width, withoutEnlargement: true }).webp({ quality: site.images.quality }).toBuffer()
+  } catch (e) {
+    console.warn(`[datme] could not resize ${rel}, using the original: ${(e as Error).message}`)
+    return fs.readFileSync(file)
+  }
   writeCache("img", import.meta.url, key, out)
   return out
 }
