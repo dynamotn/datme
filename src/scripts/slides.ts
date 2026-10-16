@@ -5,15 +5,45 @@
  * presents it one slide at a time, full screen where the browser allows.
  */
 
+import { polyfills } from "@marp-team/marpit-svg-polyfill"
+
 let presenting: { host: HTMLElement; slides: SVGSVGElement[]; at: number } | undefined
 
+type Fix = (opts: { target: ParentNode }) => void
+let fixes: Promise<Fix[]> | undefined
+const fixed = new WeakSet<ShadowRoot>()
+
+/**
+ * Safari, and every browser on iOS, scales the HTML of an SVG slide wrongly
+ * (WebKit bug 23113): text spills off the slide and off the screen. Marp's
+ * polyfill places it by hand, frame after frame, as long as the deck is on
+ * the page; elsewhere it finds nothing to do.
+ */
+function polyfill(host: Element, root: ShadowRoot) {
+  if (fixed.has(root)) return
+  fixed.add(root)
+  fixes ??= Promise.resolve(polyfills() as PromiseLike<Fix[]>)
+  void fixes.then((list) => {
+    if (!list.length) return
+    const tick = () => {
+      if (!host.isConnected) return fixed.delete(root)
+      for (const fix of list) fix({ target: root })
+      requestAnimationFrame(tick)
+    }
+    tick()
+  })
+}
+
 function attach(host: Element): ShadowRoot | null {
-  if (host.shadowRoot) return host.shadowRoot
-  const template = host.querySelector<HTMLTemplateElement>(":scope > template[shadowrootmode]")
-  if (!template) return null
-  const root = host.attachShadow({ mode: "open" })
-  root.append(template.content.cloneNode(true))
-  template.remove()
+  let root = host.shadowRoot
+  if (!root) {
+    const template = host.querySelector<HTMLTemplateElement>(":scope > template[shadowrootmode]")
+    if (!template) return null
+    root = host.attachShadow({ mode: "open" })
+    root.append(template.content.cloneNode(true))
+    template.remove()
+  }
+  polyfill(host, root)
   return root
 }
 

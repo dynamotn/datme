@@ -100,7 +100,7 @@ export function renderSlides(
     // Emoji stay text: Twemoji would fetch images from a CDN.
     emoji: { shortcode: true, unicode: false },
     math: "katex",
-    // The site brings its own presenter script; the polyfill is only for old WebKit.
+    // The site brings its own presenter script, and runs the WebKit polyfill on each deck itself (src/scripts/slides.ts).
     script: false,
     inlineSVG: true,
     container: { tag: "div", class: "marpit" },

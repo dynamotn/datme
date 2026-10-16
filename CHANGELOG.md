@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - On iPhones with iOS older than 16.2, the header, highlights and other
   tinted backgrounds keep a colour instead of losing it and letting the page
   show through: each mixed colour has a plain one to fall back on.
+- On iPhone, iPad and in Safari, slides of a Marp deck stay inside their
+  frame instead of spilling past it and off the right edge of the screen:
+  Marp's WebKit polyfill now runs on every deck.
 
 ## [2.2.0] - 2026-10-16
 
