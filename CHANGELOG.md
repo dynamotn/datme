@@ -91,6 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dates without a time keep their own day whatever the time zone of the
   build: `date(today)` matches a note due today, and a date no longer shows
   as the day before west of UTC.
+- A `.base` file with a mistake, such as `order` given without a list, shows
+  an error instead of stopping the build.
 
 ### Security
 

@@ -26,6 +26,13 @@ export interface BaseFile {
   views: BaseView[]
 }
 
+/** A list of a base file, or a BaseError: a malformed base must show as an error, not crash the build. */
+function list<T>(v: unknown, what: string, fallback: T[] = []): T[] {
+  if (v == null) return fallback
+  if (!Array.isArray(v)) throw new BaseError(`${what} must be a list`)
+  return v
+}
+
 export function parseBase(src: string): BaseFile {
   let raw: Record<string, unknown>
   try {
@@ -37,20 +44,21 @@ export function parseBase(src: string): BaseFile {
   for (const [k, v] of Object.entries((raw.properties ?? {}) as Record<string, { displayName?: string }>)) {
     if (v?.displayName) displayNames[k] = v.displayName
   }
-  const views = ((raw.views as Record<string, unknown>[] | undefined) ?? [{ type: "table", name: "Table" }]).map(
-    (v, i): BaseView => ({
+  const views = list<Record<string, unknown> | null>(raw.views, "views", [{ type: "table", name: "Table" }]).map((v, i): BaseView => {
+    if (!v || typeof v !== "object") throw new BaseError(`view ${i + 1} is empty`)
+    return {
       type: v.type === "cards" ? "cards" : v.type === "list" ? "list" : "table",
       name: String(v.name ?? `View ${i + 1}`),
       filters: v.filters as Filter | undefined,
-      order: ((v.order as string[] | undefined) ?? ["file.name"]).map(String),
-      sort: ((v.sort as { property: string; direction?: string }[] | undefined) ?? []).map((s) => ({
-        property: String(s.property),
-        direction: String(s.direction ?? "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC",
-      })),
+      order: list(v.order, "order", ["file.name"]).map(String),
+      sort: list<{ property?: unknown; direction?: unknown } | null>(v.sort, "sort").map((s) => {
+        if (s?.property == null) throw new BaseError("each sort entry needs a property")
+        return { property: String(s.property), direction: String(s.direction ?? "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC" }
+      }),
       limit: typeof v.limit === "number" ? v.limit : undefined,
       image: typeof v.image === "string" ? v.image : undefined,
-    }),
-  )
+    }
+  })
   return {
     filters: raw.filters as Filter | undefined,
     formulas: Object.fromEntries(Object.entries((raw.formulas ?? {}) as Record<string, unknown>).map(([k, v]) => [k, String(v)])),
@@ -418,9 +426,9 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
 function passes(filter: Filter | undefined, page: Page, engine: Engine, formulas: Record<string, string>): boolean {
   if (filter == null) return true
   if (typeof filter === "string") return truthy(evaluate(parseExpr(filter), { page, engine, formulas, depth: 0 }))
-  if (filter.and) return filter.and.every((f) => passes(f, page, engine, formulas))
-  if (filter.or) return filter.or.some((f) => passes(f, page, engine, formulas))
-  if (filter.not) return !filter.not.some((f) => passes(f, page, engine, formulas))
+  if (filter.and) return list<Filter>(filter.and, "and").every((f) => passes(f, page, engine, formulas))
+  if (filter.or) return list<Filter>(filter.or, "or").some((f) => passes(f, page, engine, formulas))
+  if (filter.not) return !list<Filter>(filter.not, "not").some((f) => passes(f, page, engine, formulas))
   return true
 }
 

@@ -117,5 +117,11 @@ views:
     expect(() => property("nope()", pages[0], engine, {})).toThrow("unknown function nope()")
     expect(() => property("formula.missing", pages[0], engine, {})).toThrow("unknown formula missing")
     expect(() => parseBase("views: [")).toThrow("invalid YAML")
+    // Malformed shapes are a BaseError, shown on the page, not a TypeError that fails the build.
+    for (const src of ["views: [{ order: file.name }]", "views: { a: { type: table } }", "views: [{ sort: { property: x } }]", "views:\n  -\n"]) {
+      expect(() => parseBase(src)).toThrow(BaseError)
+    }
+    const grouped = parseBase("filters: { and: 'rating == 3' }")
+    expect(() => runView(grouped, grouped.views[0], engine)).toThrow("and must be a list")
   })
 })
