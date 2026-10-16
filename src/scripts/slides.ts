@@ -10,28 +10,29 @@ import { polyfills } from "@marp-team/marpit-svg-polyfill"
 let presenting: { host: HTMLElement; slides: SVGSVGElement[]; at: number } | undefined
 
 type Fix = (opts: { target: ParentNode }) => void
-let fixes: Promise<Fix[]> | undefined
 const fixed = new WeakSet<ShadowRoot>()
+
+/** Run the polyfill's fixes on a deck now and every frame after, as long as it is on the page. */
+export function keepPlaced(host: { isConnected: boolean }, root: ParentNode, fixes: Fix[], frame?: (tick: () => void) => unknown) {
+  if (!fixes.length) return
+  const tick = () => {
+    if (!host.isConnected) return
+    for (const fix of fixes) fix({ target: root })
+    ;(frame ?? requestAnimationFrame)(tick)
+  }
+  tick()
+}
 
 /**
  * Safari, and every browser on iOS, scales the HTML of an SVG slide wrongly
  * (WebKit bug 23113): text spills off the slide and off the screen. Marp's
- * polyfill places it by hand, frame after frame, as long as the deck is on
- * the page; elsewhere it finds nothing to do.
+ * polyfill places it by hand; elsewhere it has no fixes to give.
  */
 function polyfill(host: Element, root: ShadowRoot) {
   if (fixed.has(root)) return
   fixed.add(root)
-  fixes ??= Promise.resolve(polyfills() as PromiseLike<Fix[]>)
-  void fixes.then((list) => {
-    if (!list.length) return
-    const tick = () => {
-      if (!host.isConnected) return fixed.delete(root)
-      for (const fix of list) fix({ target: root })
-      requestAnimationFrame(tick)
-    }
-    tick()
-  })
+  // The polyfill tells WebKit apart once and remembers it.
+  void Promise.resolve(polyfills() as PromiseLike<Fix[]>).then((fixes) => keepPlaced(host, root, fixes))
 }
 
 function attach(host: Element): ShadowRoot | null {
