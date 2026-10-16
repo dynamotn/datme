@@ -276,6 +276,23 @@ describe("fallback language", () => {
   })
 })
 
+describe("frontmatter flags", () => {
+  test('unlisted: "true", quoted, unlists the note as publish: "true" publishes it', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-unlisted-"))
+    fs.writeFileSync(path.join(dir, "Note.md"), '---\npublish: "true"\nunlisted: "true"\n---\nHidden.\n')
+    const script = path.join(dir, "flags.ts")
+    fs.writeFileSync(
+      script,
+      `import { getVault } from ${JSON.stringify(path.resolve(import.meta.dir, "../src/lib/vault"))}
+console.log(JSON.stringify(Object.values(getVault().notes)[0].map((n) => n.unlisted)))
+process.exit(0)`,
+    )
+    const proc = Bun.spawnSync(["bun", script], { env: { ...process.env, VAULT_PATH: dir, DATME_CACHE: "" } })
+    fs.rmSync(dir, { recursive: true, force: true })
+    expect(JSON.parse(proc.stdout.toString().trim().split("\n").pop()!)).toEqual([true])
+  }, 60_000)
+})
+
 describe("link targets", () => {
   test("a partial path finds the note it ends, in a vault of nested folders", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-nested-"))

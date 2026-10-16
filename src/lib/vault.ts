@@ -836,7 +836,7 @@ function buildVault(version: number): Vault {
               types.some((ty) => site.lineBreaks.types.includes(ty)) ||
               site.lineBreaks.folders.some((f) => s.dir === f || s.dir.startsWith(f + "/")),
         isHome: s.isHome,
-        unlisted: s.fm.unlisted === true,
+        unlisted: flag(s.fm.unlisted) === true,
         draft: site.drafts && isDraft(s.fm),
         protected: s.password != null,
         dir: s.dir,

@@ -105,6 +105,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bases read a property whose name holds a space with `note["due date"]`.
 - `--site` (or `DATME_SITE_URL`) without its `https://` is reported as a
   config error instead of crashing the build later on.
+- `unlisted: "true"`, quoted, unlists a note, as a quoted `publish` or
+  `draft` already counted; it was ignored, leaving the note listed
+  everywhere.
 
 ### Security
 
