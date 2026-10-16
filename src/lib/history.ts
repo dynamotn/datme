@@ -31,10 +31,10 @@ export type Change = { kind: "same" | "add" | "del"; text: string }
 
 const git = (args: string[]) => execFileSync("git", ["-C", site.vault, "-c", "core.quotepath=off", ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
 
-/** What a reader saw of a version of a note in a language, or undefined if it was not public then. */
-export function publicText(raw: string, lang: Lang): string | undefined {
+/** What a reader saw of a version of a note in a language, or undefined if it was not public by `until`. */
+export function publicText(raw: string, lang: Lang, until = new Date()): string | undefined {
   const { fm, body } = parseFrontmatter(raw)
-  if (!isPublished(fm, site.publish) || (fm.password != null && fm.password !== "")) return undefined
+  if (!isPublished(fm, site.publish, until) || (fm.password != null && fm.password !== "")) return undefined
   // Each version falls back the way the note does today.
   const shown = contentLanguage(body, lang, fallbackOf(fm, sourceLangOf(fm)))
   return withoutLocked(filterLanguage(body, shown))
@@ -66,14 +66,16 @@ export function noteVersions(note: Note): Version[] {
   if (hit) return hit
   const versions: Version[] = []
   try {
-    for (const c of commitsOf(note.key + ".md")) {
+    const commits = commitsOf(note.key + ".md")
+    for (const [i, c] of commits.entries()) {
       let raw: string
       try {
         raw = git(["show", `${c.hash}:${c.path}`])
       } catch {
         continue
       }
-      const text = publicText(raw, note.lang)
+      // A version scheduled for later was only seen if its day came before the next commit replaced it.
+      const text = publicText(raw, note.lang, new Date(commits[i + 1]?.time ?? Date.now()))
       if (text == null || text === versions.at(-1)?.text) continue
       versions.push({ date: new Date(c.time), text })
     }

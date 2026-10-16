@@ -116,6 +116,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the sitemap, and unlisted notes ask search engines not to index them.
 - The `.md` copies of notes follow `privateLinks`: a link to a private note
   shows what the page shows, not the private note's name.
+- A note's history no longer shows the versions written before its
+  `publish_date`.
 
 ## [2.1.0] - 2026-10-10
 

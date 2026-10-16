@@ -21,6 +21,12 @@ describe("what a version showed", () => {
     expect(publicText("No frontmatter.", "en-US")).toBeUndefined()
     expect(publicText("---\npublish: true\npassword: pw\n---\nShh.", "en-US")).toBeUndefined()
   })
+
+  test("a version scheduled for later showed nothing until its day", () => {
+    const raw = "---\npublish: true\npublish_date: 2026-05-01\n---\nEarly."
+    expect(publicText(raw, "en-US", new Date("2026-04-01"))).toBeUndefined()
+    expect(publicText(raw, "en-US", new Date("2026-06-01"))).toBe("Early.")
+  })
 })
 
 describe("what changed", () => {
