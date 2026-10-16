@@ -25,6 +25,11 @@ describe("dependencies of a rendered note", () => {
     expect(dependencies(self)).toEqual([expect.stringMatching(/^embed:03_Atomic\/Zettelkasten:.*:false$/)])
   })
 
+  test("a note embedding one with locked parts is not cached, so a changed part or password reaches it", () => {
+    expect(note("07_Project/Blog post").lockedParts.length).toBeGreaterThan(0)
+    expect(dependencies(as('<span class="transclude-ph" data-key="07_Project/Blog post" data-fragment=""></span>'))).toBeUndefined()
+  })
+
   test("a Dataview query FROM a folder depends on that folder's pages, not the whole vault", () => {
     const reference = dependencies(as(fence("dataview", 'LIST FROM "06_Reference"')))!
     const atomic = dependencies(as(fence("dataview", 'LIST FROM "03_Atomic"')))!

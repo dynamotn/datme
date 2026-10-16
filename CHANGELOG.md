@@ -55,6 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A canvas or base linked only from a password-protected note is no longer
   published as a page of its own, where its text was readable without the
   password.
+- A page embedding a note with locked parts is rendered afresh on every
+  build, so a changed locked part or a rotated password reaches it instead of
+  the old ciphertext staying in the build cache.
 
 ## [2.1.0] - 2026-10-10
 

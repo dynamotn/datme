@@ -116,6 +116,8 @@ export function dependencies(note: Note, depth = 0, seen = new Set<string>()): s
       parts.push(`embed:${key}:${target.title}:${target.url}:${target.protected}`)
       continue
     }
+    // Its locked parts are sealed into this page, and their text and passwords are not in its markdown.
+    if (target.lockedParts.length) return undefined
     const inner = dependencies(target, depth + 1, new Set(seen))
     if (!inner) return undefined
     parts.push(
