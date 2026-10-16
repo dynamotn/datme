@@ -36,6 +36,7 @@ describe("publishing rules", () => {
       "08_Journal/2026-10-05",
       "08_Journal/2026-10-07",
       "08_Journal/Garden plans",
+      "08_Journal/Unlisted",
       "index",
     ])
   })
