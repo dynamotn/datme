@@ -85,6 +85,9 @@ views:
     const current = page("Notes/Here", { tags: ["idea", "reference/place"] })
     expect(property("file.tags.filter(this.file.tags.contains(value)).length", tagged, { ...engine, current }, {})).toBe(2)
     expect(property("file.tags.map(index)", tagged, engine, {})).toEqual([0, 1, 2])
+    // A formula reads the note's own `value`, not the item of the list being filtered.
+    const valued = page("Notes/Valued", { tags: ["a", "b"], fields: { value: "b" } })
+    expect(property("file.tags.filter(value == formula.own)", valued, engine, { own: "value" })).toEqual(["b"])
   })
 
   test("errors explain what is wrong", () => {

@@ -247,7 +247,7 @@ function evaluate(e: Expr, ctx: Ctx): Value {
         const src = ctx.formulas[e.name]
         if (src == null) throw new BaseError(`unknown formula ${e.name}`)
         if (ctx.depth > 8) throw new BaseError("formulas refer to each other in a loop")
-        return evaluate(parseExpr(src), { ...ctx, depth: ctx.depth + 1 })
+        return evaluate(parseExpr(src), { ...ctx, item: undefined, depth: ctx.depth + 1 })
       }
       const obj = evaluate(e.obj, ctx)
       if (e.name === "length") return Array.isArray(obj) || typeof obj === "string" ? obj.length : null
