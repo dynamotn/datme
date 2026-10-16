@@ -6,6 +6,7 @@ import { embedExternal } from "./media"
 import { tabsHtml, columnsHtml } from "./layouts"
 import { mediaFragment, parseCues, sidecars, transcriptHtml } from "./transcripts"
 import { markdownSafe } from "./excalidraw"
+import { CODE_SPAN } from "./links"
 import { t } from "./i18n"
 
 export interface LinkRef {
@@ -132,7 +133,7 @@ export function preprocess(
     )
   let md = maskFences(src)
     .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
-    .replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, (m) => mask(m))
+    .replace(CODE_SPAN, (m) => mask(m))
     .replace(/%%[\s\S]*?%%/g, "")
   // A deck keeps its comments (directives, speaker notes) and styles, untouched by tags and highlights.
   md = ctx.slides

@@ -26,6 +26,12 @@ describe("wikilinks", () => {
     expect(links).toEqual([{ key: "06_Reference/Target", context: "See Target." }])
   })
 
+  test("a stray backtick does not hide the links of the paragraphs after it", () => {
+    const { links } = run("Press the ` key.\n\nSee [[Target]].\n\nThen run `ls`.")
+    expect(links.map((l) => l.key)).toEqual(["06_Reference/Target"])
+    expect(run("Code `[[Target]]\nstill code` here.").links).toEqual([])
+  })
+
   test("use the alias and the heading anchor", () => {
     const { md } = run("[[Target#Some Heading|the alias]]")
     expect(md).toContain(`href="${url}#some-heading"`)

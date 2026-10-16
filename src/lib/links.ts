@@ -1,10 +1,13 @@
 import type { Problem } from "./vault"
 
+/** An inline code span; like markdown's, it never runs past a blank line, so a stray ` hides nothing. */
+export const CODE_SPAN = /(`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])*?[^`]\1(?!`)/g
+
 /** Code blocks and spans are examples, not links. */
 function withoutCode(md: string): string {
   return md
     .replace(/^(\s*)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\s*\2[^\S\n]*$/gm, "")
-    .replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, "")
+    .replace(CODE_SPAN, "")
 }
 
 const count = (s: string, c: string) => s.split(c).length - 1

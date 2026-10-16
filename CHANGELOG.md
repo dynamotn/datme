@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer stops `build`, `check` and `dev` with a URIError.
 - A note whose name ends in "index", such as `z-index` or `reindex`, keeps
   its whole URL instead of losing that ending.
+- A lone backtick, as in "press the ` key", no longer turns the links and
+  tags of the following paragraphs into plain text.
 - Bases understand `filter()`, `map()` and `replace()`, so formulas such as
   `file.tags.filter(value.startsWith("x/")).map(value.replace("x/", ""))`
   render instead of failing with an unknown method.
