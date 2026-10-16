@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Esc closes the search dialog, even with text typed in the search
   field, instead of only clearing it.
+- Bases understand `filter()`, `map()` and `replace()`, so formulas such as
+  `file.tags.filter(value.startsWith("x/")).map(value.replace("x/", ""))`
+  render instead of failing with an unknown method.
 
 ## [2.1.0] - 2026-10-10
 

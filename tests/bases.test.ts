@@ -78,6 +78,15 @@ views:
     expect(runView(base, base.views[0], engine).rows).toEqual([])
   })
 
+  test("filter() and map() bind value and index, replace() swaps text", () => {
+    const tagged = page("Notes/Tagged", { tags: ["reference/person", "reference/place", "idea"] })
+    const kind = 'file.tags.filter(value.startsWith("reference/")).map(value.replace("reference/", "")).join(", ")'
+    expect(property(kind, tagged, engine, {})).toBe("person, place")
+    const current = page("Notes/Here", { tags: ["idea", "reference/place"] })
+    expect(property("file.tags.filter(this.file.tags.contains(value)).length", tagged, { ...engine, current }, {})).toBe(2)
+    expect(property("file.tags.map(index)", tagged, engine, {})).toEqual([0, 1, 2])
+  })
+
   test("errors explain what is wrong", () => {
     expect(() => parseExpr('file.hasTag("x"')).toThrow(BaseError)
     expect(() => property("nope()", pages[0], engine, {})).toThrow("unknown function nope()")

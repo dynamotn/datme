@@ -184,6 +184,8 @@ interface Ctx {
   engine: Engine
   formulas: Record<string, string>
   depth: number
+  /** The list item `filter()` and `map()` are looking at. */
+  item?: { value: Value; index: number }
 }
 
 const isLink = (v: unknown): v is Link => typeof v === "object" && v !== null && (v as Link).kind === "link"
@@ -238,6 +240,7 @@ function evaluate(e: Expr, ctx: Ctx): Value {
       if (e.name === "formula") return { __formulas: true } as unknown as Value
       // `this` is the note holding the base: the one embedding it, or with the ```base block.
       if (e.name === "this") return ctx.engine.current ? thisObject(ctx.engine.current, ctx.engine) : null
+      if (ctx.item && (e.name === "value" || e.name === "index")) return ctx.item[e.name]
       return noteValue(ctx.page, e.name)
     case "member": {
       if (e.obj.k === "var" && e.obj.name === "formula") {
@@ -290,6 +293,13 @@ function evaluate(e: Expr, ctx: Ctx): Value {
       return null
     }
     case "call": {
+      // filter() and map() evaluate their argument once per item, with `value` and `index` bound to it.
+      if (e.callee.k === "member" && (e.callee.name === "filter" || e.callee.name === "map")) {
+        const list = evaluate(e.callee.obj, ctx)
+        if (!Array.isArray(list)) return null
+        const each = (value: Value, index: number) => evaluate(e.args[0] ?? { k: "lit", v: null }, { ...ctx, item: { value, index } })
+        return e.callee.name === "filter" ? list.filter((v, i) => truthy(each(v, i))) : list.map(each)
+      }
       const args = e.args.map((x) => evaluate(x, ctx))
       if (e.callee.k === "var") return globalFn(e.callee.name, args)
       if (e.callee.k !== "member") throw new BaseError("only functions and methods can be called")
@@ -376,6 +386,8 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
       return str(self).toUpperCase()
     case "trim":
       return str(self).trim()
+    case "replace":
+      return str(self).replaceAll(str(a), str(args[1]))
     case "toString":
       return str(self)
     case "join":
