@@ -165,14 +165,10 @@ export function preprocess(
   /** A link to a private note as plain words, or nothing when it shows none. */
   const privateSpan = (kind: LinkProblem["kind"], target: string, shown: string) =>
     broken(kind, target, shown ? `<span class="broken-link" title="Not published">${shown}</span>` : "", shown)
-  const lines = md.split("\n")
-  const lineOf = (offset: number) => {
-    let n = 0
-    for (let i = 0; i < lines.length; i++) {
-      n += lines[i].length + 1
-      if (offset < n) return lines[i]
-    }
-    return ""
+  /** The line around `offset` of the text being rewritten, its masked code put back. */
+  const lineOf = (text: string, offset: number) => {
+    const end = text.indexOf("\n", offset)
+    return text.slice(text.lastIndexOf("\n", offset - 1) + 1, end < 0 ? undefined : end).replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
   }
 
   const internalLink = (src: LinkTarget, fragment: string, text: string) =>
@@ -261,7 +257,7 @@ export function preprocess(
   }
 
   // Wikilinks and embeds: [[target#fragment|alias]] and ![[...]]; tables escape the pipe as \|.
-  md = md.replace(/(!?)\[\[([^[\]\n]+?)\]\]/g, (_m, bang: string, inner: string, offset: number) => {
+  md = md.replace(/(!?)\[\[([^[\]\n]+?)\]\]/g, (_m, bang: string, inner: string, offset: number, whole: string) => {
     const raw = inner.replace(/\\\|/g, "|")
     const pipe = raw.indexOf("|")
     const target = pipe >= 0 ? raw.slice(0, pipe) : raw
@@ -270,7 +266,7 @@ export function preprocess(
     const file = (hash >= 0 ? target.slice(0, hash) : target).trim()
     const fragment = hash >= 0 ? target.slice(hash + 1).trim() : ""
 
-    if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias, fragment, lineOf(offset))
+    if (bang && EXCALIDRAW.test(file)) return embedDrawing(file, alias, fragment, lineOf(whole, offset))
     // A link (not an embed) to a drawing opens it on a page of its own, as the plugin opens it in a tab.
     if (!bang && EXCALIDRAW.test(file) && ctx.drawingPage) {
       const rel = ctx.drawingPage(file, ctx.dir)
@@ -294,7 +290,7 @@ export function preprocess(
     if (bang) {
       const note = file ? ctx.resolveNote(file, ctx.dir) : undefined
       if (note && !IMAGE.test(file)) {
-        links.push({ key: note.key, context: contextOf(lineOf(offset)) })
+        links.push({ key: note.key, context: contextOf(lineOf(whole, offset)) })
         return `<span class="transclude-ph" data-key="${escapeAttr(note.key)}" data-fragment="${escapeAttr(fragment)}"></span>`
       }
       const asset = file ? ctx.resolveAsset(file, ctx.dir) : undefined
@@ -317,7 +313,7 @@ export function preprocess(
       if (shown !== undefined) return privateSpan("link", file, shown)
       return broken("link", file, `<span class="broken-link" title="Not published">${text}</span>`)
     }
-    links.push({ key: note.key, context: contextOf(lineOf(offset)) })
+    links.push({ key: note.key, context: contextOf(lineOf(whole, offset)) })
     return internalLink(note, fragment, text)
   })
 
@@ -327,7 +323,7 @@ export function preprocess(
   // Standard markdown links pointing at vault notes or assets.
   md = md.replace(
     /(!?)\[([^\]\n]*)\]\((?!https?:|mailto:|#|\/)([^)\s]+?)(#[^)\s]*)?\)/g,
-    (m, bang: string, text: string, target: string, frag: string | undefined, offset: number) => {
+    (m, bang: string, text: string, target: string, frag: string | undefined, offset: number, whole: string) => {
       let decoded = target
       try {
         decoded = decodeURI(target)
@@ -341,7 +337,7 @@ export function preprocess(
           if (shown !== undefined) return privateSpan("link", decoded, shown)
           return broken("link", decoded, `<span class="broken-link">${text}</span>`)
         }
-        links.push({ key: note.key, context: contextOf(lineOf(offset)) })
+        links.push({ key: note.key, context: contextOf(lineOf(whole, offset)) })
         return internalLink(note, (frag ?? "").slice(1), text)
       }
       // Canvases, bases and drawings open on their own page, as their wikilinks do.

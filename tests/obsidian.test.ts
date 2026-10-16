@@ -26,6 +26,11 @@ describe("wikilinks", () => {
     expect(links).toEqual([{ key: "06_Reference/Target", context: "See Target." }])
   })
 
+  test("a link's context is its own line, code included", () => {
+    const { links } = run("First [[Target|one]] line with a long wikilink.\n\nUses `x` then [two](06_Reference/Target.md).")
+    expect(links.map((l) => l.context)).toEqual(["First one line with a long wikilink.", "Uses x then two."])
+  })
+
   test("a stray backtick does not hide the links of the paragraphs after it", () => {
     const { links } = run("Press the ` key.\n\nSee [[Target]].\n\nThen run `ls`.")
     expect(links.map((l) => l.key)).toEqual(["06_Reference/Target"])
