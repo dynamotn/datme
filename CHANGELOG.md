@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - On iPhone, iPad and in Safari, slides of a Marp deck stay inside their
   frame instead of spilling past it and off the right edge of the screen:
   Marp's WebKit polyfill now runs on every deck.
+- On a touch screen a tapped button, card or link no longer stays
+  highlighted as if the pointer were still on it, and the copy button of a
+  code block is always shown instead of hidden yet still tappable.
 
 ## [2.2.0] - 2026-10-16
 

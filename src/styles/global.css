@@ -199,9 +199,11 @@ kbd {
   font-weight: 550;
   white-space: nowrap;
 }
-.main-nav a:hover {
-  background: var(--surface-2);
-  color: var(--ink);
+@media (hover: hover) {
+  .main-nav a:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
 }
 .main-nav a[aria-current="page"] {
   color: var(--accent);
@@ -221,9 +223,11 @@ kbd {
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.search-trigger:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow);
+@media (hover: hover) {
+  .search-trigger:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow);
+  }
 }
 .search-trigger span {
   flex: 1;
@@ -241,9 +245,11 @@ kbd {
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.icon-btn:hover {
-  background: var(--surface-2);
-  color: var(--ink);
+@media (hover: hover) {
+  .icon-btn:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
 }
 .icon-btn[aria-pressed="true"] {
   color: var(--accent);
@@ -435,10 +441,12 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.explorer summary:hover,
-.explorer .folder-link:hover,
-.explorer li > a:not(.folder-link):hover {
-  background: var(--surface-2);
+@media (hover: hover) {
+  .explorer summary:hover,
+  .explorer .folder-link:hover,
+  .explorer li > a:not(.folder-link):hover {
+    background: var(--surface-2);
+  }
 }
 .explorer a[aria-current="page"] {
   background: var(--accent-soft);
@@ -464,9 +472,11 @@ kbd {
   color: var(--ink-2);
   font-weight: 550;
 }
-.side-nav a:hover {
-  background: var(--surface-2);
-  color: var(--ink);
+@media (hover: hover) {
+  .side-nav a:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
 }
 .side-nav a[aria-current="page"] {
   background: var(--surface);
@@ -505,8 +515,10 @@ kbd {
   color: var(--muted);
   margin-bottom: 14px;
 }
-.crumbs a:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .crumbs a:hover {
+    color: var(--accent);
+  }
 }
 .crumbs .sep {
   opacity: 0.5;
@@ -529,9 +541,11 @@ kbd {
   color: var(--ink-2);
   white-space: nowrap;
 }
-a.chip:hover {
-  background: var(--surface-3);
-  color: var(--ink);
+@media (hover: hover) {
+  a.chip:hover {
+    background: var(--surface-3);
+    color: var(--ink);
+  }
 }
 .chip.stage {
   background: var(--accent-soft);
@@ -687,8 +701,10 @@ a.chip:hover {
   text-decoration-thickness: 1.5px;
   transition: text-decoration-color 0.15s;
 }
-.prose a:hover {
-  text-decoration-color: var(--accent);
+@media (hover: hover) {
+  .prose a:hover {
+    text-decoration-color: var(--accent);
+  }
 }
 .prose a.internal {
   text-decoration: none;
@@ -696,9 +712,11 @@ a.chip:hover {
   padding: 0 3px;
   border-radius: 4px;
 }
-.prose a.internal:hover {
-  background: transparent;
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
+@media (hover: hover) {
+  .prose a.internal:hover {
+    background: transparent;
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+  }
 }
 .prose a.external::after {
   content: "";
@@ -897,6 +915,12 @@ a.chip:hover {
 .copy-btn:focus-visible {
   opacity: 1;
 }
+/* Without a pointer nothing hovers, and a hidden button would still copy when tapped: it shows. */
+@media (hover: none) {
+  .copy-btn {
+    opacity: 1;
+  }
+}
 .prose pre.mermaid {
   background: transparent;
   border: none;
@@ -1059,8 +1083,10 @@ details.callout[open] > summary::after {
 .toc li.d4 a {
   padding-left: 36px;
 }
-.toc li a:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .toc li a:hover {
+    color: var(--ink);
+  }
 }
 .toc li a.active {
   color: var(--accent);
@@ -1154,10 +1180,12 @@ details.callout[open] > summary::after {
   background: var(--surface);
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
-.backlink:hover {
-  border-color: var(--line-strong);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
+@media (hover: hover) {
+  .backlink:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+  }
 }
 .backlink strong {
   font-weight: 650;
@@ -1218,10 +1246,12 @@ details.callout[open] > summary::after {
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--line-strong);
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--line-strong);
+  }
 }
 .card-media {
   aspect-ratio: 16 / 9;
@@ -1235,8 +1265,10 @@ details.callout[open] > summary::after {
   display: block;
   transition: transform 0.4s;
 }
-.card:hover .card-media img {
-  transform: scale(1.04);
+@media (hover: hover) {
+  .card:hover .card-media img {
+    transform: scale(1.04);
+  }
 }
 .card-body {
   display: flex;
@@ -1292,8 +1324,10 @@ details.callout[open] > summary::after {
 .note-list li:last-child .note-row {
   border-bottom: none;
 }
-.note-row:hover {
-  background: var(--surface-2);
+@media (hover: hover) {
+  .note-row:hover {
+    background: var(--surface-2);
+  }
 }
 .note-row .emoji {
   font-size: 16px;
@@ -1412,9 +1446,11 @@ details.callout[open] > summary::after {
   background: var(--surface);
   transition: border-color 0.15s, background 0.15s;
 }
-.stage-card:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+@media (hover: hover) {
+  .stage-card:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
 }
 .stage-card .emoji {
   font-size: 22px;
@@ -1477,8 +1513,10 @@ details.callout[open] > summary::after {
   background: var(--surface);
   font-weight: 600;
 }
-.folder-card:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .folder-card:hover {
+    border-color: var(--accent);
+  }
 }
 .folder-card span {
   margin-left: auto;
@@ -1733,8 +1771,10 @@ dialog.graph-modal {
   gap: 16px;
   flex-wrap: wrap;
 }
-.site-footer a:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .site-footer a:hover {
+    color: var(--accent);
+  }
 }
 
 /* ---------- responsive ---------- */
@@ -2254,9 +2294,13 @@ dialog.graph-modal {
   line-height: 1;
   cursor: pointer;
 }
-.lightbox-btn:hover,
 .lightbox-btn:focus-visible {
   background: rgb(255 255 255 / 0.28);
+}
+@media (hover: hover) {
+  .lightbox-btn:hover {
+    background: rgb(255 255 255 / 0.28);
+  }
 }
 .lightbox-prev {
   left: 12px;
@@ -2315,8 +2359,10 @@ dialog.graph-modal {
   color: var(--ink);
   text-decoration: none;
 }
-.series-nav a:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .series-nav a:hover {
+    border-color: var(--accent);
+  }
 }
 .series-nav small {
   color: var(--muted);
@@ -2585,8 +2631,10 @@ li > .flashcard {
 .prose a.link-card::after {
   display: none;
 }
-.prose a.link-card:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .prose a.link-card:hover {
+    border-color: var(--accent);
+  }
 }
 .link-card-text {
   display: flex;
@@ -2632,8 +2680,10 @@ li > .flashcard {
   text-decoration: underline dotted var(--accent);
   text-underline-offset: 3px;
 }
-.prose a.term:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .prose a.term:hover {
+    color: var(--accent);
+  }
 }
 
 /* ---------- kanban boards ---------- */
@@ -2700,8 +2750,10 @@ li > .flashcard {
   font: 600 14px var(--font-ui);
   cursor: pointer;
 }
-.practice-start:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .practice-start:hover {
+    border-color: var(--accent);
+  }
 }
 .practice {
   width: min(36rem, calc(100vw - 32px));
@@ -2873,9 +2925,13 @@ li > .flashcard {
 .drawing-link {
   cursor: pointer;
 }
-.drawing-link:hover,
 .drawing-link:focus-visible {
   opacity: 0.75;
+}
+@media (hover: hover) {
+  .drawing-link:hover {
+    opacity: 0.75;
+  }
 }
 a.drawing-link tspan {
   text-decoration: underline;
@@ -3365,8 +3421,10 @@ a.drawing-link tspan {
 .activity .day.l4 {
   background: var(--accent);
 }
-.activity a.day:hover {
-  outline: 2px solid var(--clay);
+@media (hover: hover) {
+  .activity a.day:hover {
+    outline: 2px solid var(--clay);
+  }
 }
 .archive-list li:target {
   background: var(--accent-soft);
@@ -3491,9 +3549,11 @@ a.drawing-link tspan {
   font: 600 14px var(--font-ui);
   cursor: pointer;
 }
-.present-button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+@media (hover: hover) {
+  .present-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }
 
 /* ---------- datme credit ---------- */
@@ -3609,9 +3669,11 @@ a.drawing-link tspan {
   font-weight: 700;
   text-decoration: none;
 }
-.calendar-month td.has-note a:hover {
-  background: var(--accent);
-  color: #fff;
+@media (hover: hover) {
+  .calendar-month td.has-note a:hover {
+    background: var(--accent);
+    color: #fff;
+  }
 }
 .day-nav {
   display: flex;
@@ -3756,8 +3818,10 @@ a.drawing-link tspan {
   font: 600 0.78em var(--font-ui);
   cursor: pointer;
 }
-.prose .tab-list [role="tab"]:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .prose .tab-list [role="tab"]:hover {
+    color: var(--ink);
+  }
 }
 .prose .tab-list [role="tab"][aria-selected="true"] {
   color: var(--accent);

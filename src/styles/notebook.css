@@ -132,11 +132,13 @@
   box-shadow: 3px 3px 0 var(--ink);
   transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s;
 }
-[data-look="notebook"] .main-nav a:hover {
-  background: var(--yellow);
-  color: #050505;
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--ink);
+@media (hover: hover) {
+  [data-look="notebook"] .main-nav a:hover {
+    background: var(--yellow);
+    color: #050505;
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
 }
 [data-look="notebook"] .main-nav a[aria-current="page"] {
   background: var(--ink);
@@ -150,17 +152,21 @@
   font-family: var(--font-mono);
   font-size: 13px;
 }
-[data-look="notebook"] .search-trigger:hover {
-  box-shadow: 3px 3px 0 var(--ink);
-  border-color: var(--ink);
+@media (hover: hover) {
+  [data-look="notebook"] .search-trigger:hover {
+    box-shadow: 3px 3px 0 var(--ink);
+    border-color: var(--ink);
+  }
 }
 [data-look="notebook"] .icon-btn {
   border-radius: 4px;
   color: var(--ink);
 }
-[data-look="notebook"] .icon-btn:hover {
-  background: var(--yellow);
-  color: #050505;
+@media (hover: hover) {
+  [data-look="notebook"] .icon-btn:hover {
+    background: var(--yellow);
+    color: #050505;
+  }
 }
 [data-look="notebook"] .icon-btn[aria-pressed="true"] {
   background: var(--ink);
@@ -201,12 +207,19 @@
   border: 2px solid transparent;
   border-radius: 4px;
 }
-[data-look="notebook"] .side-nav a:hover,
 [data-look="notebook"] .side-nav a[aria-current="page"] {
   background: var(--yellow);
   color: #050505;
   border-color: var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
+}
+@media (hover: hover) {
+  [data-look="notebook"] .side-nav a:hover {
+    background: var(--yellow);
+    color: #050505;
+    border-color: var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
 }
 [data-look="notebook"] .explorer {
   font-family: var(--font-read);
@@ -222,9 +235,11 @@
   font-family: var(--font-mono);
   color: var(--ink);
 }
-[data-look="notebook"] .explorer summary:hover,
-[data-look="notebook"] .explorer li > a:hover {
-  background: var(--surface-3);
+@media (hover: hover) {
+  [data-look="notebook"] .explorer summary:hover,
+  [data-look="notebook"] .explorer li > a:hover {
+    background: var(--surface-3);
+  }
 }
 [data-look="notebook"] .explorer a[aria-current="page"] {
   background: var(--yellow);
@@ -293,10 +308,12 @@
   background: var(--pink);
   background: color-mix(in srgb, var(--pink) 65%, transparent);
 }
-[data-look="notebook"] .index-card:hover {
-  rotate: 0deg;
-  transform: translate(-4px, -4px);
-  box-shadow: var(--shadow-lg);
+@media (hover: hover) {
+  [data-look="notebook"] .index-card:hover {
+    rotate: 0deg;
+    transform: translate(-4px, -4px);
+    box-shadow: var(--shadow-lg);
+  }
 }
 [data-look="notebook"] .index-card-media {
   display: block;
@@ -339,13 +356,17 @@
   background-repeat: no-repeat;
   transition: background-size 0.25s var(--ease);
 }
-[data-look="notebook"] .index-card:hover .index-card-title a {
-  background-size: 100% 100%;
-  color: #050505;
+@media (hover: hover) {
+  [data-look="notebook"] .index-card:hover .index-card-title a {
+    background-size: 100% 100%;
+    color: #050505;
+  }
 }
-[data-look="notebook"][data-theme="dark"] .index-card:hover .index-card-title a {
-  color: var(--ink);
-  background-image: linear-gradient(transparent 70%, rgb(255 232 0 / 0.4) 70%);
+@media (hover: hover) {
+  [data-look="notebook"][data-theme="dark"] .index-card:hover .index-card-title a {
+    color: var(--ink);
+    background-image: linear-gradient(transparent 70%, rgb(255 232 0 / 0.4) 70%);
+  }
 }
 /* Excerpt written on ruled lines: each line box ends on a rule. */
 [data-look="notebook"] .index-card-excerpt {
@@ -567,8 +588,10 @@
 [data-look="notebook"] .nb-hero-side li:last-child a {
   border-bottom: none;
 }
-[data-look="notebook"] .nb-hero-side a:hover {
-  background: #fff;
+@media (hover: hover) {
+  [data-look="notebook"] .nb-hero-side a:hover {
+    background: #fff;
+  }
 }
 [data-look="notebook"] .nb-hero-side b {
   font-family: var(--font-mono);
@@ -609,9 +632,11 @@
   background: transparent;
   color: var(--ink);
 }
-[data-look="notebook"] .nb-section-head a:hover {
-  background: var(--clay);
-  color: #fff;
+@media (hover: hover) {
+  [data-look="notebook"] .nb-section-head a:hover {
+    background: var(--clay);
+    color: #fff;
+  }
 }
 
 /* ---------- note page: a sheet torn from the notebook ---------- */
@@ -655,9 +680,11 @@
   font-size: 12.5px;
   color: var(--ink);
 }
-[data-look="notebook"] .crumbs a:hover {
-  background: var(--yellow);
-  color: #050505;
+@media (hover: hover) {
+  [data-look="notebook"] .crumbs a:hover {
+    background: var(--yellow);
+    color: #050505;
+  }
 }
 [data-look="notebook"] .chip {
   height: 26px;
@@ -683,9 +710,11 @@
   background: var(--green);
   color: #050505;
 }
-[data-look="notebook"] a.chip:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 var(--ink);
+@media (hover: hover) {
+  [data-look="notebook"] a.chip:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
 }
 [data-look="notebook"] .note-title,
 [data-look="notebook"] .page-head h1 {
@@ -742,9 +771,11 @@
   padding: 0 2px;
   border-radius: 0;
 }
-[data-look="notebook"] .prose a.internal:hover {
-  background: var(--yellow);
-  color: #050505;
+@media (hover: hover) {
+  [data-look="notebook"] .prose a.internal:hover {
+    background: var(--yellow);
+    color: #050505;
+  }
 }
 /* Sidenotes stand clear of the page's frame, past its padding and border. */
 [data-look="notebook"] .prose .sidenote {
@@ -929,11 +960,13 @@
   border-radius: 6px;
   box-shadow: var(--shadow-sm);
 }
-[data-look="notebook"] .backlink:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: var(--shadow);
-  background: var(--yellow);
-  color: #050505;
+@media (hover: hover) {
+  [data-look="notebook"] .backlink:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: var(--shadow);
+    background: var(--yellow);
+    color: #050505;
+  }
 }
 [data-look="notebook"] .backlink strong {
   font-family: var(--font-ui);
@@ -972,11 +1005,13 @@
 [data-look="notebook"] .folder-card span {
   font-family: var(--font-mono);
 }
-[data-look="notebook"] .folder-card:hover {
-  background: var(--yellow);
-  color: #050505;
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow);
+@media (hover: hover) {
+  [data-look="notebook"] .folder-card:hover {
+    background: var(--yellow);
+    color: #050505;
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow);
+  }
 }
 
 /* ---------- dialogs, popover, footer ---------- */
@@ -1251,9 +1286,11 @@
   border-bottom: 2px dashed var(--ink);
   transition: background 0.15s;
 }
-[data-look="notebook"] .archive-list li:hover {
-  background: var(--yellow);
-  color: #050505;
+@media (hover: hover) {
+  [data-look="notebook"] .archive-list li:hover {
+    background: var(--yellow);
+    color: #050505;
+  }
 }
 [data-look="notebook"] .archive-list time,
 [data-look="notebook"] .archive-where {
