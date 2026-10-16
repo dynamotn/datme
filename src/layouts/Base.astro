@@ -315,7 +315,17 @@ const pluginHead = await userHead()
     >
       <div class="search-input-row">
         <Icon name="search" />
-        <input type="search" placeholder={s.searchPlaceholder} aria-label={s.search} autocomplete="off" spellcheck="false" />
+        <input
+          type="search"
+          placeholder={s.searchPlaceholder}
+          aria-label={s.search}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls="search-results"
+          aria-expanded="false"
+          autocomplete="off"
+          spellcheck="false"
+        />
         {
           site.search.meaning && site.related.semantic && site.search.engine === "minisearch" && (
             <button class="search-meaning" type="button" aria-pressed="false" data-search-meaning title={s.searchMeaningHint} data-loading={s.searchMeaningLoading}>
@@ -326,7 +336,7 @@ const pluginHead = await userHead()
         <kbd>Esc</kbd>
       </div>
       <Filters lang={lang} kinds={["folder", "type"]} scope="search" />
-      <ul class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
+      <ul id="search-results" class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
       <div class="modal-foot">
         <span><kbd>↑</kbd> <kbd>↓</kbd> {s.navigate}</span>
         <span><kbd>↵</kbd> {s.open}</span>

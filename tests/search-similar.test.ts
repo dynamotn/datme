@@ -42,6 +42,14 @@ describe("the search dialog with nothing typed", () => {
     expect(links).toEqual(["/notes/b"])
     expect(list.querySelector(".r-sim")?.textContent).toMatch(/≈ 9\d%/)
   })
+
+  test("the search field tells screen readers which result is selected", () => {
+    const input = document.querySelector("input")!
+    const first = document.querySelector(".search-results a")!
+    expect(input.getAttribute("aria-expanded")).toBe("true")
+    expect(first.id).toBeTruthy()
+    expect(input.getAttribute("aria-activedescendant")).toBe(first.id)
+  })
 })
 
 describe("the search dialog and Esc", () => {

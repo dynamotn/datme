@@ -72,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stops the build: it is served as it is, with a warning.
 - Search results always match what is typed: a slower answer to an earlier
   query or filter no longer replaces them.
+- Screen readers announce the search result chosen with the arrow keys.
 
 ### Security
 

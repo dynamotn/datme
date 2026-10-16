@@ -30,12 +30,25 @@ function engine(lang: string) {
 
 let selected = 0
 
+/** Select a result; the search field points screen readers at it, as focus stays in the field. */
 function select(list: HTMLElement, i: number) {
+  const input = list.closest("dialog")!.querySelector("input")!
   const items = [...list.querySelectorAll<HTMLAnchorElement>("a")]
-  if (!items.length) return
+  input.setAttribute("aria-expanded", String(items.length > 0))
+  if (!items.length) return void input.removeAttribute("aria-activedescendant")
   selected = (i + items.length) % items.length
-  items.forEach((a, j) => a.setAttribute("aria-selected", String(j === selected)))
+  items.forEach((a, j) => {
+    a.id = `search-option-${j}`
+    a.setAttribute("aria-selected", String(j === selected))
+  })
+  input.setAttribute("aria-activedescendant", items[selected].id)
   items[selected].scrollIntoView({ block: "nearest" })
+}
+
+/** Replace the results and select the first. */
+function show(list: HTMLElement, html: string) {
+  list.innerHTML = html
+  select(list, 0)
 }
 
 interface PagefindResult {
@@ -60,7 +73,7 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
   if (filter.folder) filters.folder = filter.folder
   if (filter.type) filters.type = filter.type
   if (!q && !Object.keys(filters).length) {
-    list.innerHTML = ""
+    show(list, "")
     return
   }
   const pf = await loadPagefind()
@@ -68,19 +81,20 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
   const hits = await Promise.all(found.results.slice(0, 30).map((r) => r.data()))
   if (stale()) return
   if (!hits.length) {
-    list.innerHTML = `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`
+    show(list, `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`)
     return
   }
   // Pagefind's excerpts are page text with <mark> around the matches.
-  list.innerHTML = hits
-    .map(
+  show(
+    list,
+    hits.map(
       (h) => `<li><a href="${esc(h.url)}" role="option">
         <div class="r-title"><span>📝</span>${esc(h.meta.title ?? h.url)}</div>
         <div class="r-snippet">${h.excerpt}</div>
       </a></li>`,
     )
-    .join("")
-  select(list, 0)
+    .join(""),
+  )
 }
 
 /** One result: the note's title, folder and tags, and the words around the match. */
@@ -101,12 +115,11 @@ async function showSimilar(dialog: HTMLDialogElement, list: HTMLElement, notes: 
   const vectors = await loadVectors(dialog.dataset.lang ?? currentLang())
   if (stale()) return
   const here = vectors?.find((n) => samePath(n.url, location.pathname))
-  if (!vectors || !here) return void (list.innerHTML = "")
+  if (!vectors || !here) return show(list, "")
   const near = nearest(here.v, vectors, 8, threshold(dialog), (url) => url === here.url)
   const byUrl = new Map(notes.map((n) => [n.u, n]))
   const items = near.flatMap((m) => (byUrl.has(m.url) ? [resultHtml(byUrl.get(m.url)!, [], m.sim)] : []))
-  list.innerHTML = items.length ? `<li class="group" role="presentation">${esc(dialog.dataset.similar ?? "")}</li>${items.join("")}` : ""
-  if (items.length) select(list, 0)
+  show(list, items.length ? `<li class="group" role="presentation">${esc(dialog.dataset.similar ?? "")}</li>${items.join("")}` : "")
 }
 
 /** Notes close in meaning to a query, once the reader turned on search by meaning. */
@@ -134,7 +147,7 @@ async function run(dialog: HTMLDialogElement, query: string) {
   const filtering = Boolean(filter.folder || filter.type)
   if (!q && !filtering) {
     if (dialog.dataset.similar) return showSimilar(dialog, list, notes, stale)
-    list.innerHTML = ""
+    show(list, "")
     return
   }
   const terms = fold(q).split(/\s+/).filter(Boolean)
@@ -151,11 +164,10 @@ async function run(dialog: HTMLDialogElement, query: string) {
   const sims = new Map(meaning.map((m) => [m.url, m.sim]))
   const hits = ranked.filter(({ id }) => id !== undefined && matchesFilter(notes[id as number], filter)).slice(0, q ? 30 : 100)
   if (!hits.length) {
-    list.innerHTML = `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`
+    show(list, `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`)
     return
   }
-  list.innerHTML = hits.map(({ id }) => resultHtml(notes[id as number], terms, sims.get(notes[id as number].u))).join("")
-  select(list, 0)
+  show(list, hits.map(({ id }) => resultHtml(notes[id as number], terms, sims.get(notes[id as number].u))).join(""))
 }
 
 /** The reader turns search by meaning on: the model is downloaded once, then every query uses it. */
