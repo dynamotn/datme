@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page } from "../src/lib/dataview"
+import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "../src/lib/dataview"
 
 const page = (key: string, over: Partial<Page> = {}): Page => ({
   key,
@@ -129,6 +129,14 @@ describe("GROUP BY", () => {
     const res = run("LIST FROM #type GROUP BY file.folder")
     expect(res.nested).toBe(true)
     expect(res.rows[1]).toEqual(["People", [expect.objectContaining({ title: "Herbert" })]])
+  })
+
+  test("FLATTEN rows and a second GROUP BY keep the notes of each group", () => {
+    const notes = (r: Value[]) => (r[1] as { title: string }[]).map((l) => l.title)
+    expect(run("LIST FROM #type GROUP BY file.folder FLATTEN rows").rows.map(notes)).toEqual([["Dune"], ["Emma"], ["Herbert"]])
+    expect(run("LIST FROM #type GROUP BY file.folder GROUP BY length(rows)").rows.map(notes)).toEqual([["Herbert"], ["Dune", "Emma"]])
+    const tasks = run("TASK GROUP BY file.name GROUP BY length(rows) > 1").groups!
+    expect(tasks.map((g) => g.tasks.map((t) => t.text))).toEqual([["call", "halfway", "write #draft 📅 2020-01-02", "read [priority:: high]"]])
   })
 })
 

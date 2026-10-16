@@ -827,10 +827,13 @@ export function runQuery(q: Query, engine: Engine): Result {
       rows = keyed.map((k) => k.r)
     } else rows = rows.slice(0, step.n)
   }
-  const file = (r: Row) => (r.file as Record<string, Value>).link
+  const file = (r: Row) => (r.file as Record<string, Value> | undefined)?.link ?? null
+  // The rows of a group. FLATTEN rows leaves one row, and a second GROUP BY gathers groups: take their rows.
+  const members = (g: Row): Row[] =>
+    [g.rows].flat().flatMap((m) => (m && typeof m === "object" && !("file" in m) && "rows" in m ? members(m as Row) : [m as Row]))
   if (q.type === "task") {
     const view = (r: Row) => ({ text: String(r.text), checked: r.checked === true })
-    if (group) return { type: "task", headers: [], rows: [], groups: rows.map((g) => ({ key: g.key, tasks: (g.rows as Row[]).map(view) })) }
+    if (group) return { type: "task", headers: [], rows: [], groups: rows.map((g) => ({ key: g.key, tasks: members(g).map(view) })) }
     // Without GROUP BY, tasks are listed under their note, as Dataview does.
     const byNote = new Map<string, TaskGroup>()
     for (const r of rows) {
@@ -846,7 +849,7 @@ export function runQuery(q: Query, engine: Engine): Result {
     if (q.type === "list") {
       return col
         ? { type: "list", headers: [], rows: rows.map((r) => [r.key, evaluate(col.e, r, engine)]) }
-        : { type: "list", headers: [], nested: true, rows: rows.map((r) => [r.key, (r.rows as Row[]).map(file)]) }
+        : { type: "list", headers: [], nested: true, rows: rows.map((r) => [r.key, members(r).map(file)]) }
     }
     return {
       type: "table",

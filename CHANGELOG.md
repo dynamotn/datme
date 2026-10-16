@@ -93,6 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as the day before west of UTC.
 - A `.base` file with a mistake, such as `order` given without a list, shows
   an error instead of stopping the build.
+- Dataview `GROUP BY` followed by `FLATTEN rows` or by a second `GROUP BY`
+  works instead of stopping the build.
 
 ### Security
 
