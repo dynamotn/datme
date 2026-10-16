@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Links written with part of a path, such as `[[folder/Note]]`, are
   resolved without scanning every note, which made large vaults with many
   such links to unpublished notes slow to load.
+- The local graph fetches its data only when it scrolls into view, so
+  opening a note no longer downloads the whole search index up front.
 
 ### Fixed
 

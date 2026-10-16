@@ -402,7 +402,18 @@ export function mountLocalGraph(canvas: HTMLCanvasElement) {
       void show(depth)
     }),
   )
-  void show(parseDepth(recall(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1)))
+  // The index carries every note's text: fetch it only once the graph comes into view.
+  const watch = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return
+      unwatch()
+      void show(parseDepth(recall(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1)))
+    },
+    { rootMargin: "200px" },
+  )
+  const unwatch = () => (watch.disconnect(), live.delete(unwatch))
+  live.add(unwatch)
+  watch.observe(canvas)
 }
 
 /** The colours of the groups, under the global graph. */
