@@ -95,6 +95,7 @@
 /* ---------- header ---------- */
 [data-look="notebook"] .site-header {
   background: var(--surface);
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
   border-bottom: var(--bw) solid var(--ink);
   gap: 14px;

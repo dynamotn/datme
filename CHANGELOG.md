@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   screen and makes every page scroll sideways.
 - On a phone or a narrow window the footer ends the page, after the related
   notes and the graph, instead of sitting between the note and them.
+- In Safari before iOS 18 and macOS Sequoia, the header and the backdrop of
+  dialogs are blurred again, instead of letting the page show through, and
+  text that should not be selectable is not.
 
 ## [2.2.0] - 2026-10-16
 

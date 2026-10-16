@@ -151,6 +151,7 @@ kbd {
   gap: 12px;
   padding: 0 20px;
   background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px);
   backdrop-filter: saturate(1.6) blur(14px);
   border-bottom: 1px solid var(--line);
 }
@@ -1369,6 +1370,7 @@ details.callout[open] > summary::after {
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 70%, transparent);
   border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 .stat b {
@@ -1505,6 +1507,7 @@ dialog.modal {
 }
 dialog.modal::backdrop {
   background: rgb(20 18 12 / 0.4);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 dialog.modal[open] {
@@ -2945,6 +2948,7 @@ a.drawing-link tspan {
   text-align: right;
   color: var(--muted);
   opacity: 0.7;
+  -webkit-user-select: none;
   user-select: none;
 }
 .prose pre.has-focused .line:not(.focused) {
