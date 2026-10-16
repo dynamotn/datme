@@ -8,7 +8,10 @@ import vaultWatcher from "./src/lib/vault-watcher.ts"
 import { site } from "./src/site.config.ts"
 
 let outDir = ""
-/** Pages kept out of search engines (unlisted and draft notes, alias redirects, history) stay out of the sitemap. */
+/**
+ * Pages kept out of search engines (unlisted and draft notes, alias redirects, history) stay out of the sitemap.
+ * @param {string} page
+ */
 function indexable(page) {
   try {
     const file = path.join(outDir, decodeURIComponent(new URL(page).pathname), "index.html")
