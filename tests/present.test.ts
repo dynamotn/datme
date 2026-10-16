@@ -6,7 +6,10 @@ const happy = new Window({ url: "https://garden.example/talk" })
 // Typed as the DOM the script is written against.
 const window = happy as unknown as globalThis.Window & typeof globalThis
 const document = window.document
-beforeAll(() => {
+beforeAll(async () => {
+  // The page script of another test file may have set decks up first, on a document of its own.
+  Object.assign(globalThis, { document: new Window({ url: "https://garden.example/other" }).document })
+  ;(await import("../src/scripts/slides")).setupSlides()
   Object.assign(globalThis, { document, window, innerHeight: 800, innerWidth: 1200, HTMLElement: window.HTMLElement })
 })
 

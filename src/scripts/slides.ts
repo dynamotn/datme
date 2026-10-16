@@ -104,11 +104,11 @@ function onKey(e: KeyboardEvent) {
   run()
 }
 
-let listening = false
-/** Document listeners, added on first use so importing this module needs no DOM. */
+let listening: Document | undefined
+/** Document listeners, added on first use so importing this module needs no DOM; once per document. */
 function listen() {
-  if (listening) return
-  listening = true
+  if (listening === document) return
+  listening = document
   document.addEventListener("keydown", onKey)
   // Leaving full screen with the browser's own controls ends the presentation too.
   document.addEventListener("fullscreenchange", () => {
