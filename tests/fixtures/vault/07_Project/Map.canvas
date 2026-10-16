@@ -5,7 +5,8 @@
     { "id": "f1", "type": "file", "x": 380, "y": 0, "width": 300, "height": 160, "file": "06_Reference/Niklas Luhmann.md" },
     { "id": "f2", "type": "file", "x": 0, "y": 360, "width": 200, "height": 120, "file": "_assets/images/diagram.png" },
     { "id": "f3", "type": "file", "x": 260, "y": 360, "width": 200, "height": 120, "file": "06_Reference/Private.md" },
-    { "id": "l1", "type": "link", "x": 520, "y": 360, "width": 240, "height": 120, "url": "https://example.com/zettel" }
+    { "id": "l1", "type": "link", "x": 520, "y": 360, "width": 240, "height": 120, "url": "https://example.com/zettel" },
+    { "id": "l2", "type": "link", "x": 800, "y": 360, "width": 240, "height": 120, "url": "notes.example.org/x" }
   ],
   "edges": [
     { "id": "e1", "fromNode": "t1", "fromSide": "right", "toNode": "f1", "toSide": "left", "label": "inspired" },

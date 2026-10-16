@@ -78,6 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A damaged list of open folders in the browser's storage no longer stops
   the rest of the page's scripts, such as the table of contents, popovers
   and the graph.
+- A canvas with an odd card, such as a link without a scheme or a text card
+  holding no text, no longer stops the build.
 
 ### Security
 

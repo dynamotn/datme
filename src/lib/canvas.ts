@@ -36,9 +36,22 @@ export interface CanvasData {
 export function parseCanvas(src: string): CanvasData {
   const data = JSON.parse(src) as Partial<CanvasData>
   const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0)
+  const str = (v: unknown) => (typeof v === "string" ? v : undefined)
   const nodes = (data.nodes ?? [])
     .filter((n) => n && typeof n.id === "string" && ["text", "file", "link", "group"].includes(n.type))
-    .map((n) => ({ ...n, x: num(n.x), y: num(n.y), width: Math.max(1, num(n.width)), height: Math.max(1, num(n.height)) }))
+    .map((n) => ({
+      ...n,
+      x: num(n.x),
+      y: num(n.y),
+      width: Math.max(1, num(n.width)),
+      height: Math.max(1, num(n.height)),
+      color: str(n.color),
+      text: str(n.text),
+      file: str(n.file),
+      subpath: str(n.subpath),
+      url: str(n.url),
+      label: str(n.label),
+    }))
   const ids = new Set(nodes.map((n) => n.id))
   const edges = (data.edges ?? []).filter((e) => e && ids.has(e.fromNode) && ids.has(e.toNode))
   return { nodes, edges }

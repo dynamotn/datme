@@ -97,7 +97,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, docUrl(doc.rel, 
             if (n.type === "link")
               return (
                 <a class="cv-node cv-link" style={pos(n)} href={n.url} target="_blank" rel="noopener noreferrer">
-                  <span>🔗 {n.url ? new URL(n.url).host : ""}</span>
+                  <span>🔗 {n.url && URL.canParse(n.url) ? new URL(n.url).host : n.url}</span>
                   <small>{n.url}</small>
                 </a>
               )

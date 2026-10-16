@@ -14,6 +14,23 @@ describe("canvas format", () => {
     expect(c.edges).toEqual([])
   })
 
+  test("blanks card fields that are not text", () => {
+    const c = parseCanvas(
+      JSON.stringify({
+        nodes: [
+          { id: "t", type: "text", text: 42 },
+          { id: "l", type: "link", url: ["x"], label: {} },
+          { id: "f", type: "file", file: "a.md" },
+        ],
+      }),
+    )
+    expect(c.nodes.map((n) => [n.text, n.url, n.label, n.file])).toEqual([
+      [undefined, undefined, undefined, undefined],
+      [undefined, undefined, undefined, undefined],
+      [undefined, undefined, undefined, "a.md"],
+    ])
+  })
+
   test("preset and hex colours, nothing else", () => {
     expect(canvasColor("1")).toBe("#fb464c")
     expect(canvasColor("#abc")).toBe("#abc")

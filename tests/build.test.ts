@@ -129,6 +129,8 @@ describe("static build", () => {
     expect(html).toMatch(/<div class="cv-node cv-missing"[^>]*>🔒 Chưa xuất bản<\/div>/)
     expect(html).not.toContain("Private.md")
     expect(html).toContain(">inspired</text>")
+    // A link card whose url is not absolute shows it as written.
+    expect(html).toMatch(/🔗 (<!--[^>]*-->)?notes\.example\.org\/x/)
     expect(read("en-US/07_Project/Map.canvas/index.html")).toContain("English card")
     expect(read("07_Project/Blog-post/index.html")).toContain('href="/07_Project/Map.canvas" class="internal doc">project map</a>')
   })
