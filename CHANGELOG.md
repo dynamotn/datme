@@ -112,6 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With stacked columns turned on, a `?stack=` address only opens pages of
   the site itself: a crafted link could run a script or pull in another
   site's page.
+- Unlisted notes, drafts, alias redirects and history pages are left out of
+  the sitemap, and unlisted notes ask search engines not to index them.
 
 ## [2.1.0] - 2026-10-10
 

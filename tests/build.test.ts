@@ -522,4 +522,11 @@ describe("static build", () => {
     expect(read("en-US/index.xml")).toContain("<language>en-US</language>")
     expect(exists("sitemap-index.xml")).toBe(true)
   })
+
+  test("unlisted notes and alias redirects are noindex and left out of the sitemap", () => {
+    expect(read("08_Journal/Unlisted/index.html")).toContain('<meta name="robots" content="noindex"')
+    const sitemap = read("sitemap-0.xml")
+    expect(sitemap).toContain("/03_Atomic/Zettelkasten/")
+    for (const p of ["/08_Journal/Unlisted/", "/03_Atomic/Slip-box/", "/07_Project/Poem/"]) expect(sitemap).not.toContain(p)
+  })
 })

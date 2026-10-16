@@ -55,7 +55,7 @@ const pagefindFilters = [`folder:${note.dir.split("/")[0]}`, ...note.types.map((
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 ---
 
-<Base noindex={note.draft} mdAlternate={site.llms && !note.protected && !note.unlisted ? `${note.url}.md` : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
+<Base noindex={note.draft || note.unlisted} mdAlternate={site.llms && !note.protected && !note.unlisted ? `${note.url}.md` : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
