@@ -3,7 +3,7 @@
  * filter and formula expressions. Evaluated over published notes only.
  */
 import { load as loadYaml } from "js-yaml"
-import { compare, type Engine, type Link, type Page, type Value } from "./dataview"
+import { compare, memo, pageOf, type Engine, type Link, type Page, type Value } from "./dataview"
 
 export class BaseError extends Error {}
 
@@ -107,7 +107,16 @@ type Expr =
 
 const PRECEDENCE: Record<string, number> = { "||": 1, "&&": 2, "==": 3, "!=": 3, "<": 4, ">": 4, "<=": 4, ">=": 4, "+": 5, "-": 5, "*": 6, "/": 6, "%": 6 }
 
+const parsedExprs = new Map<string, Expr>()
+
+/** An expression, parsed once per source string: views evaluate the same few on every page. */
 export function parseExpr(src: string): Expr {
+  let e = parsedExprs.get(src)
+  if (!e) parsedExprs.set(src, (e = parseSource(src)))
+  return e
+}
+
+function parseSource(src: string): Expr {
   const toks = tokenize(src)
   let i = 0
   const peek = () => toks[i]
@@ -192,10 +201,16 @@ const isLink = (v: unknown): v is Link => typeof v === "object" && v !== null &&
 const truthy = (v: Value) => !(v == null || v === false || v === "" || v === 0 || (Array.isArray(v) && !v.length))
 const str = (v: Value): string => (v == null ? "" : isLink(v) ? v.title : v instanceof Date ? v.toISOString() : Array.isArray(v) ? v.map(str).join(", ") : String(v))
 
+const files = new WeakMap<Page[], WeakMap<Page, Record<string, Value>>>()
+
 function fileObject(page: Page, engine: Engine): Record<string, Value> {
+  return memo(files, page, engine, () => buildFile(page, engine))
+}
+
+function buildFile(page: Page, engine: Engine): Record<string, Value> {
   const link: Link = { kind: "link", key: page.key, title: page.title, url: page.url }
   const links = page.outlinks
-    .map((k) => engine.pages.find((p) => p.key === k))
+    .map((k) => pageOf(engine, k))
     .filter((p): p is Page => !!p)
     .map((p): Link => ({ kind: "link", key: p.key, title: p.title, url: p.url }))
   return {
@@ -347,7 +362,7 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
   const file = fileOf(self)
   // The page a file method asks about: the row's, or another note's such as `this.file`.
   const key = file && (file.link as Link).key
-  const page = key === ctx.page.key ? ctx.page : key ? ctx.engine.pages.find((p) => p.key === key) : undefined
+  const page = key === ctx.page.key ? ctx.page : key ? pageOf(ctx.engine, key) : undefined
   if (page) {
     switch (name) {
       case "hasTag":

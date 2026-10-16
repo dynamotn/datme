@@ -39,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   such links to unpublished notes slow to load.
 - The local graph fetches its data only when it scrolls into view, so
   opening a note no longer downloads the whole search index up front.
+- Dataview and Bases queries look links up through an index and parse each
+  expression once, so their cost grows with the number of notes rather than
+  with its square.
 
 ### Fixed
 

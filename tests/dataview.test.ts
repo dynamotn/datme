@@ -170,6 +170,18 @@ describe("inline queries", () => {
     expect(evaluateInline("this.file.name", at("Books/Emma"))).toBe("Emma")
   })
 
+  test("links resolve through an index, and a page's row is built once", () => {
+    const indexed = [...pages]
+    // A linear scan per link made queries quadratic in the number of notes.
+    indexed.find = () => {
+      throw new Error("linear scan")
+    }
+    const e: Engine = { ...engine, pages: indexed, current: indexed[0] }
+    expect(runQuery(parseQuery("LIST file.inlinks WHERE length(file.outlinks) > 0 AND this.rating = 5"), e).rows).toHaveLength(1)
+    expect(evaluateInline("[[Herbert]].born", e)).toBeInstanceOf(Date)
+    expect(evaluateInline("this", e)).toBe(evaluateInline("this", e))
+  })
+
   test("leftovers are an error, not ignored", () => {
     expect(() => evaluateInline("rating rating", at("Books/Dune"))).toThrow(DataviewError)
   })

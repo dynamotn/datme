@@ -90,6 +90,16 @@ views:
     expect(property("file.tags.filter(value == formula.own)", valued, engine, { own: "value" })).toEqual(["b"])
   })
 
+  test("links resolve through an index, and each expression is parsed once", () => {
+    const indexed = [...pages]
+    indexed.find = () => {
+      throw new Error("linear scan")
+    }
+    const base = parseBase("views: [{ type: table, filters: 'file.links.length > 0', order: [file.name, file.links] }]")
+    expect(runView(base, base.views[0], { ...engine, pages: indexed }).rows.map((r) => r.page.stem)).toEqual(["Idea"])
+    expect(parseExpr("rating * 2")).toBe(parseExpr("rating * 2"))
+  })
+
   test("errors explain what is wrong", () => {
     expect(() => parseExpr('file.hasTag("x"')).toThrow(BaseError)
     expect(() => property("nope()", pages[0], engine, {})).toThrow("unknown function nope()")

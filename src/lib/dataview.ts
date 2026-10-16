@@ -447,14 +447,38 @@ function toValue(v: unknown, engine: Engine): Value {
   return v as Value
 }
 
+const indexes = new WeakMap<Page[], Map<string, Page>>()
+
+/** The page of a key, through an index built once per page list. */
+export function pageOf(engine: Engine, key: string): Page | undefined {
+  let index = indexes.get(engine.pages)
+  if (!index) indexes.set(engine.pages, (index = new Map(engine.pages.map((p) => [p.key, p]))))
+  return index.get(key)
+}
+
+/** A value derived from a page, computed once per page list, so a query over N pages stays linear. */
+export function memo<T>(cache: WeakMap<Page[], WeakMap<Page, T>>, page: Page, engine: Engine, make: () => T): T {
+  let byPage = cache.get(engine.pages)
+  if (!byPage) cache.set(engine.pages, (byPage = new WeakMap()))
+  let v = byPage.get(page)
+  if (v === undefined) byPage.set(page, (v = make()))
+  return v
+}
+
+const rows = new WeakMap<Page[], WeakMap<Page, Row>>()
+
 function rowOf(page: Page, engine: Engine): Row {
+  return memo(rows, page, engine, () => buildRow(page, engine))
+}
+
+function buildRow(page: Page, engine: Engine): Row {
   const fields: Row = {}
   for (const [k, v] of Object.entries(page.fields)) {
     fields[k] = toValue(v, engine)
     fields[k.toLowerCase()] ??= fields[k]
   }
   const byKey = (keys: string[]) =>
-    keys.map((k) => engine.pages.find((p) => p.key === k)).filter((p): p is Page => !!p).map(linkTo)
+    keys.map((k) => pageOf(engine, k)).filter((p): p is Page => !!p).map(linkTo)
   fields.file = {
     name: page.stem,
     path: page.key + ".md",
@@ -524,7 +548,7 @@ function evaluate(e: Expr, row: Row, engine: Engine): Value {
     case "member": {
       const obj = evaluate(e.obj, row, engine)
       if (isLink(obj)) {
-        const page = obj.key ? engine.pages.find((p) => p.key === obj.key) : undefined
+        const page = obj.key ? pageOf(engine, obj.key) : undefined
         // link.file is the linked page's file object, or null when it is not published.
         if (e.name === "file") return page ? (rowOf(page, engine).file as Value) : null
         return page ? (rowOf(page, engine)[e.name] ?? null) : null
