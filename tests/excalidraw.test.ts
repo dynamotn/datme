@@ -4,6 +4,7 @@ import path from "node:path"
 import { compressToBase64 } from "lz-string"
 import { parseDrawing, parseSelection, renderScene, textLinks, DrawingError, type Scene, type ExElement } from "../src/lib/excalidraw"
 import { getVault } from "../src/lib/vault"
+import { renderMarkdown } from "../src/lib/markdown"
 
 const fixture = fs.readFileSync(path.join(import.meta.dir, "fixtures/vault/_assets/draw/Sketch.excalidraw.md"), "utf8")
 const scene = (elements: ExElement[], extra: Partial<Scene> = {}): Scene => ({ background: "#ffffff", files: {}, exportOptions: {}, elements, ...extra })
@@ -70,6 +71,14 @@ describe("drawing", () => {
     expect(svg).toContain('<tspan x="50" y="10.00" dominant-baseline="middle">a &lt;b&gt;</tspan><tspan x="50" y="30.00" dominant-baseline="middle">c</tspan>')
     expect(svg).toContain("rotate(90.000 50 25)")
     expect(svg).toContain(`font-family="Excalifont, Virgil, 'Segoe UI Emoji', sans-serif"`)
+  })
+
+  test("markdown in text stays text, so the SVG survives the markdown parser", async () => {
+    const text = "note `ai` *x* $y$ ~w~ \\_"
+    const svg = renderScene(scene([{ id: "t", type: "text", x: 0, y: 0, width: 100, height: 20, text }]))
+    const html = await renderMarkdown(`<span class="drawing generated">${svg}</span>`, "en-US", "x")
+    expect(html).not.toMatch(/<(code|em|del|a|span class="katex")\b/)
+    expect(html).toContain(text.replace(/&/g, "&amp;"))
   })
 
   test("the same seed draws the same lines", () => {

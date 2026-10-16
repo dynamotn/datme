@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `<!--lang:xx-->` marker quoted inside a line, as in inline code or a
   table, is shown as text instead of starting a language block, which hid
   the rest of the note, footnotes included.
+- A drawing whose text holds markdown such as `` `code` ``, `*stars*` or
+  `$` signs is drawn whole, instead of falling apart into loose text on the
+  page.
 
 ## [2.1.0] - 2026-10-10
 
