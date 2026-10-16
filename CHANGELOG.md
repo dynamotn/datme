@@ -43,7 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   render instead of failing with an unknown method.
 - A `<!--lang:xx-->` marker quoted inside a line, as in inline code or a
   table, is shown as text instead of starting a language block, which hid
-  the rest of the note, footnotes included.
+  the rest of the note, footnotes included. A marker now has to sit alone on
+  its line; one inside a quote or a callout no longer counts.
 - A drawing whose text holds markdown such as `` `code` ``, `*stars*` or
   `$` signs is drawn whole, instead of falling apart into loose text on the
   page. Formulas in a drawing keep their TeX, and web or email addresses in
