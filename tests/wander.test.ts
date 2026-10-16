@@ -18,4 +18,9 @@ describe("wandering", () => {
     expect(neighbour(urls, "/tags", -1)).toBe("/c")
     expect(neighbour([], "/a", 1)).toBeUndefined()
   })
+
+  test("a malformed percent sign in a path is compared as is", () => {
+    expect(neighbour(["/100%", "/b"], "/100%", 1)).toBe("/b")
+    expect(randomOther(["/100%", "/b"], "/100%", () => 0)).toBe("/b")
+  })
 })

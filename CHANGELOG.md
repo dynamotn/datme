@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   holding no text, no longer stops the build.
 - A damaged encrypted part reads as a wrong password instead of leaving the
   unlock button stuck.
+- The j, k and r shortcuts work on pages whose address holds a stray %.
 
 ### Security
 
