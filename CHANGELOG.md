@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page in: fields are at least 16px on touch screens.
 - On a phone the global graph's title, filters and close button fit the
   dialog, on two lines, instead of being squeezed and cut off at the edge.
+- A long property value, such as a URL in a book note, wraps inside the
+  properties box instead of making the whole page scroll sideways on a
+  phone.
 
 ## [2.2.0] - 2026-10-16
 

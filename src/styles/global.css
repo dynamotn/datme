@@ -604,7 +604,8 @@ a.chip:hover {
 }
 .properties dl {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  /* minmax(0, …): a long value, such as a URL, wraps instead of widening the page. */
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 6px 16px;
   margin: 0;
   padding: 4px 12px 12px;
@@ -614,6 +615,7 @@ a.chip:hover {
 }
 .properties dd {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ---------- prose ---------- */
@@ -3057,7 +3059,7 @@ a.drawing-link tspan {
 }
 .properties .prop-map {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 2px 12px;
   margin: 0;
   padding: 0;
