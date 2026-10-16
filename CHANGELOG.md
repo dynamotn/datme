@@ -114,6 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   site's page.
 - Unlisted notes, drafts, alias redirects and history pages are left out of
   the sitemap, and unlisted notes ask search engines not to index them.
+- The `.md` copies of notes follow `privateLinks`: a link to a private note
+  shows what the page shows, not the private note's name.
 
 ## [2.1.0] - 2026-10-10
 

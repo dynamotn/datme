@@ -1,5 +1,5 @@
 import { site, type Lang } from "../site.config"
-import { listed, filterLanguage, type Note } from "./vault"
+import { getVault, listed, filterLanguage, type Note } from "./vault"
 import { langMeta } from "./i18n"
 import { renderNote } from "./markdown"
 import { withoutLocked } from "./locked"
@@ -18,13 +18,34 @@ export const mdUrl = (n: Note) => `${n.url}.md`
  * what the published page does not show.
  */
 export function noteMarkdown(n: Note): string {
-  const body = withoutLocked(filterLanguage(n.source.raw, n.contentLang))
+  const body = withoutPrivateLinks(withoutLocked(filterLanguage(n.source.raw, n.contentLang)), n)
     .replace(/%%[\s\S]*?%%/g, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim()
   const head = body.startsWith("# ") ? "" : `# ${n.title}\n\n`
   return `${head}${body}\n`
+}
+
+/** Links and embeds of private notes as the words the page shows for them, following privateLinks. */
+function withoutPrivateLinks(md: string, n: Note): string {
+  const vault = getVault()
+  const words = (target: string, alias: string | undefined) => {
+    let file = target.split("#")[0].trim()
+    try {
+      file = decodeURI(file)
+    } catch {
+      // keep the raw target
+    }
+    return file ? vault.privateLink(file, n.source.dir, alias, n.lang) : undefined
+  }
+  return md
+    .replace(/!?\[\[([^[\]\n]+?)\]\]/g, (link, inner: string) => {
+      const raw = inner.replace(/\\\|/g, "|")
+      const pipe = raw.indexOf("|")
+      return (pipe >= 0 ? words(raw.slice(0, pipe), raw.slice(pipe + 1).trim()) : words(raw, undefined)) ?? link
+    })
+    .replace(/\[([^\]\n]*)\]\(([^)\s]+?\.md)(#[^)\s]*)?\)/gi, (link, text: string, target: string) => words(target, text) ?? link)
 }
 
 const abs = (p: string) => (site.url ? new URL(p, site.url + "/").href : p)

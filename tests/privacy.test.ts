@@ -5,6 +5,8 @@ import { toProp } from "../src/lib/properties"
 import { formatPrivacy, privacyReport } from "../src/lib/check"
 import { parseArgs } from "../src/cli"
 import { site } from "../src/site.config"
+import { getVault } from "../src/lib/vault"
+import { noteMarkdown } from "../src/lib/llms"
 
 describe("privateLinkText", () => {
   test("text keeps the words, placeholder replaces them, hide drops a bare name but keeps an alias", () => {
@@ -54,6 +56,20 @@ describe("links to private notes in a note", () => {
     const { links } = run("See [[Public]] and [[Secret plan]].", "placeholder")
     expect(links).toEqual([{ key: "Public", context: "See Public and a private note." }])
     expect(run("See [[Public]] and [[Secret plan]].", "text").links[0].context).toBe("See Public and Secret plan.")
+  })
+})
+
+describe("markdown copies", () => {
+  test("follow privateLinks for links to private notes", () => {
+    const note = getVault().byKey["en-US"].get("03_Atomic/Zettelkasten")!
+    expect(noteMarkdown(note)).toContain("[[Missing note]], Private, [[#Definition|jump]]")
+    const mode = site.privateLinks
+    try {
+      site.privateLinks = "hide"
+      expect(noteMarkdown(note)).toContain("[[Missing note]], , [[#Definition|jump]]")
+    } finally {
+      site.privateLinks = mode
+    }
   })
 })
 
