@@ -88,6 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The j, k and r shortcuts work on pages whose address holds a stray %.
 - Dataview reads `date(2024-01-05)` written without quotes as that date, not
   as 2024 minus 1 minus 5.
+- Dates without a time keep their own day whatever the time zone of the
+  build: `date(today)` matches a note due today, and a date no longer shows
+  as the day before west of UTC.
 
 ### Security
 

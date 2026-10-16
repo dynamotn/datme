@@ -1,6 +1,9 @@
-/** Local calendar day of a date, as YYYY-MM-DD. */
+/** Whether a date is date-only: UTC midnight, as `2024-01-05` reads in YAML and Date. */
+export const isDateOnly = (d: Date) => d.getTime() % 86_400_000 === 0
+
+/** Calendar day of a date, as YYYY-MM-DD: the written day of a date-only value, else the local day. */
 export const dayKey = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  isDateOnly(d) ? d.toISOString().slice(0, 10) : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
 export interface CalendarDay {
   key: string

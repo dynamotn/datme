@@ -11,6 +11,7 @@ import type { Lang } from "../site.config"
 import { parseQuery, runQuery, type Engine, type Page } from "./dataview"
 import { escapeAttr } from "./obsidian"
 import { formatDate, t } from "./i18n"
+import { dayKey } from "./calendar"
 
 export interface GraphOptions {
   title?: string
@@ -71,7 +72,7 @@ export function parseGraph(src: string, today = new Date()): GraphOptions {
 }
 
 const dayOf = (v: unknown): string | undefined => {
-  if (v instanceof Date) return iso(v)
+  if (v instanceof Date) return dayKey(v)
   if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10)
   return undefined
 }

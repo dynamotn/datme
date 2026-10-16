@@ -675,10 +675,9 @@ function call(fn: string, args: Value[], engine: Engine): Value {
       const word = str(a).toLowerCase()
       if (word === "now") return new Date()
       if (DATE_WORDS.includes(word)) {
+        // UTC midnight of the local day, as date-only fields read: `due = date(today)` must match.
         const d = new Date()
-        d.setHours(0, 0, 0, 0)
-        d.setDate(d.getDate() + (word === "tomorrow" ? 1 : word === "yesterday" ? -1 : 0))
-        return d
+        return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate() + (word === "tomorrow" ? 1 : word === "yesterday" ? -1 : 0)))
       }
       return a instanceof Date ? a : Number.isNaN(Date.parse(str(a))) ? null : new Date(str(a))
     }

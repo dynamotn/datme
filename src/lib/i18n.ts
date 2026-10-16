@@ -1,4 +1,5 @@
 import { site, type Lang } from "../site.config"
+import { isDateOnly } from "./calendar"
 
 /** Built-in UI strings by base language; "{n}" is replaced by a number. */
 const builtin = {
@@ -377,5 +378,6 @@ export function langPrefix(lang: Lang): string {
 
 export function formatDate(d: Date | undefined, lang: Lang): string {
   if (!d) return ""
-  return d.toLocaleDateString(lang, { year: "numeric", month: "short", day: "numeric" })
+  // A date-only value is UTC midnight: shown in local time, west of UTC it would fall on the day before.
+  return d.toLocaleDateString(lang, { year: "numeric", month: "short", day: "numeric", timeZone: isDateOnly(d) ? "UTC" : undefined })
 }

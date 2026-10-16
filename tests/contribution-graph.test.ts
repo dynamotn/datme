@@ -17,7 +17,7 @@ const page = (key: string, over: Partial<Page>): Page => ({
 })
 const pages = [
   page("run-1", { tags: ["run"], created: new Date("2026-10-01T08:00:00Z"), fields: { km: 5, ran: "2026-10-02" } }),
-  page("run-2", { tags: ["run"], created: new Date("2026-10-01T18:00:00Z"), fields: { km: 10, ran: "2026-10-03" } }),
+  page("run-2", { tags: ["run"], created: new Date("2026-10-01T14:00:00Z"), fields: { km: 10, ran: "2026-10-03" } }),
   page("book", { created: new Date("2026-10-04T08:00:00Z"), tasks: extractTasks("- [x] read ✅ 2026-10-05\n- [ ] later ✅ 2026-10-05") }),
   page("old", { tags: ["run"], created: new Date("2025-01-01T08:00:00Z") }),
 ]
@@ -38,6 +38,21 @@ describe("contribution graphs", () => {
       today,
     )
     expect([...graphCounts(km, engine)].map(([d, c]) => [d, c.count])).toEqual([["2026-10-02", 5], ["2026-10-03", 10]])
+  })
+
+  test("a moment counts on its local day, as the activity calendar does; a date-only value on its own day", () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "America/New_York"
+      const late = page("late", { created: new Date("2026-10-02T02:00:00Z"), fields: { ran: new Date("2026-10-03") } })
+      const local = { pages: [late], resolve: () => undefined }
+      expect([...graphCounts(parseGraph("title: x", today), local).keys()]).toEqual(["2026-10-01"])
+      const ran = parseGraph("dataSource:\n  dateField: { type: PAGE_PROPERTY, value: ran }", today)
+      expect([...graphCounts(ran, local).keys()]).toEqual(["2026-10-03"])
+    } finally {
+      // bun test runs in UTC unless TZ is set.
+      process.env.TZ = tz ?? "UTC"
+    }
   })
 
   test("tasks count on the day they were done", () => {

@@ -100,6 +100,18 @@ views:
     expect(parseExpr("rating * 2")).toBe(parseExpr("rating * 2"))
   })
 
+  test("today() is a date-only value in any time zone", () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "America/New_York"
+      const now = new Date()
+      expect(property("today()", pages[0], engine, {})).toEqual(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())))
+    } finally {
+      // bun test runs in UTC unless TZ is set.
+      process.env.TZ = tz ?? "UTC"
+    }
+  })
+
   test("errors explain what is wrong", () => {
     expect(() => parseExpr('file.hasTag("x"')).toThrow(BaseError)
     expect(() => property("nope()", pages[0], engine, {})).toThrow("unknown function nope()")

@@ -89,6 +89,20 @@ describe("output", () => {
     expect(evaluateInline("date(2024-01-05T10:30)", engine)).toEqual(new Date("2024-01-05T10:30"))
   })
 
+  test("date(today) is a date-only value, comparable with date-only fields in any time zone", () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "America/New_York"
+      const now = new Date()
+      const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+      expect(evaluateInline("date(today)", engine)).toEqual(today)
+      expect(evaluateInline("date(tomorrow)", engine)).toEqual(new Date(today.getTime() + 86_400_000))
+    } finally {
+      // bun test runs in UTC unless TZ is set.
+      process.env.TZ = tz ?? "UTC"
+    }
+  })
+
   test("LIST with an expression shows the value next to the link", () => {
     expect(run("LIST book.author FROM #type/book SORT file.name").rows[0]).toEqual([
       expect.objectContaining({ title: "Dune" }),

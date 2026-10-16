@@ -332,9 +332,9 @@ function globalFn(name: string, args: Value[]): Value {
     case "now":
       return new Date()
     case "today": {
+      // UTC midnight of the local day, as date-only properties read.
       const d = new Date()
-      d.setHours(0, 0, 0, 0)
-      return d
+      return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
     }
     case "date":
       return Number.isNaN(Date.parse(str(a))) ? null : new Date(str(a))

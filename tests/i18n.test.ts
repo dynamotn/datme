@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { t, langPrefix, formatDate, langMeta } from "../src/lib/i18n"
+import { dayKey } from "../src/lib/calendar"
 
 describe("i18n", () => {
   test("the default language lives at the root", () => {
@@ -40,5 +41,20 @@ describe("i18n", () => {
     const d = new Date("2024-05-14T12:00:00Z")
     expect(formatDate(d, "en-US")).toBe("May 14, 2024")
     expect(formatDate(undefined, "vi-VN")).toBe("")
+  })
+
+  test("a date-only value shows the day it names in any time zone", () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "America/New_York"
+      expect(formatDate(new Date("2024-01-05"), "en-US")).toBe("Jan 5, 2024")
+      expect(dayKey(new Date("2024-01-05"))).toBe("2024-01-05")
+      // A moment keeps the local day: 23:00 here is already the next day in UTC.
+      expect(formatDate(new Date(2024, 0, 5, 23), "en-US")).toBe("Jan 5, 2024")
+      expect(dayKey(new Date(2024, 0, 5, 23))).toBe("2024-01-05")
+    } finally {
+      // bun test runs in UTC unless TZ is set.
+      process.env.TZ = tz ?? "UTC"
+    }
   })
 })
