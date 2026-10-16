@@ -130,6 +130,13 @@ function tokenize(src: string): Tok[] {
       i += tag[0].length
       continue
     }
+    // date(2024-01-05) is a date literal in Dataview, not 2024 minus 1 minus 5.
+    const iso = out.at(-1)?.v === "(" && String(out.at(-2)?.v).toLowerCase() === "date" ? src.slice(i).match(ISO) : null
+    if (iso) {
+      out.push({ t: "str", v: iso[0] })
+      i += iso[0].length
+      continue
+    }
     const num = src.slice(i).match(/^\d+(\.\d+)?/)
     if (num) {
       out.push({ t: "num", v: Number(num[0]) })

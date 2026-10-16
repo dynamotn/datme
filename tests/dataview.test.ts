@@ -84,6 +84,11 @@ describe("output", () => {
     expect(run('TABLE WITHOUT ID related FROM "Inbox"').rows[0][0]).toMatchObject({ kind: "link", key: "Books/Dune" })
   })
 
+  test("date() reads an unquoted ISO date as a date, not as subtraction", () => {
+    expect(titles("LIST WHERE born = date(1920-10-08)")).toEqual(["Herbert"])
+    expect(evaluateInline("date(2024-01-05T10:30)", engine)).toEqual(new Date("2024-01-05T10:30"))
+  })
+
   test("LIST with an expression shows the value next to the link", () => {
     expect(run("LIST book.author FROM #type/book SORT file.name").rows[0]).toEqual([
       expect.objectContaining({ title: "Dune" }),
