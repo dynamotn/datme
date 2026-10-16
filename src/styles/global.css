@@ -2985,6 +2985,36 @@ a.drawing-link tspan {
 .modal-head select[data-graph-color] {
   margin-right: 8px;
 }
+/* A phone gives the graph's title and close button a line, and its controls the next. */
+@media (max-width: 640px) {
+  .graph-modal .modal-head {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .graph-modal .modal-head > span {
+    flex: 1;
+  }
+  .graph-modal .modal-head [data-close-dialog] {
+    order: 1;
+  }
+  .graph-modal .modal-head .filters,
+  .graph-modal .modal-head select[data-graph-color],
+  .graph-modal .graph-space {
+    order: 2;
+    margin: 0;
+  }
+  .graph-modal .modal-head .filters {
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+  .graph-modal .modal-head .filters select,
+  .graph-modal .modal-head select[data-graph-color] {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+}
 .graph-space {
   height: 32px;
   margin-right: 8px;

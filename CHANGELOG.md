@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Safari's toolbar where their last items could not be reached.
 - On iPhone and iPad, tapping a filter or another field no longer zooms the
   page in: fields are at least 16px on touch screens.
+- On a phone the global graph's title, filters and close button fit the
+  dialog, on two lines, instead of being squeezed and cut off at the edge.
 
 ## [2.2.0] - 2026-10-16
 
