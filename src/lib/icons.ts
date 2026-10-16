@@ -12,11 +12,13 @@ import { site } from "../site.config"
 const DATA = ".obsidian/plugins/obsidian-icon-folder/data.json"
 const PACKS = ".obsidian/icons"
 
-let byPath: { stamp: string; map: Map<string, { name: string; color?: string }> } | undefined
+let byPath: { stamp: string; vault: string; checked: number; map: Map<string, { name: string; color?: string }> } | undefined
 const svgs = new Map<string, string | undefined>()
 
 /** Icons Iconize keeps by path: "Books" for a folder, "Books/Dune.md" for a note. */
 export function iconizeIcons(vault = site.vault): Map<string, { name: string; color?: string }> {
+  // Every page asks for every icon of the explorer: look at the file at most once a second.
+  if (byPath?.vault === vault && Date.now() - byPath.checked < 1000) return byPath.map
   // Read again when Iconize saves, so `datme dev` follows icon changes.
   let stamp = vault
   try {
@@ -24,7 +26,10 @@ export function iconizeIcons(vault = site.vault): Map<string, { name: string; co
   } catch {
     stamp += "-"
   }
-  if (byPath?.stamp === stamp) return byPath.map
+  if (byPath?.stamp === stamp) {
+    byPath.checked = Date.now()
+    return byPath.map
+  }
   const map = new Map<string, { name: string; color?: string }>()
   try {
     const data = JSON.parse(fs.readFileSync(path.join(vault, DATA), "utf8")) as Record<string, unknown>
@@ -39,7 +44,7 @@ export function iconizeIcons(vault = site.vault): Map<string, { name: string; co
   } catch {
     // no Iconize in this vault
   }
-  byPath = { stamp, map }
+  byPath = { stamp, vault, checked: Date.now(), map }
   return map
 }
 
