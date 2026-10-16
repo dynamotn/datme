@@ -9,7 +9,13 @@ cache:
     files: [bun.lock]
   paths: [node_modules/]
 
+# oven/bun has no git, which datme reads dates and history from, and its tests use.
+.git: &git
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends git > /dev/null
+
 test:
+  <<: *git
   script:
     - bun install --frozen-lockfile
     - bunx astro check
@@ -17,6 +23,7 @@ test:
 
 # The documentation is a datme garden; the default branch publishes it on GitLab Pages.
 pages:
+  <<: *git
   needs: [test]
   script:
     - bun install --frozen-lockfile
