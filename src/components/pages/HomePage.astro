@@ -22,23 +22,29 @@ const home = vault.home && vault.byKey[lang].get(vault.home.key)
 const r = home ? await renderNote(home) : undefined
 
 // The home note is split at each H2: the intro becomes the hero, the rest become shelves.
-// Sections holding a static table are hand-serialized Dataview queries, superseded by the
-// live cards; tables that datme renders from queries or bases carry the dataview class.
-const [intro = "", ...sections] = (r?.html ?? "").split(/(?=<h2[\s>])/)
-const shelves = sections.filter((html) => !/<table(?![^>]*class="dataview)/.test(html))
+const [intro = "", ...shelves] = (r?.html ?? "").split(/(?=<h2[\s>])/)
 
 const notes = listed(lang).filter((n) => !n.isHome)
 const blog = byRecent(notes.filter((n) => n.isBlog), "created")
 const recent = byRecent(notes).slice(0, 8)
 const mocs = notes.filter((n) => n.isMoc)
 const linkCount = notes.reduce((acc, n) => acc + n.links.length, 0)
-const stages = [...vault.trees[lang].folders]
-  .filter((f) => site.stages[f.segment])
-  .sort((a, b) => site.stages[a.segment].order - site.stages[b.segment].order)
-  .map((f) => ({ folder: f, stage: site.stages[f.segment], count: countNotes(f) }))
-// Without configured stages, the notebook home lists the top-level folders instead.
+// A stage links to its folder when one has its name; stages set by property have none.
+const folderOf = new Map(vault.trees[lang].folders.map((f) => [f.segment, f]))
+// Folder notes introduce their folder and are not counted, as in countNotes.
+const counted = notes.filter((n) => n.source.stem !== n.dir.split("/").at(-1))
+const stages = Object.entries(site.stages)
+  .sort(([, a], [, b]) => a.order - b.order)
+  .map(([key, stage]) => ({
+    url: folderOf.get(key)?.url,
+    icon: stage.icon,
+    label: stage.label[lang],
+    count: counted.filter((n) => n.stage === key).length,
+  }))
+  .filter((x) => x.count)
+// Without configured stages, the home lists the top-level folders instead.
 const shelvesOfFolders = stages.length
-  ? stages.map(({ folder, stage, count }) => ({ url: folder.url, icon: stage.icon, label: stage.label[lang], count }))
+  ? stages
   : vault.trees[lang].folders.map((f) => ({ url: f.url, icon: "📁", label: f.name, count: countNotes(f) }))
 const blogUrl = blog.length
   ? slugToUrl(langPrefix(lang) + "tags/" + (blog[0].tags.find((x) => site.conventions.blogTags.includes(x)) ?? ""))
@@ -174,18 +180,18 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
     <section>
       <div class="section-head">
         <div>
-          <h2>{s.garden}</h2>
-          <p>{s.gardenLead}</p>
+          <h2>{stages.length ? s.garden : s.explorer}</h2>
+          {stages.length > 0 && <p>{s.gardenLead}</p>}
         </div>
       </div>
       <div class="stage-grid">
         {
-          stages.map(({ folder, stage, count }) => (
-            <a class="stage-card" href={folder.url}>
-              <span class="emoji">{stage.icon}</span>
+          shelvesOfFolders.map((f) => (
+            <a class="stage-card" href={f.url}>
+              <span class="emoji">{f.icon}</span>
               <span>
-                <b>{stage.label[lang]}</b>
-                <span>{s.notesCount(count)}</span>
+                <b>{f.label}</b>
+                <span>{s.notesCount(f.count)}</span>
               </span>
             </a>
           ))

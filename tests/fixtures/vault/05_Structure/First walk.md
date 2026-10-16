@@ -1,6 +1,7 @@
 ---
 publish: true
 trail: true
+stage: 03_Atomic
 tags:
   - type/trail
 ---

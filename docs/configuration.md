@@ -30,7 +30,8 @@ See [Privacy](privacy.md) for the whole picture.
 
 ```yaml
 publish: explicit             # or `all`: everything except `publish: false`
-home: index.md                # note rendered as the home page
+home: index.md                # note rendered as the home page: the part above the
+                              # first H2 is the hero, each H2 section becomes a shelf
 ignore: [Archive, Journal]    # added to .obsidian, .trash, templates, private
 privateLinks: text            # links to private notes: text, placeholder or hide
 check:
@@ -52,6 +53,7 @@ conventions:
 stages:                       # top-level folders shown as note maturity
   Inbox: fleeting             # presets: fleeting, literature, atomic,
   Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
+  seedling: { icon: 🌱, label: Seedling }  # or set by a property: `stage: seedling`
 
 types:                        # icons and labels for type/* tags (common ones built in)
   recipe: { icon: 🍲, label: Recipe }
@@ -110,7 +112,7 @@ graph:
   view: 2d                    # how the global graph opens: 2d, or 3d (turned by dragging)
 
 strings:                      # override any UI text, per language
-  en-US: { blog: Essays }
+  en-US: { blog: Essays }     # e.g. garden, gardenLead, recentLead for a home without the garden wording
 ```
 
 ## Search, images and maps

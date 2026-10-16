@@ -22,11 +22,16 @@ const props = noteProperties(note)
 
 <div class="chips">
   {
-    note.stage && (
-      <a class="chip stage" href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
-        {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
-      </a>
-    )
+    note.stage &&
+      (note.stage === stageFolder ? (
+        <a class="chip stage" href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
+          {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
+        </a>
+      ) : (
+        <span class="chip stage">
+          {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
+        </span>
+      ))
   }
   {
     note.types.map((ty) => (

@@ -50,7 +50,7 @@ export interface Note {
   bannerPos: string
   cssclasses: string[]
   description?: string
-  /** Top-level folder of the note when the config defines it as a stage. */
+  /** Configured stage of the note: its `stage` property, else its top-level folder. */
   stage?: string
   types: string[]
   isBlog: boolean
@@ -822,7 +822,13 @@ function buildVault(version: number): Vault {
           ...(slides ? ["slide-deck"] : []),
         ],
         description: typeof s.fm.description === "string" ? s.fm.description : undefined,
-        stage: site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
+        // A `stage` property naming a configured stage wins over the top-level folder.
+        stage:
+          typeof s.fm.stage === "string" && site.stages[s.fm.stage]
+            ? s.fm.stage
+            : site.stages[s.dir.split("/")[0]]
+              ? s.dir.split("/")[0]
+              : undefined,
         types,
         isBlog: tags.some((x) => blogTags.includes(x)),
         isMoc: tags.some((x) => mapTags.includes(x)),

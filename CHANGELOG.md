@@ -5,6 +5,23 @@ All notable changes to datme are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- A note's stage can be set with a `stage` property naming a configured
+  stage, for vaults that do not sort notes into a folder per stage. It
+  wins over the folder, and the home page counts it under that stage.
+
+### Changed
+
+- Every section of the home note is shown on the home page: sections
+  holding a plain table are no longer dropped.
+- The classic home page lists the top-level folders when no stages are
+  configured, as the notebook one does, instead of an empty garden.
+- Stage presets fall back to their English label in languages other than
+  English and Vietnamese, instead of the Vietnamese one.
+
 ## [2.2.2] - 2026-10-16
 
 ### Fixed

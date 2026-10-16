@@ -163,6 +163,10 @@ describe("metadata", () => {
     expect(zk.stage).toBe("03_Atomic")
   })
 
+  test("a stage property overrides the folder", () => {
+    expect(vi.get("05_Structure/First walk")!.stage).toBe("03_Atomic")
+  })
+
   test("banners resolve vault assets and keep their focal point", () => {
     const post = vi.get("07_Project/Blog post")!
     expect(post.isBlog).toBe(true)

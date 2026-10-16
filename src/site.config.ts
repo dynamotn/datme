@@ -23,15 +23,15 @@ export const CONFIG_FILES = ["datme.yaml", "datme.yml", ".datme.yaml"]
 /** Folders never scanned for notes, on top of the ones listed in the config. */
 const DEFAULT_IGNORE = [".git", ".obsidian", ".trash", "node_modules", "private", "templates"]
 
-/** Ready-made stages for Zettelkasten-style folders, usable by name in the config. */
+/** Ready-made stages for Zettelkasten-style folders, usable by name in the config. English first: other languages fall back to it. */
 const STAGE_PRESETS: Record<string, Omit<StageDef, "order">> = {
-  fleeting: { icon: "🌱", label: { "vi-VN": "Thoáng qua", "en-US": "Fleeting" } },
-  literature: { icon: "📖", label: { "vi-VN": "Tài liệu", "en-US": "Literature" } },
-  atomic: { icon: "⚛️", label: { "vi-VN": "Nguyên tử", "en-US": "Atomic" } },
-  permanent: { icon: "🌳", label: { "vi-VN": "Vĩnh viễn", "en-US": "Permanent" } },
-  structure: { icon: "🗺️", label: { "vi-VN": "Cấu trúc", "en-US": "Structure" } },
-  reference: { icon: "📚", label: { "vi-VN": "Tham khảo", "en-US": "Reference" } },
-  project: { icon: "🛠️", label: { "vi-VN": "Dự án", "en-US": "Project" } },
+  fleeting: { icon: "🌱", label: { "en-US": "Fleeting", "vi-VN": "Thoáng qua" } },
+  literature: { icon: "📖", label: { "en-US": "Literature", "vi-VN": "Tài liệu" } },
+  atomic: { icon: "⚛️", label: { "en-US": "Atomic", "vi-VN": "Nguyên tử" } },
+  permanent: { icon: "🌳", label: { "en-US": "Permanent", "vi-VN": "Vĩnh viễn" } },
+  structure: { icon: "🗺️", label: { "en-US": "Structure", "vi-VN": "Cấu trúc" } },
+  reference: { icon: "📚", label: { "en-US": "Reference", "vi-VN": "Tham khảo" } },
+  project: { icon: "🛠️", label: { "en-US": "Project", "vi-VN": "Dự án" } },
 }
 
 const localized = z.union([z.string(), z.record(z.string(), z.string())])

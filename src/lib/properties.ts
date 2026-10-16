@@ -90,7 +90,9 @@ export function noteProperties(note: Note): [string, PropValue][] {
   const vault = getVault()
   // A deck's directives style its slides; they say nothing to a reader.
   const directives = note.slides ? ["marp", ...MARP_DIRECTIVES] : []
-  const hidden = new Set([...HIDDEN_PROPERTIES, ...directives, ...site.properties.hide].map((k) => k.toLowerCase()))
+  // A stage property is already shown as the stage chip.
+  const stage = note.stage === note.source.fm.stage ? ["stage"] : []
+  const hidden = new Set([...HIDDEN_PROPERTIES, ...directives, ...stage, ...site.properties.hide].map((k) => k.toLowerCase()))
   const resolve = (target: string) => {
     const s = vault.resolveNote(target, note.dir)
     return s && vault.byKey[note.lang].get(s.key)
