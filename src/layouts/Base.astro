@@ -271,28 +271,6 @@ const pluginHead = await userHead()
       </aside>
       <main class="main">
         <slot />
-        <footer class="site-footer">
-          <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
-          <nav>
-            {
-              Object.entries(site.footerLinks).map(([label, href]) => (
-                <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
-                  {label}
-                </a>
-              ))
-            }
-          </nav>
-          {
-            site.poweredBy && (
-              <p class="datme-credit">
-                <Fragment set:html={datmeMark} />
-                {credit[0]}
-                <a href="https://gitlab.com/dynamo-tools/datme" rel="noopener">datme</a>
-                {credit[1]}
-              </p>
-            )
-          }
-        </footer>
       </main>
       {
         rail && (
@@ -301,6 +279,29 @@ const pluginHead = await userHead()
           </aside>
         )
       }
+      {/* After the rail, which a narrow screen stacks under the note: the footer stays last. */}
+      <footer class="site-footer">
+        <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
+        <nav>
+          {
+            Object.entries(site.footerLinks).map(([label, href]) => (
+              <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
+                {label}
+              </a>
+            ))
+          }
+        </nav>
+        {
+          site.poweredBy && (
+            <p class="datme-credit">
+              <Fragment set:html={datmeMark} />
+              {credit[0]}
+              <a href="https://gitlab.com/dynamo-tools/datme" rel="noopener">datme</a>
+              {credit[1]}
+            </p>
+          )
+        }
+      </footer>
     </div>
 
     <dialog

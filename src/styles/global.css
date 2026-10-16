@@ -306,7 +306,7 @@ kbd {
 }
 .main {
   min-width: 0;
-  padding: 28px clamp(16px, 4vw, 56px) 80px;
+  padding: 28px clamp(16px, 4vw, 56px) 40px;
 }
 :root.reader .sidebar,
 :root.reader .menu-btn {
@@ -339,6 +339,10 @@ kbd {
 }
 :root.hide-left:not(.hide-right) .shell.no-right {
   grid-template-columns: minmax(0, 1fr);
+}
+:root.hide-left .site-footer,
+:root.reader .site-footer {
+  grid-column: 1;
 }
 .panel-title {
   display: flex;
@@ -1696,9 +1700,12 @@ dialog.graph-modal {
 }
 
 /* ---------- footer ---------- */
+/* Under the note, in its column: the middle one, or the first when the left one is folded away. */
 .site-footer {
+  grid-column: 2;
+  min-width: 0;
+  margin: 0 clamp(16px, 4vw, 56px) 80px;
   border-top: 1px solid var(--line);
-  margin-top: 40px;
   padding: 28px 0 0;
   display: flex;
   flex-wrap: wrap;
@@ -1737,6 +1744,11 @@ dialog.graph-modal {
   }
   :root.hide-left .sidebar-right {
     grid-column: 1;
+  }
+  /* The rail now stacks under the note, so the note's column is the last one. */
+  .site-footer,
+  :root.hide-left .site-footer {
+    grid-column: -2;
   }
 }
 @media (max-width: 900px) {
