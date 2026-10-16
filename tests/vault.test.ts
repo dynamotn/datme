@@ -276,6 +276,25 @@ describe("fallback language", () => {
 })
 
 describe("link targets", () => {
+  test("a partial path finds the note it ends, in a vault of nested folders", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-nested-"))
+    fs.mkdirSync(path.join(dir, "A/B"), { recursive: true })
+    fs.mkdirSync(path.join(dir, "C/B"), { recursive: true })
+    fs.writeFileSync(path.join(dir, "A/B/Note.md"), "---\npublish: true\n---\nA.\n")
+    fs.writeFileSync(path.join(dir, "C/B/Other.md"), "---\npublish: true\n---\nC.\n")
+    const script = path.join(dir, "resolve.ts")
+    fs.writeFileSync(
+      script,
+      `import { getVault } from ${JSON.stringify(path.resolve(import.meta.dir, "../src/lib/vault"))}
+const v = getVault()
+console.log(JSON.stringify([v.resolveNote("B/Note", "")?.key, v.resolveNote("b/other", "")?.key, v.resolveNote("X/Note", "")?.key ?? null]))
+process.exit(0)`,
+    )
+    const proc = Bun.spawnSync(["bun", script], { env: { ...process.env, VAULT_PATH: dir, DATME_CACHE: "" } })
+    fs.rmSync(dir, { recursive: true, force: true })
+    expect(JSON.parse(proc.stdout.toString().trim().split("\n").pop()!)).toEqual(["A/B/Note", "C/B/Other", null])
+  }, 60_000)
+
   test("a % that is not an escape, as in a 50% rule, is taken as written", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-percent-"))
     fs.writeFileSync(path.join(dir, "Note.md"), "---\npublish: true\n---\nSee [[The 50% rule]] and ![[100% done.png]].\n")

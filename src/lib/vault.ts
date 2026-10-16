@@ -503,7 +503,9 @@ function buildVault(version: number): Vault {
       const cands = byStem.get(lower)
       if (cands?.length) return [...cands].sort((a, b) => a.key.length - b.key.length)[0]
     } else {
-      for (const [k, s] of byPath) if (k.endsWith("/" + lower)) return s
+      // A partial path such as folder/Note: only notes of that name can end with it.
+      const hit = byStem.get(path.posix.basename(lower))?.find((s) => s.key.toLowerCase().endsWith("/" + lower))
+      if (hit) return hit
     }
     return byAlias.get(lower)
   }

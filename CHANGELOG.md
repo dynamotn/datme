@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Obsidian companion plugin lives in its own repository,
   [obsidian-datme](https://github.com/dynamotn/obsidian-datme), with its own
   releases.
+- Links written with part of a path, such as `[[folder/Note]]`, are
+  resolved without scanning every note, which made large vaults with many
+  such links to unpublished notes slow to load.
+
 ### Fixed
 
 - Esc closes the search dialog, even with text typed in the search
