@@ -1052,6 +1052,9 @@
   }
 }
 @media (max-width: 520px) {
+  [data-look="notebook"] .site-header {
+    gap: 2px;
+  }
   [data-look="notebook"] .nb-metrics {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }

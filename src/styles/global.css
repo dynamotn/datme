@@ -1792,7 +1792,8 @@ dialog.graph-modal {
   }
   .search-trigger span,
   .search-trigger kbd,
-  .hide-sm {
+  .hide-sm,
+  .stack-toggle {
     display: none;
   }
   .home-cols {
@@ -1806,11 +1807,23 @@ dialog.graph-modal {
   }
 }
 @media (max-width: 520px) {
+  /* A phone fits the whole header on one line: smaller buttons, only the other language. */
   .site-header {
-    padding: 0 10px;
-    gap: 4px;
+    padding: 0 8px;
+    gap: 2px;
+  }
+  .brand {
+    flex: none;
   }
   .brand-name {
+    display: none;
+  }
+  .icon-btn,
+  .search-trigger {
+    width: 34px;
+    height: 34px;
+  }
+  .lang-switch a[aria-current="true"] {
     display: none;
   }
   .stage-grid {
