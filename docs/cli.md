@@ -91,3 +91,5 @@ Notes that embed others or run queries are cached too, keyed by what they read:
 
 The cache lives in datme's `.datme/cache`. `$DATME_CACHE` moves it (handy for
 CI caches), an empty value turns it off, and `--fresh` starts from scratch.
+Since datme deletes what a build no longer uses, `$DATME_CACHE` must name an
+empty directory or one datme filled; any other stops the build.

@@ -119,6 +119,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shows what the page shows, not the private note's name.
 - A note's history no longer shows the versions written before its
   `publish_date`.
+- `DATME_CACHE` pointing at a directory datme did not fill, such as the
+  vault or `~/.cache`, stops the build instead of having its files deleted
+  by the cache pruning or by `--fresh`.
 
 ## [2.1.0] - 2026-10-10
 

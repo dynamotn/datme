@@ -15,6 +15,11 @@ const MARKER = ".datme-build"
 /** Rendered notes and social cards reused by the next build, unless DATME_CACHE says otherwise. */
 const CACHE = path.join(PACKAGE_ROOT, ".datme", "cache")
 
+/** Marks a directory as datme's build cache, so builds may delete in it. */
+const CACHE_MARKER = ".datme-cache"
+/** What datme writes in its cache: the kinds of render-cache and the dead links. */
+const CACHE_ENTRIES = ["notes", "og", "img", "img-size", "lqip", "diagrams", "embeddings", "preview", DEAD_LINKS_FILE]
+
 /** The build cache: DATME_CACHE moves it, an empty value turns it off. */
 function cacheDirOf(env: NodeJS.ProcessEnv, cwd: string): string | undefined {
   return env.DATME_CACHE === undefined ? CACHE : env.DATME_CACHE ? path.resolve(cwd, env.DATME_CACHE) : undefined
@@ -221,10 +226,24 @@ export function pruneCache(root: string, since: number): void {
       if (e.isDirectory()) {
         walk(p)
         if (!fs.readdirSync(p).length) fs.rmdirSync(p)
-      } else if (e.name !== DEAD_LINKS_FILE && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
+      } else if (e.name !== DEAD_LINKS_FILE && e.name !== CACHE_MARKER && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
     }
   }
   walk(root)
+}
+
+/**
+ * Mark a cache directory as datme's before writing in it. Refuses one that is
+ * not empty and unmarked, so pruning never deletes files datme did not write.
+ */
+export function claimCache(dir: string): void {
+  const entries = dir !== CACHE && fs.existsSync(dir) ? fs.readdirSync(dir) : []
+  // A cache an older datme wrote has no marker, only datme's own entries.
+  if (entries.length && !entries.includes(CACHE_MARKER) && !entries.every((e) => CACHE_ENTRIES.includes(e))) {
+    throw new CliError(`DATME_CACHE "${dir}" is not empty and was not created by datme; choose another directory.`)
+  }
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, CACHE_MARKER), "datme's build cache: files no build uses are deleted.\n")
 }
 
 function git(cwd: string, ...args: string[]): string | undefined {
@@ -431,6 +450,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       // Builds point the dead ones at the Internet Archive.
       const cacheDir = cacheDirOf(env, cwd)
       if (cacheDir) {
+        claimCache(cacheDir)
         const { writeDeadLinks } = await import("./lib/dead-links.ts")
         writeDeadLinks(cacheDir, found.filter((p) => p.level === "warning" && p.url).map((p) => p.url!))
       }
@@ -460,7 +480,9 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   // An empty DATME_CACHE turns the cache off; a path moves it, e.g. somewhere CI keeps between runs.
   const cacheDir = cacheDirOf(env, cwd)
   if (cacheDir) {
-    if (args.fresh) fs.rmSync(cacheDir, { recursive: true, force: true })
+    claimCache(cacheDir)
+    // --fresh empties the cache, keeping the marker that makes it datme's.
+    if (args.fresh) for (const e of fs.readdirSync(cacheDir)) if (e !== CACHE_MARKER) fs.rmSync(path.join(cacheDir, e), { recursive: true, force: true })
     env.DATME_CACHE = cacheDir
     env.DATME_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8")).version
   }

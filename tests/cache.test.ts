@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { pruneCache } from "../src/cli"
+import { claimCache, pruneCache } from "../src/cli"
 
 // Builds a copy of the fixture vault through the CLI with a cache of its own.
 const root = path.resolve(import.meta.dir, "..")
@@ -75,6 +75,42 @@ describe("build cache", () => {
     expect(fs.existsSync(marker)).toBe(false)
     expect(files(cache).length).toBeGreaterThan(0)
   }, 240_000)
+})
+
+describe("a DATME_CACHE datme does not own", () => {
+  test("is never pruned nor emptied by --fresh", () => {
+    const foreign = path.join(tmp, "foreign")
+    fs.mkdirSync(foreign)
+    fs.writeFileSync(path.join(foreign, "keep.md"), "mine")
+    const past = new Date(Date.now() - 60_000)
+    fs.utimesSync(path.join(foreign, "keep.md"), past, past)
+    const proc = Bun.spawnSync(["bun", "bin/datme.ts", "build", vault, "--out", path.join(tmp, "foreign-out"), "--fresh"], {
+      cwd: root,
+      env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: foreign },
+      stdout: "pipe",
+      stderr: "pipe",
+    })
+    expect(proc.exitCode).not.toBe(0)
+    expect(proc.stderr.toString()).toContain("was not created by datme")
+    expect(fs.readFileSync(path.join(foreign, "keep.md"), "utf8")).toBe("mine")
+  }, 240_000)
+})
+
+describe("claimCache", () => {
+  test("takes an empty directory or one an older datme filled, and refuses any other", () => {
+    const older = path.join(tmp, "older")
+    fs.mkdirSync(path.join(older, "notes"), { recursive: true })
+    fs.writeFileSync(path.join(older, "dead-links.json"), "{}")
+    claimCache(older)
+    expect(fs.existsSync(path.join(older, ".datme-cache"))).toBe(true)
+    const fresh = path.join(tmp, "fresh-cache")
+    claimCache(fresh)
+    expect(fs.readdirSync(fresh)).toEqual([".datme-cache"])
+    const other = path.join(tmp, "other")
+    fs.mkdirSync(other)
+    fs.writeFileSync(path.join(other, "notes.txt"), "mine")
+    expect(() => claimCache(other)).toThrow("was not created by datme")
+  })
 })
 
 describe("pruneCache", () => {
