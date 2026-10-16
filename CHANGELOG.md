@@ -122,6 +122,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DATME_CACHE` pointing at a directory datme did not fill, such as the
   vault or `~/.cache`, stops the build instead of having its files deleted
   by the cache pruning or by `--fresh`.
+- Encrypted content only takes in files of the vault: an `/assets/` address
+  leading above the vault or into a hidden folder such as `.git` is left as
+  it is.
 
 ## [2.1.0] - 2026-10-10
 

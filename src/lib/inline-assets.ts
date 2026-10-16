@@ -45,9 +45,12 @@ export function inlineAssets(html: string, vault: string, isPublic: (rel: string
       return m
     }
     if (isPublic(rel)) return m
+    // Only a file of the vault: never one above it (..%2F), nor a hidden one such as .git/ or .env.
+    const file = path.resolve(vault, rel)
+    if (!file.startsWith(path.resolve(vault) + path.sep) || path.relative(vault, file).split(path.sep).some((p) => p.startsWith("."))) return m
     let data: Buffer
     try {
-      data = fs.readFileSync(path.join(vault, rel))
+      data = fs.readFileSync(file)
     } catch {
       return m
     }

@@ -54,6 +54,16 @@ describe("files of encrypted content", () => {
     )
     expect(out.inlined).toEqual(["a.png"])
   })
+
+  test("only files of the vault are inlined, never one above it or a hidden one", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "datme-inline-"))
+    const dir = path.join(root, "vault")
+    fs.mkdirSync(path.join(dir, ".git"), { recursive: true })
+    fs.writeFileSync(path.join(root, "outside.png"), "OUT")
+    fs.writeFileSync(path.join(dir, ".git", "config"), "GIT")
+    const html = '<img src="/assets/..%2Foutside.png"><a href="/assets/.git/config">c</a>'
+    expect(inlineAssets(html, dir, () => false)).toEqual({ html, inlined: [] })
+  })
 })
 
 describe("locked parts of a note", () => {
