@@ -18,6 +18,16 @@ function fetchColumn(url: string): Promise<Element | null> {
   return hit
 }
 
+/** `url` as a path on this site, or undefined when it points anywhere else. */
+function local(url: string): string | undefined {
+  try {
+    const u = new URL(url, location.origin)
+    return u.origin === location.origin ? u.pathname + u.search + u.hash : undefined
+  } catch {
+    return undefined
+  }
+}
+
 const enabled = () => root.classList.contains("stack-mode") && matchMedia("(min-width: 900px)").matches
 const columns = (row: Element) => [...row.querySelectorAll<HTMLElement>(":scope > [data-stack-col]")]
 
@@ -30,7 +40,10 @@ function syncUrl(row: Element) {
 }
 
 /** Open `url` right after `from`, closing whatever was to its right. */
-export async function openColumn(row: Element, from: Element, url: string, hooks: () => void) {
+export async function openColumn(row: Element, from: Element, target: string, hooks: () => void) {
+  // ?stack= comes from the URL: never fetch, import or navigate to another origin or a javascript: URL.
+  const url = local(target)
+  if (!url) return
   const cols = columns(row)
   const existing = cols.find((c) => c.dataset.url === url)
   if (existing) return existing.scrollIntoView({ behavior: "smooth", inline: "nearest" })

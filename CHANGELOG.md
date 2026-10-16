@@ -77,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A page embedding a note with locked parts is rendered afresh on every
   build, so a changed locked part or a rotated password reaches it instead of
   the old ciphertext staying in the build cache.
+- With stacked columns turned on, a `?stack=` address only opens pages of
+  the site itself: a crafted link could run a script or pull in another
+  site's page.
 
 ## [2.1.0] - 2026-10-10
 
