@@ -5,6 +5,7 @@ import { sluggify, slugTag, slugToUrl } from "./slug"
 import { embedExternal } from "./media"
 import { tabsHtml, columnsHtml } from "./layouts"
 import { mediaFragment, parseCues, sidecars, transcriptHtml } from "./transcripts"
+import { markdownSafe } from "./excalidraw"
 import { t } from "./i18n"
 
 export interface LinkRef {
@@ -245,7 +246,7 @@ export function preprocess(
         for (const key of drawn.links) links.push({ key, context: contextOf(line) })
         // The SVG carries its own name for screen readers.
         // Masked like code: later passes must not read `url(#clip)` as a #tag or `==` as a highlight.
-        return mask(`<span class="drawing generated"${width}>${drawn.svg.replace(/role="(img|group)"/, `role="$1" aria-label="${name}"`)}</span>`)
+        return mask(`<span class="drawing generated"${width}>${markdownSafe(drawn.svg.replace(/role="(img|group)"/, `role="$1" aria-label="${name}"`))}</span>`)
       }
       problems.push({ kind: "drawing", target: file })
       return `<span class="drawing-missing">✏️ ${name}: the drawing cannot be found or read</span>`

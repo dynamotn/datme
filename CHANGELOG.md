@@ -46,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the rest of the note, footnotes included.
 - A drawing whose text holds markdown such as `` `code` ``, `*stars*` or
   `$` signs is drawn whole, instead of falling apart into loose text on the
-  page.
+  page. Formulas in a drawing keep their TeX, and web or email addresses in
+  its text no longer become links the drawing never had.
 
 ## [2.1.0] - 2026-10-10
 

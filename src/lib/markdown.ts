@@ -271,6 +271,16 @@ const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out, lang }) => (tre
     out.h1 = hastToString(firstEl).replace(/#$/, "").trim()
     tree.children.splice(tree.children.indexOf(firstEl), 1)
   }
+  // GFM turns a URL or an address in a drawing's text into a link the drawing never had: back to text.
+  visit(tree, "element", (drawing: Element) => {
+    if (!(drawing.properties.className as string[] | undefined)?.includes("drawing")) return
+    visit(drawing, "element", (node: Element, index, parent) => {
+      if (node.tagName !== "a" || (node.properties.className as string[] | undefined)?.includes("drawing-link") || !parent || index == null) return
+      parent.children.splice(index, 1, ...node.children)
+      return index
+    })
+    return SKIP
+  })
   const headings: Heading[] = []
   visit(tree, "element", (node: Element, index, parent) => {
     const tag = node.tagName

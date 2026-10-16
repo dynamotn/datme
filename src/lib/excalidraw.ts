@@ -154,9 +154,6 @@ export function parseSelection(fragment: string): Selection | undefined {
 // ---------- drawing ----------
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-// The SVG reaches the markdown parser as inline HTML: what markdown reads in text (`code`, *emphasis*, $math$,
-// links) is written as entities, or the <code> or <em> it would make ends the SVG in the browser.
-const escText = (s: string) => esc(s).replace(/[`*_~[\]$\\:]/g, (c) => `&#${c.charCodeAt(0)};`)
 const transparent = (c: string | undefined) => !c || c === "transparent"
 
 /** Font families of Excalidraw, by the number it stores. */
@@ -325,7 +322,7 @@ function textSvg(e: ExElement, link: (target: string) => string | undefined): st
       const parts = textLinks(line).map((part, j) => {
         const pos = j === 0 ? ` x="${x}" y="${((i + 0.5) * lh).toFixed(2)}"` : ""
         // dominant-baseline is not inherited through <a> everywhere, so each part carries it.
-        const span = `<tspan${pos} dominant-baseline="middle">${escText(part.text) || (j === 0 ? " " : "")}</tspan>`
+        const span = `<tspan${pos} dominant-baseline="middle">${esc(part.text) || (j === 0 ? " " : "")}</tspan>`
         const href = part.target ? link(part.target) : undefined
         return href ? `<a href="${esc(href)}" class="drawing-link">${span}</a>` : span
       })
@@ -341,7 +338,7 @@ function imageSvg(e: ExElement, view: FileView | undefined, prefix: string): str
   if (!view) return ""
   if (view.kind === "drawing") return `<svg viewBox="${view.viewBox}" width="${w}" height="${h}">${view.body}</svg>`
   if (view.kind === "note") {
-    const card = `<rect width="${w}" height="${h}" rx="8" fill="#ffffff" stroke="#c0c0c0"/><text x="${w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(`${FONTS[5]}, ${FALLBACK}`)}" font-size="${Math.max(12, Math.min(28, h / 4))}" fill="#1e1e1e">📄 ${escText(view.title)}</text>`
+    const card = `<rect width="${w}" height="${h}" rx="8" fill="#ffffff" stroke="#c0c0c0"/><text x="${w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(`${FONTS[5]}, ${FALLBACK}`)}" font-size="${Math.max(12, Math.min(28, h / 4))}" fill="#1e1e1e">📄 ${esc(view.title)}</text>`
     return view.href ? `<a href="${esc(view.href)}" class="drawing-link">${card}</a>` : card
   }
   if (view.kind === "math") {
@@ -523,7 +520,7 @@ export function renderParts(scene: Scene, options: RenderOptions = {}): Parts {
       if (FRAMES.includes(e.type)) {
         // Frames as Excalidraw shows them: a light outline with the frame's name above.
         const name = e.name ?? "Frame"
-        return `<g class="drawing-frame"><rect x="${e.x}" y="${e.y}" width="${e.width}" height="${e.height}" rx="8" fill="none" stroke="#bbb" stroke-width="2"/>${name ? `<text x="${e.x}" y="${e.y - 6}" font-family="${esc(FALLBACK)}" font-size="14" fill="#999">${escText(name)}</text>` : ""}</g>`
+        return `<g class="drawing-frame"><rect x="${e.x}" y="${e.y}" width="${e.width}" height="${e.height}" rx="8" fill="none" stroke="#bbb" stroke-width="2"/>${name ? `<text x="${e.x}" y="${e.y - 6}" font-family="${esc(FALLBACK)}" font-size="14" fill="#999">${esc(name)}</text>` : ""}</g>`
       }
       const inner = shape(e, opts)
       if (!inner) return ""
@@ -554,6 +551,14 @@ export function renderParts(scene: Scene, options: RenderOptions = {}): Parts {
 }
 
 /** The scene as an SVG, framed like Excalidraw's own export. */
+/**
+ * The SVG made inert for the markdown parser, which reads it as inline HTML: what markdown
+ * understands in its text (`code`, *emphasis*, $math$, autolinks, line breaks) becomes
+ * entities, or the <code> or <em> it would make ends the SVG in the browser.
+ */
+export const markdownSafe = (svg: string) =>
+  svg.replace(/>([^<]+)</g, (_m, text: string) => `>${text.replace(/[`*_~[\]$\\:@.\n]/g, (c) => `&#${c.charCodeAt(0)};`)}<`)
+
 export function renderScene(scene: Scene, options: RenderOptions = {}): string {
   const p = renderParts(scene, options)
   // A drawing exported dark stays dark; the page's dark theme leaves it alone.

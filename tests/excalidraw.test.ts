@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
 import { compressToBase64 } from "lz-string"
-import { parseDrawing, parseSelection, renderScene, textLinks, DrawingError, type Scene, type ExElement } from "../src/lib/excalidraw"
+import { markdownSafe, parseDrawing, parseSelection, renderScene, textLinks, DrawingError, type Scene, type ExElement } from "../src/lib/excalidraw"
 import { getVault } from "../src/lib/vault"
 import { renderMarkdown } from "../src/lib/markdown"
 
@@ -74,11 +74,17 @@ describe("drawing", () => {
   })
 
   test("markdown in text stays text, so the SVG survives the markdown parser", async () => {
-    const text = "note `ai` *x* $y$ ~w~ \\_"
-    const svg = renderScene(scene([{ id: "t", type: "text", x: 0, y: 0, width: 100, height: 20, text }]))
-    const html = await renderMarkdown(`<span class="drawing generated">${svg}</span>`, "en-US", "x")
-    expect(html).not.toMatch(/<(code|em|del|a|span class="katex")\b/)
-    expect(html).toContain(text.replace(/&/g, "&amp;"))
+    const text = "note `ai` *x* $y$ ~w~ \\_ www.example.com a@b.co"
+    const tex = "a*b*c + $x$\n\na~b~c"
+    const svg =
+      renderScene(scene([{ id: "t", type: "text", x: 0, y: 0, width: 100, height: 20, text }])).replace(/<\/svg>$/, "") +
+      `<foreignObject><div xmlns="http://www.w3.org/1999/xhtml"><math><annotation encoding="application/x-tex">${tex}</annotation></math></div></foreignObject></svg>`
+    const html = await renderMarkdown(`<span class="drawing generated">${markdownSafe(svg)}</span>`, "en-US", "x")
+    expect(html.match(/<svg[\s\S]*<\/svg>/)![0]).not.toMatch(/<(code|em|del|a|br|p|span)\b/)
+    expect(html).toContain(text)
+    expect(html).toContain(">a*b*c + $x$\n\na~b~c<")
+    const linked = renderScene(scene([{ id: "l", type: "text", x: 0, y: 0, width: 100, height: 20, text: "[z](https://a.b)" }]))
+    expect(await renderMarkdown(`<span class="drawing generated">${markdownSafe(linked)}</span>`, "en-US", "x")).toContain('<a href="https://a.b" class="drawing-link')
   })
 
   test("the same seed draws the same lines", () => {
