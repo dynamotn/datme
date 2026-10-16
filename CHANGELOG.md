@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dataview and Bases queries look links up through an index and parse each
   expression once, so their cost grows with the number of notes rather than
   with its square.
+- Finding unlinked mentions skips notes that lack a word of the name, about
+  five times faster on a vault of 2,000 notes.
 
 ### Fixed
 

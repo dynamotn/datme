@@ -34,6 +34,12 @@ function plain(md: string): string {
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
+/**
+ * Whole words of a text, folded as a case-insensitive regex compares letters:
+ * upper then lower maps ϐ to β and ſ to s, and final sigma is one letter.
+ */
+const words = (s: string) => s.toUpperCase().toLowerCase().replaceAll("ς", "σ").match(/[\p{L}\p{N}]+/gu) ?? []
+
 /** What a note is about, for its embedding: title, description and the start of its text. */
 export const aboutText = (n: Note) => [n.title, n.description ?? "", plain(n.md)].join("\n").slice(0, 2000)
 
@@ -80,14 +86,26 @@ export async function computeRelated(lang: Lang) {
 
   const mentions = new Map<string, Mention[]>()
   const texts = new Map(notes.filter((n) => !n.protected).map((n) => [n.key, plain(n.md)]))
+  // The notes holding each word: a whole-word mention needs every word of the name, so the
+  // regex runs only on notes holding its rarest one instead of on every note.
+  const holders = new Map<string, Set<string>>()
+  for (const [key, text] of texts) {
+    for (const w of words(text)) {
+      if (!holders.has(w)) holders.set(w, new Set())
+      holders.get(w)!.add(key)
+    }
+  }
   for (const target of notes) {
     const names = [...new Set([target.title, ...target.aliases].map((s) => s.trim()).filter((s) => s.length >= 4))]
     if (!names.length) continue
     // Whole words only, so "Git" does not match inside "GitLab" and diacritics count as letters.
     const re = new RegExp(`(?<![\\p{L}\\p{N}])(${names.map(escapeRe).join("|")})(?![\\p{L}\\p{N}])`, "iu")
+    const rarest = names.map((n) => words(n).map((w) => holders.get(w) ?? new Set<string>()).sort((a, b) => a.size - b.size)[0])
+    const candidates = rarest.every(Boolean) ? new Set(rarest.flatMap((s) => [...s])) : undefined
     const found: Mention[] = []
     for (const source of notes) {
       if (source === target || source.protected || out.get(source.key)!.has(target.key)) continue
+      if (candidates && !candidates.has(source.key)) continue
       const text = texts.get(source.key)!
       const m = re.exec(text)
       if (!m) continue
