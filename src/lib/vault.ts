@@ -333,10 +333,11 @@ export function filterLanguage(src: string, lang: Lang): string {
   let inThisLang = false
   const out: string[] = []
   for (let line of src.split("\n")) {
-    line = line.replace(/[\t\r ]*$/, "")
+    // Only the \r goes: two trailing spaces are a line break.
+    line = line.replace(/\r$/, "")
     fence = fenceAfter(fence, line)
     if (fence === null) {
-      const m = line.match(LANG_MARKER)
+      const m = line.trimEnd().match(LANG_MARKER)
       if (m) {
         if (m[1] === "*") {
           inLang = false

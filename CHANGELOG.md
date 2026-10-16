@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Language and lock markers inside a `~~~` code block are left alone, and
   ```` ``` ```` in the middle of a line no longer counts as a code block, so
   neither hides or shows the wrong language's text.
+- Two spaces at the end of a line break the line again, as in Obsidian;
+  they were being trimmed away.
 - Bases understand `filter()`, `map()` and `replace()`, so formulas such as
   `file.tags.filter(value.startsWith("x/")).map(value.replace("x/", ""))`
   render instead of failing with an unknown method.

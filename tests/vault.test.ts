@@ -115,6 +115,10 @@ describe("languages", () => {
     expect(filterLanguage(src, "vi-VN")).toBe(src)
   })
 
+  test("two trailing spaces stay, as the line break they are", () => {
+    expect(filterLanguage("Roses are red  \r\nViolets\n<!--lang:*-->  ", "vi-VN")).toBe("Roses are red  \nViolets")
+  })
+
   test("only real fences hide markers: ~~~ fences count, ``` inside a line does not", () => {
     expect(filterLanguage("Run ```ls``` first.\n<!--lang:en-US-->\nen\n<!--lang:*-->\nend", "vi-VN")).toBe("Run ```ls``` first.\nend")
     const tilde = "~~~\n<!--lang:en-US-->\n```\n~~~\nafter"
