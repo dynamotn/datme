@@ -374,7 +374,11 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
   if (page) {
     switch (name) {
       case "hasTag":
-        return args.some((t) => page.tags.some((tag) => tag === str(t).replace(/^#/, "") || tag.startsWith(str(t).replace(/^#/, "") + "/")))
+        return args.some((t) => {
+          // Tags match whatever their case, as in Obsidian.
+          const want = str(t).replace(/^#/, "").toLowerCase()
+          return page.tags.some((tag) => tag.toLowerCase() === want || tag.toLowerCase().startsWith(want + "/"))
+        })
       case "inFolder": {
         const f = str(a).replace(/^\/+|\/+$/g, "")
         return page.dir === f || page.dir.startsWith(f + "/")

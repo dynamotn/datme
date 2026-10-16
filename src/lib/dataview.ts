@@ -706,8 +706,11 @@ export function scopeOf(q: Query, engine: Engine): Page[] | undefined {
 
 function inSource(page: Page, s: Source, engine: Engine): boolean {
   switch (s.k) {
-    case "tag":
-      return page.tags.some((t) => t === s.tag || t.startsWith(s.tag + "/"))
+    case "tag": {
+      // Tags match whatever their case, as in Obsidian.
+      const tag = s.tag.toLowerCase()
+      return page.tags.some((t) => t.toLowerCase() === tag || t.toLowerCase().startsWith(tag + "/"))
+    }
     case "folder": {
       const f = s.path.replace(/^\/+|\/+$/g, "")
       return page.dir === f || page.dir.startsWith(f + "/") || page.key === f.replace(/\.md$/, "")

@@ -95,6 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an error instead of stopping the build.
 - Dataview `GROUP BY` followed by `FLATTEN rows` or by a second `GROUP BY`
   works instead of stopping the build.
+- Dataview `FROM #tag` and Bases `hasTag()` match tags whatever their case,
+  as Obsidian does.
 
 ### Security
 

@@ -36,6 +36,7 @@ describe("FROM", () => {
   test("tags include nested tags; folders include subfolders", () => {
     expect(titles("LIST FROM #type")).toEqual(["Dune", "Emma", "Herbert"])
     expect(titles('LIST FROM "Books"')).toEqual(["Dune", "Emma"])
+    expect(titles("LIST FROM #Type/Book")).toEqual(["Dune", "Emma"])
   })
 
   test("negation, AND, OR and parentheses", () => {
