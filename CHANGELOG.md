@@ -50,6 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page. Formulas in a drawing keep their TeX, and web or email addresses in
   its text no longer become links the drawing never had.
 
+### Security
+
+- A canvas or base linked only from a password-protected note is no longer
+  published as a page of its own, where its text was readable without the
+  password.
+
 ## [2.1.0] - 2026-10-10
 
 - `datme doctor` checks the machine and the vault before a build: the Bun or

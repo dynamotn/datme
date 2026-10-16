@@ -752,9 +752,11 @@ function buildVault(version: number): Vault {
         readText,
         privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
       })
-      // A protected note's files travel inside its ciphertext, so they are not published on their own.
-      if (!s.password) pre.assets.forEach((a) => assets.add(a))
-      pre.docs.forEach((d) => docRefs.add(d))
+      // A protected note's files travel inside its ciphertext, and the canvases and bases it links stay unpublished.
+      if (!s.password) {
+        pre.assets.forEach((a) => assets.add(a))
+        pre.docs.forEach((d) => docRefs.add(d))
+      }
       // A locked part's links stay out of backlinks and the graph, and its files out of the site.
       const lockedParts = parts.map((part) => {
         const { password, variable } = resolvePassword(part.password)
