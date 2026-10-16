@@ -59,6 +59,10 @@ describe("resolveConfig", () => {
     expect(c.ignore).toContain("Archive")
   })
 
+  test("a --site URL without its scheme is a config error, not a crash later on", () => {
+    expect(() => resolveConfig({}, "/v", { DATME_SITE_URL: "notes.example.com" })).toThrow(ConfigError)
+  })
+
   test("DATME_SITE_URL overrides the configured URL, without a trailing slash", () => {
     const c = resolveConfig({ site: { url: "https://a.example" } }, "/v", { DATME_SITE_URL: "https://b.example/" })
     expect(c.url).toBe("https://b.example")

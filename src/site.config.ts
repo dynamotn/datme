@@ -425,6 +425,10 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   const name = path.basename(vault) || "Notes"
   let order = 0
   const stages: Record<string, StageDef> = {}
+  // --site sets DATME_SITE_URL, which must be a URL as site.url is.
+  if (env.DATME_SITE_URL && !z.url().safeParse(env.DATME_SITE_URL).success) {
+    throw new ConfigError(`Invalid site URL "${env.DATME_SITE_URL}" from --site or DATME_SITE_URL: write it in full, as https://notes.example.com`)
+  }
   const url = (env.DATME_SITE_URL ?? c.site.url)?.replace(/\/+$/, "")
   /** Set by `--drafts`: drafts and scheduled notes are built too, for previewing. */
   const drafts = env.DATME_DRAFTS === "1"
