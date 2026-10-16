@@ -652,7 +652,8 @@ type Parts = Omit<Rendered, "description"> & { description?: string }
 
 function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   const variant = stack.length > 1 ? "embed" : "page"
-  const id = `${getVault().version}:${note.lang}:${note.key}:${variant}`
+  // An embed is shared only along the same chain of embeds: two chains in a cycle would wait on each other forever.
+  const id = `${getVault().version}:${note.lang}:${variant === "page" ? note.key : stack.join("\0")}:${variant}`
   let hit = cache.get(id)
   if (!hit) {
     hit = (async () => {

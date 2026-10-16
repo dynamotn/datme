@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import { getVault } from "../src/lib/vault"
 import { renderNote, renderSecret, renderMarkdown } from "../src/lib/markdown"
 
@@ -243,4 +246,26 @@ describe("line breaks", () => {
     const { html } = await renderNote(vi.get("03_Atomic/Zettelkasten")!)
     expect(html).not.toContain("<br>")
   })
+})
+
+describe("embeds", () => {
+  test("notes embedding each other render side by side without waiting on each other", () => {
+    // X and Y embed each other; P embeds Y and Q embeds X, rendered at once as the search index does.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-embeds-"))
+    const notes = { P: "![[Y]]", Q: "![[X]]", X: "x ![[Y]]", Y: "y ![[X]]" }
+    for (const [name, body] of Object.entries(notes)) fs.writeFileSync(path.join(dir, `${name}.md`), `---\npublish: true\n---\n${body}\n`)
+    const script = path.join(dir, "render.ts")
+    fs.writeFileSync(
+      script,
+      `import { getVault } from ${JSON.stringify(path.resolve(import.meta.dir, "../src/lib/vault"))}
+import { renderNote } from ${JSON.stringify(path.resolve(import.meta.dir, "../src/lib/markdown"))}
+const notes = Object.values(getVault().byKey)[0]
+const out = await Promise.all(["P", "Q"].map((k) => renderNote(notes.get(k)!)))
+console.log(out.every((r) => r.html.includes("transclude")) ? "rendered" : "empty")
+process.exit(0)`,
+    )
+    const proc = Bun.spawnSync(["bun", script], { env: { ...process.env, VAULT_PATH: dir, DATME_CACHE: "" }, timeout: 30_000 })
+    fs.rmSync(dir, { recursive: true, force: true })
+    expect(proc.stdout.toString().trim()).toBe("rendered")
+  }, 40_000)
 })
