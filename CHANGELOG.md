@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   embedded elsewhere.
 - A link or embed whose name holds a `%`, such as `[[The 50% rule]]`, no
   longer stops `build`, `check` and `dev` with a URIError.
+- A note whose name ends in "index", such as `z-index` or `reindex`, keeps
+  its whole URL instead of losing that ending.
 - Bases understand `filter()`, `map()` and `replace()`, so formulas such as
   `file.tags.filter(value.startsWith("x/")).map(value.replace("x/", ""))`
   render instead of failing with an unknown method.

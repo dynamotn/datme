@@ -27,6 +27,9 @@ describe("slugToUrl", () => {
     expect(slugToUrl("index")).toBe("/")
     expect(slugToUrl("")).toBe("/")
     expect(slugToUrl("en-US/index")).toBe("/en-US")
+    // Only a whole `index` segment: a name merely ending in it keeps its URL.
+    expect(slugToUrl("z-index")).toBe("/z-index")
+    expect(slugToUrl("Tools/Elasticsearch-reindex")).toBe("/Tools/Elasticsearch-reindex")
   })
 
   test("percent-encodes each segment but keeps slashes", () => {

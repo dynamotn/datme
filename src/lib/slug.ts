@@ -26,7 +26,7 @@ export function slugTag(tag: string): string {
 /** Turn a slug into an absolute URL path, encoding each segment. */
 export function slugToUrl(slug: string): string {
   if (slug === "" || slug === "index") return "/"
-  const clean = slug.replace(/\/?index$/, "")
+  const clean = slug.replace(/(^|\/)index$/, "")
   return "/" + clean.split("/").map(encodeURIComponent).join("/")
 }
 

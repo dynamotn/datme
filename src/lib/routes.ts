@@ -33,7 +33,7 @@ export function routes(): Map<string, Page> {
   const vault = getVault()
   const pages = new Map<string, Page>()
   const claim = (slug: string, page: Page) => {
-    const key = slug.replace(/\/?index$/, "")
+    const key = slug.replace(/(^|\/)index$/, "")
     if (!pages.has(key)) pages.set(key, page)
   }
   for (const lang of site.langs) {
