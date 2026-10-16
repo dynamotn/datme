@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with its square.
 - Finding unlinked mentions skips notes that lack a word of the name, about
   five times faster on a vault of 2,000 notes.
+- A note's history reads each version from git once, not once per language.
 
 ### Fixed
 

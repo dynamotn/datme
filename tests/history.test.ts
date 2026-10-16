@@ -1,8 +1,10 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { diffParagraphs, publicText } from "../src/lib/history"
+import * as childProcess from "node:child_process"
+import { diffParagraphs, noteVersions, publicText } from "../src/lib/history"
+import { getVault } from "../src/lib/vault"
 
 describe("what a version showed", () => {
   test("the public text only: no frontmatter, comments, locked parts or other languages", () => {
@@ -26,6 +28,21 @@ describe("what a version showed", () => {
     const raw = "---\npublish: true\npublish_date: 2026-05-01\n---\nEarly."
     expect(publicText(raw, "en-US", new Date("2026-04-01"))).toBeUndefined()
     expect(publicText(raw, "en-US", new Date("2026-06-01"))).toBe("Early.")
+  })
+})
+
+describe("reading versions from git", () => {
+  test("happens once per note, not once per language", () => {
+    const notes = (["vi-VN", "en-US"] as const).map((lang) => getVault().byKey[lang].get("03_Atomic/Queries")!)
+    const spy = spyOn(childProcess, "execFileSync")
+    try {
+      notes.forEach(noteVersions)
+      const calls = (cmd: string) => spy.mock.calls.filter((c) => (c[1] as string[]).includes(cmd)).length
+      expect(calls("log")).toBe(1)
+      expect(calls("show")).toBeGreaterThan(0)
+    } finally {
+      spy.mockRestore()
+    }
   })
 })
 

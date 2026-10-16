@@ -57,6 +57,29 @@ function commitsOf(rel: string): { hash: string; time: number; path: string }[] 
   return out.reverse()
 }
 
+const raws = new Map<string, { time: number; raw: string }[]>()
+
+/** Every committed text of a file, oldest first: read once, shared by the languages of a note. */
+function rawVersions(rel: string): { time: number; raw: string }[] {
+  const id = `${getVault().version}:${rel}`
+  const hit = raws.get(id)
+  if (hit) return hit
+  const out: { time: number; raw: string }[] = []
+  try {
+    for (const c of commitsOf(rel)) {
+      try {
+        out.push({ time: c.time, raw: git(["show", `${c.hash}:${c.path}`]) })
+      } catch {
+        continue
+      }
+    }
+  } catch {
+    // not in git
+  }
+  raws.set(id, out)
+  return out
+}
+
 const cache = new Map<string, Version[]>()
 
 /** The public versions of a note, oldest first, a version only when what readers saw changed. */
@@ -65,22 +88,12 @@ export function noteVersions(note: Note): Version[] {
   const hit = cache.get(id)
   if (hit) return hit
   const versions: Version[] = []
-  try {
-    const commits = commitsOf(note.key + ".md")
-    for (const [i, c] of commits.entries()) {
-      let raw: string
-      try {
-        raw = git(["show", `${c.hash}:${c.path}`])
-      } catch {
-        continue
-      }
-      // A version scheduled for later was only seen if its day came before the next commit replaced it.
-      const text = publicText(raw, note.lang, new Date(commits[i + 1]?.time ?? Date.now()))
-      if (text == null || text === versions.at(-1)?.text) continue
-      versions.push({ date: new Date(c.time), text })
-    }
-  } catch {
-    // not in git
+  const all = rawVersions(note.key + ".md")
+  for (const [i, v] of all.entries()) {
+    // A version scheduled for later was only seen if its day came before the next commit replaced it.
+    const text = publicText(v.raw, note.lang, new Date(all[i + 1]?.time ?? Date.now()))
+    if (text == null || text === versions.at(-1)?.text) continue
+    versions.push({ date: new Date(v.time), text })
   }
   cache.set(id, versions)
   return versions
