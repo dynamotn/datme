@@ -70,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its text no longer become links the drawing never had.
 - An image that cannot be decoded, such as a half-synced photo, no longer
   stops the build: it is served as it is, with a warning.
+- Search results always match what is typed: a slower answer to an earlier
+  query or filter no longer replaces them.
 
 ### Security
 

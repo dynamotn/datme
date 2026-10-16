@@ -54,7 +54,7 @@ function loadPagefind(): Promise<Pagefind> {
   return pagefind
 }
 
-async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: string) {
+async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: string, stale: () => boolean) {
   const filter = readFilters(dialog)
   const filters: Record<string, string> = {}
   if (filter.folder) filters.folder = filter.folder
@@ -66,6 +66,7 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
   const pf = await loadPagefind()
   const found = await pf.search(q || null, { filters })
   const hits = await Promise.all(found.results.slice(0, 30).map((r) => r.data()))
+  if (stale()) return
   if (!hits.length) {
     list.innerHTML = `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`
     return
@@ -96,8 +97,9 @@ function resultHtml(n: IndexNote, terms: string[], sim?: number): string {
 const threshold = (dialog: HTMLDialogElement) => Number(dialog.dataset.threshold) || 0.55
 
 /** With nothing typed on a note's page: the notes closest to it in meaning, from vectors alone. */
-async function showSimilar(dialog: HTMLDialogElement, list: HTMLElement, notes: IndexNote[]) {
+async function showSimilar(dialog: HTMLDialogElement, list: HTMLElement, notes: IndexNote[], stale: () => boolean) {
   const vectors = await loadVectors(dialog.dataset.lang ?? currentLang())
+  if (stale()) return
   const here = vectors?.find((n) => samePath(n.url, location.pathname))
   if (!vectors || !here) return void (list.innerHTML = "")
   const near = nearest(here.v, vectors, 8, threshold(dialog), (url) => url === here.url)
@@ -117,16 +119,21 @@ async function byMeaning(dialog: HTMLDialogElement, q: string): Promise<Near[]> 
   return nearest(await embedQuery(dialog.dataset.model, q), vectors, 30, threshold(dialog), undefined, 127)
 }
 
+let runs = 0
+
 async function run(dialog: HTMLDialogElement, query: string) {
+  // A slower answer to an older query or filter must not replace the newer one.
+  const ticket = ++runs
+  const stale = () => ticket !== runs
   const list = dialog.querySelector<HTMLElement>(".search-results")!
-  if (dialog.dataset.engine === "pagefind" && (query.trim() || !dialog.dataset.similar)) return runPagefind(dialog, list, query.trim())
-  if (dialog.dataset.engine === "pagefind") return showSimilar(dialog, list, (await loadIndex(dialog.dataset.lang ?? currentLang())).notes)
+  if (dialog.dataset.engine === "pagefind" && (query.trim() || !dialog.dataset.similar)) return runPagefind(dialog, list, query.trim(), stale)
+  if (dialog.dataset.engine === "pagefind") return showSimilar(dialog, list, (await loadIndex(dialog.dataset.lang ?? currentLang())).notes, stale)
   const { ms, notes } = await engine(dialog.dataset.lang ?? currentLang())
   const q = query.trim()
   const filter = readFilters(dialog)
   const filtering = Boolean(filter.folder || filter.type)
   if (!q && !filtering) {
-    if (dialog.dataset.similar) return showSimilar(dialog, list, notes)
+    if (dialog.dataset.similar) return showSimilar(dialog, list, notes, stale)
     list.innerHTML = ""
     return
   }
@@ -136,8 +143,7 @@ async function run(dialog: HTMLDialogElement, query: string) {
   // With filters but no query, browse every matching note.
   const found = !q ? all : tagQuery ? all.filter(({ id }) => notes[id].g.some((g) => fold(g).startsWith(tagQuery))) : ms.search(q)
   const meaning = q && !tagQuery ? await byMeaning(dialog, q) : []
-  // A slower answer to an older query must not replace the newer one.
-  if (dialog.querySelector("input")!.value.trim() !== q) return
+  if (stale()) return
   const idOf = new Map(notes.map((n, id) => [n.u, id]))
   const ranked = meaning.length
     ? blend(found.map((f) => ({ url: notes[f.id as number].u, score: f.score })), meaning, threshold(dialog)).map((url) => ({ id: idOf.get(url)! }))
