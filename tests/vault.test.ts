@@ -115,6 +115,12 @@ describe("languages", () => {
     expect(filterLanguage(src, "vi-VN")).toBe(src)
   })
 
+  test("only real fences hide markers: ~~~ fences count, ``` inside a line does not", () => {
+    expect(filterLanguage("Run ```ls``` first.\n<!--lang:en-US-->\nen\n<!--lang:*-->\nend", "vi-VN")).toBe("Run ```ls``` first.\nend")
+    const tilde = "~~~\n<!--lang:en-US-->\n```\n~~~\nafter"
+    expect(filterLanguage(tilde, "vi-VN")).toBe(tilde)
+  })
+
   test("language markers quoted inside a line are content", () => {
     const src = "<!--lang:vi-VN-->\n| Blocks | `<!--lang:vi-VN-->`, `<!--lang:en-US-->` |\n\n[^1]: Footnote.\n<!--lang:*-->"
     expect(filterLanguage(src, "vi-VN")).toBe("| Blocks | `<!--lang:vi-VN-->`, `<!--lang:en-US-->` |\n\n[^1]: Footnote.")

@@ -26,6 +26,11 @@ describe("splitting locked parts", () => {
     expect(md).toContain("```\n<!--lock:c-->\n```")
   })
 
+  test("a ~~~ fence hides markers too, and ``` inside a line opens no fence", () => {
+    expect(splitLocked("~~~\n<!--lock:x-->\n~~~").parts).toEqual([])
+    expect(splitLocked("Run ```ls```.\n<!--lock:y-->\nsecret").parts.map((p) => p.password)).toEqual(["y"])
+  })
+
   test("@group passwords come from the environment, never from the vault", () => {
     expect(groupVariable("close-friends")).toBe("DATME_LOCK_CLOSE_FRIENDS")
     expect(resolvePassword("plain words")).toEqual({ password: "plain words" })

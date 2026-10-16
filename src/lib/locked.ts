@@ -18,6 +18,17 @@ export interface LockedPart {
 
 const MARK = /^\s*<!--lock:(.*)-->\s*$/
 
+/**
+ * The code fence still open after `line`: a line starting with ``` or ~~~ opens one,
+ * and only the same marker, at least as long and alone on its line, closes it.
+ */
+export function fenceAfter(open: string | null, line: string): string | null {
+  const m = line.match(/^\s*(`{3,}|~{3,})(.*)$/)
+  if (!m) return open
+  if (open === null) return m[1]
+  return m[1][0] === open[0] && m[1].length >= open.length && !m[2].trim() ? null : open
+}
+
 /** The HTML that stands in for locked part `i` until it is encrypted into the page. */
 export const lockedPlaceholder = (i: number) => `<div class="locked-part" data-lock="${i}"></div>`
 
@@ -28,10 +39,10 @@ export const lockedPlaceholder = (i: number) => `<div class="locked-part" data-l
 export function splitLocked(src: string): { md: string; parts: LockedPart[] } {
   const out: string[] = []
   const parts: LockedPart[] = []
-  let inFence = false
+  let fence: string | null = null
   let part: LockedPart | undefined
   for (const line of src.split("\n")) {
-    const m = inFence ? null : line.match(MARK)
+    const m = fence !== null ? null : line.match(MARK)
     if (m) {
       if (part) parts.push(part)
       part = undefined
@@ -43,7 +54,7 @@ export function splitLocked(src: string): { md: string; parts: LockedPart[] } {
       }
       continue
     }
-    if (line.includes("```")) inFence = !inFence
+    fence = fenceAfter(fence, line)
     if (part) part.md += (part.md ? "\n" : "") + line
     else out.push(line)
   }

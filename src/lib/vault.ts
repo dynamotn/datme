@@ -9,7 +9,7 @@ import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
-import { resolvePassword, splitLocked } from "./locked"
+import { fenceAfter, resolvePassword, splitLocked } from "./locked"
 import { isSlides, isTheme, slideDirectives } from "./slides"
 import { cite, parseBibtex, type BibEntry } from "./citations"
 import katex from "katex"
@@ -273,14 +273,14 @@ const LANG_MARKER = /^\s*<!--lang:([^\s>]+)-->$/
  * lang-blocks Obsidian plugin, so the vault and the site agree.
  */
 export function textLanguages(src: string): Lang[] {
-  let inFence = false
+  let fence: string | null = null
   let inComment = false
   let current: Lang | null = null
   const found: Lang[] = []
   for (let line of src.split("\n")) {
     line = line.replace(/[\t\r ]*$/, "")
-    if (line.includes("```")) inFence = !inFence
-    if (!inFence) {
+    fence = fenceAfter(fence, line)
+    if (fence === null) {
       const m = line.match(LANG_MARKER)
       if (m) {
         current = m[1] === "*" ? null : m[1]
@@ -292,7 +292,7 @@ export function textLanguages(src: string): Lang[] {
       if (text.includes("-->")) inComment = false
       continue
     }
-    if (!inFence && text.startsWith("<!--")) {
+    if (fence === null && text.startsWith("<!--")) {
       if (!text.includes("-->")) inComment = true
       continue
     }
@@ -328,14 +328,14 @@ export function contentLanguage(src: string, lang: Lang, fallback: Lang | null, 
 
 /** Port of the fork's MultiLanguage transformer: keeps blocks of one language. */
 export function filterLanguage(src: string, lang: Lang): string {
-  let inFence = false
+  let fence: string | null = null
   let inLang = false
   let inThisLang = false
   const out: string[] = []
   for (let line of src.split("\n")) {
     line = line.replace(/[\t\r ]*$/, "")
-    if (line.includes("```")) inFence = !inFence
-    if (!inFence) {
+    fence = fenceAfter(fence, line)
+    if (fence === null) {
       const m = line.match(LANG_MARKER)
       if (m) {
         if (m[1] === "*") {
