@@ -281,6 +281,7 @@ kbd {
   max-width: 1480px;
   margin: 0 auto;
   min-height: calc(100vh - var(--header-h));
+  min-height: calc(100dvh - var(--header-h));
 }
 .shell.no-right {
   grid-template-columns: var(--left-w) minmax(0, 1fr);
@@ -290,6 +291,7 @@ kbd {
   top: var(--header-h);
   align-self: start;
   height: calc(100vh - var(--header-h));
+  height: calc(100dvh - var(--header-h));
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -1502,6 +1504,7 @@ dialog.modal {
   box-shadow: var(--shadow-lg);
   width: min(680px, calc(100vw - 24px));
   max-height: min(640px, calc(100vh - 80px));
+  max-height: min(640px, calc(100dvh - 80px));
   margin: 10vh auto auto;
   overflow: hidden;
 }
@@ -1632,6 +1635,7 @@ dialog.graph-modal {
   width: min(1100px, calc(100vw - 24px));
   max-height: none;
   height: min(760px, calc(100vh - 60px));
+  height: min(760px, calc(100dvh - 60px));
   margin: auto;
 }
 .graph-modal .graph-full {
@@ -2180,6 +2184,7 @@ dialog.graph-modal {
 .lightbox {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -2203,6 +2208,7 @@ dialog.graph-modal {
 .lightbox img {
   max-width: 100%;
   max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   object-fit: contain;
   border-radius: 4px;
   background: #fff;
@@ -2225,6 +2231,7 @@ dialog.graph-modal {
   width: min(100%, 1400px);
   height: auto;
   max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   border-radius: 4px;
   background: #fff;
 }
@@ -3360,6 +3367,7 @@ a.drawing-link tspan {
 :root.stacking .stack-row {
   display: flex;
   height: calc(100vh - var(--header-h));
+  height: calc(100dvh - var(--header-h));
   overflow-x: auto;
   overflow-y: hidden;
 }

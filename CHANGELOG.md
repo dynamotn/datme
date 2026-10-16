@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In Safari before iOS 18 and macOS Sequoia, the header and the backdrop of
   dialogs are blurred again, instead of letting the page show through, and
   text that should not be selectable is not.
+- On iPhone and iPad, the menu drawer, the search and graph dialogs and
+  other full-height panels fit the visible screen, instead of running under
+  Safari's toolbar where their last items could not be reached.
 
 ## [2.2.0] - 2026-10-16
 
