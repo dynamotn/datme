@@ -73,6 +73,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search results always match what is typed: a slower answer to an earlier
   query or filter no longer replaces them.
 - Screen readers announce the search result chosen with the arrow keys.
+- A damaged list of open folders in the browser's storage no longer stops
+  the rest of the page's scripts, such as the table of contents, popovers
+  and the graph.
 
 ### Security
 

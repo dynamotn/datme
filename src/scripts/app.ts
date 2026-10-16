@@ -106,16 +106,25 @@ function syncToggles() {
 
 // ---- explorer: highlight the current page, remember open folders ----
 const OPEN_KEY = "explorer-open"
+/** The folders left open, read defensively: storage is anyone's to edit. */
+function openFolders(): Set<string> {
+  try {
+    const list: unknown = JSON.parse(read(OPEN_KEY) ?? "[]")
+    return new Set(Array.isArray(list) ? list.filter((d) => typeof d === "string") : [])
+  } catch {
+    return new Set()
+  }
+}
 function setupExplorer() {
   const explorer = document.querySelector<HTMLElement>("[data-explorer]")
   if (!explorer) return
-  const open = new Set<string>(JSON.parse(read(OPEN_KEY) ?? "[]"))
+  const open = openFolders()
   if (!explorer.dataset.bound) {
     explorer.dataset.bound = "1"
     explorer.querySelectorAll("details").forEach((d) => {
       if (open.has(d.dataset.dir!)) d.open = true
       d.addEventListener("toggle", () => {
-        const set = new Set<string>(JSON.parse(read(OPEN_KEY) ?? "[]"))
+        const set = openFolders()
         if (d.open) set.add(d.dataset.dir!)
         else set.delete(d.dataset.dir!)
         store(OPEN_KEY, JSON.stringify([...set]))
