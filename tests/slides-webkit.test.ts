@@ -25,7 +25,9 @@ beforeAll(() => {
 describe("decks in WebKit", () => {
   test("the polyfill places each deck's slides every frame, until the deck leaves the page", async () => {
     document.body.innerHTML = `<div class="marp-deck"><template shadowrootmode="open"><div class="marpit"><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject><section></section></foreignObject></svg></div></template></div>`
-    const { setupSlides } = await import("../src/scripts/slides")
+    // A copy of its own: another test file may have loaded the module, and its polyfill, already.
+    const fresh = "../src/scripts/slides?webkit"
+    const { setupSlides } = (await import(fresh)) as typeof import("../src/scripts/slides")
     setupSlides()
     setupSlides()
     await Bun.sleep(0)
