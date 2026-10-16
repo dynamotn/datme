@@ -80,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the graph.
 - A canvas with an odd card, such as a link without a scheme or a text card
   holding no text, no longer stops the build.
+- A damaged encrypted part reads as a wrong password instead of leaving the
+  unlock button stuck.
 
 ### Security
 

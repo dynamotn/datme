@@ -15,6 +15,12 @@ describe("note encryption", () => {
     expect(await decrypt(payload, "pw", 100_001)).toBeNull()
   })
 
+  test("a damaged payload or iteration count yields nothing instead of throwing", async () => {
+    const payload = await encrypt("secret", "pw", 1000)
+    expect(await decrypt("not base64!", "pw", 1000)).toBeNull()
+    expect(await decrypt(payload, "pw", NaN)).toBeNull()
+  })
+
   test("every encryption uses a fresh salt and IV", async () => {
     expect(await encrypt("same", "pw", 100_000)).not.toBe(await encrypt("same", "pw", 100_000))
   })
