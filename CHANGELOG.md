@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - On iPhone and iPad, the menu drawer, the search and graph dialogs and
   other full-height panels fit the visible screen, instead of running under
   Safari's toolbar where their last items could not be reached.
+- On iPhone and iPad, tapping a filter or another field no longer zooms the
+  page in: fields are at least 16px on touch screens.
 
 ## [2.2.0] - 2026-10-16
 

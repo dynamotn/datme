@@ -3877,3 +3877,13 @@ a.drawing-link tspan {
 .trail-nav[hidden] {
   display: none;
 }
+
+/* iOS zooms into a field whose text is under 16px, and stays zoomed: on touch screens none is smaller.
+   Important, as the looks size their selects and fields with more specific rules. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em) !important;
+  }
+}
