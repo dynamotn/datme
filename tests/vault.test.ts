@@ -112,6 +112,12 @@ describe("languages", () => {
     expect(filterLanguage(src, "vi-VN")).toBe(src)
   })
 
+  test("language markers quoted inside a line are content", () => {
+    const src = "<!--lang:vi-VN-->\n| Blocks | `<!--lang:vi-VN-->`, `<!--lang:en-US-->` |\n\n[^1]: Footnote.\n<!--lang:*-->"
+    expect(filterLanguage(src, "vi-VN")).toBe("| Blocks | `<!--lang:vi-VN-->`, `<!--lang:en-US-->` |\n\n[^1]: Footnote.")
+    expect(textLanguages(src)).toEqual(["vi-VN"])
+  })
+
   test("titles and slugs follow the per-language title map", () => {
     const zk = en.get("03_Atomic/Zettelkasten")!
     expect(zk.title).toBe("Zettelkasten method")

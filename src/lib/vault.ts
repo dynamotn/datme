@@ -253,6 +253,9 @@ export function sourceLangOf(fm: Record<string, unknown>): Lang {
   return typeof fm.lang === "string" && site.langs.includes(fm.lang) ? fm.lang : site.defaultLang
 }
 
+/** A <!--lang:xx--> marker alone on its line; one quoted in a sentence or a table is text. */
+const LANG_MARKER = /^\s*<!--lang:([^\s>]+)-->$/
+
 /**
  * Languages whose <!--lang:xx--> blocks hold real text, in order of first
  * appearance. Blank lines, headings, HTML comments (even over several lines)
@@ -269,7 +272,7 @@ export function textLanguages(src: string): Lang[] {
     line = line.replace(/[\t\r ]*$/, "")
     if (line.includes("```")) inFence = !inFence
     if (!inFence) {
-      const m = line.match(/<!--lang:(.*)-->/)
+      const m = line.match(LANG_MARKER)
       if (m) {
         current = m[1] === "*" ? null : m[1]
         continue
@@ -324,7 +327,7 @@ export function filterLanguage(src: string, lang: Lang): string {
     line = line.replace(/[\t\r ]*$/, "")
     if (line.includes("```")) inFence = !inFence
     if (!inFence) {
-      const m = line.match(/<!--lang:(.*)-->/)
+      const m = line.match(LANG_MARKER)
       if (m) {
         if (m[1] === "*") {
           inLang = false

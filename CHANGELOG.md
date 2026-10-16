@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bases understand `filter()`, `map()` and `replace()`, so formulas such as
   `file.tags.filter(value.startsWith("x/")).map(value.replace("x/", ""))`
   render instead of failing with an unknown method.
+- A `<!--lang:xx-->` marker quoted inside a line, as in inline code or a
+  table, is shown as text instead of starting a language block, which hid
+  the rest of the note, footnotes included.
 
 ## [2.1.0] - 2026-10-10
 
