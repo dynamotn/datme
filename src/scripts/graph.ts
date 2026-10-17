@@ -15,7 +15,7 @@ interface GNode extends SimulationNodeDatum {
   r: number
   /** Day the note was created, null when unknown. */
   k: number | null
-  /** Group it is coloured by: its top folder, first type, stage or freshness. */
+  /** Group it is coloured by: its top folder, first type, stage, topic, freshness or visits. */
   g: string
   /** Links away from the current note, in the local graph. */
   hop: number
@@ -87,6 +87,8 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
         ? n.p
         : colorBy === "stage"
           ? (n.st ?? "")
+          : colorBy === "topic"
+            ? (n.tp ?? "")
           : colorBy === "fresh" && n.m != null
             ? (freshLabels[freshness(n.m)] ?? "")
             : footprints && hasVisited(footprints, n.u)

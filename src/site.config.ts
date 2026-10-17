@@ -284,6 +284,11 @@ const schema = z
       })
       .strict()
       .default({ count: 5, mentions: true, semantic: false }),
+    /**
+     * Group notes into topics from the embeddings of related.semantic, for the graph and /stats:
+     * true picks how many from the number of notes, a number sets it, false turns topics off.
+     */
+    topics: z.union([z.boolean(), z.number().int().min(2).max(40)]).default(true),
     /** Offer the stacked-notes mode, where links open side by side. */
     stackedPages: z.boolean().default(true),
     graph: z
@@ -361,7 +366,7 @@ const schema = z
     stats: z
       .object({
         /** Garden health indicators left off /stats, for authors who prefer not to publish them. */
-        hide: z.array(z.enum(["density", "structure", "freshness", "hubs"])).default([]),
+        hide: z.array(z.enum(["density", "structure", "freshness", "hubs", "topics"])).default([]),
       })
       .strict()
       .default({ hide: [] }),
@@ -534,6 +539,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     bibliography: (typeof c.bibliography === "string" ? [c.bibliography] : (c.bibliography ?? [])).map((p) => p.replace(/^\/+/, "")),
     images: { ...c.images, widths: [...new Set(c.images.widths)].sort((a, b) => a - b) },
     stackedPages: c.stackedPages,
+    topics: c.topics,
     graph: c.graph,
     related: c.related,
     theme: { ...c.theme, css: c.theme.css.replace(/^\/+/, "") },

@@ -2,6 +2,7 @@ import { site, type Lang } from "../site.config"
 import { getVault, listed, countNotes } from "./vault"
 import { renderNote } from "./markdown"
 import { gardenShape } from "./check"
+import { topics } from "./topics"
 
 export interface Stats {
   notes: number
@@ -27,6 +28,8 @@ export interface Health {
   freshness?: { days: number; notes: number }[]
   /** The notes most linked to, most first. */
   hubs?: { title: string; url: string; count: number }[]
+  /** Notes grouped by what they are about, largest topic first; with related.semantic only. */
+  topics?: { label: string; notes: { title: string; url: string }[] }[]
 }
 
 const DAY = 86_400_000
@@ -106,6 +109,10 @@ export async function gardenStats(lang: Lang): Promise<Stats> {
       .filter((h) => h.count > 0)
       .sort((a, b) => b.count - a.count || a.title.localeCompare(b.title))
       .slice(0, 5)
+  }
+  if (!hide.has("topics")) {
+    const list = await topics(lang)
+    if (list.length) health.topics = list.map((t) => ({ label: t.label, notes: t.items.map((i) => ({ title: i.note.title, url: i.note.url })) }))
   }
   return {
     health,

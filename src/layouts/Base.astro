@@ -373,6 +373,7 @@ const pluginHead = await userHead()
           <option value="folder">{s.graphColorBy}: {s.folder}</option>
           <option value="type">{s.graphColorBy}: {s.graphColorType}</option>
           {Object.keys(site.stages).length > 0 && <option value="stage">{s.graphColorBy}: {s.graphColorStage}</option>}
+          {site.related.semantic && site.topics !== false && <option value="topic">{s.graphColorBy}: {s.graphColorTopic}</option>}
           <option value="fresh">{s.graphColorBy}: {s.graphColorFresh}</option>
           <option value="visited">{s.graphColorBy}: {s.graphColorVisited}</option>
         </select>

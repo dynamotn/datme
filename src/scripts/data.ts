@@ -13,6 +13,8 @@ export interface IndexNote {
   s: string | null
   /** Label of the note's stage, "" without one. */
   st?: string
+  /** Label of the note's topic, "" without one. */
+  tp?: string
   f: string
   d: string
   c: string

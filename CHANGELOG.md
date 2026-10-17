@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/practice` gathers the flashcards of every deck in one session, due
   cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
   a reader has practised, a 🧠 badge in the header counts the cards due.
+- With `related.semantic`, notes are grouped into topics by what they are
+  about: the graph colours them by topic and `/stats` lists each topic with
+  its notes. `topics` sets how many, or turns them off.
 - Readers can highlight passages of a note, add their own words, and export
   every highlight as Markdown for their vault, each with a link back to the
   passage. Highlights stay in their browser and find their words again after

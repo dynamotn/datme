@@ -140,7 +140,9 @@ this off.
   the garden is: links per note and their trend, orphans and dead ends (as
   `datme check` counts them), notes tended in the last 30, 90 and 365 days,
   and the most linked notes. `stats: { hide: [density, structure, freshness,
-  hubs] }` leaves any of them out.
+  hubs, topics] }` leaves any of them out. With `related.semantic`, it also
+  groups the notes into topics, each named after the tag most of its notes
+  share, or its most central note; the graph can colour notes by topic too.
 
 Each of these pages exists only when some note qualifies. Protected notes
 never show up on them.

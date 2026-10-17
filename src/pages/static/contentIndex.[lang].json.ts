@@ -2,6 +2,7 @@ import type { APIRoute, GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
 import { getVault, listed } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
+import { topicOf } from "~/lib/topics"
 
 export const getStaticPaths = (() => site.langs.map((lang) => ({ params: { lang } }))) satisfies GetStaticPaths
 
@@ -12,6 +13,7 @@ export const GET: APIRoute = async ({ params }) => {
   const notes = listed(lang)
   const index = new Map(notes.map((n, i) => [n.key, i]))
   const folders = vault.folders[lang]
+  const topic = await topicOf(lang)
   const entries = await Promise.all(
     notes.map(async (n) => {
       const r = await renderNote(n)
@@ -23,6 +25,8 @@ export const GET: APIRoute = async ({ params }) => {
         s: n.stage ? site.stages[n.stage].icon : null,
         // Stage label, for the stage filter and graph colours.
         st: n.stage ? site.stages[n.stage].label[lang] : "",
+        // Topic from the embeddings, for the graph's colours; "" without one.
+        tp: topic.get(n.key) ?? "",
         f: folders.get(n.dir)?.name ?? "",
         p: n.dir.split("/")[0],
         y: n.types,

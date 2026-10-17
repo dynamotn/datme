@@ -112,6 +112,8 @@ related:                      # under each note: notes sharing tags or links,
   semantic: false             # true: also notes close in meaning (see The reader's side);
                               # or { model: …, threshold: 0.55 }
 stackedPages: true            # a header button to open linked notes side by side
+topics: true                  # with related.semantic: group notes into topics for the graph and /stats;
+                              # a number sets how many, false turns them off
 graph:
   depth: 1                    # links the local graph follows: 1, or 2 for links of links
   view: 2d                    # how the global graph opens: 2d, or 3d (turned by dragging)
@@ -158,7 +160,7 @@ ogImages: true                # social cards for the home page and notes without
 oembed: true                  # other sites can embed a card of each public note (needs site.url)
 llms: true                    # /llms.txt, /llms-full.txt and a .md copy of every public note (without comments)
 askAi: [chatgpt, claude]      # assistants a note's Markdown menu opens it in (needs site.url); [] for none
-stats: { hide: [] }           # garden health left off /stats: density, structure, freshness, hubs
+stats: { hide: [] }           # garden health left off /stats: density, structure, freshness, hubs, topics
 outdated: { after: 2 }        # say so on notes not updated for this many years (off by default)
 offline: true                 # installable app; pages a reader opened stay readable offline
 ```

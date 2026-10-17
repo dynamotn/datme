@@ -127,6 +127,29 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
               </table>
             </figure>
           )}
+          {health.topics && (
+            <>
+              <h3>{s.statsTopics}</h3>
+              <ul class="stats-topics">
+                {health.topics.map((topic) => (
+                  <li>
+                    <strong>{topic.label}</strong> <small>{fmt(topic.notes.length)}</small>
+                    <span>
+                      {topic.notes.slice(0, 6).map((n, i) => (
+                        <>
+                          {i > 0 && " · "}
+                          <a class="internal" href={n.url}>
+                            {n.title}
+                          </a>
+                        </>
+                      ))}
+                      {topic.notes.length > 6 && " …"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           {health.hubs && health.hubs.length > 0 && (
             <>
               <h3>{s.statsHubs}</h3>
