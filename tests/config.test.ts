@@ -93,8 +93,32 @@ describe("resolveConfig", () => {
     }
   })
 
-  test("unknown stage presets are rejected", () => {
-    expect(() => resolveConfig({ stages: { X: "sprouting" } }, "/v")).toThrow(ConfigError)
+  test("only the three Zettelkasten kinds are presets; any other stage is the vault's own", () => {
+    const c = resolveConfig(
+      {
+        languages: ["en-US"],
+        stages: { Inbox: "Fleeting", Sources: "literature", Notes: "permanent", "03_Atomic": "atomic", Maps: "Maps of content", "06_Lab": { icon: "🧪" }, Bare: null },
+      },
+      "/v",
+    )
+    expect(Object.fromEntries(Object.entries(c.stages).map(([k, v]) => [k, `${v.icon} ${v.label["en-US"]}`]))).toEqual({
+      Inbox: "🌱 Fleeting",
+      Sources: "📖 Literature",
+      Notes: "🌳 Permanent",
+      // What used to be a preset is now a label of its own.
+      "03_Atomic": "🗂️ atomic",
+      Maps: "🗂️ Maps of content",
+      // Without a label, the folder's name without its number.
+      "06_Lab": "🧪 Lab",
+      Bare: "🗂️ Bare",
+    })
+    expect(Object.values(c.stages).map((s) => s.order)).toEqual([0, 1, 2, 3, 4, 5, 6])
+  })
+
+  test("a stage must be a name or an icon and a label", () => {
+    expect(() => resolveConfig({ stages: { X: "" } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ stages: { X: { colour: "red" } } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ stages: { X: 3 } }, "/v")).toThrow(ConfigError)
   })
 })
 

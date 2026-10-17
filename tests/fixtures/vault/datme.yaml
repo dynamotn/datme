@@ -15,8 +15,8 @@ ignore:
   - _assets/templates
 stages:
   01_Fleeting: fleeting
-  03_Atomic: atomic
-  06_Reference: reference
+  03_Atomic: { icon: ⚛️, label: { vi-VN: Nguyên tử, en-US: Atomic } }
+  06_Reference: { icon: 📚, label: { vi-VN: Tham khảo, en-US: Reference } }
   07_Project:
     icon: 🧪
     label:

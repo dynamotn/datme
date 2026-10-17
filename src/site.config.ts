@@ -4,6 +4,7 @@ import path from "node:path"
 import { load as loadYaml } from "js-yaml"
 import { z } from "astro/zod"
 import { bundledThemes } from "shiki"
+import { folderDisplayName } from "./lib/slug"
 
 /** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
 export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
@@ -23,16 +24,19 @@ export const CONFIG_FILES = ["datme.yaml", "datme.yml", ".datme.yaml"]
 /** Folders never scanned for notes, on top of the ones listed in the config. */
 const DEFAULT_IGNORE = [".git", ".obsidian", ".trash", "node_modules", "private", "templates"]
 
-/** Ready-made stages for Zettelkasten-style folders, usable by name in the config. English first: other languages fall back to it. */
+/**
+ * The three kinds of note of a Zettelkasten, usable by name in the config.
+ * English first: other languages fall back to it. Any other stage is the
+ * vault's own: a label, or an icon and a label.
+ */
 const STAGE_PRESETS: Record<string, Omit<StageDef, "order">> = {
   fleeting: { icon: "🌱", label: { "en-US": "Fleeting", "vi-VN": "Thoáng qua" } },
   literature: { icon: "📖", label: { "en-US": "Literature", "vi-VN": "Tài liệu" } },
-  atomic: { icon: "⚛️", label: { "en-US": "Atomic", "vi-VN": "Nguyên tử" } },
   permanent: { icon: "🌳", label: { "en-US": "Permanent", "vi-VN": "Vĩnh viễn" } },
-  structure: { icon: "🗺️", label: { "en-US": "Structure", "vi-VN": "Cấu trúc" } },
-  reference: { icon: "📚", label: { "en-US": "Reference", "vi-VN": "Tham khảo" } },
-  project: { icon: "🛠️", label: { "en-US": "Project", "vi-VN": "Dự án" } },
 }
+
+/** The icon of a stage the config gives none. */
+const STAGE_ICON = "🗂️"
 
 const localized = z.union([z.string(), z.record(z.string(), z.string())])
 
@@ -103,13 +107,14 @@ const schema = z
       .default({ me: [] }),
     languages: z.array(z.string().min(2)).min(1).default(["en-US"]),
     ignore: z.array(z.string()).default([]),
+    /**
+     * Folder (or `stage` property value) to stage: a preset name, a label of
+     * the vault's own, or an icon and a label, either of which may be left out.
+     */
     stages: z
       .record(
         z.string(),
-        z.union([
-          z.enum(Object.keys(STAGE_PRESETS) as [string, ...string[]]),
-          z.object({ icon: z.string(), label: localized }).strict(),
-        ]),
+        z.union([z.string().min(1), z.object({ icon: z.string().min(1).optional(), label: localized.optional() }).strict(), z.null()]),
       )
       .default({}),
     /** explicit: only notes with `publish: true`; all: every note except `publish: false`. */
@@ -454,8 +459,10 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - search.meaning: needs related.semantic, whose model it uses`)
   }
   for (const [folder, def] of Object.entries(c.stages)) {
-    const base = typeof def === "string" ? STAGE_PRESETS[def] : def
-    stages[folder] = { icon: base.icon, label: localize(base.label, langs, folder), order: order++ }
+    // A string naming no preset is the stage's label; without one, the folder's name is.
+    const preset = typeof def === "string" ? STAGE_PRESETS[def.toLowerCase()] : undefined
+    const own = preset ?? (typeof def === "string" ? { label: def } : (def ?? {}))
+    stages[folder] = { icon: own.icon ?? STAGE_ICON, label: localize(own.label, langs, folderDisplayName(folder)), order: order++ }
   }
   return {
     vault,
