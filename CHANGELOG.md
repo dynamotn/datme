@@ -355,6 +355,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `_headers` adds `Strict-Transport-Security` for HTTPS sites and serves the
   vault's SVG, HTML and XML files sandboxed, so a script in one never runs on
   the site's origin.
+- `@dynamotn/datme` is published to npm by trusted publishing from GitHub
+  Actions, with a provenance attestation and no npm token stored anywhere.
+  Pre-releases go to the `next` dist-tag, so `latest` stays on the last
+  stable release.
 
 ## [2.2.2] - 2026-10-16
 
