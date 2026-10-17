@@ -34,7 +34,23 @@ export interface SourceNote {
 }
 
 /** Page layouts a note can ask for with its `layout` property. */
-export const LAYOUTS = ["cv", "gallery", "timeline", "links", "projects", "books", "movies"] as const
+export const LAYOUTS = [
+  "cv",
+  "gallery",
+  "timeline",
+  "links",
+  "uses",
+  "now",
+  "faq",
+  "quotes",
+  "projects",
+  "books",
+  "movies",
+  "talks",
+  "recipes",
+  "places",
+  "shelf",
+] as const
 export type Layout = (typeof LAYOUTS)[number]
 
 /** A source note as seen in one language. */
@@ -54,7 +70,7 @@ export interface Note {
   bannerPos: string
   /** Picture standing for the note in a collection: its `cover` property, else its banner. */
   cover?: string
-  /** How the page is laid out (`layout` property): a résumé, a gallery or a collection of notes. */
+  /** How the page is laid out (`layout` property): a page of its own text reshaped, or a collection of notes. */
   layout?: Layout
   cssclasses: string[]
   description?: string

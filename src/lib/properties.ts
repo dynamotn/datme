@@ -96,7 +96,12 @@ export function noteProperties(note: Note): [string, PropValue][] {
   // A stage property is already shown as the stage chip.
   const stage = note.stage === note.source.fm.stage ? ["stage"] : []
   // What a layout already shows: where a collection's notes come from, the head of a résumé.
-  const layout = note.layout === "cv" ? ["role", "headline", "email", "phone", "location", "links"] : note.layout ? ["from"] : []
+  const layout =
+    note.layout === "cv"
+      ? ["role", "headline", "email", "phone", "location", "links"]
+      : note.layout
+        ? ["from", "group", "statuses", "fields"]
+        : []
   const hidden = new Set([...HIDDEN_PROPERTIES, ...directives, ...stage, ...layout, ...site.properties.hide].map((k) => k.toLowerCase()))
   const resolve = (target: string) => {
     const s = vault.resolveNote(target, note.dir)

@@ -1,0 +1,6 @@
+filters: 'file.hasTag("book")'
+views:
+  - type: cards
+    name: By status
+    order: [file.name, note.rating]
+    groupBy: note.status

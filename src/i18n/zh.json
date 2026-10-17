@@ -202,5 +202,10 @@
   "emptyCollection": "这里还没有笔记。",
   "statusWatching": "在看",
   "statusToWatch": "想看",
-  "statusWatched": "看过"
+  "statusWatched": "看过",
+  "linkSlides": "幻灯片",
+  "linkVideo": "视频",
+  "linkPaper": "论文",
+  "nowUpdated": "最后更新于 {date}",
+  "nowStale": "此页面已有一段时间未更新，内容可能已过时。"
 }

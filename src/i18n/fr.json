@@ -202,5 +202,10 @@
   "emptyCollection": "Aucune note ici pour l’instant.",
   "statusWatching": "En cours",
   "statusToWatch": "À voir",
-  "statusWatched": "Vu"
+  "statusWatched": "Vu",
+  "linkSlides": "Diapositives",
+  "linkVideo": "Vidéo",
+  "linkPaper": "Article",
+  "nowUpdated": "Mis à jour le {date}",
+  "nowStale": "Cette page n’a pas été mise à jour depuis un moment et peut être dépassée."
 }

@@ -4,7 +4,7 @@ import { getVault } from "~/lib/vault"
 import { renderNote, renderSecret } from "~/lib/markdown"
 import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
-import { t, langMeta } from "~/lib/i18n"
+import { t, langMeta, formatDate } from "~/lib/i18n"
 import { lookOf } from "~/lib/nav"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
@@ -27,7 +27,9 @@ import Outdated from "../Outdated.astro"
 import Collection from "../Collection.astro"
 import CvHead from "../CvHead.astro"
 import LinksHead from "../LinksHead.astro"
-import { isCollection, layoutHtml } from "~/lib/note-layouts"
+import { isCollection, itemOf, layoutHtml } from "~/lib/note-layouts"
+import ItemHead from "../ItemHead.astro"
+import { isOutdated } from "~/scripts/outdated"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 
 interface Props {
@@ -61,8 +63,13 @@ const pagefindFilters = [`folder:${note.dir.split("/")[0]}`, ...note.types.map((
   .join(", ")
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 // A résumé and a gallery reshape the note's text; a page with a layout is a destination, not a note among others.
-const html = layoutHtml(note.layout, r.html)
+const html = layoutHtml(note, r.html)
 const plain = !note.layout
+// A book, a film or a project of a collection shows its cover beside its title.
+const item = itemOf(note)
+// A now page says when it was last true, and warns once it is three months old.
+const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefined
+const NOW_STALE_YEARS = 0.25
 ---
 
 <Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
@@ -98,6 +105,15 @@ const plain = !note.layout
         <CvHead note={note} title={title} />
       ) : note.layout === "links" ? (
         <LinksHead note={note} title={title} />
+      ) : item ? (
+        <ItemHead note={note} item={item}>
+          <header class="note-head">
+            <NoteMeta note={note} words={r.words}>
+              <h1 class="note-title">{title}</h1>
+            </NoteMeta>
+            <PageMenu note={note} />
+          </header>
+        </ItemHead>
       ) : (
         <header class="note-head">
           <NoteMeta note={note} words={r.words}>
@@ -105,6 +121,18 @@ const plain = !note.layout
           </NoteMeta>
           <PageMenu note={note} />
         </header>
+      )
+    }
+    {
+      nowSince && (
+        <div class="now-stamp">
+          <p>
+            <time datetime={nowSince.toISOString()}>{s.nowUpdated.replace("{date}", formatDate(nowSince, note.lang))}</time>
+          </p>
+          <p class="outdated" role="note" data-outdated data-since={nowSince.toISOString()} data-after={NOW_STALE_YEARS} hidden={!isOutdated(nowSince, NOW_STALE_YEARS)}>
+            ⏳ {s.nowStale}
+          </p>
+        </div>
       )
     }
     <Outdated note={note} />

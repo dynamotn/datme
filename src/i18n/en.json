@@ -202,5 +202,10 @@
   "emptyCollection": "No notes here yet.",
   "statusWatching": "Watching",
   "statusToWatch": "To watch",
-  "statusWatched": "Watched"
+  "statusWatched": "Watched",
+  "linkSlides": "Slides",
+  "linkVideo": "Video",
+  "linkPaper": "Paper",
+  "nowUpdated": "Last updated {date}",
+  "nowStale": "This page has not been updated in a while, so it may be out of date."
 }

@@ -11,10 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Notes can take a page layout with `layout`. `cv` makes a printable résumé
   from the note, `gallery` turns its pictures into a grid, `timeline` puts
-  its sections on a line down the page, and `links` makes a link-in-bio
-  page of buttons. `projects`, `books` and `movies` show the notes of a
-  folder or tag as project cards or a shelf of covers or posters, grouped
-  by `status`. A `cover` property gives each note its picture.
+  its sections on a line down the page, `links` makes a link-in-bio page of
+  buttons, `uses` a grid of the tools you use, `now` a now page that warns
+  when it grows old, `faq` questions that open on their answers, and
+  `quotes` a wall of quotes.
+- Collection layouts list the notes of a folder or tag: `projects` as
+  cards, `books`, `movies` and `shelf` as shelves of covers, `talks` by
+  year, `recipes` by category and `places` on a map. When the note embeds
+  a base, they list what the base finds, in its order and groups. `shelf`
+  takes its own statuses and fields.
+- A note listed by a collection, or with a `cover` property, shows its cover
+  beside its title with its author or years, status, rating and links. A
+  recipe's ingredients sit beside its steps, each one to tick off.
 - Each note has a 📄 Markdown menu: copy the note as markdown, open its
   markdown copy, or ask ChatGPT or Claude to read it. `askAi` picks the
   assistants, or `[]` for none; they need `site.url`.

@@ -4780,3 +4780,273 @@ summary.ntn-col-head {
     box-shadow: var(--shadow);
   }
 }
+
+/* An item of a collection: its cover beside its title, then what it is. */
+.item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+.item-cover {
+  flex: none;
+  width: 220px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+.item-head.is-upright .item-cover {
+  width: 150px;
+  aspect-ratio: 2 / 3;
+  border-radius: 3px 6px 6px 3px;
+}
+.item-id {
+  flex: 1;
+  min-width: 0;
+}
+.item-byline {
+  margin: 4px 0 0;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.item-facts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.item-links {
+  margin-top: 10px;
+}
+@media (max-width: 560px) {
+  .item-head {
+    flex-direction: column;
+  }
+  .item-cover {
+    width: 100%;
+  }
+}
+
+/* A now page: when it was last true. */
+.now-stamp {
+  margin: 0 0 20px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--accent);
+}
+.now-stamp p {
+  margin: 0;
+}
+.now-stamp .outdated {
+  margin-top: 8px;
+}
+
+/* What I use: a grid of cards, each a name over what it is for. */
+.prose ul.uses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 1em 0 1.6em;
+  padding: 0;
+  list-style: none;
+}
+.prose ul.uses-grid > li {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 0.92em;
+}
+.prose ul.uses-grid > li::marker {
+  content: none;
+}
+.prose ul.uses-grid > li > strong:first-child,
+.prose ul.uses-grid > li > a:first-child {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+}
+.prose ul.uses-grid img {
+  display: block;
+  max-height: 120px;
+  margin: 8px auto 0;
+  object-fit: contain;
+}
+
+/* Questions that open on their answers. */
+.faq-item {
+  border-bottom: 1px solid var(--line);
+}
+.faq-item > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.faq-item > summary::-webkit-details-marker {
+  display: none;
+}
+.faq-item > summary::before {
+  content: "+";
+  flex: none;
+  width: 1em;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+.faq-item[open] > summary::before {
+  content: "−";
+}
+.faq-item > summary h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.faq-answer {
+  padding: 0 0 14px calc(1em + 10px);
+}
+.faq-answer > :first-child {
+  margin-top: 0;
+}
+
+/* A wall of quotes. */
+.quote-wall {
+  columns: 2 260px;
+  column-gap: 16px;
+  margin: 1.2em 0;
+}
+.quote-card {
+  break-inside: avoid;
+  margin: 0 0 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.prose .quote-card blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-read);
+  font-size: 1.08em;
+  font-style: italic;
+}
+.quote-card blockquote > :last-child {
+  margin-bottom: 0;
+}
+.quote-card figcaption {
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.quote-card figcaption::before {
+  content: "— ";
+}
+
+/* A recipe: ingredients beside the steps. */
+.recipe {
+  display: grid;
+  grid-template-columns: minmax(180px, 15rem) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.recipe-ingredients {
+  position: sticky;
+  top: 80px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.recipe-ingredients h2 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+.recipe-ingredients ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recipe-tick {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  cursor: pointer;
+}
+.recipe-tick:has(input:checked) {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.recipe-steps > h2:first-child {
+  margin-top: 0;
+}
+@media (max-width: 720px) {
+  .recipe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .recipe-ingredients {
+    position: static;
+  }
+}
+
+/* Talks: dated rows. */
+.talk-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.talk {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: 4px 18px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.talk-date {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+  padding-top: 2px;
+}
+.talk-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.talk-title {
+  font-weight: 600;
+}
+.talk-meta {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+@media (max-width: 560px) {
+  .talk {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Places: the map over the cards. */
+.collection-map {
+  height: min(55vh, 460px);
+  margin: 0 0 32px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.life-when {
+  margin: 0 0 4px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+}

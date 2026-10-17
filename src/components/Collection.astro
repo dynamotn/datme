@@ -1,8 +1,21 @@
 ---
 import type { Note } from "~/lib/vault"
+import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
-import { t } from "~/lib/i18n"
-import { collectionOf, linksOf, periodOf, plain, ratingOf, type Collection } from "~/lib/note-layouts"
+import { formatDate, t } from "~/lib/i18n"
+import {
+  collectionOf,
+  field,
+  linksOf,
+  periodOf,
+  placesOf,
+  plain,
+  ratingOf,
+  recipeFacts,
+  specOf,
+  whenOf,
+  type Collection,
+} from "~/lib/note-layouts"
 
 interface Props {
   note: Note
@@ -10,30 +23,56 @@ interface Props {
 }
 const { note, kind } = Astro.props
 const s = t(note.lang)
-const groups = collectionOf(note, kind)
+const spec = specOf(note, kind)
+const groups = collectionOf(note, spec)
 const described = new Map(
   await Promise.all(
     groups.flatMap((g) => g.notes).map(async (n) => [n.key, n.description ?? (await renderNote(n)).description] as const),
   ),
 )
 const list = (v: unknown) => (Array.isArray(v) ? v.map(plain) : plain(v) ? plain(v).split(/\s*,\s*/) : []).filter(Boolean)
+const fieldsOf = (n: Note) => spec.fields.map((f) => field(n, f)).filter(Boolean)
+const map = kind === "places" ? placesOf(groups) : []
+// The meta line of a card: the years of a project, the facts of a recipe, the place and date of a trip.
+const metaOf = (n: Note) =>
+  kind === "recipes"
+    ? recipeFacts(n)
+    : kind === "places"
+      ? [...fieldsOf(n), whenOf(n) && n.source.fm.visited != null ? formatDate(whenOf(n), note.lang) : ""].filter(Boolean)
+      : kind === "projects"
+        ? [periodOf(n, note.lang), plain(n.source.fm.role)].filter(Boolean)
+        : fieldsOf(n)
 ---
 
 <div class:list={["collection", `collection-${kind}`]}>
+  {
+    map.length > 0 && (
+      <div
+        class="map-canvas collection-map"
+        data-map={JSON.stringify(map)}
+        data-tiles={site.map.tiles}
+        data-tiles-dark={site.map.darkTiles}
+        data-attribution={site.map.attribution}
+        role="region"
+        aria-label={s.map}
+      />
+    )
+  }
   {groups.length === 0 && <p class="empty">{s.emptyCollection}</p>}
   {
     groups.map((g) => (
-      <section class="collection-group" data-status={g.key || undefined}>
-        <h2 class="collection-title">
-          {g.label} <span class="count">{g.notes.length}</span>
-        </h2>
-        {kind === "projects" ? (
+      <section class="collection-group" data-group={g.key || undefined}>
+        {g.label && (
+          <h2 class="collection-title">
+            {g.label} <span class="count">{g.notes.length}</span>
+          </h2>
+        )}
+        {spec.look === "cards" ? (
           <div class="card-grid project-grid">
             {g.notes.map((n) => {
-              const period = periodOf(n, note.lang)
+              const meta = metaOf(n)
               const stack = list(n.source.fm.stack ?? n.source.fm.tech)
               const links = linksOf(n)
-              const role = plain(n.source.fm.role)
               return (
                 <article class="card project-card">
                   {n.cover && (
@@ -45,7 +84,7 @@ const list = (v: unknown) => (Array.isArray(v) ? v.map(plain) : plain(v) ? plain
                     <h3 class="card-title">
                       <a class="internal" href={n.url}>{n.title}</a>
                     </h3>
-                    {(period || role) && <p class="project-meta">{[period, role].filter(Boolean).join(" · ")}</p>}
+                    {meta.length > 0 && <p class="project-meta">{meta.join(" · ")}</p>}
                     {described.get(n.key) && <p class="card-desc">{described.get(n.key)}</p>}
                     {stack.length > 0 && (
                       <ul class="project-stack">
@@ -68,12 +107,42 @@ const list = (v: unknown) => (Array.isArray(v) ? v.map(plain) : plain(v) ? plain
               )
             })}
           </div>
+        ) : spec.look === "rows" ? (
+          <ol class="talk-list">
+            {g.notes.map((n) => {
+              const when = whenOf(n)
+              const meta = fieldsOf(n)
+              const links = linksOf(n)
+              return (
+                <li class="talk">
+                  {when && (
+                    <time class="talk-date" datetime={when.toISOString()}>
+                      {formatDate(when, note.lang)}
+                    </time>
+                  )}
+                  <div class="talk-body">
+                    <a class="talk-title internal" href={n.url}>
+                      {n.title}
+                    </a>
+                    {meta.length > 0 && <span class="talk-meta">{meta.join(" · ")}</span>}
+                    {links.length > 0 && (
+                      <span class="project-links">
+                        {links.map((l) => (
+                          <a href={l.href} rel="noopener">
+                            {l.label} ↗
+                          </a>
+                        ))}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
         ) : (
           <ul class="book-shelf">
             {g.notes.map((n) => {
-              const fm = n.source.fm
-              const author = plain(fm.author ?? fm.authors ?? fm.director ?? fm.directors)
-              const year = plain(fm.year ?? fm.published ?? fm.released)
+              const meta = fieldsOf(n)
               const rating = ratingOf(n)
               return (
                 <li class="book">
@@ -83,7 +152,7 @@ const list = (v: unknown) => (Array.isArray(v) ? v.map(plain) : plain(v) ? plain
                     </span>
                     <span class="book-title">{n.title}</span>
                   </a>
-                  {(author || year) && <span class="book-author">{[author, year].filter(Boolean).join(", ")}</span>}
+                  {meta.length > 0 && <span class="book-author">{meta.join(", ")}</span>}
                   {rating && (
                     <span class="book-rating" title={`${s.ratingOf} ${rating}/5`} aria-label={`${s.ratingOf} ${rating}/5`}>
                       {"★".repeat(Math.round(rating))}

@@ -202,5 +202,10 @@
   "emptyCollection": "Chưa có ghi chú nào ở đây.",
   "statusWatching": "Đang xem",
   "statusToWatch": "Sẽ xem",
-  "statusWatched": "Đã xem"
+  "statusWatched": "Đã xem",
+  "linkSlides": "Slide",
+  "linkVideo": "Video",
+  "linkPaper": "Bài báo",
+  "nowUpdated": "Cập nhật lần cuối {date}",
+  "nowStale": "Trang này đã khá lâu chưa được cập nhật, có thể không còn đúng."
 }

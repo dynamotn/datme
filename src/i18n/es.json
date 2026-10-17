@@ -202,5 +202,10 @@
   "emptyCollection": "Todavía no hay notas aquí.",
   "statusWatching": "Viendo",
   "statusToWatch": "Por ver",
-  "statusWatched": "Visto"
+  "statusWatched": "Visto",
+  "linkSlides": "Diapositivas",
+  "linkVideo": "Vídeo",
+  "linkPaper": "Artículo",
+  "nowUpdated": "Actualizado por última vez el {date}",
+  "nowStale": "Esta página no se actualiza desde hace tiempo y puede estar desfasada."
 }

@@ -202,5 +202,10 @@
   "emptyCollection": "Hier gibt es noch keine Notizen.",
   "statusWatching": "Schaue ich",
   "statusToWatch": "Zu sehen",
-  "statusWatched": "Gesehen"
+  "statusWatched": "Gesehen",
+  "linkSlides": "Folien",
+  "linkVideo": "Video",
+  "linkPaper": "Paper",
+  "nowUpdated": "Zuletzt aktualisiert am {date}",
+  "nowStale": "Diese Seite wurde länger nicht aktualisiert und ist vielleicht nicht mehr aktuell."
 }

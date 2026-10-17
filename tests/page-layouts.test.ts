@@ -2,7 +2,18 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { cvHtml, galleryHtml, linksHtml, plain, timelineHtml } from "../src/lib/note-layouts"
+import {
+  cvHtml,
+  faqHtml,
+  galleryHtml,
+  linksHtml,
+  plain,
+  quotesHtml,
+  recipeHtml,
+  timelineHtml,
+  usesHtml,
+  withoutBases,
+} from "../src/lib/note-layouts"
 
 describe("layout transforms", () => {
   test("a gallery gathers runs of picture-only paragraphs into one grid", () => {
@@ -35,6 +46,39 @@ describe("layout transforms", () => {
     expect(linksHtml(links)).toStartWith('<ul class="link-hub">')
     expect(linksHtml(`<ul><li>text</li><li><a href="/a">A</a></li></ul>`)).toStartWith("<ul>")
     expect(linksHtml(`<ul><li><a href="/a">A</a><ul><li>x</li></ul></li></ul>`)).not.toContain("link-hub")
+  })
+
+  test("uses: lists of names in bold become cards, other lists stay", () => {
+    expect(usesHtml(`<ul><li><strong>Vim</strong> — editor</li></ul>`)).toBe(`<ul class="uses-grid"><li><strong>Vim</strong> — editor</li></ul>`)
+    expect(usesHtml(`<ul><li>plain</li></ul>`)).toBe(`<ul><li>plain</li></ul>`)
+  })
+
+  test("a FAQ: each H2 opens on its answer, without its anchor", () => {
+    expect(faqHtml(`<p>Hi</p><h2 id="q">Q?<a class="heading-anchor" href="#q">#</a></h2><p>A.</p>`)).toBe(
+      `<p>Hi</p><details class="faq-item"><summary><h2 id="q">Q?</h2></summary><div class="faq-answer"><p>A.</p></div></details>`,
+    )
+  })
+
+  test("quotes: a wall of cards, the dashed last line as who said it", () => {
+    const html = quotesHtml(
+      `<p>Intro</p>\n<blockquote>\n<p>Be kind.</p>\n<p>— Ann</p>\n</blockquote>\n<blockquote>\n<p>Go fast.\n— Bob</p>\n</blockquote>\n<blockquote><p>Anon.</p></blockquote>`,
+    )
+    expect(html.match(/<div class="quote-wall">/g)).toHaveLength(1)
+    expect(html).toContain(`<blockquote><p>Be kind.</p></blockquote><figcaption>Ann</figcaption>`)
+    expect(html).toContain(`<blockquote><p>Go fast.</p></blockquote><figcaption>Bob</figcaption>`)
+    expect(html).toContain(`<blockquote><p>Anon.</p></blockquote></figure>`)
+  })
+
+  test("a recipe: its ingredients beside its steps, each to tick off", () => {
+    const html = recipeHtml(`<p>Intro</p><h2>Ingredients</h2><ul><li>Salt</li></ul><h2>Steps</h2><ol><li>Cook</li></ol>`)
+    expect(html).toBe(
+      `<p>Intro</p><div class="recipe"><aside class="recipe-ingredients"><h2>Ingredients</h2><ul><li><label class="recipe-tick"><input type="checkbox"> Salt</label></li></ul></aside><div class="recipe-steps"><h2>Steps</h2><ol><li>Cook</li></ol></div></div>`,
+    )
+    expect(recipeHtml(`<h2>Steps</h2><p>x</p>`)).toBe(`<h2>Steps</h2><p>x</p>`)
+  })
+
+  test("a collection leaves out the bases it shows, nested divs and all", () => {
+    expect(withoutBases(`<p>a</p><div class="base-embed"><div class="card-wall"><div>x</div></div></div><p>b</p>`)).toBe(`<p>a</p><p>b</p>`)
   })
 
   test("frontmatter values read as plain text, wikilinks by their alias or name", () => {
@@ -94,7 +138,7 @@ describe("page layouts", () => {
 
   test("projects of the folder, grouped by status in reading order", () => {
     const html = article("Projects/Projects/index.html")
-    const groups = [...html.matchAll(/data-status="([^"]+)"/g)].map((m) => m[1])
+    const groups = [...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])
     expect(groups).toEqual(["active", "done", "someday"])
     expect(html).toContain('<h2 class="collection-title">In progress <span class="count">1</span>')
     expect(html).toContain('<p class="project-meta">2025 – now</p>')
@@ -113,7 +157,7 @@ describe("page layouts", () => {
 
   test("books by tag on a shelf: covers, authors and ratings", () => {
     const html = article("Books/index.html")
-    const groups = [...html.matchAll(/data-status="([^"]+)"/g)].map((m) => m[1])
+    const groups = [...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])
     expect(groups).toEqual(["reading", "read"])
     expect(html).toContain('<span class="book-cover-text">How to Take Smart Notes</span>')
     expect(html).toContain('<span class="book-author">Sönke Ahrens, 2017</span>')
@@ -136,14 +180,76 @@ describe("page layouts", () => {
 
   test("movies by folder: directors, release years and the watchlist first after watching", () => {
     const html = article("Movies/index.html")
-    const groups = [...html.matchAll(/data-status="([^"]+)"/g)].map((m) => m[1])
+    const groups = [...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])
     expect(groups).toEqual(["to-watch", "watched"])
     expect(html).toContain('<span class="book-author">Andrei Tarkovsky, 1979</span>')
   })
 
+  test("uses, now, FAQ and quotes", () => {
+    expect(article("Uses/index.html").match(/<ul class="uses-grid">/g)).toHaveLength(1)
+    const now = article("Now/index.html")
+    expect(now).toContain('<time datetime="2020-01-02T00:00:00.000Z">Last updated Jan 2, 2020</time>')
+    // Old enough to warn, at build time and again in the browser.
+    expect(now).toMatch(/<p class="outdated" role="note" data-outdated [^>]*data-after="0.25">/)
+    expect(article("FAQ/index.html").match(/<details class="faq-item">/g)).toHaveLength(2)
+    expect(article("Quotes/index.html").match(/<figure class="quote-card">/g)).toHaveLength(3)
+  })
+
+  test("talks by year, newest first, with their event and links", () => {
+    const html = article("Talks/Talks/index.html")
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["2024", "2023"])
+    expect(html).toContain('<span class="talk-meta">RustConf</span>')
+    expect(html).toContain('<a href="https://slides.example/gardens" rel="noopener">Slides ↗</a>')
+    expect(html).toContain('<span class="talk-meta">Hà Nội meetup</span>')
+  })
+
+  test("recipes by category; a recipe's page has its cover and two columns", () => {
+    expect(article("Recipes/Recipes/index.html")).toContain('<p class="project-meta">⏱ 6 h · 🍽 4</p>')
+    // The ingredients are an aside of their own, so the whole page is read.
+    const page = read("Recipes/Phở-bò/index.html")
+    expect(page).toContain('<div class="item-head"><img class="item-cover" src="/assets/_assets/road.png"')
+    expect(page).toContain('<aside class="recipe-ingredients">')
+  })
+
+  test("places on a map, grouped by country", () => {
+    const html = article("Places/index.html")
+    expect(html).toContain('class="map-canvas collection-map" data-map="[{&quot;lat&quot;:35.01')
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["japan", "vietnam"])
+  })
+
+  test("a shelf names its own statuses, per language, and fields", () => {
+    const html = article("Games/index.html")
+    expect(html).toContain('<h2 class="collection-title">Playing now <span class="count">1</span>')
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["playing", "backlog"])
+    expect(html).toContain('<span class="book-author">Switch</span>')
+  })
+
+  test("a collection embedding a base shows what the base finds, in its groups, without the table", () => {
+    const html = article("Shelf-by-base/index.html")
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["read", "reading"])
+    expect(html).not.toContain("base-embed")
+  })
+
+  test("a gallery and a timeline show the notes their base finds", () => {
+    const gallery = article("Covers/index.html")
+    expect(gallery).toContain('<figure class="gallery-item"><a class="internal" href="/Reading/Deep-Work"')
+    expect(gallery).not.toContain("base-embed")
+    const timeline = article("Reading-log/index.html")
+    const dates = [...timeline.matchAll(/<p class="life-when"><time datetime="([^"]+)"/g)].map((m) => m[1].slice(0, 10))
+    expect(dates.slice(0, 2)).toEqual(["2023-03-01", "2024-09-10"])
+  })
+
+  test("a book of a collection shows its cover upright beside its title, with its author and rating", () => {
+    const html = article("Reading/Deep-Work/index.html")
+    expect(html).toContain('<div class="item-head is-upright"><img class="item-cover" src="/assets/_assets/cover.png"')
+    expect(html).toContain('<p class="item-byline">Cal Newport</p>')
+    expect(html).toContain('<span class="chip item-status">Read</span>')
+  })
+
   test("a note without a layout keeps the usual page", () => {
-    const html = read("Reading/Deep-Work/index.html")
+    const html = read("Sketchbook/index.html")
     expect(html).not.toContain("layout-")
+    expect(html).not.toContain("item-head")
     expect(html).toContain('class="backlinks"')
   })
 })

@@ -47,7 +47,7 @@ const stream = isStream(folder.dir)
       <h1>{folder.name}</h1>
       <p>{s.notesCount(countNotes(folder))} · <a href={feed}>{s.rss}</a></p>
     </header>
-    {intro && <div class="prose" style="margin-bottom: 36px" set:html={layoutHtml(layout, intro.html)} />}
+    {intro && <div class="prose" style="margin-bottom: 36px" set:html={layout ? layoutHtml(folder.folderNote!, intro.html) : intro.html} />}
     {collection && folder.folderNote && <Collection note={folder.folderNote} kind={collection} />}
     {
       folder.folders.length > 0 && (

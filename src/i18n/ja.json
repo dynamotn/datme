@@ -202,5 +202,10 @@
   "emptyCollection": "まだノートがありません。",
   "statusWatching": "視聴中",
   "statusToWatch": "観たい",
-  "statusWatched": "視聴済み"
+  "statusWatched": "視聴済み",
+  "linkSlides": "スライド",
+  "linkVideo": "動画",
+  "linkPaper": "論文",
+  "nowUpdated": "最終更新 {date}",
+  "nowStale": "このページはしばらく更新されていないため、内容が古いかもしれません。"
 }

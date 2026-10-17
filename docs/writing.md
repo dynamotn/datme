@@ -43,8 +43,8 @@ that folder's page.
 | `created`, `updated` | Dates; without them datme uses the git history, then the file's times |
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
-| `layout` | `cv`, `gallery`, `timeline`, `links`, `projects`, `books` or `movies`: see [Page layouts](#page-layouts) |
-| `cover` | The picture that stands for the note on a projects, books or movies page (a vault file or a URL); the banner otherwise |
+| `layout` | A page made for what the note holds: `cv`, `gallery`, `projects`, `books`… see [Page layouts](#page-layouts) |
+| `cover` | The picture that stands for the note in a collection and beside its title (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |
 | `draft`, `publish_date`, `unlisted`, `password` | See [Privacy](privacy.md) |
 | `lang` | The language the note is written in, when it isn't the site's default one |
@@ -151,6 +151,8 @@ A note with a `layout` property gets a page made for what it holds. It is
 still an ordinary note in the vault, and the page leaves out backlinks and
 related notes.
 
+### Layouts of a note's own text
+
 - **`cv`**: a résumé. The title is your name, and `role`, `location`,
   `phone`, `email` and `links` (a map of label to URL), plus `cover` for a
   photo, make the head. The text before the first heading is the summary.
@@ -166,30 +168,54 @@ related notes.
   avatar and `description` the line under the title. Every list whose
   items each start with a link becomes a column of buttons; the words after
   a link describe it.
-- **`projects`**: a card for each note of the collection, with its `cover`,
-  `description`, the years from `start` to `end`, `role`, `stack` (or
-  `tech`), and links from `repo`, `url`, `demo` and `links`.
+- **`uses`**: what you work with. Every list whose items each start with a
+  name in bold (`- **Vim** — my editor`) or a link becomes a grid of cards.
+- **`now`**: what you are doing now. The page says when it was last
+  updated, and warns readers once that is more than three months ago.
+- **`faq`**: each `##` heading is a question that opens on its answer.
+- **`quotes`**: quotes (`>`) become a wall of cards. A last line starting
+  with a dash (`— Ada Lovelace`) is who said it.
+
+### Collections
+
+A collection lists other notes:
+
+- **`projects`**: a card for each, with its `cover`, `description`, the
+  years from `start` to `end`, `role`, `stack` (or `tech`), and links from
+  `repo`, `url`, `demo` and `links`.
 - **`books`**: a shelf of covers, with `author`, `year` and a `rating` out
   of five.
 - **`movies`**: a shelf of posters, with `director`, `released` (or `year`)
   and a `rating`.
-
-Projects, books and movies list the notes in the layout note's folder, or
-the folders and `#tags` given in `from`. They are grouped by `status`:
-projects go in progress, planned, paused, done, archived; books go reading,
-to read, read, abandoned; movies go watching, to watch, watched, abandoned.
-Usual spellings of each status count (`ongoing`, `completed`,
-`want-to-read`, `dnf`, `watchlist`, `seen`, …). Any other status gets its own group
-after these, and notes without one come last.
+- **`talks`**: a row for each talk, at its `date`, with its `event` (or
+  `venue`) and links to its `slides`, `video` and `paper`, grouped by year.
+- **`recipes`**: a card for each, with its `cover`, `time` and `servings`,
+  grouped by `category`.
+- **`places`**: a map of the places with a `location`, over a card for each,
+  grouped by `country`.
+- **`shelf`**: a shelf of anything else: games, records, podcasts. Name its
+  statuses and the properties to show under each title:
 
 ```markdown
 ---
-layout: books
-from: "#book"
+layout: shelf
+from: "#game"
+statuses:
+  playing: { en-US: Playing, vi-VN: Đang chơi }
+  backlog: Backlog
+fields: [platform, year]
 ---
-
-What I have been reading.
 ```
+
+A collection lists the notes in its note's folder, or the folders and
+`#tags` given in `from`. Projects, books and movies are grouped by
+`status`: projects go in progress, planned, paused, done, archived; books
+go reading, to read, read, abandoned; movies go watching, to watch,
+watched, abandoned. Usual spellings of each status count (`ongoing`,
+`completed`, `want-to-read`, `dnf`, `watchlist`, `seen`, …). Any other
+status gets its own group after these, and notes without one come last.
+`group` picks another property to group by, `year`, or `none`, and
+`fields` the properties shown under each title.
 
 ```markdown
 ---
@@ -200,6 +226,18 @@ rating: 4
 cover: deep-work.jpg
 ---
 ```
+
+When a collection's note embeds a base (`![[Reading.base]]`, a view of one,
+or a ```` ```base ```` block), it lists what the base finds instead, in the
+base's order and under its `groupBy` groups, and the base's own table is
+left out. In a `gallery`, a base shows the covers of the notes it finds; in
+a `timeline`, those notes at their dates.
+
+A note listed by a collection shows its `cover` beside its title, with what
+it is (author, years, date and event…), its status, rating and links. A
+recipe's page puts its ingredients (a section named *Ingredients* or
+*Nguyên liệu*) beside its steps, each one to tick off. Any note with a
+`cover` gets the same head.
 
 A folder note with a `layout` lays out its folder's page as well:
 `Projects/Projects.md` with `layout: projects` turns `/Projects` into the
