@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `appearance.folders` gives a folder its own style, subfolders included,
+  for example `Writing: classic` on a notebook site.
 - Notes can take a page layout with `layout`. `cv` makes a printable résumé
   from the note, `gallery` turns its pictures into a grid, `timeline` puts
   its sections on a line down the page, `links` makes a link-in-bio page of
