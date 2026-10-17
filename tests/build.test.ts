@@ -46,6 +46,7 @@ describe("static build", () => {
     expect(note).toContain('action="https://buttondown.com/api/emails/embed-subscribe/test-garden"')
     expect(note).toContain("Nhận note mới qua email")
     expect(note).not.toContain('name="tag"')
+    expect(read("03_Atomic/Zettelkasten/index.html")).not.toContain("garden-dates")
     expect(form("06_Reference/index.html")).toContain('<input type="hidden" name="tag" value="folder:06_Reference">')
     expect(form("en-US/tags/theme/pkm/index.html")).toContain('<input type="hidden" name="tag" value="tag:theme/pkm">')
     expect(form("en-US/tags/theme/pkm/index.html")).toContain("New notes in #theme/pkm by email")
@@ -500,7 +501,7 @@ describe("static build", () => {
     expect(trail).toContain("4 bước")
     expect(trail).not.toContain("<dt>trail")
     // A stage set by property is a chip, not a link to its folder, and not a property.
-    expect(trail).toMatch(/<span class="chip stage">\s*⚛️ Nguyên tử\s*<\/span>/)
+    expect(trail).toMatch(/<span class="chip stage garden-stage">\s*⚛️ Nguyên tử\s*<\/span>/)
     expect(trail).not.toContain("<dt>stage")
     const stop = read("06_Reference/Niklas-Luhmann/index.html")
     expect(stop).toMatch(/<aside class="trail-bar" data-trail="\/05_Structure\/First-walk" aria-label="Lối dạo: First walk" hidden>/)

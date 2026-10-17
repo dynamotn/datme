@@ -1,6 +1,6 @@
 ---
 import type { Note } from "~/lib/vault"
-import { site } from "~/site.config"
+import { site, type Style } from "~/site.config"
 import { t, formatDate, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "./Icon.astro"
@@ -11,8 +11,10 @@ import { typeInfo } from "~/lib/types"
 interface Props {
   note: Note
   words: number
+  look: Style
 }
-const { note, words } = Astro.props
+const { note, words, look } = Astro.props
+const garden = look === "garden"
 const s = t(note.lang)
 const tagUrl = (tag: string) => slugToUrl(langPrefix(note.lang) + "tags/" + tag)
 const minutes = Math.max(1, Math.round(words / 220))
@@ -24,11 +26,11 @@ const props = noteProperties(note)
   {
     note.stage &&
       (note.stage === stageFolder ? (
-        <a class="chip stage" href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
+        <a class:list={["chip stage", { "garden-stage": garden }]} href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
           {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
         </a>
       ) : (
-        <span class="chip stage">
+        <span class:list={["chip stage", { "garden-stage": garden }]}>
           {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
         </span>
       ))
@@ -44,6 +46,28 @@ const props = noteProperties(note)
 <slot />
 <div class="note-meta">
   {
+    garden ? (
+      (note.created || note.updated) && (
+        <p class="garden-dates">
+          {note.created && (
+            <>
+              {s.planted} <time datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>
+            </>
+          )}
+          {note.created && note.updated && " · "}
+          {note.updated && (
+            <>
+              {s.lastTended}{" "}
+              <time datetime={note.updated.toISOString()} data-tended title={formatDate(note.updated, note.lang)}>
+                {formatDate(note.updated, note.lang)}
+              </time>
+            </>
+          )}
+        </p>
+      )
+    ) : (
+      <>
+  {
     note.created && (
       <span title={s.created}>
         <Icon name="calendar" />
@@ -57,6 +81,9 @@ const props = noteProperties(note)
         <Icon name="edit" />
         <time class="dt-updated" datetime={note.updated.toISOString()}>{formatDate(note.updated, note.lang)}</time>
       </span>
+    )
+  }
+      </>
     )
   }
   {

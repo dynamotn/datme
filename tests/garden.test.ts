@@ -86,4 +86,12 @@ describe("garden style", () => {
     expect(row).toContain("data-tended")
     expect(row).not.toContain('data-size="large"')
   })
+
+  test("note pages say when a note was planted and last tended, and offer paths", () => {
+    const html = read("Evergreen/Gardens/index.html")
+    expect(html).toMatch(/Planted <time datetime="[^"]+">/)
+    expect(html).toMatch(/Last tended <time datetime="[^"]+" data-tended/)
+    expect(read("Seeds/Idea/index.html")).toContain("Paths from here")
+    expect(read("Seeds/Idea/index.html")).toMatch(/class="backlink-stage"[^>]*>🌳/)
+  })
 })
