@@ -1,9 +1,10 @@
 import { afterAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { loadUserPlugins, pluginFile } from "../src/lib/user-plugins"
 
-const base = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-d"
+const base = os.tmpdir()
 fs.mkdirSync(base, { recursive: true })
 const tmp = fs.mkdtempSync(path.join(base, "plugins-"))
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }))

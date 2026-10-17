@@ -1,9 +1,10 @@
 import { afterAll, afterEach, describe, expect, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { fetchNeighbours, findInGarden } from "../src/lib/neighbours"
 
-const base = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-d"
+const base = os.tmpdir()
 fs.mkdirSync(base, { recursive: true })
 const tmp = fs.mkdtempSync(path.join(base, "neighbours-"))
 const realFetch = globalThis.fetch

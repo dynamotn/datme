@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { site } from "../src/site.config"
 import { getVault } from "../src/lib/vault"
@@ -42,7 +43,7 @@ describe("findMentions", () => {
 })
 
 describe("suggestionsFor a private draft", () => {
-  const base = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-d"
+  const base = os.tmpdir()
   let dir = ""
   const vaultBefore = site.vault
   beforeAll(() => {

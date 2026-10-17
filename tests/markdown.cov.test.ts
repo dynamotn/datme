@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { site } from "../src/site.config"
 import { getVault } from "../src/lib/vault"
 import { renderMarkdown, renderNote, userHead } from "../src/lib/markdown"
 import * as renderCache from "../src/lib/render-cache"
 
-const TMP = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-d/forkC"
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "datme-markdown-cov-"))
 const FIXTURE = path.resolve(import.meta.dir, "fixtures/vault")
 
 describe("markdown edges on the fixture vault", () => {

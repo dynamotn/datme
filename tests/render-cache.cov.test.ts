@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 
@@ -9,7 +10,7 @@ import { pathToFileURL } from "node:url"
  * DATME_CACHE pointing at a temporary directory. The copy every other module
  * imports is left alone, so no other test caches into it and mocks of it hold.
  */
-const TMP = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-d/forkA"
+const TMP = os.tmpdir()
 const MODULE = path.resolve(import.meta.dir, "../src/lib/render-cache.ts")
 type CacheModule = typeof import("../src/lib/render-cache")
 

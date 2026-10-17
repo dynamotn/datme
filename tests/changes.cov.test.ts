@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { site } from "../src/site.config"
 import { getVault, type Note } from "../src/lib/vault"
@@ -7,7 +8,7 @@ import { gardenChanges, hasChanges, noteChanges, TRIVIAL_WORDS, wordsChanged } f
 import { hasHistory, historyUrl, noteVersions } from "../src/lib/history"
 
 // A small vault of its own, in git, so the history is known exactly.
-const tmpRoot = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-c"
+const tmpRoot = os.tmpdir()
 fs.mkdirSync(tmpRoot, { recursive: true })
 const tmp = fs.mkdtempSync(path.join(tmpRoot, "changes-"))
 const vault = path.join(tmp, "vault")

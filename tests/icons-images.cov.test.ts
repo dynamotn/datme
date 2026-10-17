@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import sharp from "sharp"
 import { site } from "../src/site.config"
 import { iconHtml, iconizeIcons, lucideSvg } from "../src/lib/icons"
 import { assetPath, imageSize, placeholder, renderVariant, stamp, variantPath, variantWidths } from "../src/lib/images"
 
-const tmpRoot = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-c"
+const tmpRoot = os.tmpdir()
 fs.mkdirSync(tmpRoot, { recursive: true })
 const tmp = fs.mkdtempSync(path.join(tmpRoot, "icons-images-"))
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }))

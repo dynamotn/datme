@@ -1,11 +1,12 @@
 import { afterAll, beforeAll, describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { loadConfig, site } from "../src/site.config"
 import { getVault, markdownFiles, type Vault } from "../src/lib/vault"
 
 /** Scratch vaults live outside the repository; every one is rebuilt from scratch per run. */
-const ROOT = "/Users/dynamo/.claude/jobs/6fc80508/tmp/cov-d/forkB/vaults"
+const ROOT = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "datme-vault-cov-")), "vaults")
 
 const saved = { ...site }
 const savedNeighbours = process.env.DATME_NEIGHBOURS
