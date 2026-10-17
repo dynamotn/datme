@@ -44,6 +44,8 @@ that folder's page.
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
 | `layout` | A page made for what the note holds: `cv`, `gallery`, `projects`, `books`… see [Page layouts](#page-layouts) |
+| `style` | The look of this page: `notebook`, `classic`, `garden`, `resume` or `darkroom`. See [Page layouts](#page-layouts) |
+| `chrome` | The frame around the page: `full`, or `minimal` for a thin bar with no menu, search or sidebars |
 | `cover` | The picture that stands for the note in a collection and beside its title (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |
 | `draft`, `publish_date`, `unlisted`, `password` | See [Privacy](privacy.md) |
@@ -172,6 +174,32 @@ never show up on them.
 A note with a `layout` property gets a page made for what it holds. It is
 still an ordinary note in the vault, and the page leaves out backlinks and
 related notes.
+
+Each layout also picks a look and a frame for its page:
+
+| Layout | Style | Frame |
+| --- | --- | --- |
+| `cv` | `resume` | `minimal` |
+| `links` | `classic` | `minimal` |
+| `gallery` | `darkroom` | `minimal` |
+| `faq` | the site's | `full` |
+| all others | the site's | `full`, without the table of contents, the graph and stacked pages |
+
+The `resume` style is an A4 sheet on a grey desk, in two columns, and prints
+as a clean white page even in dark mode. The `darkroom` style is a near-black
+gallery wall with pictures in rows of equal height; it starts dark unless the
+reader chose a theme, plain captions always show and cover captions appear on
+hover or focus. The `minimal` frame keeps a thin bar with the site's name and
+a light/dark toggle, and a one-line footer. Other layouts keep the header but
+lose the right rail (table of contents and graph) and stacked pages.
+
+To override, set `style` and `chrome` on the note: `style: notebook` and
+`chrome: full` give a `cv` the usual site look. Without them the order is the
+note's `style`, then its layout's, then `appearance.folders` (the longest
+matching folder), then `appearance.style`; the frame is the note's `chrome`,
+then its layout's, then `full`. An unknown value is reported as a warning at
+build time and ignored. A folder note with a layout lends its style and frame
+to the folder page.
 
 ### Layouts of a note's own text
 

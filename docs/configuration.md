@@ -79,6 +79,7 @@ archiveDeadLinks: true        # dead links found by `check --external` point to 
 appearance:
   style: notebook             # notebook: index cards on dotted paper; classic: a quiet serif blog;
                               # garden: notes as plants in a bed, sized by how grown they are
+                              # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
     Garden: garden
@@ -135,6 +136,10 @@ seedlings from evergreens. Readers filter the bed by stage (by top folder when
 there are no stages) and by tag. Folder and tag pages are beds too, and a note
 says when it was planted and last tended. `theme.accent` and `theme.fonts`
 override its moss green, Fraunces headings and Literata text.
+
+The `resume` and `darkroom` styles are made for a single page rather than a
+whole site: a note picks them with `style:` or through its `layout` (`cv`,
+`gallery`), see [Page layouts](writing.md#page-layouts).
 
 ## Search, images and maps
 
