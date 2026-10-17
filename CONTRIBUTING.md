@@ -33,3 +33,26 @@ through *stages*. Pick the words a gardener would use in your language.
 
 A new key goes into every file in the same change, in English if you cannot
 translate it; the test keeps them in step.
+
+## Cutting a release
+
+Releases start from the default branch, with the changes under
+`[Unreleased]` in `CHANGELOG.md`:
+
+```bash
+scripts/release.sh --dry-run --version 3.0.0   # every check, nothing written
+scripts/release.sh --version 3.0.0
+```
+
+The script runs the checks above, stamps `package.json`, turns
+`[Unreleased]` into the release, commits `chore: release v3.0.0`, tags it and
+pushes the branch and the tag to `origin` (GitLab) and `gh` (GitHub). The tag
+does the rest: GitLab makes its release, and GitHub makes its release and
+publishes the package to npm by trusted publishing, with no npm token. A
+pre-release such as `3.0.0-rc.2` goes to npm's `next` dist-tag. Without
+`--version`, the version comes from the Conventional Commits since the last
+tag. See `scripts/release.sh --help` for the other options.
+
+The script is written on [dybatpho](https://github.com/dynamotn/dybatpho),
+read from the machine's checkout in `~/Working/personal/tools/dybatpho`; set
+`DYBATPHO_DIR` to use another one.
