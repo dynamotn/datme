@@ -81,5 +81,8 @@ jobs:
       # npm trusted publishing: the job's OIDC token (id-token: write) stands in for a
       # stored npm token, and npm adds the provenance attestation on its own.
       - name: Check npm can publish with OIDC (11.5.1 or later)
-        run: node -e 'const [a, b, c] = process.argv[1].split(".").map(Number); process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1)' "$(npm --version)"
+        run: |
+          version="$(npm --version)"
+          lowest="$(printf '%s\n' 11.5.1 "$version" | sort -V | head -n 1)"
+          [[ "$lowest" == 11.5.1 ]] || { echo "npm $version cannot publish with OIDC; 11.5.1 or later can" >&2; exit 1; }
       - run: npm publish ./*.tgz --access public --tag ${{ steps.kind.outputs.npm }}
