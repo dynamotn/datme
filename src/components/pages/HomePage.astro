@@ -54,6 +54,13 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
 ---
 
 <Base lang={lang} title={site.title[lang]} description={r?.description ?? site.tagline[lang]} image={home?.banner} alternates={alternates} jsonLd={websiteLd(lang)}>
+  <aside class="continue-reading" data-continue hidden>
+    <a class="internal" href="#">
+      <span class="continue-label">📖 {s.continueReading}</span>
+      <strong data-continue-title></strong>
+      <span class="continue-depth" data-continue-depth aria-hidden="true"></span>
+    </a>
+  </aside>
   {
     look === "notebook" ? (
       <>

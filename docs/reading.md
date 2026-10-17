@@ -25,6 +25,11 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - **Trails:** a [trail](writing.md#trails) is a guided walk the author laid
   out. Once started, every stop shows where you are on it; `n` and `p` go to
   the next and previous stop.
+- **Footprints:** the browser remembers which notes the reader opened and
+  how far they read the last one. The home page offers to continue reading
+  there, and the graph can colour the notes visited, the rest staying in the
+  fog. Nothing leaves the browser; "Forget where I've been" in the "Aa" menu
+  clears it.
 - **Walks:** "🥾 Walk from here to…" under a note's title asks for another
   note and finds the shortest chain of links between them, followed either
   way. The walk then guides like a trail, `n` and `p` included, and its bar

@@ -2679,6 +2679,43 @@ li > .flashcard {
   font: 13.5px var(--font-ui);
   color: var(--ink);
 }
+.prefs-forget {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted);
+  font: 13px var(--font-ui);
+  text-align: start;
+  cursor: pointer;
+}
+.continue-reading {
+  max-width: 40rem;
+  margin: 0 0 20px;
+}
+.continue-reading[hidden] {
+  display: none;
+}
+.continue-reading a {
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+.continue-label {
+  color: var(--muted);
+  font: 600 12.5px var(--font-ui);
+}
+.continue-depth {
+  height: 3px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) var(--depth, 0%), var(--surface-2) var(--depth, 0%));
+}
 .prefs-panel[hidden] {
   display: none;
 }

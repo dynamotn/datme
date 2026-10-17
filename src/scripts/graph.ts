@@ -3,6 +3,7 @@ import { navigate } from "astro:transitions/client"
 import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
 import { groupColors } from "./graph-colors"
 import { freshness } from "./outdated"
+import { hasVisited, readFootprints } from "./footprints"
 import { neighbourhood, parseDepth, type Depth } from "./graph-hops"
 import { bounds, project, tilt, type Camera } from "./graph-3d"
 
@@ -77,6 +78,8 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
 
   const colorBy = canvas.dataset.colorBy
   const freshLabels = JSON.parse(canvas.dataset.freshLabels ?? "{}") as Record<string, string>
+  // Footprints: notes the reader opened stand out, the rest stay in the fog.
+  const footprints = colorBy === "visited" ? readFootprints() : undefined
   const groupOf = (n: (typeof data.notes)[number]) =>
     colorBy === "type"
       ? (n.y[0] ?? "")
@@ -86,7 +89,9 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
           ? (n.st ?? "")
           : colorBy === "fresh" && n.m != null
             ? (freshLabels[freshness(n.m)] ?? "")
-            : ""
+            : footprints && hasVisited(footprints, n.u)
+              ? (canvas.dataset.visitedLabel ?? "")
+              : ""
   const all = data.notes.map(
     (n, i) =>
       ({
@@ -455,6 +460,7 @@ async function drawGlobal(dialog: HTMLDialogElement) {
   const color = dialog.querySelector<HTMLSelectElement>("[data-graph-color]")
   canvas.dataset.colorBy = color?.value ?? ""
   canvas.dataset.freshLabels = color?.dataset.freshLabels ?? "{}"
+  canvas.dataset.visitedLabel = color?.dataset.visitedLabel ?? ""
   const space = (recall(SPACE_KEY) ?? dialog.dataset.view) === "3d"
   dialog.querySelector("[data-graph-3d]")?.setAttribute("aria-pressed", String(space))
   const stop = await mountGraph(canvas, "global", readFilters(dialog), { space })

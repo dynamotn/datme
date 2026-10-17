@@ -631,6 +631,15 @@ describe("static build", () => {
     expect(read("index.html")).not.toContain("data-walk-open")
   })
 
+  test("footprints: a continue-reading card on the home page, a graph colour and a way to forget them", () => {
+    const home = read("index.html")
+    expect(home).toMatch(/<aside class="continue-reading" data-continue hidden>[\s\S]*?📖 Đọc tiếp/)
+    expect(home).toContain('<option value="visited">Tô màu: nơi đã ghé</option>')
+    expect(home).toContain('data-visited-label="Đã ghé"')
+    expect(home).toContain('<button type="button" class="prefs-forget" data-forget-footprints data-done="Đã quên">Quên những nơi tôi đã ghé</button>')
+    expect(read("03_Atomic/Zettelkasten/index.html")).not.toContain("data-continue")
+  })
+
   test("llms-full.txt holds every public note in full, each with its source", () => {
     const full = read("llms-full.txt")
     expect(full).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")

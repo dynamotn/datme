@@ -248,6 +248,7 @@ const pluginHead = await userHead()
           </div>
           <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
           <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
+          <button type="button" class="prefs-forget" data-forget-footprints data-done={s.forgotten}>{s.forgetFootprints}</button>
         </div>
       </div>
       <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
@@ -365,12 +366,14 @@ const pluginHead = await userHead()
           data-graph-color
           aria-label={s.graphColorBy}
           data-fresh-labels={JSON.stringify({ month: s.freshMonth, year: s.freshYear, older: s.freshOlder })}
+          data-visited-label={s.visitedLabel}
         >
           <option value="">{s.graphColorBy}: {s.graphColorNone}</option>
           <option value="folder">{s.graphColorBy}: {s.folder}</option>
           <option value="type">{s.graphColorBy}: {s.graphColorType}</option>
           {Object.keys(site.stages).length > 0 && <option value="stage">{s.graphColorBy}: {s.graphColorStage}</option>}
           <option value="fresh">{s.graphColorBy}: {s.graphColorFresh}</option>
+          <option value="visited">{s.graphColorBy}: {s.graphColorVisited}</option>
         </select>
         <button class="graph-space" type="button" data-graph-3d aria-pressed="false" title={s.graph3d}>3D</button>
         <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>
