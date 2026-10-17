@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Branch from `main` (`58eadf8` or later). Do not edit `src/lib/note-layouts.ts`, `src/components/Collection.astro`, `CvHead.astro`, `LinksHead.astro` (they do not exist on `main`; they belong to the layouts branch). Keep edits to `NotePage.astro`, `FolderPage.astro`, `vault.ts`, `global.css`, `print.css` small: they are shared hot spots with that branch.
+- Branch from `main` at `cdcc4a9` or later (that commit moved UI strings to `src/i18n/<lang>.json` and added `src/scripts/garden-practice.ts`, an unrelated flashcard feature). Do not edit `src/lib/note-layouts.ts`, `src/components/Collection.astro`, `CvHead.astro`, `LinksHead.astro` (they do not exist on `main`; they belong to the layouts branch). Keep edits to `NotePage.astro`, `FolderPage.astro`, `vault.ts`, `global.css`, `print.css` small: they are shared hot spots with that branch.
 - Every rule in `src/styles/garden.css` is scoped to `[data-look="garden"]`. `notebook` and `classic` rendering must not change, except the folder-page change in Task 3.
 - Garden CSS uses the existing token names (`--bg`, `--surface`, `--ink`, `--ink-2`, `--muted`, `--line`, `--accent`, `--accent-2`, `--accent-soft`, `--font-ui`, `--font-read`, …) so `themeCss()` accent and font overrides keep winning.
 - Pages work without JavaScript: every tile shows, filter controls stay hidden.
@@ -240,15 +240,15 @@ Also: `gardenChips(listed("en-US"), "en-US", {})` returns only `kind: "folder"` 
 ### Task 5: Garden client script: filters, cap and relative dates
 
 **Files:**
-- Create: `src/scripts/garden.ts`
-- Create: `tests/garden-script.test.ts`
-- Modify: `src/scripts/app.ts` (call `setupGarden()` in the `astro:page-load` handler, ~line 298)
+- Create: `src/scripts/garden-bed.ts`
+- Create: `tests/garden-bed.test.ts`
+- Modify: `src/scripts/app.ts` (call `setupGardenBed()` in the `astro:page-load` handler, ~line 298)
 
 **Interfaces:**
 - Produces:
   - `export function relativeTended(since: Date, lang: string, now = new Date()): string | undefined` — `Intl.RelativeTimeFormat(lang, { numeric: "auto" })` in days (hours under a day); `undefined` when older than 30 days or in the future.
   - `export function tileMatches(tile: { stage: string; folder: string; tags: string[] }, filter: { stage?: string; folder?: string; tag?: string }): boolean`
-  - `export function setupGarden(): void` — for each `[data-garden]` root:
+  - `export function setupGardenBed(): void` — for each `[data-garden]` root:
     - un-hide `[data-garden-filters]`;
     - chip `<button data-garden-chip data-kind data-value aria-pressed>`: one active at a time, "all" resets;
     - `<select data-garden-tag>` filters by tag;
@@ -278,8 +278,8 @@ test("a tile matches every active filter", () => {
 })
 ```
 
-- [ ] **Step 2: Run** `bun test tests/garden-script.test.ts` — FAIL.
-- [ ] **Step 3: Implement** to the interface; wire `setupGarden()` into `app.ts`.
+- [ ] **Step 2: Run** `bun test tests/garden-bed.test.ts` — FAIL.
+- [ ] **Step 3: Implement** to the interface; wire `setupGardenBed()` into `app.ts`.
 - [ ] **Step 4: Run** — PASS.
 - [ ] **Step 5: Commit** `feat(garden): filter the garden and show recent tending`.
 
@@ -293,7 +293,7 @@ test("a tile matches every active filter", () => {
 - Modify: `src/layouts/Base.astro` (import `~/styles/garden.css` after `notebook.css`)
 - Modify: `src/components/pages/HomePage.astro` (`look === "garden" ? <GardenHome …/> : …` before the notebook branch)
 - Modify: `src/components/pages/FolderPage.astro`, `src/components/pages/TagPage.astro` (garden branch)
-- Modify: `src/lib/i18n.ts` (strings, `vi` and `en`)
+- Modify: `src/i18n/{en,vi,de,es,fr,ja,zh}.json` (strings; `tests/i18n.test.ts` requires every built-in language to have exactly the English keys)
 - Create: `tests/fixtures/garden/` (vault), `tests/garden.test.ts` (build)
 - Modify: `tests/fixtures/vault/datme.yaml` (`appearance.folders: { 01_Fleeting: garden }`), `tests/build.test.ts`
 - Modify: `tests/styles.test.ts`
@@ -304,7 +304,7 @@ test("a tile matches every active filter", () => {
   - `GardenTile.astro` props `{ note: Note; variant?: "recent" | "path" }` → `<article class="garden-tile" data-size={TileSize} data-stage={note.stage ?? ""} data-folder={top-level segment} data-tags={tags without type prefix, space-separated}>`. With `variant` the class is `garden-tile is-recent` / `garden-tile is-path`, so an exact `class="garden-tile"` matches bed tiles only; `recent` tiles are always `small` plus the date. Sizes: `small` = stage icon + title link; `medium` adds `<time datetime=… data-tended title=…>{formatDate(updated)}</time>` after `s.tended`; `large` also adds `<p class="garden-tile-desc">` (description) and up to 3 tag chips. No banner, no reading time.
   - `GardenBed.astro` props `{ notes: Note[]; lang: Lang; cap?: number }` → `<div data-garden data-cap={cap}>`, `<div class="garden-filters" data-garden-filters hidden>` (chips: "all" + `gardenChips`; `<select data-garden-tag>` of `topTags`), `<div class="garden-bed">` with `gardenOrder(notes)` tiles, `<button type="button" class="garden-more" data-garden-more hidden>{s.walkGarden}</button>` only when `cap` is set.
   - `GardenHome.astro` props `{ lang: Lang; intro: string; shelves: string[]; title: string }`, sections in this order: `section.garden-gate` (h1, tagline, intro prose) → `section.garden-recent` (h2 `s.recentlyTended`, horizontal row of `byRecent(notes).slice(0, RECENT_TILES)` as `GardenTile variant="recent"`; omitted when empty) → `section.garden-paths` (h2 `s.pathsIn`, MOCs as `GardenTile variant="path"`; omitted when none) → `GardenBed` (all listed notes except home and folder notes, `cap={HOME_TILES}`) → `section.garden-beds` (each shelf as `.prose`).
-  - New `i18n` keys (en / vi): `recentlyTended` "Recently tended" / "Mới được chăm"; `tended` "Tended" / "Chăm"; `planted` "Planted" / "Gieo"; `lastTended` "Last tended" / "Chăm lần cuối"; `pathsIn` "Paths in" / "Lối vào"; `pathsFromHere` "Paths from here" / "Lối đi từ đây"; `nearby` "Nearby" / "Lân cận"; `walkGarden` "Walk the whole garden" / "Đi hết khu vườn"; `allStages` "All" / "Tất cả".
+  - New string keys, added to all seven `src/i18n/*.json` files. English and Vietnamese are fixed below; translate the other five (de, es, fr, ja, zh) in the same tone as their neighbouring keys (en / vi): `recentlyTended` "Recently tended" / "Mới được chăm"; `tended` "Tended" / "Chăm"; `planted` "Planted" / "Gieo"; `lastTended` "Last tended" / "Chăm lần cuối"; `pathsIn` "Paths in" / "Lối vào"; `pathsFromHere` "Paths from here" / "Lối đi từ đây"; `nearby` "Nearby" / "Lân cận"; `walkGarden` "Walk the whole garden" / "Đi hết khu vườn"; `allStages` "All" / "Tất cả".
 
 - [ ] **Step 1: Create the garden fixture** `tests/fixtures/garden/`:
   - `datme.yaml`: `site.title: Garden test`, `languages: [en-US]`, `publish: all`, `stages: { Seeds: fleeting, Sources: literature, Evergreen: permanent }`, `appearance: { style: garden, classic: [Writing] }`.
@@ -342,7 +342,7 @@ In `tests/build.test.ts`: `01_Fleeting/Idea/index.html` and `01_Fleeting/index.h
 In `tests/styles.test.ts`: read `garden.css`, strip comments, and for every selector list before a `{` that is not an at-rule (`@import`, `@media`, `@font-face`, `@supports`, `@keyframes` and its frames), assert each comma-separated selector starts with `[data-look="garden"]`.
 
 - [ ] **Step 3: Run** `bun test tests/garden.test.ts tests/build.test.ts tests/styles.test.ts` — the new tests FAIL.
-- [ ] **Step 4: Implement** the components, page branches, strings and the structural `garden.css` (masonry via `columns`, `break-inside: avoid`; tile sizes by `[data-size]`; recently tended row `overflow-x: auto` with `scroll-snap`).
+- [ ] **Step 4: Implement** the components, page branches, strings (all seven languages) and the structural `garden.css` (masonry via `columns`, `break-inside: avoid`; tile sizes by `[data-size]`; recently tended row `overflow-x: auto` with `scroll-snap`).
 - [ ] **Step 5: Run** `bun test` (whole suite: the main fixture changed) — PASS. `bun run check` — clean.
 - [ ] **Step 6: CHANGELOG** `### Added`: the garden home, tiles and filters (one line each, reader-facing).
 - [ ] **Step 7: Commit** `feat(garden): add garden home, folder and tag pages`.
