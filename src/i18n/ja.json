@@ -232,5 +232,12 @@
   "linkVideo": "動画",
   "linkPaper": "論文",
   "nowUpdated": "最終更新 {date}",
-  "nowStale": "このページはしばらく更新されていないため、内容が古いかもしれません。"
+  "nowStale": "このページはしばらく更新されていないため、内容が古いかもしれません。",
+  "recentlyTended": "最近手入れしたノート",
+  "tended": "手入れ",
+  "lastTended": "最終手入れ",
+  "pathsIn": "入り口の小道",
+  "pathsFromHere": "ここからの小道",
+  "nearby": "近くのノート",
+  "walkGarden": "庭をすべて歩く"
 }

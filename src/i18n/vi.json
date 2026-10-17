@@ -232,5 +232,12 @@
   "linkVideo": "Video",
   "linkPaper": "Bài báo",
   "nowUpdated": "Cập nhật lần cuối {date}",
-  "nowStale": "Trang này đã khá lâu chưa được cập nhật, có thể không còn đúng."
+  "nowStale": "Trang này đã khá lâu chưa được cập nhật, có thể không còn đúng.",
+  "recentlyTended": "Mới được chăm",
+  "tended": "Chăm",
+  "lastTended": "Chăm lần cuối",
+  "pathsIn": "Lối vào",
+  "pathsFromHere": "Lối đi từ đây",
+  "nearby": "Lân cận",
+  "walkGarden": "Đi hết khu vườn"
 }

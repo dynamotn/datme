@@ -232,5 +232,12 @@
   "linkVideo": "Video",
   "linkPaper": "Paper",
   "nowUpdated": "Zuletzt aktualisiert am {date}",
-  "nowStale": "Diese Seite wurde länger nicht aktualisiert und ist vielleicht nicht mehr aktuell."
+  "nowStale": "Diese Seite wurde länger nicht aktualisiert und ist vielleicht nicht mehr aktuell.",
+  "recentlyTended": "Kürzlich gepflegt",
+  "tended": "Gepflegt",
+  "lastTended": "Zuletzt gepflegt",
+  "pathsIn": "Wege hinein",
+  "pathsFromHere": "Wege von hier",
+  "nearby": "In der Nähe",
+  "walkGarden": "Den ganzen Garten durchwandern"
 }

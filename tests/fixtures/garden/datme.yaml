@@ -1,0 +1,12 @@
+# A site in the garden style, with three stages and a classic folder.
+site:
+  title: Garden test
+languages: [en-US]
+publish: all
+stages:
+  Seeds: fleeting
+  Sources: literature
+  Evergreen: permanent
+appearance:
+  style: garden
+  classic: [Writing]

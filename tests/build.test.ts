@@ -294,6 +294,14 @@ describe("static build", () => {
     expect(read("06_Reference/index.html")).toContain('data-look="notebook"')
   })
 
+  test("a folder mapped to garden shows its notes and its page as a garden", () => {
+    expect(read("05_Structure/First-walk/index.html")).toContain('data-look="garden"')
+    const folder = read("05_Structure/index.html")
+    expect(folder).toContain('data-look="garden"')
+    expect(folder).toContain('class="garden-tile"')
+    expect(read("03_Atomic/Zettelkasten/index.html")).toContain('data-look="notebook"')
+  })
+
   test("the main menu lists the configured pages and skips missing notes", () => {
     const nav = read("index.html").match(/<nav class="main-nav"[\s\S]*?<\/nav>/)![0]
     expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/", "/06_Reference/Niklas-Luhmann", "/tags"])

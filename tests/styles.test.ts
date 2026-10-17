@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 
 const notebook = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/notebook.css"), "utf8")
+const garden = () => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/garden.css"), "utf8")
 
 /** Declarations of the first rule whose selector is exactly `selector`. */
 function rule(css: string, selector: string): string {
@@ -16,5 +17,16 @@ describe("notebook look", () => {
     const h2 = rule(notebook, '[data-look="notebook"] .prose h2')
     expect(h2).not.toMatch(/display:\s*inline/)
     expect(h2).toMatch(/width:\s*fit-content/)
+  })
+})
+
+describe("garden look", () => {
+  test("every rule is scoped to the garden look", () => {
+    const css = garden().replace(/\/\*[\s\S]*?\*\//g, "")
+    const selectors = [...css.matchAll(/([^{};]+)\{/g)]
+      .map((m) => m[1].trim())
+      .filter((s) => !s.startsWith("@") && !/^(from|to|\d+%)(\s*,\s*(from|to|\d+%))*$/.test(s))
+    expect(selectors.length).toBeGreaterThan(0)
+    for (const list of selectors) for (const one of list.split(",")) expect(one.trim()).toStartWith('[data-look="garden"]')
   })
 })

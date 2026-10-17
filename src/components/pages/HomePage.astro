@@ -11,6 +11,7 @@ import NoteCard from "../NoteCard.astro"
 import NoteRow from "../NoteRow.astro"
 import Icon from "../Icon.astro"
 import IndexCard from "../IndexCard.astro"
+import GardenHome from "../garden/GardenHome.astro"
 
 interface Props {
   lang: Lang
@@ -68,7 +69,9 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
     </a>
   </aside>
   {
-    look === "notebook" ? (
+    look === "garden" ? (
+      <GardenHome lang={lang} intro={intro} shelves={shelves} title={r?.h1 ?? site.title[lang]} />
+    ) : look === "notebook" ? (
       <>
         <section class="nb-hero">
           <article class="nb-hero-main">

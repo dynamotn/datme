@@ -14,6 +14,7 @@ import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
 import Icon from "../Icon.astro"
 import IndexCard from "../IndexCard.astro"
+import GardenBed from "../garden/GardenBed.astro"
 import Collection from "../Collection.astro"
 import { isCollection, layoutHtml } from "~/lib/note-layouts"
 
@@ -85,7 +86,9 @@ const stream = isStream(folder.dir)
       !collection &&
         !stream &&
         folder.notes.length > 0 &&
-        (look === "notebook" ? (
+        (look === "garden" ? (
+          <GardenBed notes={folder.notes} lang={lang} />
+        ) : look === "notebook" ? (
           <div class="card-wall">
             {byRecent(folder.notes).map((n) => (
               <IndexCard note={n} />

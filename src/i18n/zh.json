@@ -232,5 +232,12 @@
   "linkVideo": "视频",
   "linkPaper": "论文",
   "nowUpdated": "最后更新于 {date}",
-  "nowStale": "此页面已有一段时间未更新，内容可能已过时。"
+  "nowStale": "此页面已有一段时间未更新，内容可能已过时。",
+  "recentlyTended": "最近照料",
+  "tended": "照料",
+  "lastTended": "最近照料于",
+  "pathsIn": "入口小径",
+  "pathsFromHere": "从这里出发的小径",
+  "nearby": "附近",
+  "walkGarden": "漫游整个花园"
 }

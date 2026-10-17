@@ -232,5 +232,12 @@
   "linkVideo": "Vídeo",
   "linkPaper": "Artículo",
   "nowUpdated": "Actualizado por última vez el {date}",
-  "nowStale": "Esta página no se actualiza desde hace tiempo y puede estar desfasada."
+  "nowStale": "Esta página no se actualiza desde hace tiempo y puede estar desfasada.",
+  "recentlyTended": "Cuidadas hace poco",
+  "tended": "Cuidada",
+  "lastTended": "Último cuidado",
+  "pathsIn": "Caminos de entrada",
+  "pathsFromHere": "Caminos desde aquí",
+  "nearby": "Cerca",
+  "walkGarden": "Recorrer todo el jardín"
 }
