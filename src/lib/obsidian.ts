@@ -6,6 +6,7 @@ import { visit } from "unist-util-visit"
 import type { Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl } from "./slug"
+import { withBase } from "./base"
 import { embedExternal } from "./media"
 import { tabsHtml, columnsHtml } from "./layouts"
 import { mediaFragment, parseCues, sidecars, transcriptHtml } from "./transcripts"
@@ -106,7 +107,7 @@ export function anchorOf(fragment: string): string {
 }
 
 function assetUrl(rel: string): string {
-  return "/assets/" + rel.split("/").map(encodeURIComponent).join("/")
+  return withBase("/assets/" + rel.split("/").map(encodeURIComponent).join("/"))
 }
 
 /** The words of a link in plain text: its alias or target, unless it points at a private note. */

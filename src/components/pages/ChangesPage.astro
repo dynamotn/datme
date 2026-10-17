@@ -4,6 +4,7 @@ import { t, langPrefix, formatDate } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import { gardenChanges, hasChanges, weekOf, type GardenChange } from "~/lib/changes"
 import { changesPath } from "~/lib/feed"
+import { withBase } from "~/lib/base"
 import Base from "~/layouts/Base.astro"
 
 interface Props {
@@ -13,7 +14,7 @@ const { lang } = Astro.props
 const s = t(lang)
 const weeks = new Map<string, GardenChange[]>()
 for (const c of gardenChanges(lang)) weeks.set(weekOf(c.date), [...(weeks.get(weekOf(c.date)) ?? []), c])
-const feed = "/" + changesPath(lang, { kind: "site" })
+const feed = withBase("/" + changesPath(lang, { kind: "site" }))
 const alternates = Object.fromEntries(site.langs.filter(hasChanges).map((l) => [l, slugToUrl(langPrefix(l) + "changes")]))
 ---
 

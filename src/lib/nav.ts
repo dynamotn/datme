@@ -2,6 +2,7 @@ import { site, type Lang } from "../site.config"
 import { getVault } from "./vault"
 import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
+import { withBase } from "./base"
 import { hasMap, hasTimeline } from "./places"
 import { hasJournal } from "./journal"
 import { hasDecks } from "./decks"
@@ -36,7 +37,7 @@ export function navLinks(lang: Lang): NavLink[] {
     } else if (item.kind === "practice") {
       if (hasDecks(lang)) out.push({ label: t(lang).practice, url: slugToUrl(langPrefix(lang) + "practice") })
     }
-    else if (item.kind === "url") out.push({ label: item.label![lang], url: item.target! })
+    else if (item.kind === "url") out.push({ label: item.label![lang], url: withBase(item.target!) })
     else {
       const source = vault.resolveNote(item.target!, "")
       const note = source && vault.byKey[lang].get(source.key)

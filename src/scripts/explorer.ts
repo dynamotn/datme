@@ -1,4 +1,5 @@
 import { samePath } from "./data"
+import { withBase } from "./base"
 
 /**
  * Pages carry only part of the explorer (src/lib/explorer.ts): the top level
@@ -14,7 +15,7 @@ const trees = new Map<string, Promise<string>>()
 function fetchTree(lang: string): Promise<string> {
   let hit = trees.get(lang)
   if (!hit) {
-    const url = `/static/explorer.${lang}.html`
+    const url = withBase(`/static/explorer.${lang}.html`)
     hit = fetch(url).then((r) => {
       if (!r.ok) throw new Error(`${r.status} ${url}`)
       return r.text()

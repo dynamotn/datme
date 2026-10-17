@@ -1,3 +1,5 @@
+import { stripBase, withBase } from "./base"
+
 /**
  * Quartz-compatible slug of one path segment, so existing URLs keep working.
  * Composed Unicode (NFC), so a name macOS stored decomposed gets the same URL.
@@ -30,11 +32,16 @@ export function slugTag(tag: string): string {
     .join("/")
 }
 
-/** Turn a slug into an absolute URL path, encoding each segment. */
+/** Turn a slug into the URL path of its page, under the site's base, encoding each segment. */
 export function slugToUrl(slug: string): string {
-  if (slug === "" || slug === "index") return "/"
+  if (slug === "" || slug === "index") return withBase("/")
   const clean = slug.replace(/(^|\/)index$/, "")
-  return "/" + clean.split("/").map(encodeURIComponent).join("/")
+  return withBase("/" + clean.split("/").map(encodeURIComponent).join("/"))
+}
+
+/** The slug of a page from its URL path: the inverse of slugToUrl, for route params. */
+export function urlToSlug(url: string): string {
+  return stripBase(url).replace(/^\//, "").split("/").map(decodeURIComponent).join("/")
 }
 
 /** Human name of a vault folder: "06.01_Tools" -> "Tools". */

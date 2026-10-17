@@ -3,6 +3,7 @@ import { navigate } from "astro:transitions/client"
 import { loadIndex, currentLang, matchesFilter, readFilters, samePath, type IndexNote } from "./data"
 import { fold, esc, highlight, snippet } from "./text"
 import { blend, embedQuery, loadVectors, nearest, type Near } from "./semantic"
+import { base, withBase } from "./base"
 
 const engines = new Map<string, Promise<{ ms: MiniSearch<IndexNote & { id: number }>; notes: IndexNote[] }>>()
 
@@ -58,13 +59,18 @@ interface PagefindResult {
   meta: { title?: string }
 }
 interface Pagefind {
+  options(o: { baseUrl: string }): Promise<void>
   search(q: string | null, opts?: { filters?: Record<string, string> }): Promise<{ results: { data(): Promise<PagefindResult> }[] }>
 }
 let pagefind: Promise<Pagefind> | undefined
 
 /** Pagefind's own script, written next to the site by the build; only the parts a query needs load. */
 function loadPagefind(): Promise<Pagefind> {
-  pagefind ??= import(/* @vite-ignore */ `${location.origin}/pagefind/pagefind.js`) as Promise<Pagefind>
+  // Its results are paths from the root of the site: baseUrl puts them under the site's path.
+  pagefind ??= (import(/* @vite-ignore */ `${location.origin}${withBase("/pagefind/pagefind.js")}`) as Promise<Pagefind>).then(async (pf) => {
+    await pf.options({ baseUrl: base() })
+    return pf
+  })
   return pagefind
 }
 

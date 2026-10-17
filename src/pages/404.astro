@@ -2,6 +2,7 @@
 import Base from "~/layouts/Base.astro"
 import { site } from "~/site.config"
 import { t } from "~/lib/i18n"
+import { withBase } from "~/lib/base"
 
 const lang = site.defaultLang
 const s = t(lang)
@@ -14,6 +15,6 @@ const others = site.langs.slice(1)
     <h1 class="note-title">{s.notFound}</h1>
     <p class="empty">{s.notFoundLead}</p>
     {others.map((l) => <p class="empty">{t(l).notFound} — {t(l).notFoundLead}</p>)}
-    <p><a class="chip stage" href="/">{s.backHome}</a></p>
+    <p><a class="chip stage" href={withBase("/")}>{s.backHome}</a></p>
   </div>
 </Base>

@@ -13,6 +13,7 @@ import { THEME_COLOR } from "~/lib/pwa"
 import { startsDark, type Frame } from "~/lib/look"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
+import { absUrl, withBase } from "~/lib/base"
 import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
 import { navLinks } from "~/lib/nav"
@@ -79,8 +80,7 @@ const s = t(lang)
 const siteTitle = site.title[lang]
 const fullTitle = title === siteTitle ? title : `${title} · ${siteTitle}`
 const home = slugToUrl(langPrefix(lang) + "index")
-const abs = (p: string) => (site.url ? new URL(p, site.url + "/").href : p)
-const canonical = abs(canonicalUrl ?? Astro.url.pathname)
+const canonical = absUrl(canonicalUrl ?? Astro.url.pathname)
 const rss = slugToUrl(langPrefix(lang) + "index.xml")
 const year = new Date().getFullYear()
 // The sprout is decoration next to its name; the link says "datme".
@@ -111,7 +111,7 @@ const lookCss = LOOK_CSS[look]
     {description && <meta name="description" content={description} />}
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={withBase("/favicon.svg")} type="image/svg+xml" />
     <link rel="preconnect" href={MONO_FONT_ORIGIN} crossorigin />
     {/* The monospace face loads without holding up the first paint; code shows in a fallback until it arrives. */}
     <link rel="preload" as="style" href={MONO_FONT_CSS} />
@@ -131,21 +131,21 @@ const lookCss = LOOK_CSS[look]
     {
       site.offline && (
         <>
-          <link rel="manifest" href="/manifest.webmanifest" />
-          <link rel="apple-touch-icon" href="/icon-192.png" />
+          <link rel="manifest" href={withBase("/manifest.webmanifest")} />
+          <link rel="apple-touch-icon" href={withBase("/icon-192.png")} />
         </>
       )
     }
     <link rel="alternate" type="application/rss+xml" title={siteTitle} href={rss} />
     {feed && <link rel="alternate" type="application/rss+xml" title={fullTitle} href={feed} />}
     {mdAlternate && <link rel="alternate" type="text/markdown" href={mdAlternate} />}
-    {oembed && <link rel="alternate" type="application/json+oembed" href={abs(oembed)} title={title} />}
+    {oembed && <link rel="alternate" type="application/json+oembed" href={absUrl(oembed)} title={title} />}
     {
       site.langs.map(
         (l) =>
           alternates[l] &&
           (!translatedIn || translatedIn.includes(l)) && (
-            <link rel="alternate" hreflang={langMeta(l).html} href={abs(alternates[l]!)} />
+            <link rel="alternate" hreflang={langMeta(l).html} href={absUrl(alternates[l]!)} />
           ),
       )
     }
@@ -154,7 +154,7 @@ const lookCss = LOOK_CSS[look]
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     {description && <meta property="og:description" content={description} />}
-    {ogUrl && <meta property="og:image" content={abs(ogUrl)} />}
+    {ogUrl && <meta property="og:image" content={absUrl(ogUrl)} />}
     {ogUrl && !image && <meta property="og:image:width" content="1200" />}
     {ogUrl && !image && <meta property="og:image:height" content="630" />}
     <meta name="twitter:card" content={ogUrl ? "summary_large_image" : "summary"} />
@@ -224,7 +224,7 @@ const lookCss = LOOK_CSS[look]
   </head>
   <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage} data-highlight={s.highlight} data-highlights={s.highlights} data-highlight-note={s.highlightNote} data-highlight-save={s.highlightSave} data-highlight-remove={s.highlightRemove} data-highlight-lost={s.highlightLost} data-highlights-empty={s.highlightsEmpty} data-highlights-export={s.highlightsExport}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
-    {customCssFile() && <link rel="stylesheet" href="/custom.css" />}
+    {customCssFile() && <link rel="stylesheet" href={withBase("/custom.css")} />}
     <header class:list={["site-header", { "site-bar": minimal }]}>
       {
         !minimal && (
@@ -359,7 +359,7 @@ const lookCss = LOOK_CSS[look]
               <nav>
                 {
                   Object.entries(site.footerLinks).map(([label, href]) => (
-                    <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
+                    <a href={withBase(href)} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
                       {label}
                     </a>
                   ))

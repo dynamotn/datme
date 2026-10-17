@@ -8,6 +8,7 @@ mock.module("astro:transitions/client", () => ({ navigate: (url: string) => void
 
 // Pagefind's script, as the build writes it next to the site.
 const pagefindAsked: { q: string | null; filters?: Record<string, string> }[] = []
+const pagefindOptions: { baseUrl: string }[] = []
 const pagefindPages: Record<string, { url: string; excerpt: string; meta: { title?: string } }[]> = {
   slip: [
     { url: "/notes/a", excerpt: "the <mark>slip</mark> box", meta: { title: "Slip box" } },
@@ -15,6 +16,9 @@ const pagefindPages: Record<string, { url: string; excerpt: string; meta: { titl
   ],
 }
 mock.module("https://garden.example/pagefind/pagefind.js", () => ({
+  async options(o: { baseUrl: string }) {
+    pagefindOptions.push(o)
+  },
   async search(q: string | null, opts?: { filters?: Record<string, string> }) {
     pagefindAsked.push({ q, filters: opts?.filters })
     if (q === "slow") await tick(150)
@@ -343,6 +347,8 @@ describe("searching with Pagefind", () => {
     expect(list.querySelector(".r-snippet")!.innerHTML).toBe("the <mark>slip</mark> box")
     expect(list.querySelectorAll(".r-title")[1].textContent).toBe("📝/notes/untitled")
     expect(pagefindAsked.at(-1)).toEqual({ q: "slip", filters: {} })
+    // Its result URLs are paths from the site's root: the site's path goes in front.
+    expect(pagefindOptions).toEqual([{ baseUrl: "/" }])
   })
 
   test("filters go to Pagefind, even with nothing typed; nothing found says so", async () => {

@@ -24,6 +24,13 @@ site:
 languages: [en-US]            # the first is served at /, others under /<lang>/
 ```
 
+`site.url` may end in a path, such as `https://me.github.io/garden/` for a
+GitHub or GitLab project site: every page, link, feed, the sitemap, search and
+the offline app then live under `/garden/`. Paths you write yourself in `nav`
+and `footer`, like `/cv.pdf`, are taken from the root of the site and get the
+path in front too. ActivityPub needs a `site.url` at the root of its host,
+where other servers look for `/.well-known/`.
+
 ## What gets published
 
 See [Privacy](privacy.md) for the whole picture.

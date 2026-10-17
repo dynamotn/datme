@@ -1,7 +1,7 @@
 import { site, type Lang } from "../site.config"
 import { getVault, type Note, type FolderNode, type Doc, type Problem } from "./vault"
 import { langPrefix } from "./i18n"
-import { sluggify, slugToUrl } from "./slug"
+import { sluggify, slugToUrl, urlToSlug } from "./slug"
 import { docSlug } from "./obsidian"
 import { hasMap, hasTimeline } from "./places"
 import { hasJournal } from "./journal"
@@ -106,7 +106,7 @@ function claimRoutes(): { pages: Map<string, Page>; problems: Problem[] } {
     for (const doc of vault.docs.values()) claim(prefix + docSlug(doc.rel), { kind: doc.kind, lang, doc })
     for (const note of vault.notes[lang]) {
       if (note.formerUrl) {
-        claim(note.formerUrl.replace(/^\//, "").split("/").map(decodeURIComponent).join("/"), { kind: "alias", lang, note })
+        claim(urlToSlug(note.formerUrl), { kind: "alias", lang, note })
       }
       for (const alias of note.aliases) {
         claim(prefix + sluggify(note.dir ? `${note.dir}/${alias}` : alias), { kind: "alias", lang, note })

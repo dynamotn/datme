@@ -4,6 +4,7 @@ import { getVault, type Doc } from "~/lib/vault"
 import { renderMarkdown, renderNote } from "~/lib/markdown"
 import { bounds, canvasColor, edgePath, linkHref, type CanvasNode } from "~/lib/canvas"
 import { docUrl } from "~/lib/obsidian"
+import { assetPath } from "~/lib/images"
 import { t } from "~/lib/i18n"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
@@ -33,7 +34,7 @@ const nodes = await Promise.all(
       const note = source && vault.byKey[lang].get(source.key)
       if (note) return { n, note, excerpt: (await renderNote(note)).description }
       const asset = vault.resolveAsset(n.file, "")
-      if (asset && vault.assets.has(asset)) return { n, asset: "/assets/" + asset.split("/").map(encodeURIComponent).join("/") }
+      if (asset && vault.assets.has(asset)) return { n, asset: assetPath(asset) }
       // The name of an unpublished note is private too.
       return { n, missing: true }
     }

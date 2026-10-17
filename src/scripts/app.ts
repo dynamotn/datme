@@ -2,6 +2,7 @@ import { openSearch, setupSearch } from "./search"
 import { mountLocalGraph, openGraph, teardownGraphs } from "./graph"
 import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
+import { base, withBase } from "./base"
 import { setupLocked } from "./locked"
 import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
@@ -266,9 +267,12 @@ function setupLocalGraph() {
 export function setupOffline(): void {
   if (!("serviceWorker" in navigator) || !import.meta.env.PROD) return
   if (root.dataset.offline != null) {
-    window.addEventListener("load", () => void navigator.serviceWorker.register("/sw.js").catch(() => {}))
+    window.addEventListener("load", () => void navigator.serviceWorker.register(withBase("/sw.js")).catch(() => {}))
   } else {
-    void navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()))
+    // Only this site's: sites under other paths of the host keep theirs.
+    void navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => regs.filter((r) => new URL(r.scope).pathname === base()).forEach((r) => r.unregister()))
   }
 }
 setupOffline()

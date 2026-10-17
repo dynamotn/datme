@@ -7,6 +7,7 @@ import { defineConfig } from "astro/config"
 import sitemap from "@astrojs/sitemap"
 import vaultWatcher from "./src/lib/vault-watcher.ts"
 import { site } from "./src/site.config.ts"
+import { stripBase } from "./src/lib/base.ts"
 
 let outDir = ""
 /**
@@ -15,7 +16,7 @@ let outDir = ""
  */
 function indexable(page) {
   try {
-    const file = path.join(outDir, decodeURIComponent(new URL(page).pathname), "index.html")
+    const file = path.join(outDir, decodeURIComponent(stripBase(new URL(page).pathname)), "index.html")
     return !fs.readFileSync(file, "utf8").includes('<meta name="robots" content="noindex"')
   } catch {
     return true
@@ -24,6 +25,8 @@ function indexable(page) {
 
 export default defineConfig({
   site: site.url,
+  // A site.url with a path (project Pages, https://user.github.io/repo/) serves every page under it.
+  base: site.base,
   trailingSlash: "ignore",
   prefetch: { prefetchAll: false, defaultStrategy: "hover" },
   // Pages wait on async work (OG cards, image probes), so a few render at once.

@@ -2,6 +2,7 @@ import crypto from "node:crypto"
 import type { SiteConfig } from "../site.config"
 import { MONO_FONT_ORIGIN } from "./fonts"
 import { STATIC_HEADERS } from "./activitypub"
+import { withBase } from "./base"
 
 /** Hashes of the inline scripts of built pages, for a CSP without 'unsafe-inline'. */
 export function inlineScriptHashes(pages: string[]): string[] {
@@ -100,6 +101,8 @@ const INERT_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline';
 
 /** A _headers file (Netlify, Cloudflare Pages): safe defaults, and long caching for hashed assets. */
 export function headersFile(site: SiteConfig, scriptHashes: string[] = []): string {
+  // Paths of the site's own files, under the path it is served from.
+  const at = (path: string) => withBase(path, site.base)
   const all = [
     "X-Content-Type-Options: nosniff",
     "Referrer-Policy: strict-origin-when-cross-origin",
@@ -110,27 +113,27 @@ export function headersFile(site: SiteConfig, scriptHashes: string[] = []): stri
     ...(site.headers && site.headers.csp ? [`Content-Security-Policy: ${contentSecurityPolicy(site, scriptHashes)}`] : []),
   ]
   return [
-    "/*",
+    at("/*"),
     ...all.map((h) => `  ${h}`),
     "",
     "# Vault files a browser would run as a page (an SVG or HTML with a script) open inert.",
     "# Pages that show them as pictures or frames are not affected; PDFs and media are left alone.",
-    ...INERT_FILES.flatMap((ext) => [`/assets/*.${ext}`, `  Content-Security-Policy: ${INERT_CSP}`, ""]),
+    ...INERT_FILES.flatMap((ext) => [at(`/assets/*.${ext}`), `  Content-Security-Policy: ${INERT_CSP}`, ""]),
     "# File names under /_astro carry a hash of their content.",
-    "/_astro/*",
+    at("/_astro/*"),
     "  Cache-Control: public, max-age=31536000, immutable",
     "",
     ...(site.oembed && site.url
       ? [
           "# Note cards are made to be embedded by other sites; frame-ancestors overrides X-Frame-Options.",
-          "/*/embed",
+          at("/*/embed"),
           "  Content-Security-Policy: frame-ancestors *",
           "",
         ]
       : []),
     ...(site.activitypub && site.activitypub !== "bridgy" ? ["# The fediverse reads these as JSON from other servers.", ...STATIC_HEADERS] : []),
     "# The service worker must update as soon as the site does.",
-    "/sw.js",
+    at("/sw.js"),
     "  Cache-Control: no-cache",
     "",
   ].join("\n")

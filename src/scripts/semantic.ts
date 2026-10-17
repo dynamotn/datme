@@ -4,6 +4,8 @@
  * search.meaning a reader can also embed the query itself, in the browser,
  * with the same model. Nothing a reader types leaves the page.
  */
+import { withBase } from "./base"
+
 export interface Vectors {
   model: string
   dims: number
@@ -62,7 +64,7 @@ const loaded = new Map<string, Promise<{ url: string; v: Int8Array }[] | undefin
 export function loadVectors(lang: string): Promise<{ url: string; v: Int8Array }[] | undefined> {
   let hit = loaded.get(lang)
   if (!hit) {
-    hit = fetch(`/static/vectors.${lang}.json`)
+    hit = fetch(withBase(`/static/vectors.${lang}.json`))
       .then((r) => (r.ok ? (r.json() as Promise<Vectors>) : undefined))
       .then((data) => data?.notes.map((n) => ({ url: n.u, v: decode(n.v) })))
       .catch(() => undefined)

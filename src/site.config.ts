@@ -6,6 +6,7 @@ import { z } from "astro/zod"
 import { bundledThemes } from "shiki"
 import { folderDisplayName } from "./lib/slug"
 import { CONFIG_FILES } from "./lib/config-files"
+import { basePath, useSite } from "./lib/base"
 
 /** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
 export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
@@ -491,6 +492,11 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   if (c.activitypub && !url) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - activitypub: needs site.url, the address other servers reach`)
   }
+  // Other servers look the garden up at /.well-known/ of its host, which a site under a path does not own.
+  const base = basePath(url)
+  if (c.activitypub && base !== "/") {
+    throw new ConfigError(`Invalid datme config in ${vault}:\n  - activitypub: needs a site.url at the root of its host, not under ${base}`)
+  }
   if (c.search.meaning && !c.related.semantic) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - search.meaning: needs related.semantic, whose model it uses`)
   }
@@ -503,6 +509,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   return {
     vault,
     url,
+    /** The path the site is served under, "/" or "/garden/" for https://x.dev/garden/. */
+    base,
     title: localize(c.site.title, langs, name),
     tagline: localize(c.site.tagline, langs, ""),
     author: c.site.author ?? "",
@@ -611,3 +619,4 @@ export function vaultFromEnv(env: Record<string, string | undefined> = process.e
 }
 
 export const site: SiteConfig = loadConfig(vaultFromEnv())
+useSite(site)

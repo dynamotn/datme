@@ -2,12 +2,10 @@ import { site, type Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
+import { absUrl } from "./base"
 
 /** Structured data for search engines, as schema.org objects. */
 export type JsonLd = Record<string, unknown>
-
-/** Absolute URL of a site path; JSON-LD is only emitted when site.url is known. */
-const abs = (p: string) => new URL(p, site.url + "/").href
 
 const author = () => (site.author ? { "@type": "Person", name: site.author } : undefined)
 
@@ -20,7 +18,7 @@ export function websiteLd(lang: Lang): JsonLd[] {
       "@type": "WebSite",
       name: site.title[lang],
       description: site.tagline[lang] || undefined,
-      url: abs(slugToUrl(langPrefix(lang) + "index")),
+      url: absUrl(slugToUrl(langPrefix(lang) + "index")),
       inLanguage: lang,
       author: author(),
     },
@@ -37,15 +35,15 @@ interface NoteLdOpts {
 /** A note as an Article (BlogPosting for blog notes), with the folders above it as breadcrumbs. */
 export function noteLd(note: Note, { title, description, image, words }: NoteLdOpts): JsonLd[] {
   if (!site.url) return []
-  const url = abs(note.url)
+  const url = absUrl(note.url)
   const folders = getVault().folders[note.lang]
   const parts = note.dir ? note.dir.split("/") : []
   const crumbs = [
-    { name: t(note.lang).home, url: abs(slugToUrl(langPrefix(note.lang) + "index")) },
+    { name: t(note.lang).home, url: absUrl(slugToUrl(langPrefix(note.lang) + "index")) },
     ...parts
       .map((_, i) => folders.get(parts.slice(0, i + 1).join("/")))
       .filter((f) => f != null)
-      .map((f) => ({ name: f.name, url: abs(f.url) })),
+      .map((f) => ({ name: f.name, url: absUrl(f.url) })),
     { name: title, url },
   ]
   return [
@@ -57,7 +55,7 @@ export function noteLd(note: Note, { title, description, image, words }: NoteLdO
       description: description || undefined,
       url,
       mainEntityOfPage: url,
-      image: image ? abs(image) : undefined,
+      image: image ? absUrl(image) : undefined,
       datePublished: note.created?.toISOString(),
       dateModified: (note.updated ?? note.created)?.toISOString(),
       inLanguage: note.lang,
