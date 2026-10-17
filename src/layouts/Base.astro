@@ -6,6 +6,7 @@ import "~/styles/garden.css"
 import "~/styles/print.css"
 import { site, type Lang, type Style } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
+import { startsDark, type Frame } from "~/lib/look"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "~/components/Icon.astro"
@@ -37,6 +38,8 @@ interface Props {
   rail?: boolean
   /** Visual style of the page; defaults to the configured one. */
   look?: Style
+  /** Navigation around the page: all of it, all but the rail, or a thin bar of its own. */
+  frame?: Frame
   /** schema.org structured data describing the page. */
   jsonLd?: JsonLd[]
   /** URL of the RSS feed of this page's notes, next to the site's. */
@@ -58,6 +61,7 @@ const {
   canonicalUrl,
   rail = false,
   look = site.appearance.style,
+  frame = "full",
   jsonLd = [],
   feed,
   mdAlternate,
@@ -83,10 +87,13 @@ const datmeMark = datmeLogo
 const credit = s.poweredBy.split("{datme}")
 // Tags the vault's datme.config.mjs adds to every page.
 const pluginHead = await userHead()
+// A page that stands alone keeps only a bar with the site's name and the scheme toggle.
+const minimal = frame === "minimal"
+const withRail = rail && frame === "full"
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme}>
+<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme} data-scheme-default={startsDark(look) ? "dark" : undefined} data-chrome={frame}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -163,8 +170,11 @@ const pluginHead = await userHead()
             hidden = localStorage.getItem("sidebars") || ""
             doc.documentElement.classList.toggle("stack-mode", localStorage.getItem("stack") === "1")
           } catch {}
-          // A scheme set in datme.yaml comes on <html>; otherwise the system's.
-          theme ??= doc.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          // Same order as initialTheme (src/lib/theme-init.ts): the stored choice, the page's own
+          // default, the scheme set in datme.yaml (both on <html>), then the system's.
+          const { schemeDefault, theme: siteScheme } = doc.documentElement.dataset
+          theme = [theme, schemeDefault, siteScheme].find((v) => v === "light" || v === "dark")
+          theme ??= matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
           doc.documentElement.dataset.theme = theme
           doc.documentElement.classList.toggle("reader", reader === "1")
           doc.documentElement.classList.toggle("hide-left", hidden.includes("left"))
@@ -189,80 +199,91 @@ const pluginHead = await userHead()
   <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage} data-highlight={s.highlight} data-highlights={s.highlights} data-highlight-note={s.highlightNote} data-highlight-save={s.highlightSave} data-highlight-remove={s.highlightRemove} data-highlight-lost={s.highlightLost} data-highlights-empty={s.highlightsEmpty} data-highlights-export={s.highlightsExport}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
     {customCssFile() && <link rel="stylesheet" href="/custom.css" />}
-    <header class="site-header">
-      <button class="icon-btn menu-btn" type="button" data-nav-toggle aria-label={s.menu}>
-        <Icon name="menu" />
-      </button>
+    <header class:list={["site-header", { "site-bar": minimal }]}>
+      {
+        !minimal && (
+          <button class="icon-btn menu-btn" type="button" data-nav-toggle aria-label={s.menu}>
+            <Icon name="menu" />
+          </button>
+        )
+      }
       <a class="brand" href={home}>
         <span class="brand-mark">{site.logo}</span>
         <span class="brand-name">{siteTitle}</span>
       </a>
-      <nav class="main-nav" aria-label={s.menu}>
-        {nav.map((l) => <a href={l.url}>{l.label}</a>)}
-      </nav>
-      <div class="header-spacer"></div>
-      <button class="search-trigger" type="button" data-open-search aria-label={s.search}>
-        <Icon name="search" />
-        <span>{s.searchPlaceholder}</span>
-        <kbd>Ctrl K</kbd>
-      </button>
-      <div class="header-spacer hide-sm"></div>
+      {minimal && <div class="header-spacer"></div>}
       {
-        hasDecks(lang) && (
-          <a class="icon-btn due-badge" href={slugToUrl(langPrefix(lang) + "practice")} data-due-badge data-label={s.practiceDue} hidden>
-            🧠<span></span>
-          </a>
+        !minimal && (
+          <>
+            <nav class="main-nav" aria-label={s.menu}>
+              {nav.map((l) => <a href={l.url}>{l.label}</a>)}
+            </nav>
+            <div class="header-spacer"></div>
+            <button class="search-trigger" type="button" data-open-search aria-label={s.search}>
+              <Icon name="search" />
+              <span>{s.searchPlaceholder}</span>
+              <kbd>Ctrl K</kbd>
+            </button>
+            <div class="header-spacer hide-sm"></div>
+            {
+              hasDecks(lang) && (
+                <a class="icon-btn due-badge" href={slugToUrl(langPrefix(lang) + "practice")} data-due-badge data-label={s.practiceDue} hidden>
+                  🧠<span></span>
+                </a>
+              )
+            }
+            <button class="icon-btn" type="button" data-random aria-label={s.randomNote} title={`${s.randomNote} (R)`}>
+              <span aria-hidden="true">🎲</span>
+            </button>
+            <button class="icon-btn" type="button" data-open-graph aria-label={s.globalGraph} title={`${s.globalGraph} (Ctrl G)`}>
+              <Icon name="graph" />
+            </button>
+            <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="left" aria-label={s.toggleLeft} title={s.toggleLeft} aria-pressed="false">
+              <Icon name="panelLeft" />
+            </button>
+            {
+              withRail && (
+                <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="right" aria-label={s.toggleRight} title={s.toggleRight} aria-pressed="false">
+                  <Icon name="panelRight" />
+                </button>
+              )
+            }
+            {
+              site.stackedPages && withRail && (
+                <button class="icon-btn stack-toggle" type="button" data-stack-toggle aria-label={s.stackMode} title={s.stackMode} aria-pressed="false">
+                  <Icon name="layers" />
+                </button>
+              )
+            }
+            <div class="prefs">
+              <button class="icon-btn prefs-toggle" type="button" data-prefs-toggle aria-label={s.prefs} title={s.prefs} aria-expanded="false">
+                <span aria-hidden="true">Aa</span>
+              </button>
+              <div class="prefs-panel" data-prefs-panel role="group" aria-label={s.prefs} hidden>
+                <div class="prefs-size">
+                  <span>{s.prefsSize}</span>
+                  <button type="button" data-pref-size="-1" aria-label={`${s.prefsSize} −`}>A−</button>
+                  <output data-pref-size-out>100%</output>
+                  <button type="button" data-pref-size="1" aria-label={`${s.prefsSize} +`}>A+</button>
+                </div>
+                <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
+                <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
+                <button type="button" class="prefs-forget" data-open-highlights>🖍 {s.highlights}</button>
+                <button type="button" class="prefs-forget" data-forget-footprints data-done={s.forgotten}>{s.forgetFootprints}</button>
+              </div>
+            </div>
+            <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
+              <Icon name="book" />
+            </button>
+          </>
         )
       }
-      <button class="icon-btn" type="button" data-random aria-label={s.randomNote} title={`${s.randomNote} (R)`}>
-        <span aria-hidden="true">🎲</span>
-      </button>
-      <button class="icon-btn" type="button" data-open-graph aria-label={s.globalGraph} title={`${s.globalGraph} (Ctrl G)`}>
-        <Icon name="graph" />
-      </button>
-      <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="left" aria-label={s.toggleLeft} title={s.toggleLeft} aria-pressed="false">
-        <Icon name="panelLeft" />
-      </button>
-      {
-        rail && (
-          <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="right" aria-label={s.toggleRight} title={s.toggleRight} aria-pressed="false">
-            <Icon name="panelRight" />
-          </button>
-        )
-      }
-      {
-        site.stackedPages && rail && (
-          <button class="icon-btn stack-toggle" type="button" data-stack-toggle aria-label={s.stackMode} title={s.stackMode} aria-pressed="false">
-            <Icon name="layers" />
-          </button>
-        )
-      }
-      <div class="prefs">
-        <button class="icon-btn prefs-toggle" type="button" data-prefs-toggle aria-label={s.prefs} title={s.prefs} aria-expanded="false">
-          <span aria-hidden="true">Aa</span>
-        </button>
-        <div class="prefs-panel" data-prefs-panel role="group" aria-label={s.prefs} hidden>
-          <div class="prefs-size">
-            <span>{s.prefsSize}</span>
-            <button type="button" data-pref-size="-1" aria-label={`${s.prefsSize} −`}>A−</button>
-            <output data-pref-size-out>100%</output>
-            <button type="button" data-pref-size="1" aria-label={`${s.prefsSize} +`}>A+</button>
-          </div>
-          <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
-          <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
-          <button type="button" class="prefs-forget" data-open-highlights>🖍 {s.highlights}</button>
-          <button type="button" class="prefs-forget" data-forget-footprints data-done={s.forgotten}>{s.forgetFootprints}</button>
-        </div>
-      </div>
-      <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
-        <Icon name="book" />
-      </button>
       <button class="icon-btn" type="button" data-theme-toggle aria-label={s.theme} title={s.theme}>
         <Icon name="sun" class="theme-sun" />
         <Icon name="moon" class="theme-moon" />
       </button>
       {
-        site.langs.length > 1 && (
+        !minimal && site.langs.length > 1 && (
           <nav class="lang-switch" aria-label={s.language}>
             {
               site.langs.map((l) => (
@@ -281,15 +302,19 @@ const pluginHead = await userHead()
       }
     </header>
 
-    <div class:list={["shell", { "no-right": !rail }]}>
-      <aside class="sidebar sidebar-left" transition:persist={`explorer-${lang}`} data-sidebar>
-        <Explorer lang={lang} />
-      </aside>
+    <div class:list={["shell", { "no-right": !withRail }]}>
+      {
+        !minimal && (
+          <aside class="sidebar sidebar-left" transition:persist={`explorer-${lang}`} data-sidebar>
+            <Explorer lang={lang} />
+          </aside>
+        )
+      }
       <main class="main">
         <slot />
       </main>
       {
-        rail && (
+        withRail && (
           <aside class="sidebar sidebar-right">
             <slot name="rail" />
           </aside>
@@ -298,104 +323,116 @@ const pluginHead = await userHead()
       {/* After the rail, which a narrow screen stacks under the note: the footer stays last. */}
       <footer class="site-footer">
         <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
-        <nav>
-          {
-            Object.entries(site.footerLinks).map(([label, href]) => (
-              <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
-                {label}
-              </a>
-            ))
-          }
-        </nav>
         {
-          site.poweredBy && (
-            <p class="datme-credit">
-              <Fragment set:html={datmeMark} />
-              {credit[0]}
-              <a href="https://gitlab.com/dynamo-brain/datme" rel="noopener">datme</a>
-              {credit[1]}
-            </p>
+          !minimal && (
+            <>
+              <nav>
+                {
+                  Object.entries(site.footerLinks).map(([label, href]) => (
+                    <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
+                      {label}
+                    </a>
+                  ))
+                }
+              </nav>
+              {
+                site.poweredBy && (
+                  <p class="datme-credit">
+                    <Fragment set:html={datmeMark} />
+                    {credit[0]}
+                    <a href="https://gitlab.com/dynamo-brain/datme" rel="noopener">datme</a>
+                    {credit[1]}
+                  </p>
+                )
+              }
+            </>
           )
         }
       </footer>
     </div>
 
-    <dialog
-      class="modal"
-      data-search-dialog
-      data-lang={lang}
-      data-engine={site.search.engine}
-      data-similar={site.related.semantic ? s.similarNotes : undefined}
-      data-threshold={site.related.semantic ? site.related.semantic.threshold : undefined}
-      data-model={site.search.meaning && site.related.semantic ? site.related.semantic.model : undefined}
-      transition:persist={`search-${lang}`}
-    >
-      <div class="search-input-row">
-        <Icon name="search" />
-        <input
-          type="search"
-          placeholder={s.searchPlaceholder}
-          aria-label={s.search}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-controls="search-results"
-          aria-expanded="false"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        {
-          site.search.meaning && site.related.semantic && site.search.engine === "minisearch" && (
-            <button class="search-meaning" type="button" aria-pressed="false" data-search-meaning title={s.searchMeaningHint} data-loading={s.searchMeaningLoading}>
-              ✨ <span>{s.searchMeaning}</span>
-            </button>
-          )
-        }
-        <kbd>Esc</kbd>
-      </div>
-      <Filters lang={lang} kinds={["folder", "type", "stage", "fresh"]} scope="search" />
-      <ul id="search-results" class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
-      <div class="modal-foot">
-        <span><kbd>↑</kbd> <kbd>↓</kbd> {s.navigate}</span>
-        <span><kbd>↵</kbd> {s.open}</span>
-        <span><kbd>Esc</kbd> {s.close}</span>
-      </div>
-    </dialog>
+    {
+      !minimal && (
+        <>
+          <dialog
+            class="modal"
+            data-search-dialog
+            data-lang={lang}
+            data-engine={site.search.engine}
+            data-similar={site.related.semantic ? s.similarNotes : undefined}
+            data-threshold={site.related.semantic ? site.related.semantic.threshold : undefined}
+            data-model={site.search.meaning && site.related.semantic ? site.related.semantic.model : undefined}
+            transition:persist={`search-${lang}`}
+          >
+            <div class="search-input-row">
+              <Icon name="search" />
+              <input
+                type="search"
+                placeholder={s.searchPlaceholder}
+                aria-label={s.search}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="search-results"
+                aria-expanded="false"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              {
+                site.search.meaning && site.related.semantic && site.search.engine === "minisearch" && (
+                  <button class="search-meaning" type="button" aria-pressed="false" data-search-meaning title={s.searchMeaningHint} data-loading={s.searchMeaningLoading}>
+                    ✨ <span>{s.searchMeaning}</span>
+                  </button>
+                )
+              }
+              <kbd>Esc</kbd>
+            </div>
+            <Filters lang={lang} kinds={["folder", "type", "stage", "fresh"]} scope="search" />
+            <ul id="search-results" class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
+            <div class="modal-foot">
+              <span><kbd>↑</kbd> <kbd>↓</kbd> {s.navigate}</span>
+              <span><kbd>↵</kbd> {s.open}</span>
+              <span><kbd>Esc</kbd> {s.close}</span>
+            </div>
+          </dialog>
 
-    <dialog class="modal graph-modal" data-graph-dialog data-view={site.graph.view}>
-      <div class="modal-head">
-        <span>{s.globalGraph}</span>
-        <Filters lang={lang} kinds={["folder", "tag", "stage"]} scope="graph" />
-        <select
-          data-graph-color
-          aria-label={s.graphColorBy}
-          data-fresh-labels={JSON.stringify({ month: s.freshMonth, year: s.freshYear, older: s.freshOlder })}
-          data-visited-label={s.visitedLabel}
-        >
-          <option value="">{s.graphColorBy}: {s.graphColorNone}</option>
-          <option value="folder">{s.graphColorBy}: {s.folder}</option>
-          <option value="type">{s.graphColorBy}: {s.graphColorType}</option>
-          {Object.keys(site.stages).length > 0 && <option value="stage">{s.graphColorBy}: {s.graphColorStage}</option>}
-          {site.related.semantic && site.topics !== false && <option value="topic">{s.graphColorBy}: {s.graphColorTopic}</option>}
-          <option value="fresh">{s.graphColorBy}: {s.graphColorFresh}</option>
-          <option value="visited">{s.graphColorBy}: {s.graphColorVisited}</option>
-        </select>
-        <button class="graph-space" type="button" data-graph-3d aria-pressed="false" title={s.graph3d}>3D</button>
-        <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>
-          <Icon name="close" />
-        </button>
-      </div>
-      <div class="graph-full">
-        <canvas data-graph="global" data-lang={lang}></canvas>
-      </div>
-      <div class="graph-foot">
-        <label class="graph-time">
-          <span>{s.graphTime}</span>
-          <input type="range" data-graph-time step="1" />
-          <output data-graph-time-label></output>
-        </label>
-        <div class="graph-legend" data-graph-legend></div>
-      </div>
-    </dialog>
+          <dialog class="modal graph-modal" data-graph-dialog data-view={site.graph.view}>
+            <div class="modal-head">
+              <span>{s.globalGraph}</span>
+              <Filters lang={lang} kinds={["folder", "tag", "stage"]} scope="graph" />
+              <select
+                data-graph-color
+                aria-label={s.graphColorBy}
+                data-fresh-labels={JSON.stringify({ month: s.freshMonth, year: s.freshYear, older: s.freshOlder })}
+                data-visited-label={s.visitedLabel}
+              >
+                <option value="">{s.graphColorBy}: {s.graphColorNone}</option>
+                <option value="folder">{s.graphColorBy}: {s.folder}</option>
+                <option value="type">{s.graphColorBy}: {s.graphColorType}</option>
+                {Object.keys(site.stages).length > 0 && <option value="stage">{s.graphColorBy}: {s.graphColorStage}</option>}
+                {site.related.semantic && site.topics !== false && <option value="topic">{s.graphColorBy}: {s.graphColorTopic}</option>}
+                <option value="fresh">{s.graphColorBy}: {s.graphColorFresh}</option>
+                <option value="visited">{s.graphColorBy}: {s.graphColorVisited}</option>
+              </select>
+              <button class="graph-space" type="button" data-graph-3d aria-pressed="false" title={s.graph3d}>3D</button>
+              <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>
+                <Icon name="close" />
+              </button>
+            </div>
+            <div class="graph-full">
+              <canvas data-graph="global" data-lang={lang}></canvas>
+            </div>
+            <div class="graph-foot">
+              <label class="graph-time">
+                <span>{s.graphTime}</span>
+                <input type="range" data-graph-time step="1" />
+                <output data-graph-time-label></output>
+              </label>
+              <div class="graph-legend" data-graph-legend></div>
+            </div>
+          </dialog>
+        </>
+      )
+    }
 
     <script>
       import "~/scripts/app"

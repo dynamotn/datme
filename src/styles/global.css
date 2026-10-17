@@ -1942,6 +1942,15 @@ dialog.graph-modal {
   }
 }
 
+/* A page that stands alone: a thin bar, the page, one line of footer. */
+:root[data-chrome="minimal"] .shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+:root[data-chrome="minimal"] .site-footer {
+  grid-column: 1;
+  justify-content: center;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 1200px) {
   .shell {

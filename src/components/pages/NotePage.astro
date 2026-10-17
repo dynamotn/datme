@@ -5,7 +5,7 @@ import { renderNote, renderSecret } from "~/lib/markdown"
 import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
-import { lookOf } from "~/lib/look"
+import { frameOf, lookOf } from "~/lib/look"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
@@ -67,6 +67,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
 const html = layoutHtml(note, r.html)
 const plain = !note.layout
 const look = lookOf(note)
+const frame = frameOf(note)
 const garden = look === "garden"
 const stageIcon = (n: Note) => (n.stage ? site.stages[n.stage]?.icon : undefined)
 // A book, a film or a project of a collection shows its cover beside its title.
@@ -76,7 +77,7 @@ const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefi
 const NOW_STALE_YEARS = 0.25
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
@@ -93,7 +94,7 @@ const NOW_STALE_YEARS = 0.25
         </figure>
       )
     }
-    <Breadcrumbs lang={note.lang} dir={note.dir} />
+    {frame !== "minimal" && <Breadcrumbs lang={note.lang} dir={note.dir} />}
     {
       plain && r.words >= 300 && (
         <div class="reading-progress" data-progress data-words={r.words} data-left={s.minutesLeft} aria-hidden="true">

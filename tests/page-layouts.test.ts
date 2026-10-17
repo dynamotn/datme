@@ -93,8 +93,8 @@ const root = path.resolve(import.meta.dir, "..")
 const vault = path.join(root, "tests/fixtures/layouts")
 let out = ""
 const read = (p: string) => fs.readFileSync(path.join(out, p), "utf8")
-// The note itself, cards of a collection included: up to the sidebar.
-const article = (p: string) => read(p).match(/<article[\s\S]*?<aside/)![0]
+// The note itself, cards of a collection included: up to the sidebar, or the footer on a page without one.
+const article = (p: string) => read(p).match(/<article[\s\S]*?(?:<aside|<footer class="site-footer")/)![0]
 
 beforeAll(() => {
   out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "datme-layouts-")), "site")
@@ -251,5 +251,38 @@ describe("page layouts", () => {
     expect(html).not.toContain("layout-")
     expect(html).not.toContain("item-head")
     expect(html).toContain('class="backlinks"')
+  })
+
+  test("a résumé and a link page stand alone", () => {
+    for (const [page, look] of [["CV/index.html", "resume"], ["Links/index.html", "classic"]] as const) {
+      const html = read(page)
+      expect(html).toContain(`data-look="${look}"`)
+      expect(html).toContain('data-chrome="minimal"')
+      for (const gone of ['class="main-nav"', "data-open-search", "sidebar-left", "sidebar-right", 'class="crumbs"', "data-search-dialog", "data-graph-dialog"])
+        expect(html).not.toContain(gone)
+      expect(html).toContain("data-theme-toggle")
+    }
+  })
+
+  test("a gallery starts dark", () => {
+    const html = read("Photos/index.html")
+    expect(html).toContain('data-look="darkroom"')
+    expect(html).toContain('data-scheme-default="dark"')
+  })
+
+  test("collections and timelines keep the header but drop the rail", () => {
+    for (const page of ["Life/index.html", "Projects/index.html"]) {
+      const html = read(page)
+      expect(html).toContain('data-chrome="full-norail"')
+      expect(html).toContain('class="main-nav"')
+      expect(html).not.toContain("sidebar-right")
+    }
+    expect(read("FAQ/index.html")).toContain('data-chrome="full"')
+  })
+
+  test("a note can override its layout's style and frame", () => {
+    const html = read("Styled-CV/index.html")
+    expect(html).toContain('data-look="garden"')
+    expect(html).toContain('data-chrome="full"')
   })
 })

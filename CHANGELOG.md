@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   style, `gallery` pages the darkroom style and `links` pages the classic
   one, and a note's own `style:` still wins. A folder whose folder note has
   a layout takes that look too.
+- Résumé, link and gallery pages stand alone: they keep only a thin bar with the
+  site's name and the light/dark toggle, and a one-line footer, with no menu,
+  search, sidebars or breadcrumbs. Any note can ask for this with
+  `chrome: minimal`, or for the full frame with `chrome: full`. Timelines and
+  collections keep the header and explorer but drop the right rail, and
+  galleries start dark unless the reader chose a scheme.
 - Notes can set `style:` (`notebook`, `classic`, `garden`, `resume` or
   `darkroom`) and `chrome:` (`full` or `minimal`) in their properties; an
   unknown value is reported as a warning and the note keeps its usual look.
