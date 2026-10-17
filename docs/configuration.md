@@ -49,6 +49,7 @@ conventions:
   mapTags: [type/moc, moc]    # listed as maps of content
   flashcardTags: [flashcards] # decks: Q::A, Q:::A and ?-separated cards flip open
   timelineTags: [timeline, type/event]  # events dated by `date` on /timeline
+  ratingScale: 5              # highest `rating`: 7 draws ratings as seven stars
 
 stages:                       # top-level folders shown as note maturity, in this order
   Inbox: fleeting             # presets: fleeting, literature, permanent

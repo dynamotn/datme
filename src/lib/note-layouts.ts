@@ -1,4 +1,4 @@
-import { type Lang } from "../site.config"
+import { site, type Lang } from "../site.config"
 import { getVault, listed, type Layout, type Note } from "./vault"
 import { slugTag } from "./slug"
 import { formatDate, t, type StringKey } from "./i18n"
@@ -329,12 +329,16 @@ export function periodOf(n: Note, lang: Lang): string | undefined {
   return start === end ? start : `${start} – ${end}`
 }
 
-/** A rating out of five, from a number or a run of stars. */
-export function ratingOf(n: Note): number | undefined {
-  const v = n.source.fm.rating
+/** A rating out of `scale`, from a number or a run of stars. */
+export function parseRating(v: unknown, scale: number): number | undefined {
   if (v == null || v === "") return undefined
   const r = typeof v === "number" ? v : /^[★⭐]+$/u.test(String(v)) ? [...String(v)].length : Number(v)
-  return Number.isFinite(r) && r > 0 ? Math.min(5, r) : undefined
+  return Number.isFinite(r) && r > 0 ? Math.min(scale, r) : undefined
+}
+
+/** A note's rating out of conventions.ratingScale. */
+export function ratingOf(n: Note): number | undefined {
+  return parseRating(n.source.fm.rating, site.conventions.ratingScale)
 }
 
 /** The status of a note as its collection names it. */

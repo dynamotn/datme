@@ -7,6 +7,7 @@ import {
   faqHtml,
   galleryHtml,
   linksHtml,
+  parseRating,
   plain,
   quotesHtml,
   recipeHtml,
@@ -16,6 +17,14 @@ import {
 } from "../src/lib/note-layouts"
 
 describe("layout transforms", () => {
+  test("ratings are read as numbers or stars and capped at the scale", () => {
+    expect(parseRating(6, 7)).toBe(6)
+    expect(parseRating(6, 5)).toBe(5)
+    expect(parseRating("★★★", 7)).toBe(3)
+    expect(parseRating("", 7)).toBeUndefined()
+    expect(parseRating(0, 7)).toBeUndefined()
+  })
+
   test("a gallery gathers runs of picture-only paragraphs into one grid", () => {
     const html = galleryHtml(
       `<p>Intro</p>\n<p><span class="image-embed"><img src="/a.png" alt="Fog"></span>\n<span class="image-embed"><img src="/b.png" alt=""></span></p>\n<p><img src="/c.png" alt=""></p>\n<p>Outro <img src="/d.png" alt=""></p>`,

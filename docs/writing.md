@@ -235,7 +235,7 @@ A collection lists other notes:
   years from `start` to `end`, `role`, `stack` (or `tech`), and links from
   `repo`, `url`, `demo` and `links`.
 - **`books`**: a shelf of covers, with `author`, `year` and a `rating` out
-  of five.
+  of five, or of `conventions.ratingScale`.
 - **`movies`**: a shelf of posters, with `director`, `released` (or `year`)
   and a `rating`.
 - **`talks`**: a row for each talk, at its `date`, with its `event` (or

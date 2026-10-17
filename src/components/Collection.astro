@@ -23,6 +23,7 @@ interface Props {
 }
 const { note, kind } = Astro.props
 const s = t(note.lang)
+const scale = site.conventions.ratingScale
 const spec = specOf(note, kind)
 const groups = collectionOf(note, spec)
 const described = new Map(
@@ -154,9 +155,9 @@ const metaOf = (n: Note) =>
                   </a>
                   {meta.length > 0 && <span class="book-author">{meta.join(", ")}</span>}
                   {rating && (
-                    <span class="book-rating" title={`${s.ratingOf} ${rating}/5`} aria-label={`${s.ratingOf} ${rating}/5`}>
+                    <span class="book-rating" title={`${s.ratingOf} ${rating}/${scale}`} aria-label={`${s.ratingOf} ${rating}/${scale}`}>
                       {"★".repeat(Math.round(rating))}
-                      <span class="book-rating-rest">{"★".repeat(5 - Math.round(rating))}</span>
+                      <span class="book-rating-rest">{"★".repeat(scale - Math.round(rating))}</span>
                     </span>
                   )}
                 </li>

@@ -143,6 +143,8 @@ const schema = z
         flashcardTags: z.array(z.string()).default(["flashcards"]),
         /** Notes with one of these tags are timeline events, dated by `date` when they have no `start`. */
         timelineTags: z.array(z.string()).default(["timeline", "type/event"]),
+        /** Highest `rating` a note can have: ratings are drawn as that many stars. */
+        ratingScale: z.number().int().min(2).max(10).default(5),
       })
       .strict()
       .default({
@@ -151,6 +153,7 @@ const schema = z
         mapTags: ["type/moc", "moc"],
         flashcardTags: ["flashcards"],
         timelineTags: ["timeline", "type/event"],
+        ratingScale: 5,
       }),
     footer: z.record(z.string(), z.string()).default({}),
     /** A small "grown with datme" line, with its sprout, at the end of the footer. */

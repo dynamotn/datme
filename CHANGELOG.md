@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `appearance.folders` gives a folder its own style, subfolders included,
   for example `Writing: classic` on a notebook site. The starter config of
   `datme init` lists the styles and has a place for it.
+- `conventions.ratingScale` sets the highest `rating`, from 2 to 10 (5 by
+  default): a vault rating on a 1–7 scale shows seven stars instead of
+  having its ratings cut to five.
 - Notes can take a page layout with `layout`. `cv` makes a printable résumé
   from the note, `gallery` turns its pictures into a grid, `timeline` puts
   its sections on a line down the page, `links` makes a link-in-bio page of

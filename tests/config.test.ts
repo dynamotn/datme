@@ -150,7 +150,14 @@ describe("publishing rules and conventions", () => {
       mapTags: ["type/moc", "moc"],
       flashcardTags: ["flashcards"],
       timelineTags: ["timeline", "type/event"],
+      ratingScale: 5,
     })
+  })
+
+  test("ratings can use another scale, within 2 to 10 stars", () => {
+    expect(resolveConfig({ conventions: { ratingScale: 7 } }, "/v").conventions.ratingScale).toBe(7)
+    expect(() => resolveConfig({ conventions: { ratingScale: 1 } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ conventions: { ratingScale: 4.5 } }, "/v")).toThrow(ConfigError)
   })
 
   test("conventions can be partially overridden", () => {
