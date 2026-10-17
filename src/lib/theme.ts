@@ -28,7 +28,11 @@ export function themeCss(): string {
     dark.push(`--accent:${d}`, `--accent-2:${d}`, `--accent-soft:color-mix(in srgb, ${d} 16%, transparent)`)
   }
   const font = (name: string, fallback: string) => `"${name}", ${fallback}`
-  if (fonts.heading) light.push(`--font-ui:${font(fonts.heading, "system-ui, sans-serif")}`)
+  if (fonts.heading) {
+    light.push(`--font-ui:${font(fonts.heading, "system-ui, sans-serif")}`)
+    // The garden sets its headings apart from its UI font.
+    light.push(`--font-heading:${font(fonts.heading, "Georgia, serif")}`)
+  }
   if (fonts.body) light.push(`--font-read:${font(fonts.body, "Georgia, serif")}`)
   if (fonts.code) {
     light.push(`--font-code:${font(fonts.code, "ui-monospace, monospace")}`)

@@ -195,6 +195,8 @@ describe("init", () => {
     );
     expect(c.title["en-US"]).toBe("Second Brain");
     expect(c.publish).toBe("explicit");
+    expect(c.appearance.style).toBe("notebook");
+    expect(c.appearance.folders).toEqual({});
   });
 
   test("writes datme.yaml once and never overwrites it", async () => {

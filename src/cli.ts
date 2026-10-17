@@ -312,6 +312,13 @@ stages: {}
 #  Notes: permanent
 #  Maps: { icon: "🗺️", label: Maps of content }
 
+# notebook: index cards on dotted paper; classic: a quiet serif blog;
+# garden: notes as plants in a bed, sized by their stage.
+appearance:
+  style: notebook
+  folders: {}
+#    Writing: classic
+
 footer: {}
 #  GitHub: https://github.com/you
 # poweredBy: false            # hide the "grown with datme" line
