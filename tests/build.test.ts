@@ -286,6 +286,14 @@ describe("static build", () => {
     expect(read("07_Project/Blog-post/index.html")).toContain('data-look="classic"')
   })
 
+  test("folder pages use their folder's style", () => {
+    const project = read("07_Project/index.html")
+    expect(project).toContain('data-look="classic"')
+    expect(project).toContain('class="note-row')
+    expect(project).not.toContain('class="card-wall"')
+    expect(read("06_Reference/index.html")).toContain('data-look="notebook"')
+  })
+
   test("the main menu lists the configured pages and skips missing notes", () => {
     const nav = read("index.html").match(/<nav class="main-nav"[\s\S]*?<\/nav>/)![0]
     expect([...nav.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(["/", "/06_Reference/Niklas-Luhmann", "/tags"])
