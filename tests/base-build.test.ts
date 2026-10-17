@@ -51,6 +51,12 @@ describe("a site served under a path", () => {
     expect([...escaped]).toEqual([])
   })
 
+  test("the 404 page goes back only to pages under it, and home is under it", () => {
+    const page = read("404.html")
+    expect(page).toContain('data-base="/garden/"')
+    expect(page).toContain('<a class="chip stage" href="/garden/">')
+  })
+
   test("wikilinks, tags, assets and social cards point under it", () => {
     const note = read("03_Atomic/Zettelkasten/index.html")
     expect(note).toContain('<link rel="canonical" href="https://x.dev/garden/03_Atomic/Zettelkasten/">')

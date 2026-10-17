@@ -392,7 +392,6 @@ footer: {}
 `
 }
 
-/** Run a command; returns once a build finishes, or never for dev and preview. */
 /**
  * Runs Astro from the package root. An outDir outside the working directory
  * makes Astro prerender into <cwd>/.astro and rename from there, which fails
@@ -408,11 +407,29 @@ export async function inPackage<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** datme's own package.json. */
+function packageJson(): { version: string; engines?: Record<string, string> } {
+  return JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8"))
+}
+
+/** The language a command asked for with --lang, the site's first one by default; refuses one the site lacks. */
+async function languageOf(args: Args): Promise<string> {
+  const { site } = await import("./site.config.ts")
+  const lang = args.lang ?? site.defaultLang
+  if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
+  return lang
+}
+
+/** A note named on the command line as a vault path: forward slashes, no leading slash. */
+function notePath(note: string): string {
+  return note.replace(/\\/g, "/").replace(/^\/+/, "")
+}
+
+/** Run a command; returns once a build finishes, or never for dev and preview. */
 export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd = process.cwd()): Promise<void> {
   if (args.command === "help") return void console.log(USAGE)
   if (args.command === "version") {
-    const pkg = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8"))
-    return void console.log(pkg.version)
+    return void console.log(packageJson().version)
   }
 
   const vault = resolveVault(args.vault, env, cwd)
@@ -445,9 +462,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   if (args.command === "build") checkOutput(out, vault)
 
   if (args.command === "export") {
-    const { site } = await import("./site.config.ts")
-    const lang = args.lang ?? site.defaultLang
-    if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
+    const lang = await languageOf(args)
     const { exportEpub, exportHtml } = await import("./lib/export.ts")
     // Named after the folder as resolved, so "./" or "notes/.." is named like the folder it is.
     const name = path.basename(path.resolve(vault, args.folder!))
@@ -463,13 +478,11 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   }
 
   if (args.command === "url") {
-    const { site } = await import("./site.config.ts")
-    const lang = args.lang ?? site.defaultLang
-    if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
+    const lang = await languageOf(args)
     const { getVault } = await import("./lib/vault.ts")
     const { docUrl } = await import("./lib/obsidian.ts")
     const vaultData = getVault()
-    const rel = args.note!.replace(/\\/g, "/").replace(/^\/+/, "")
+    const rel = notePath(args.note!)
     const url = /\.(canvas|base|excalidraw(\.md)?)$/i.test(rel)
       ? vaultData.docs.has(rel) ? docUrl(rel, lang) : undefined
       : vaultData.byKey[lang].get(rel.replace(/\.md$/i, ""))?.url
@@ -479,7 +492,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
 
   if (args.command === "doctor") {
     const { diagnose, formatDiagnosis } = await import("./lib/doctor.ts")
-    const pkg = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8"))
+    const pkg = packageJson()
     const findings = diagnose({
       env,
       runtime: { bun: process.versions.bun, node: process.versions.node },
@@ -512,10 +525,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   }
 
   if (args.command === "related") {
-    const { site } = await import("./site.config.ts")
-    const lang = args.lang ?? site.defaultLang
-    if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
-    const rel = args.note!.replace(/\\/g, "/").replace(/^\/+/, "")
+    const lang = await languageOf(args)
+    const rel = notePath(args.note!)
     if (!fs.existsSync(path.join(vault, rel))) throw new CliError(`"${rel}" is not a note of the vault.`)
     const { suggestionsFor, formatSuggestions } = await import("./lib/suggest.ts")
     const found = await suggestionsFor(rel, lang)
@@ -589,7 +600,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     claimCache(cacheDir)
     if (args.fresh) emptyCache(cacheDir)
     env.DATME_CACHE = cacheDir
-    env.DATME_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8")).version
+    env.DATME_VERSION = packageJson().version
   }
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000

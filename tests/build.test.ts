@@ -29,10 +29,12 @@ afterAll(() => {
 describe("static build", () => {
   test("the 404 page offers the way back to the page the reader came from, and home", () => {
     const page = read("404.html")
-    expect(page).toContain('<button class="chip not-found-back" type="button" hidden>← Về trang vừa đọc</button>')
+    expect(page).toContain('<button class="chip not-found-back" type="button" data-base="/" hidden>← Về trang vừa đọc</button>')
     expect(page).toContain('<a class="chip stage" href="/">Về trang chủ</a>')
     // The button shows only for a reader who came from this garden; the script runs inline, hashed for the CSP.
     expect(page).toMatch(/<script>(?:(?!<\/script>)[\s\S])*from\.origin !== location\.origin[\s\S]*?history\.back\(\)[\s\S]*?<\/script>/)
+    // A page of another garden on the same host, outside this one's base, is not a way back.
+    expect(page).toContain('from.pathname.startsWith(back.dataset.base || "/")')
   })
 
   test("home pages exist in both languages", () => {

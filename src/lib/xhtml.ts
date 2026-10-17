@@ -1,14 +1,12 @@
 import { find, html } from "property-information"
 import type { Root, RootContent, Element, Properties } from "hast"
+import { escapeAttr, escapeText } from "./html"
 
 /** Inline SVG and MathML only render in XHTML when they say which language they speak. */
 const NAMESPACES: Record<string, string> = { svg: "http://www.w3.org/2000/svg", math: "http://www.w3.org/1998/Math/MathML" }
 
 /** Elements that never have content, written as <br/> in XML. */
 const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"])
-
-const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-const escapeAttr = (s: string) => escapeText(s).replace(/"/g, "&quot;")
 
 function attributes(props: Properties): string {
   let out = ""

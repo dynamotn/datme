@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 const scores: { out: HTMLElement; src: string; opts: object }[] = []
 mock.module("abcjs", () => ({ default: { renderAbc: (out: HTMLElement, src: string, opts: object) => void scores.push({ out, src, opts }) } }))

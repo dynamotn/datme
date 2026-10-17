@@ -7,6 +7,8 @@
  * Matching ignores case and diacritics, as Obsidian's search does by default.
  */
 
+import { escapeText } from "./html"
+
 export interface Searchable {
   title: string
   /** Vault-relative path, with .md. */
@@ -153,7 +155,6 @@ export function search(query: Node, docs: Searchable[]): Hit[] {
 /** HTML of a snippet with the searched words marked, accents and case ignored. */
 export function highlight(raw: string, words: string[]): string {
   const text = raw.normalize("NFC")
-  const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   const folded = fold(text)
   const marks: [number, number][] = []
   for (const w of words.map(fold).filter(Boolean)) {
@@ -164,9 +165,9 @@ export function highlight(raw: string, words: string[]): string {
   let pos = 0
   for (const [s, e] of marks) {
     if (s < pos) continue
-    out += escape(text.slice(pos, s)) + `<mark>${escape(text.slice(s, e))}</mark>`
+    out += escapeText(text.slice(pos, s)) + `<mark>${escapeText(text.slice(s, e))}</mark>`
     pos = e
   }
   // NFD folding keeps one character per character for Latin and Vietnamese text, so offsets line up.
-  return out + escape(text.slice(pos))
+  return out + escapeText(text.slice(pos))
 }

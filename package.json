@@ -44,7 +44,7 @@
     "build": "bun bin/datme.ts build",
     "preview": "bun bin/datme.ts preview",
     "check": "astro check",
-    "test": "bun test",
+    "test": "bun test --coverage",
     "screenshots": "bun tools/screenshots.ts"
   },
   "dependencies": {

@@ -7,7 +7,7 @@
  */
 import { site, type Lang } from "../site.config"
 import { t } from "./i18n"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { html } from "./dataview-render"
 import { lucideSvg } from "./icons"
 import { parseLocation } from "./places"

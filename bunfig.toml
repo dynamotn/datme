@@ -1,2 +1,10 @@
 [test]
 preload = ["./tests/setup.ts"]
+# With --coverage, every file of src/ and bin/ must run all its lines and functions.
+coverageThreshold = { lines = 1.0, functions = 1.0 }
+coveragePathIgnorePatterns = [
+  # Test helpers, and the configs tests write into temporary vaults.
+  "tests/**",
+  "**/datme.config.*",
+  "**/node_modules/**",
+]

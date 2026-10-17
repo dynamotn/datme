@@ -8,6 +8,7 @@
  */
 import { Marp } from "@marp-team/marp-core"
 import { dump } from "js-yaml"
+import { escapeAttrKeepGt } from "./html"
 
 export function isSlides(fm: Record<string, unknown>): boolean {
   return fm.marp === true || fm.marp === "true"
@@ -85,8 +86,6 @@ const FRAME = `:host{display:block;margin:1.5rem 0}
 :host(.presenting) .marpit>svg[data-marpit-svg].current{display:block}
 @media print{.marpit>svg[data-marpit-svg]{break-inside:avoid;box-shadow:none;border:1px solid #ccc}}`
 
-const escapeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
-
 export function renderSlides(
   md: string,
   directives: Record<string, unknown>,
@@ -122,7 +121,7 @@ export function renderSlides(
   return {
     html:
       (imports.length ? `<style>${imports.join("")}</style>` : "") +
-      `<div class="marp-deck" role="group" aria-label="${escapeAttr(labels.slides.replace("{n}", String(count)))}" data-present="${escapeAttr(labels.present)}">` +
+      `<div class="marp-deck" role="group" aria-label="${escapeAttrKeepGt(labels.slides.replace("{n}", String(count)))}" data-present="${escapeAttrKeepGt(labels.present)}">` +
       `<template shadowrootmode="open"><style>${FRAME}</style><style>${scoped}</style>${html}</template></div>`,
     count,
   }

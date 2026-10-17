@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
-import { installDom, sharedOrFresh, until, type Dom } from "./cov-dom"
+import { installDom, until, type Dom } from "./client-dom"
 import type { ContentIndex } from "../src/scripts/data"
 
 const navigated: string[] = []
@@ -27,16 +27,15 @@ beforeAll(async () => {
     configurable: true,
   })
   globalThis.fetch = (async () => new Response(JSON.stringify(index))) as unknown as typeof fetch
-  // The button that opens the picker is listened for on the document of the first setup.
-  walk = await sharedOrFresh<Walk>("../src/scripts/walk", async (m) => {
-    page()
-    await m.setupWalk()
-    dom.document.querySelector<HTMLElement>("[data-walk-open]")!.click()
-    await until(() => dom.document.querySelector("dialog"), 30)
-    const dialog = dom.document.querySelector("dialog")
-    dialog?.remove()
-    return !!dialog
-  })
+  walk = await import("../src/scripts/walk")
+  // The button that opens the picker is listened for on the document of the first setup: the shared page.
+  page()
+  await walk.setupWalk()
+  dom.document.querySelector<HTMLElement>("[data-walk-open]")!.click()
+  await until(() => dom.document.querySelector("dialog"), 30)
+  const dialog = dom.document.querySelector("dialog")
+  expect(dialog).not.toBeNull()
+  dialog!.remove()
 })
 afterAll(() => {
   globalThis.fetch = realFetch

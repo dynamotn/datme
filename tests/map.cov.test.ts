@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 // A stand-in for Leaflet that records what the script asks of it.
 type LatLng = [number, number]

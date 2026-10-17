@@ -24,7 +24,8 @@ import type { Root as MdRoot, Blockquote, ListItem, Paragraph, PhrasingContent, 
 import type { Root as HastRoot, Element, ElementContent } from "hast"
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
-import { anchorOf, escapeAttr } from "./obsidian"
+import { anchorOf } from "./obsidian"
+import { escapeAttr, escapeAttrKeepGt } from "./html"
 import { t } from "./i18n"
 import { renderDataview, renderDataviewJs, renderInlineQuery, renderContributionGraph, renderTasksBlock, renderSearchBlock } from "./dataview-render"
 import { renderBaseView, renderBaseBlock } from "./base-render"
@@ -832,8 +833,6 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   return hit
 }
 
-const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
-
 /** Files that only encrypted content uses, put inside it as data URIs. */
 function sealedFiles(html: string): string {
   const published = getVault().assets
@@ -854,11 +853,11 @@ async function sealParts(html: string, note: Note, user: UserPlugins): Promise<s
     const form =
       `<div class="locked-part" data-lock="${i}">` +
       `<form class="locked" data-payload="${payload}" data-iterations="${site.encryption.iterations}">` +
-      `<p>🔒 ${escapeHtml(s.lockedPart)}</p>` +
-      `<label><span class="sr-only">${escapeHtml(s.password)}</span>` +
-      `<input type="password" name="password" placeholder="${escapeHtml(s.password)}" autocomplete="current-password" required></label>` +
-      `<button type="submit">${escapeHtml(s.unlock)}</button>` +
-      `<p class="locked-error" hidden>${escapeHtml(s.wrongPassword)}</p></form>` +
+      `<p>🔒 ${escapeAttrKeepGt(s.lockedPart)}</p>` +
+      `<label><span class="sr-only">${escapeAttrKeepGt(s.password)}</span>` +
+      `<input type="password" name="password" placeholder="${escapeAttrKeepGt(s.password)}" autocomplete="current-password" required></label>` +
+      `<button type="submit">${escapeAttrKeepGt(s.unlock)}</button>` +
+      `<p class="locked-error" hidden>${escapeAttrKeepGt(s.wrongPassword)}</p></form>` +
       `<div class="locked-content" hidden></div></div>`
     html = html.replace(lockedPlaceholder(i), () => form)
   }

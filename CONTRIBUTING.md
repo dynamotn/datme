@@ -7,8 +7,12 @@ the checks CI runs:
 ```bash
 bun install
 bunx astro check
-bun test
+bun test --coverage
 ```
+
+With `--coverage` the run fails unless every line and function of `src/` and
+`bin/` runs in some test (`coverageThreshold` in `bunfig.toml`). Run single
+files without it: on its own, a file covers only part of the code.
 
 Record anything a user could notice in `CHANGELOG.md`, under `[Unreleased]`.
 

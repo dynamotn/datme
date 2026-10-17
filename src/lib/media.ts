@@ -1,4 +1,4 @@
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
 const VIDEO = /\.(mp4|webm|mov|mkv|ogv|m4v)$/i

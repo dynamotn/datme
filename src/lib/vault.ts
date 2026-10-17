@@ -6,7 +6,6 @@ import { site, STYLES, type Lang, type Style } from "../site.config"
 import { pickOption, CHROMES, type Chrome } from "./look"
 import { langPrefix, t } from "./i18n"
 import { sluggify, slugTag, slugToUrl, urlToSlug, folderDisplayName } from "./slug"
-import { withBase } from "./base"
 import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
@@ -17,7 +16,7 @@ import { cite, parseBibtex, type BibEntry } from "./citations"
 import katex from "katex"
 import crypto from "node:crypto"
 import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, type Scene } from "./excalidraw"
-import { urlPlaceholder, type DrawnDrawing } from "./obsidian"
+import { assetUrl, urlPlaceholder, type DrawnDrawing } from "./obsidian"
 import { findInGarden } from "./neighbours"
 import { privateLinkText, showsName } from "./privacy"
 
@@ -1136,10 +1135,6 @@ function buildTree(list: Note[], lang: Lang): { root: FolderNode; all: Map<strin
     f.notes.sort((a, b) => collator.compare(a.title, b.title))
   }
   return { root, all }
-}
-
-export function assetUrl(rel: string): string {
-  return withBase("/assets/" + rel.split("/").map(encodeURIComponent).join("/"))
 }
 
 /** Number of notes under a folder, recursively; folder notes introduce their folder and are not counted. */

@@ -1,7 +1,7 @@
 import type { Plugin } from "unified"
 import type { Root as MdRoot, Code } from "mdast"
 import { visit } from "unist-util-visit"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { readCache, writeCache } from "./render-cache"
 import { site } from "../site.config"
 

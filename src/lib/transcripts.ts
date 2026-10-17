@@ -1,4 +1,4 @@
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 
 /**
  * Timestamps and transcripts of audio and video embeds.

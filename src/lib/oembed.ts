@@ -8,6 +8,7 @@ import type { Note } from "./vault"
 import { renderNote } from "./markdown"
 import { ogPath } from "./og-url"
 import { absUrl, withBase } from "./base"
+import { escapeAttrKeepGt } from "./html"
 
 /** Height of the card in pixels, as the iframe asks for it. */
 export const EMBED_HEIGHT = 190
@@ -37,6 +38,6 @@ export async function oembedJson(n: Note): Promise<Record<string, unknown>> {
     ...(image ? { thumbnail_url: absUrl(image), thumbnail_width: 1200, thumbnail_height: 630 } : {}),
     width: 600,
     height: EMBED_HEIGHT,
-    html: `<iframe src="${src}" width="600" height="${EMBED_HEIGHT}" style="max-width:100%;border:0" loading="lazy" title="${title.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}"></iframe>`,
+    html: `<iframe src="${src}" width="600" height="${EMBED_HEIGHT}" style="max-width:100%;border:0" loading="lazy" title="${escapeAttrKeepGt(title)}"></iframe>`,
   }
 }

@@ -1,18 +1,16 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, sharedOrFresh, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 let dom: Dom
 let revealHash: typeof import("../src/scripts/tabs").revealHash
 beforeAll(async () => {
   dom = installDom("https://garden.example/note")
-  // The module listens on the document it was imported with.
-  ;({ revealHash } = await sharedOrFresh<typeof import("../src/scripts/tabs")>("../src/scripts/tabs", () => {
-    dom.document.body.innerHTML = `<div data-tabs><div role="tablist"><button role="tab" id="a">a</button><button role="tab" id="b">b</button></div></div>`
-    dom.document.getElementById("b")!.click()
-    const answered = dom.document.getElementById("b")!.getAttribute("aria-selected") === "true"
-    dom.document.body.innerHTML = ""
-    return answered
-  }))
+  ;({ revealHash } = await import("../src/scripts/tabs"))
+  // The module listens on the document it was imported with: the shared page.
+  dom.document.body.innerHTML = `<div data-tabs><div role="tablist"><button role="tab" id="a">a</button><button role="tab" id="b">b</button></div></div>`
+  dom.document.getElementById("b")!.click()
+  expect(dom.document.getElementById("b")!.getAttribute("aria-selected")).toBe("true")
+  dom.document.body.innerHTML = ""
 })
 afterAll(() => dom.restore())
 

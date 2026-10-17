@@ -1,20 +1,18 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, sharedOrFresh, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 type Trail = typeof import("../src/scripts/trail")
 let dom: Dom
 let trail: Trail
 beforeAll(async () => {
   dom = installDom("https://garden.example/notes/b?trail=pkm&x=1")
-  // The module listens on the document it was imported with.
-  trail = await sharedOrFresh<Trail>("../src/scripts/trail", () => {
-    dom.document.body.innerHTML = `<a data-trail-start="probe">probe</a>`
-    dom.document.querySelector<HTMLElement>("a")!.click()
-    const answered = dom.window.sessionStorage.getItem("datme-trail") === "probe"
-    dom.window.sessionStorage.clear()
-    dom.document.body.innerHTML = ""
-    return answered
-  })
+  trail = await import("../src/scripts/trail")
+  // The module listens on the document it was imported with: the shared page.
+  dom.document.body.innerHTML = `<a data-trail-start="probe">probe</a>`
+  dom.document.querySelector<HTMLElement>("a")!.click()
+  expect(dom.window.sessionStorage.getItem("datme-trail")).toBe("probe")
+  dom.window.sessionStorage.clear()
+  dom.document.body.innerHTML = ""
 })
 afterAll(() => dom.restore())
 

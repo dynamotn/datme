@@ -9,7 +9,7 @@
 import { parseYaml } from "./yaml"
 import type { Lang } from "../site.config"
 import { parseQuery, runQuery, type Engine, type Page } from "./dataview"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { formatDate, t } from "./i18n"
 import { dayKey } from "./calendar"
 

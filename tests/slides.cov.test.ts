@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 type Slides = typeof import("../src/scripts/slides")
 let dom: Dom
@@ -8,7 +8,13 @@ beforeAll(async () => {
   dom = installDom("https://garden.example/talk", { innerWidth: 1200, innerHeight: 800 })
   slides = await import("../src/scripts/slides")
 })
-afterAll(() => dom.restore())
+afterAll(() => {
+  // The document is shared with the other test files: take the faked full screen away again.
+  const doc = dom.document as unknown as Record<string, unknown>
+  delete doc.fullscreenElement
+  delete doc.exitFullscreen
+  dom.restore()
+})
 
 const slide = (n: number) => `<svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject><section id="s${n}"><p>Slide ${n}</p><a href="/x">link</a></section></foreignObject></svg>`
 const deck = (n = 3) => `<div class="marp-deck"><template shadowrootmode="open"><div class="marpit">${Array.from({ length: n }, (_, i) => slide(i + 1)).join("")}</div></template></div>`

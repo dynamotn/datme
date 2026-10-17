@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 const navigated: string[] = []
 mock.module("astro:transitions/client", () => ({ navigate: (url: string) => void navigated.push(url) }))

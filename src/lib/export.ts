@@ -1,3 +1,8 @@
+/**
+ * A folder of the garden as a book: an EPUB, or one HTML page to print to
+ * PDF. Chapters follow the folder tree; protected notes are left out.
+ */
+
 import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
@@ -11,12 +16,7 @@ import { renderNote } from "./markdown"
 import { toXhtml } from "./xhtml"
 import { zip } from "./zip"
 import { absUrl, withBase } from "./base"
-
-/**
- * A folder of the garden as a book: an EPUB, or one HTML page to print to
- * PDF. Chapters follow the folder tree; protected notes are left out.
- */
-export type Format = "epub" | "html"
+import { escapeAttr } from "./html"
 
 interface Chapter {
   note: Note
@@ -36,7 +36,6 @@ const MEDIA_TYPES: Record<string, string> = {
   ".avif": "image/avif",
 }
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
 /** The notes of a folder in reading order: its introduction, its notes, then each subfolder. */
 export function bookNotes(folder: FolderNode): Note[] {
@@ -148,17 +147,17 @@ export async function exportHtml(dir: string, lang: Lang = site.defaultLang): Pr
           return type && fs.existsSync(file) ? `data:${type};base64,${fs.readFileSync(file).toString("base64")}` : undefined
         },
       )
-      return `<section class="chapter" id="${anchor(c)}"><h1 class="chapter-title">${escape(c.title)}</h1>${toXhtml(tree)}</section>`
+      return `<section class="chapter" id="${anchor(c)}"><h1 class="chapter-title">${escapeAttr(c.title)}</h1>${toXhtml(tree)}</section>`
     })
     .join("\n")
-  const toc = book.chapters.map((c) => `<li><a href="#${anchor(c)}">${escape(c.title)}</a></li>`).join("")
+  const toc = book.chapters.map((c) => `<li><a href="#${anchor(c)}">${escapeAttr(c.title)}</a></li>`).join("")
   return `<!doctype html>
-<html lang="${escape(lang)}">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escape(book.title)}</title>
+<html lang="${escapeAttr(lang)}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeAttr(book.title)}</title>
 <style>${stylesheet()}</style></head>
 <body>
-<h1>${escape(book.title)}</h1>
-${site.author ? `<p class="author">${escape(site.author)}</p>` : ""}
+<h1>${escapeAttr(book.title)}</h1>
+${site.author ? `<p class="author">${escapeAttr(site.author)}</p>` : ""}
 <nav class="toc"><ol>${toc}</ol></nav>
 ${body}
 </body>
@@ -168,8 +167,8 @@ ${body}
 
 const xhtmlPage = (title: string, lang: Lang, body: string, extra = "") => `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${escape(lang)}" xml:lang="${escape(lang)}">
-<head><meta charset="utf-8"/><title>${escape(title)}</title><link rel="stylesheet" type="text/css" href="style.css"/>${extra}</head>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${escapeAttr(lang)}" xml:lang="${escapeAttr(lang)}">
+<head><meta charset="utf-8"/><title>${escapeAttr(title)}</title><link rel="stylesheet" type="text/css" href="style.css"/>${extra}</head>
 <body>${body}</body>
 </html>
 `
@@ -191,7 +190,7 @@ export async function exportEpub(dir: string, lang: Lang = site.defaultLang): Pr
         return images.get(rel)
       },
     )
-    return { c, xhtml: xhtmlPage(c.title, lang, `<section class="chapter"><h1 class="chapter-title">${escape(c.title)}</h1>${toXhtml(tree)}</section>`) }
+    return { c, xhtml: xhtmlPage(c.title, lang, `<section class="chapter"><h1 class="chapter-title">${escapeAttr(c.title)}</h1>${toXhtml(tree)}</section>`) }
   })
   const id = `urn:uuid:${uuidFrom(`${site.url ?? site.vault}:${lang}:${dir}`)}`
   const modified = new Date().toISOString().replace(/\.\d+Z$/, "Z")
@@ -202,12 +201,12 @@ export async function exportEpub(dir: string, lang: Lang = site.defaultLang): Pr
     ...[...images].map(([rel, name], i) => `<item id="img${i + 1}" href="${name}" media-type="${MEDIA_TYPES[path.extname(rel).toLowerCase()]}"/>`),
   ].join("\n    ")
   const opf = `<?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id" xml:lang="${escape(lang)}">
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id" xml:lang="${escapeAttr(lang)}">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:identifier id="book-id">${id}</dc:identifier>
-    <dc:title>${escape(book.title)}</dc:title>
-    <dc:language>${escape(lang)}</dc:language>
-    ${site.author ? `<dc:creator>${escape(site.author)}</dc:creator>` : ""}
+    <dc:title>${escapeAttr(book.title)}</dc:title>
+    <dc:language>${escapeAttr(lang)}</dc:language>
+    ${site.author ? `<dc:creator>${escapeAttr(site.author)}</dc:creator>` : ""}
     <meta property="dcterms:modified">${modified}</meta>
   </metadata>
   <manifest>
@@ -221,7 +220,7 @@ export async function exportEpub(dir: string, lang: Lang = site.defaultLang): Pr
   const nav = xhtmlPage(
     book.title,
     lang,
-    `<nav epub:type="toc" id="toc"><h1>${escape(book.title)}</h1><ol>${chapters.map(({ c }) => `<li><a href="${c.file}">${escape(c.title)}</a></li>`).join("")}</ol></nav>`,
+    `<nav epub:type="toc" id="toc"><h1>${escapeAttr(book.title)}</h1><ol>${chapters.map(({ c }) => `<li><a href="${c.file}">${escapeAttr(c.title)}</a></li>`).join("")}</ol></nav>`,
   )
   return zip([
     { name: "mimetype", data: "application/epub+zip", store: true },

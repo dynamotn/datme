@@ -1,7 +1,7 @@
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { formatDate, t } from "./i18n"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
 import { filterLanguage } from "./vault"
 import { withoutLocked } from "./locked"

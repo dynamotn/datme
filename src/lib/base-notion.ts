@@ -5,7 +5,7 @@
  */
 import type { Lang } from "../site.config"
 import { formatDate, t } from "./i18n"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { html } from "./dataview-render"
 import { lucideSvg } from "./icons"
 import type { Link, Value } from "./dataview"

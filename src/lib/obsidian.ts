@@ -14,6 +14,7 @@ import { markdownSafe } from "./excalidraw"
 import { CODE_SPAN } from "./links"
 import { t } from "./i18n"
 import { GARDEN_LINK } from "./neighbours"
+import { escapeAttr } from "./html"
 
 export interface LinkRef {
   key: string
@@ -97,16 +98,14 @@ export function docUrl(rel: string, lang: Lang): string {
 /** Placeholder for a note URL; replaced once every slug of the language is known. */
 export const urlPlaceholder = (key: string) => `\u0001URL:${key}\u0001`
 
-export const escapeAttr = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-
 export function anchorOf(fragment: string): string {
   if (!fragment) return ""
   if (fragment.startsWith("^")) return "#" + fragment
   return "#" + new GithubSlugger().slug(fragment.split("#").pop()!.trim())
 }
 
-function assetUrl(rel: string): string {
+/** The URL of a published vault file, under /assets/. */
+export function assetUrl(rel: string): string {
   return withBase("/assets/" + rel.split("/").map(encodeURIComponent).join("/"))
 }
 

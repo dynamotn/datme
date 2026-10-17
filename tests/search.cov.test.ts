@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
-import { installDom, tick, until, type Dom } from "./cov-dom"
+import { installDom, settle, until, type Dom } from "./client-dom"
 import { model } from "./cov-transformers"
 import { quantize } from "../src/lib/vectors"
 
@@ -21,7 +21,7 @@ mock.module("https://garden.example/pagefind/pagefind.js", () => ({
   },
   async search(q: string | null, opts?: { filters?: Record<string, string> }) {
     pagefindAsked.push({ q, filters: opts?.filters })
-    if (q === "slow") await tick(150)
+    if (q === "slow") await settle(150)
     const hits = q === null ? pagefindPages.slip.slice(0, 1) : (pagefindPages[q] ?? [])
     return { results: hits.map((h) => ({ data: async () => h })) }
   },
@@ -96,7 +96,7 @@ const key = (el: Element, k: string) => {
 /** Wait for the results to settle on something other than what they were. */
 const settled = async (list: Element, before = list.innerHTML) => {
   await until(() => list.innerHTML !== before)
-  await tick(20)
+  await settle(20)
 }
 
 describe("searching with the built-in index", () => {
@@ -222,12 +222,12 @@ describe("notes like this one", () => {
   test("with nothing typed and no vectors, or on a page that is no note, nothing is listed", async () => {
     let { list } = make({ similar: true, lang: "cov-novec" })
     search.openSearch()
-    await tick(80)
+    await settle(80)
     expect(list.innerHTML).toBe("")
     dom.window.history.replaceState(null, "", "/tags")
     ;({ list } = make({ similar: true }))
     search.openSearch()
-    await tick(80)
+    await settle(80)
     expect(list.innerHTML).toBe("")
     dom.window.history.replaceState(null, "", "/notes/c")
     ;({ list } = make({ similar: true }))
@@ -238,7 +238,7 @@ describe("notes like this one", () => {
     dom.window.history.replaceState(null, "", "/notes/x")
     ;({ list } = make({ similar: true, lang: "cov-search" }))
     search.openSearch()
-    await tick(80)
+    await settle(80)
     expect(list.innerHTML).toBe("")
     dom.window.history.replaceState(null, "", "/notes/a")
   })
@@ -270,7 +270,7 @@ describe("searching by meaning", () => {
       await settled(list)
       toggle.click()
       await until(() => !toggle.hasAttribute("aria-busy"))
-      await tick(20)
+      await settle(20)
       if (fresh) {
         expect(toggle.getAttribute("aria-pressed")).toBe("false")
         expect(warned).toEqual(["[datme] search by meaning is unavailable:"])
@@ -374,9 +374,9 @@ describe("searching with Pagefind", () => {
   test("a slower answer to an older query never replaces a newer one", async () => {
     const { input, list } = make({ engine: "pagefind", lang: "cov-pf" })
     type(input, "slow")
-    await tick(80)
+    await settle(80)
     type(input, "slip")
-    await tick(300)
+    await settle(300)
     expect(hrefs(list)).toEqual(["/notes/a", "/notes/untitled"])
   })
 
@@ -401,7 +401,7 @@ describe("searching with Pagefind", () => {
       type(input, "slip")
       await settled(list)
       release()
-      await tick(50)
+      await settle(50)
       expect(hrefs(list)).toEqual(["/notes/a", "/notes/untitled"])
     } finally {
       globalThis.fetch = fetchNow

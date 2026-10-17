@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 // Vite turns the ?url import into the font's address; here it is a fixed one.
 mock.module("excalifont/fonts/Excalifont-Regular.woff2?url", () => ({ default: "/assets/excalifont.woff2" }))
@@ -34,7 +34,11 @@ beforeAll(async () => {
   Object.defineProperty(dom.document, "fonts", { value: fontSet, configurable: true })
   fonts = await import("../src/scripts/excalifont")
 })
-afterAll(() => dom.restore())
+afterAll(() => {
+  // The document is shared with the other test files: take the fake font set away again.
+  delete (dom.document as unknown as Record<string, unknown>).fonts
+  dom.restore()
+})
 
 const links = () => [...dom.document.querySelectorAll<HTMLLinkElement>("link[data-drawing-fonts]")].map((l) => l.href)
 

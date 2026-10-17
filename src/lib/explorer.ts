@@ -2,6 +2,7 @@ import type { FolderNode } from "./vault"
 import { countNotes } from "./vault"
 import { folderIcon, noteIcon } from "./icons"
 import { site } from "../site.config"
+import { escapeAttrMinimal, escapeHtml } from "./html"
 
 /**
  * The explorer's tree as HTML. Every page shows only part of it: the top
@@ -9,9 +10,6 @@ import { site } from "../site.config"
  * whole tree is one file per language (/static/explorer.<lang>.html) that the
  * browser swaps in, so pages do not each carry every note of the vault.
  */
-
-const text = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;")
-const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
 
 const CHEVRON = '<span class="chev"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>'
 
@@ -58,15 +56,15 @@ export function explorerTree(folder: FolderNode, opts: Options = {}): string {
       const opened = opts.open?.has(c.dir) ?? false
       // The link sits beside the toggle, not inside it: a summary must hold no other control.
       html +=
-        `<li class="folder"><details data-dir="${attr(c.dir)}"${opened ? " open" : ""}>` +
-        `<summary aria-label="${attr(c.name)}">${CHEVRON}</summary>` +
+        `<li class="folder"><details data-dir="${escapeAttrMinimal(c.dir)}"${opened ? " open" : ""}>` +
+        `<summary aria-label="${escapeAttrMinimal(c.name)}">${CHEVRON}</summary>` +
         (full || opened ? list(c) : "<ul></ul>") +
-        `</details><a class="folder-link" href="${attr(c.url)}"${mark(c.url)}>${folderIcon(c.dir) ?? ""}${text(c.name)}</a>` +
+        `</details><a class="folder-link" href="${escapeAttrMinimal(c.url)}"${mark(c.url)}>${folderIcon(c.dir) ?? ""}${escapeHtml(c.name)}</a>` +
         `<span class="count">${countNotes(c)}</span></li>`
     }
     for (const n of f.notes) {
-      const stage = n.stage && f.dir === "" ? `<span class="stage-icon">${text(site.stages[n.stage].icon)}</span>` : ""
-      html += `<li><a href="${attr(n.url)}" title="${attr(n.title)}"${mark(n.url)}>${stage}${noteIcon(n.key, n.source.fm) ?? ""}${text(n.title)}</a></li>`
+      const stage = n.stage && f.dir === "" ? `<span class="stage-icon">${escapeHtml(site.stages[n.stage].icon)}</span>` : ""
+      html += `<li><a href="${escapeAttrMinimal(n.url)}" title="${escapeAttrMinimal(n.title)}"${mark(n.url)}>${stage}${noteIcon(n.key, n.source.fm) ?? ""}${escapeHtml(n.title)}</a></li>`
     }
     return html + "</ul>"
   }

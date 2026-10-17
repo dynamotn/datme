@@ -10,6 +10,7 @@
  *   read it from their server, but cannot follow it.
  */
 import type { SiteConfig } from "../site.config"
+import { escapeAttr } from "./html"
 
 export interface OutboxItem {
   url: string
@@ -59,7 +60,6 @@ export function actor(site: SiteConfig, username: string): object {
   }
 }
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
 /** The newest notes as Create activities, newest first. */
 export function outbox(site: SiteConfig, items: OutboxItem[]): object {
@@ -71,7 +71,7 @@ export function outbox(site: SiteConfig, items: OutboxItem[]): object {
     totalItems: items.length,
     orderedItems: items.map((n) => {
       const url = abs(site, n.url)
-      const content = `<p><a href="${escape(url)}">${escape(n.title)}</a></p>${n.summary ? `<p>${escape(n.summary)}</p>` : ""}`
+      const content = `<p><a href="${escapeAttr(url)}">${escapeAttr(n.title)}</a></p>${n.summary ? `<p>${escapeAttr(n.summary)}</p>` : ""}`
       return {
         id: `${url}#create`,
         type: "Create",

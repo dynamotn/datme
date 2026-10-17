@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, tick, until, type Dom } from "./cov-dom"
+import { installDom, settle, until, type Dom } from "./client-dom"
 
 type Popover = typeof import("../src/scripts/popover")
 let dom: Dom
@@ -73,7 +73,7 @@ describe("previews of notes of this garden", () => {
     await until(() => popover())
     expect(popover()!.querySelector<HTMLElement>(".prose")!.style.transform).toBe("translateY(-100px)")
     enter(b)
-    await tick(320)
+    await settle(320)
     expect(popover()!.querySelector<HTMLElement>(".prose")!.style.transform).toBe("")
     expect(asked.filter((r) => r.url === "/notes/two")).toHaveLength(1)
   })
@@ -106,7 +106,7 @@ describe("previews of notes of this garden", () => {
     hovered(links[3], false)
     for (const a of links) {
       enter(a)
-      await tick(320)
+      await settle(320)
       expect(popover()).toBeNull()
     }
   })
@@ -117,7 +117,7 @@ describe("previews of notes of this garden", () => {
     expect(links.map((a) => a.dataset.popover ?? "")).toEqual(["1", "", ""])
     pop.setupPopovers()
     for (const a of links) enter(a)
-    await tick(320)
+    await settle(320)
     expect(asked.some((r) => ["/notes/here/", "/notes/x", "/notes/y"].includes(r.url))).toBe(false)
   })
 
@@ -161,7 +161,7 @@ describe("previews of notes of neighbour gardens", () => {
     for (const l of [refused, down]) {
       leave(l)
       enter(l)
-      await tick(320)
+      await settle(320)
       expect(popover()).toBeNull()
     }
     // Nothing to name it by at all: an empty heading.
@@ -207,12 +207,12 @@ describe("footnotes and citations", () => {
     Object.defineProperty(side, "offsetParent", { value: dom.document.body, configurable: true })
     enter(fn)
     enter(missing)
-    await tick(230)
+    await settle(230)
     expect(popover()).toBeNull()
     Object.defineProperty(side, "offsetParent", { value: null, configurable: true })
     hovered(fn, false)
     enter(fn)
-    await tick(230)
+    await settle(230)
     expect(popover()).toBeNull()
   })
 

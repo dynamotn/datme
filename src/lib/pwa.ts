@@ -2,6 +2,7 @@ import { site, type Style } from "../site.config"
 import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
 import { withBase } from "./base"
+import { escapeText } from "./html"
 
 /** Theme colours of the browser chrome, matching the light page background. */
 export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
@@ -39,13 +40,11 @@ export function manifest(): string {
   )
 }
 
-const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-
 /** Shown for a page that was never read while online. */
 function offlinePage(): string {
   const lang = site.defaultLang
-  const lines = site.langs.map((l) => `<p>${escapeHtml(t(l).offlineLead)}</p>`).join("")
-  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(t(lang).offline)}</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px;text-align:center;color:#1d1b17;background:#f6f3ec}@media(prefers-color-scheme:dark){body{color:#ecebe5;background:#111210}}a{color:inherit}</style></head><body><p style="font-size:48px;margin:0">📴</p><h1>${escapeHtml(t(lang).offline)}</h1>${lines}<p><a href="${withBase("/")}">${escapeHtml(t(lang).backHome)}</a></p></body></html>`
+  const lines = site.langs.map((l) => `<p>${escapeText(t(l).offlineLead)}</p>`).join("")
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeText(t(lang).offline)}</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px;text-align:center;color:#1d1b17;background:#f6f3ec}@media(prefers-color-scheme:dark){body{color:#ecebe5;background:#111210}}a{color:inherit}</style></head><body><p style="font-size:48px;margin:0">📴</p><h1>${escapeText(t(lang).offline)}</h1>${lines}<p><a href="${withBase("/")}">${escapeText(t(lang).backHome)}</a></p></body></html>`
 }
 
 /** Pages kept for offline reading; the oldest ones are dropped beyond this. */

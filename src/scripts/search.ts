@@ -1,7 +1,8 @@
 import type MiniSearch from "minisearch"
 import { navigate } from "astro:transitions/client"
 import { loadIndex, currentLang, matchesFilter, readFilters, samePath, type IndexNote } from "./data"
-import { fold, esc, highlight, snippet } from "./text"
+import { fold, highlight, snippet } from "./text"
+import { escapeAttr } from "../lib/html"
 import { blend, embedQuery, loadVectors, nearest, type Near } from "./semantic"
 import { base, withBase } from "./base"
 
@@ -88,15 +89,15 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
   const hits = await Promise.all(found.results.slice(0, 30).map((r) => r.data()))
   if (stale()) return
   if (!hits.length) {
-    show(list, `<li class="empty" role="none">${esc(list.dataset.empty ?? "")}</li>`)
+    show(list, `<li class="empty" role="none">${escapeAttr(list.dataset.empty ?? "")}</li>`)
     return
   }
   // Pagefind's excerpts are page text with <mark> around the matches.
   show(
     list,
     hits.map(
-      (h) => `<li role="none"><a href="${esc(h.url)}" role="option">
-        <div class="r-title"><span>📝</span>${esc(h.meta.title ?? h.url)}</div>
+      (h) => `<li role="none"><a href="${escapeAttr(h.url)}" role="option">
+        <div class="r-title"><span>📝</span>${escapeAttr(h.meta.title ?? h.url)}</div>
         <div class="r-snippet">${h.excerpt}</div>
       </a></li>`,
     )
@@ -108,9 +109,9 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
 function resultHtml(n: IndexNote, terms: string[], sim?: number): string {
   const path = [n.f, ...n.g.slice(0, 3).map((g) => "#" + g)].filter(Boolean).join(" · ")
   const closeness = sim === undefined ? "" : `<span class="r-sim">≈ ${Math.round(sim * 100)}%</span>`
-  return `<li role="none"><a href="${esc(n.u)}" role="option">
+  return `<li role="none"><a href="${escapeAttr(n.u)}" role="option">
         <div class="r-title"><span>${n.s ?? "📝"}</span>${highlight(n.t, terms)}${closeness}</div>
-        <div class="r-path">${esc(path)}</div>
+        <div class="r-path">${escapeAttr(path)}</div>
         <div class="r-snippet">${highlight(snippet(n.c || n.d, terms), terms)}</div>
       </a></li>`
 }
@@ -126,7 +127,7 @@ async function showSimilar(dialog: HTMLDialogElement, list: HTMLElement, notes: 
   const near = nearest(here.v, vectors, 8, threshold(dialog), (url) => url === here.url)
   const byUrl = new Map(notes.map((n) => [n.u, n]))
   const items = near.flatMap((m) => (byUrl.has(m.url) ? [resultHtml(byUrl.get(m.url)!, [], m.sim)] : []))
-  show(list, items.length ? `<li class="group" role="presentation">${esc(dialog.dataset.similar ?? "")}</li>${items.join("")}` : "")
+  show(list, items.length ? `<li class="group" role="presentation">${escapeAttr(dialog.dataset.similar ?? "")}</li>${items.join("")}` : "")
 }
 
 /** Notes close in meaning to a query, once the reader turned on search by meaning. */
@@ -171,7 +172,7 @@ async function run(dialog: HTMLDialogElement, query: string) {
   const sims = new Map(meaning.map((m) => [m.url, m.sim]))
   const hits = ranked.filter(({ id }) => id !== undefined && matchesFilter(notes[id as number], filter)).slice(0, q ? 30 : 100)
   if (!hits.length) {
-    show(list, `<li class="empty" role="none">${esc(list.dataset.empty ?? "")}</li>`)
+    show(list, `<li class="empty" role="none">${escapeAttr(list.dataset.empty ?? "")}</li>`)
     return
   }
   show(list, hits.map(({ id }) => resultHtml(notes[id as number], terms, sims.get(notes[id as number].u))).join(""))

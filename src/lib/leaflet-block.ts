@@ -8,7 +8,7 @@
 import { site, type Lang } from "../site.config"
 import { getVault, listed } from "./vault"
 import { parseLocation, type Place } from "./places"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { t } from "./i18n"
 
 export interface LeafletMap {

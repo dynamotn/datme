@@ -20,7 +20,7 @@ test:
   script:
     - bun install --frozen-lockfile
     - bunx astro check
-    - bun test
+    - bun test --coverage
 
 # The documentation is a datme garden; the default branch publishes it on GitLab Pages.
 pages:

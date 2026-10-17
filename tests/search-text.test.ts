@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { fold, esc, highlight, snippet } from "../src/scripts/text"
+import { fold, highlight, snippet } from "../src/scripts/text"
 import { samePath } from "../src/scripts/data"
 
 describe("fold", () => {
@@ -18,7 +18,7 @@ describe("highlight", () => {
   })
 
   test("without terms it only escapes", () => {
-    expect(highlight("a & b", [])).toBe(esc("a & b"))
+    expect(highlight("a & b", [])).toBe("a &amp; b")
   })
 })
 

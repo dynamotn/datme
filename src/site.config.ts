@@ -461,7 +461,10 @@ export interface NavItem {
 }
 
 export class ConfigError extends Error {
-  override name = "ConfigError"
+  constructor(message?: string) {
+    super(message)
+    this.name = "ConfigError"
+  }
 }
 
 /** Validate a parsed config and fill in every default. Pure, so it can be tested. */

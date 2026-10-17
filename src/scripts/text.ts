@@ -1,15 +1,15 @@
 /** Pure text helpers for search, kept free of browser-only imports so they can be tested. */
 
+import { escapeAttr } from "../lib/html"
+
 /** Lowercase and strip diacritics, so "ghi chu" matches "ghi chú". */
 export const fold = (s: string) =>
   s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
 
-export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!)
-
 /** Highlight query terms, matching without diacritics. Each char folds to one char. */
 export function highlight(text: string, terms: string[]): string {
   const folded = [...text].map((c) => fold(c) || c).join("")
-  if ([...text].length !== folded.length || !terms.length) return esc(text)
+  if ([...text].length !== folded.length || !terms.length) return escapeAttr(text)
   const chars = [...text]
   const marks = new Array(chars.length).fill(false)
   for (const term of terms) {
@@ -25,7 +25,7 @@ export function highlight(text: string, terms: string[]): string {
   chars.forEach((c, i) => {
     if (marks[i] && !open) (out += "<mark>"), (open = true)
     if (!marks[i] && open) (out += "</mark>"), (open = false)
-    out += esc(c)
+    out += escapeAttr(c)
   })
   return open ? out + "</mark>" : out
 }

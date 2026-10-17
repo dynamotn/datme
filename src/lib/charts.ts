@@ -1,5 +1,5 @@
 import { parseYaml } from "./yaml"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 
 /** A chart of the Obsidian Charts plugin, as its YAML describes it. */
 export interface ChartSpec {

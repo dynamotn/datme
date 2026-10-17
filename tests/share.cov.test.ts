@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, sharedOrFresh, tick, type Dom } from "./cov-dom"
+import { installDom, settle, type Dom } from "./client-dom"
 
 type Share = typeof import("../src/scripts/share")
 let dom: Dom
@@ -9,19 +9,17 @@ let clipboard: { writeText(s: string): Promise<void> } | undefined
 beforeAll(async () => {
   dom = installDom("https://garden.example/notes/a?x=1")
   Object.defineProperty(dom.window.navigator, "clipboard", { get: () => clipboard, configurable: true })
-  // The module listens on the document of its first setup.
-  share = await sharedOrFresh<Share>("../src/scripts/share", async (m) => {
-    clipboard = okClipboard
-    m.setupShare()
-    m.setupShare()
-    page()
-    select(dom.document.getElementById("p")!.firstChild!)
-    await mouseup()
-    const answered = !!bar()
-    dom.document.dispatchEvent(new dom.window.Event("scroll"))
-    dom.document.getSelection()!.removeAllRanges()
-    return answered
-  })
+  share = await import("../src/scripts/share")
+  // The module listens on the document of its first setup: the shared page.
+  clipboard = okClipboard
+  share.setupShare()
+  share.setupShare()
+  page()
+  select(dom.document.getElementById("p")!.firstChild!)
+  await mouseup()
+  expect(bar()).not.toBeNull()
+  dom.document.dispatchEvent(new dom.window.Event("scroll"))
+  dom.document.getSelection()!.removeAllRanges()
 })
 afterAll(() => dom.restore())
 
@@ -41,7 +39,7 @@ const select = (node: Node) => {
 }
 const mouseup = async (target: EventTarget = dom.document.body) => {
   target.dispatchEvent(new dom.window.MouseEvent("mouseup", { bubbles: true }))
-  await tick(5)
+  await settle(5)
 }
 const bar = () => dom.document.querySelector<HTMLElement>(".share-bar")
 const buttons = () => [...(bar()?.querySelectorAll("button") ?? [])].map((b) => b.textContent)
@@ -70,10 +68,10 @@ describe("sharing a selection", () => {
     copied.length = 0
     const b = bar()!.querySelector<HTMLButtonElement>("button")!
     b.click()
-    await tick(5)
+    await settle(5)
     expect(copied).toEqual(["https://garden.example/notes/a#:~:text=The%20slip%20box%20is%20a%20second%20brain%20for%20notes."])
     expect(b.textContent).toBe("Đã chép")
-    await tick(1300)
+    await settle(1300)
     expect(!!bar()).toBe(false)
   })
 
@@ -88,7 +86,7 @@ describe("sharing a selection", () => {
     await mouseup()
     expect(buttons()).toEqual(["Copy link to passage", "Highlight"])
     bar()!.querySelector<HTMLButtonElement>("button")!.click()
-    await tick(5)
+    await settle(5)
     expect(dom.window.location.hash).toBe("#:~:text=The%20slip%20box%20is%20a%20second%20brain%20for%20notes.")
     // "Copied" never shows: the copy failed.
     expect(bar()!.querySelector("button")!.textContent).toBe("Copy link to passage")
@@ -145,15 +143,15 @@ describe("sharing a selection", () => {
     page()
     select(dom.document.getElementById("p")!.firstChild!)
     dom.document.dispatchEvent(new dom.window.KeyboardEvent("keyup", { key: "a" }))
-    await tick(5)
+    await settle(5)
     expect(!!bar()).toBe(false)
     dom.document.dispatchEvent(new dom.window.KeyboardEvent("keyup", { key: "Shift" }))
-    await tick(5)
+    await settle(5)
     expect(!!bar()).toBe(true)
     dom.document.dispatchEvent(new dom.window.Event("scroll"))
     expect(!!bar()).toBe(false)
     dom.document.dispatchEvent(new dom.window.KeyboardEvent("keyup", { key: "ArrowRight", shiftKey: true }))
-    await tick(5)
+    await settle(5)
     expect(!!bar()).toBe(true)
     // A new selection replaces the bar rather than adding one.
     await mouseup()

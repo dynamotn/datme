@@ -5,6 +5,7 @@ import { formatDate, t, type StringKey } from "./i18n"
 import { currentPage, engineFor } from "./dataview-render"
 import { parseBase, runView, type BaseFile } from "./bases"
 import { parseLocation, type Place } from "./places"
+import { escapeAttr } from "./html"
 
 /**
  * Page layouts a note asks for with its `layout` property. Some reshape the
@@ -421,7 +422,6 @@ export function itemOf(n: Note): Item | undefined {
 
 const IMAGE_ONLY = /^(?:\s|<br\s*\/?>|<span class="image-embed">\s*<img\b[^>]*>\s*<\/span>|<img\b[^>]*>)+$/
 const IMG = /<img\b[^>]*>/g
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
 /**
  * A gallery: runs of paragraphs holding nothing but pictures become one grid,
@@ -461,7 +461,7 @@ function galleryOfNotes(notes: Note[]): string {
     .filter((n) => n.cover)
     .map(
       (n) =>
-        `<figure class="gallery-item"><a class="internal" href="${esc(n.url)}" data-key="${esc(n.key)}" tabindex="-1" aria-hidden="true"><img src="${esc(n.cover!)}" alt="" loading="lazy"></a><figcaption><a class="internal" href="${esc(n.url)}">${esc(n.title)}</a></figcaption></figure>`,
+        `<figure class="gallery-item"><a class="internal" href="${escapeAttr(n.url)}" data-key="${escapeAttr(n.key)}" tabindex="-1" aria-hidden="true"><img src="${escapeAttr(n.cover!)}" alt="" loading="lazy"></a><figcaption><a class="internal" href="${escapeAttr(n.url)}">${escapeAttr(n.title)}</a></figcaption></figure>`,
     )
   return items.length ? `<div class="gallery-grid">${items.join("")}</div>` : ""
 }
@@ -507,7 +507,7 @@ function timelineOfNotes(notes: Note[], lang: Lang, sorted: boolean): string {
   if (!dated.length) return ""
   const events = dated.map(
     ({ n, when }) =>
-      `<li class="life-event"><p class="life-when"><time datetime="${when!.toISOString()}">${esc(formatDate(when, lang))}</time></p><div class="life-body"><p><a class="internal" href="${esc(n.url)}" data-key="${esc(n.key)}">${esc(n.title)}</a>${n.description ? ` — ${esc(n.description)}` : ""}</p></div></li>`,
+      `<li class="life-event"><p class="life-when"><time datetime="${when!.toISOString()}">${escapeAttr(formatDate(when, lang))}</time></p><div class="life-body"><p><a class="internal" href="${escapeAttr(n.url)}" data-key="${escapeAttr(n.key)}">${escapeAttr(n.title)}</a>${n.description ? ` — ${escapeAttr(n.description)}` : ""}</p></div></li>`,
   )
   return `<ol class="life-timeline">${events.join("")}</ol>`
 }

@@ -13,6 +13,7 @@ import * as lzString from "lz-string"
 import rough from "roughjs"
 import type { Options as RoughOptions } from "roughjs/bin/core"
 import { getStroke } from "perfect-freehand"
+import { escapeAttr } from "./html"
 
 // lz-string is CommonJS: named imports fail under Vite and Node, which put it on the default export.
 const LZString = (lzString as { default?: typeof lzString }).default ?? lzString
@@ -233,7 +234,6 @@ export function parseSelection(fragment: string): Selection | undefined {
 
 // ---------- drawing ----------
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 const transparent = (c: string | undefined) => !c || c === "transparent"
 
 /** Font families of Excalidraw, by the number it stores. */
@@ -301,7 +301,7 @@ function paths(drawable: ReturnType<typeof generator.rectangle>, dash?: number[]
     .toPaths(drawable)
     .map((p) => {
       const dashAttr = dash && p.fill === "none" && p.stroke === outline ? ` stroke-dasharray="${dash.join(" ")}"` : ""
-      return `<path d="${p.d}" stroke="${esc(p.stroke)}" stroke-width="${p.strokeWidth}" fill="${esc(p.fill ?? "none")}"${dashAttr}/>`
+      return `<path d="${p.d}" stroke="${escapeAttr(p.stroke)}" stroke-width="${p.strokeWidth}" fill="${escapeAttr(p.fill ?? "none")}"${dashAttr}/>`
     })
     .join("")
 }
@@ -372,7 +372,7 @@ function freehandPath(e: ExElement): string {
     },
     ["M", outline[0][0].toFixed(2), outline[0][1].toFixed(2), "Q"],
   )
-  return `<path d="${d.join(" ")} Z" fill="${esc(e.strokeColor ?? "#1e1e1e")}"/>`
+  return `<path d="${d.join(" ")} Z" fill="${escapeAttr(e.strokeColor ?? "#1e1e1e")}"/>`
 }
 
 /** Links in a line of text: [[target|alias]], [[target]] and [text](url), with what a reader sees of them. */
@@ -402,14 +402,14 @@ function textSvg(e: ExElement, link: (target: string) => string | undefined): st
       const parts = textLinks(line).map((part, j) => {
         const pos = j === 0 ? ` x="${x}" y="${((i + 0.5) * lh).toFixed(2)}"` : ""
         // dominant-baseline is not inherited through <a> everywhere, so each part carries it.
-        const span = `<tspan${pos} dominant-baseline="middle">${esc(part.text) || (j === 0 ? " " : "")}</tspan>`
+        const span = `<tspan${pos} dominant-baseline="middle">${escapeAttr(part.text) || (j === 0 ? " " : "")}</tspan>`
         const href = part.target ? link(part.target) : undefined
-        return href ? `<a href="${esc(href)}" class="drawing-link">${span}</a>` : span
+        return href ? `<a href="${escapeAttr(href)}" class="drawing-link">${span}</a>` : span
       })
       return parts.join("")
     })
     .join("")
-  return `<text font-family="${esc(font)}" font-size="${size}" fill="${esc(e.strokeColor ?? "#1e1e1e")}" text-anchor="${anchor}" dominant-baseline="middle" style="white-space:pre">${tspans}</text>`
+  return `<text font-family="${escapeAttr(font)}" font-size="${size}" fill="${escapeAttr(e.strokeColor ?? "#1e1e1e")}" text-anchor="${anchor}" dominant-baseline="middle" style="white-space:pre">${tspans}</text>`
 }
 
 function imageSvg(e: ExElement, view: FileView | undefined, prefix: string): string {
@@ -418,8 +418,8 @@ function imageSvg(e: ExElement, view: FileView | undefined, prefix: string): str
   if (!view) return ""
   if (view.kind === "drawing") return `<svg viewBox="${view.viewBox}" width="${w}" height="${h}">${view.body}</svg>`
   if (view.kind === "note") {
-    const card = `<rect width="${w}" height="${h}" rx="8" fill="#ffffff" stroke="#c0c0c0"/><text x="${w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(`${FONTS[5]}, ${FALLBACK}`)}" font-size="${Math.max(12, Math.min(28, h / 4))}" fill="#1e1e1e">📄 ${esc(view.title)}</text>`
-    return view.href ? `<a href="${esc(view.href)}" class="drawing-link">${card}</a>` : card
+    const card = `<rect width="${w}" height="${h}" rx="8" fill="#ffffff" stroke="#c0c0c0"/><text x="${w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="${escapeAttr(`${FONTS[5]}, ${FALLBACK}`)}" font-size="${Math.max(12, Math.min(28, h / 4))}" fill="#1e1e1e">📄 ${escapeAttr(view.title)}</text>`
+    return view.href ? `<a href="${escapeAttr(view.href)}" class="drawing-link">${card}</a>` : card
   }
   if (view.kind === "math") {
     // MathML renders in the browser inside a foreignObject, sized to the element.
@@ -430,11 +430,11 @@ function imageSvg(e: ExElement, view: FileView | undefined, prefix: string): str
   const c = e.crop
   // A cropped image shows only its window of the picture.
   if (c && c.width > 0 && c.height > 0) {
-    return `<svg viewBox="${c.x} ${c.y} ${c.width} ${c.height}" width="${w}" height="${h}" preserveAspectRatio="none"${flip}><image href="${esc(view.href)}" width="${c.naturalWidth}" height="${c.naturalHeight}"/></svg>`
+    return `<svg viewBox="${c.x} ${c.y} ${c.width} ${c.height}" width="${w}" height="${h}" preserveAspectRatio="none"${flip}><image href="${escapeAttr(view.href)}" width="${c.naturalWidth}" height="${c.naturalHeight}"/></svg>`
   }
-  const round = e.roundness ? ` clip-path="url(#${prefix}r-${esc(e.id)})"` : ""
-  const clip = e.roundness ? `<clipPath id="${prefix}r-${esc(e.id)}"><rect width="${w}" height="${h}" rx="${Math.min(w, h) * 0.1}"/></clipPath>` : ""
-  return `${clip}<image href="${esc(view.href)}" width="${w}" height="${h}" preserveAspectRatio="none"${flip}${round}/>`
+  const round = e.roundness ? ` clip-path="url(#${prefix}r-${escapeAttr(e.id)})"` : ""
+  const clip = e.roundness ? `<clipPath id="${prefix}r-${escapeAttr(e.id)}"><rect width="${w}" height="${h}" rx="${Math.min(w, h) * 0.1}"/></clipPath>` : ""
+  return `${clip}<image href="${escapeAttr(view.href)}" width="${w}" height="${h}" preserveAspectRatio="none"${flip}${round}/>`
 }
 
 /** The shape of one element, drawn at the origin; the caller moves and turns it. */
@@ -593,14 +593,14 @@ export function renderParts(scene: Scene, options: RenderOptions = {}): Parts {
   const defs: string[] = []
   const frameIds = new Set(drawable.filter((e) => FRAMES.includes(e.type)).map((e) => e.id))
   for (const f of [...drawable.filter((e) => frameIds.has(e.id)), ...(clipTo ? [clipTo] : [])]) {
-    defs.push(`<clipPath id="${prefix}f-${esc(f.id)}"><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}"/></clipPath>`)
+    defs.push(`<clipPath id="${prefix}f-${escapeAttr(f.id)}"><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}"/></clipPath>`)
   }
   const body = drawable
     .map((e) => {
       if (FRAMES.includes(e.type)) {
         // Frames as Excalidraw shows them: a light outline with the frame's name above.
         const name = e.name ?? "Frame"
-        return `<g class="drawing-frame"><rect x="${e.x}" y="${e.y}" width="${e.width}" height="${e.height}" rx="8" fill="none" stroke="#bbb" stroke-width="2"/>${name ? `<text x="${e.x}" y="${e.y - 6}" font-family="${esc(FALLBACK)}" font-size="14" fill="#999">${esc(name)}</text>` : ""}</g>`
+        return `<g class="drawing-frame"><rect x="${e.x}" y="${e.y}" width="${e.width}" height="${e.height}" rx="8" fill="none" stroke="#bbb" stroke-width="2"/>${name ? `<text x="${e.x}" y="${e.y - 6}" font-family="${escapeAttr(FALLBACK)}" font-size="14" fill="#999">${escapeAttr(name)}</text>` : ""}</g>`
       }
       const inner = shape(e, opts)
       if (!inner) return ""
@@ -611,16 +611,16 @@ export function renderParts(scene: Scene, options: RenderOptions = {}): Parts {
       const href = target ? opts.resolveLink(target[0]) : undefined
       // A shape has no words of its own: the link is named after where it leads.
       const label = target ? (target[1] ?? target[0].split("/").pop()!.replace(/\.md$/, "")) : ""
-      if (href) g = `<a href="${esc(href)}" class="drawing-link" aria-label="${esc(label)}">${g}</a>`
+      if (href) g = `<a href="${escapeAttr(href)}" class="drawing-link" aria-label="${escapeAttr(label)}">${g}</a>`
       // What a frame holds stays inside it, as in Excalidraw.
       const frame = clipTo?.id ?? (e.frameId && frameIds.has(e.frameId) ? e.frameId : undefined)
-      return frame ? `<g clip-path="url(#${prefix}f-${esc(frame)})">${g}</g>` : g
+      return frame ? `<g clip-path="url(#${prefix}f-${escapeAttr(frame)})">${g}</g>` : g
     })
     .join("")
   const bg =
     transparent(scene.background) || scene.exportOptions.transparent
       ? ""
-      : `<rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${esc(scene.background)}"/>`
+      : `<rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="${escapeAttr(scene.background)}"/>`
   return {
     viewBox: `${minX.toFixed(2)} ${minY.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)}`,
     width,

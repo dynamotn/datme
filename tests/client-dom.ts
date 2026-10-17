@@ -5,7 +5,8 @@
  * Every test file using it shares one window: the whole suite runs in one bun
  * process with one module cache, and scripts bind some listeners to the
  * document once, on first use. With one shared document those listeners keep
- * working whichever test file happens to set them up first.
+ * working whichever test file happens to set them up first, and each module
+ * is imported once, so bun's coverage counts every test that runs it.
  */
 import { Window } from "happy-dom"
 
@@ -24,6 +25,7 @@ const PLAIN = [
   "Element",
   "Text",
   "HTMLElement",
+  "HTMLAnchorElement",
   "HTMLMediaElement",
   "HTMLVideoElement",
   "HTMLCanvasElement",
@@ -37,6 +39,8 @@ const PLAIN = [
   "MutationObserver",
   "IntersectionObserver",
   "ResizeObserver",
+  "CSS",
+  "FontFace",
 ] as const
 
 /** Functions of the window, called without it. */
@@ -47,6 +51,7 @@ const LIVE = ["innerHeight", "innerWidth", "scrollY"] as const
 
 export interface Dom {
   window: DomWindow
+  document: Document
   /** Move the page to another URL, keeping its document. */
   goto(url: string): void
   /** Put a global in place until restore (a fake observer, a clipboard...). */
@@ -56,13 +61,25 @@ export interface Dom {
 
 const SHARED = Symbol.for("datme.tests.client-dom")
 
+/** The live values of the window as happy-dom made them, for tests that fake a size or a scroll on it. */
+const ownLive = new WeakMap<Window, Map<string, PropertyDescriptor | undefined>>()
+
 function sharedWindow(): Window {
   const g = globalThis as unknown as Record<symbol, Window | undefined>
-  return (g[SHARED] ??= new Window({ url: "https://garden.example/", width: 1024, height: 768 }))
+  if (!g[SHARED]) {
+    const happy = new Window({ url: "https://garden.example/", width: 1024, height: 768 })
+    ownLive.set(happy, new Map(LIVE.map((k) => [k, Object.getOwnPropertyDescriptor(happy, k)])))
+    g[SHARED] = happy
+  }
+  return g[SHARED]
 }
 
-/** Leave the shared page blank for the next test file. */
+/** Leave the shared page blank for the next test file, its size and scroll as they started. */
 function clean(happy: Window) {
+  for (const [k, desc] of ownLive.get(happy) ?? []) {
+    if (desc) Object.defineProperty(happy, k, desc)
+    else delete (happy as unknown as Record<string, unknown>)[k]
+  }
   const root = happy.document.documentElement
   for (const a of [...root.attributes]) root.removeAttribute(a.name)
   happy.document.head.innerHTML = ""
@@ -72,7 +89,8 @@ function clean(happy: Window) {
   happy.sessionStorage.clear()
 }
 
-export function installDom(url = "https://garden.example/"): Dom {
+/** Install the shared page at `url` as the global DOM; `extra` adds or overrides globals until restore. */
+export function installDom(url = "https://garden.example/", extra: Record<string, unknown> = {}): Dom {
   const happy = sharedWindow()
   happy.happyDOM.setURL(url)
   clean(happy)
@@ -87,8 +105,10 @@ export function installDom(url = "https://garden.example/"): Dom {
   for (const k of PLAIN) put(k, { value: w[k], writable: true })
   for (const k of BOUND) put(k, { value: (w[k] as (...a: unknown[]) => unknown).bind(window), writable: true })
   for (const k of LIVE) put(k, { get: () => w[k] })
+  for (const [k, v] of Object.entries(extra)) put(k, { value: v, writable: true })
   return {
     window,
+    document: window.document,
     goto: (url) => happy.happyDOM.setURL(url),
     set: (name, value) => put(name, { value, writable: true }),
     restore() {
@@ -105,3 +125,7 @@ export function installDom(url = "https://garden.example/"): Dom {
 /** Let promises and short timers settle. */
 export const settle = (ms = 0) => new Promise((r) => setTimeout(r, ms))
 
+/** Wait until `cond` holds, polling every 10ms, for up to a second by default. */
+export async function until(cond: () => unknown, tries = 100): Promise<void> {
+  for (let i = 0; i < tries && !cond(); i++) await settle(10)
+}

@@ -4,6 +4,8 @@
  * the references the note cites listed at its end.
  */
 
+import { escapeAttr } from "./html"
+
 export interface BibEntry {
   key: string
   type: string
@@ -149,7 +151,6 @@ export function shortAuthors(e: BibEntry): string {
   return `${ps[0].family} et al.`
 }
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 const initials = (given: string) =>
   given
     .split(/[\s-]+/)
@@ -163,19 +164,19 @@ export function formatReference(e: BibEntry): string {
   const ps = people(f.author ?? f.editor)
   const names = ps.map((p) => (p.given ? `${p.family}, ${initials(p.given)}` : p.family))
   const who = names.length > 1 ? `${names.slice(0, -1).join(", ")}, & ${names.at(-1)}` : (names[0] ?? "")
-  const title = f.title ? escape(f.title) : ""
+  const title = f.title ? escapeAttr(f.title) : ""
   const container = f.journal ?? f.journaltitle ?? f.booktitle
   const parts: string[] = []
   // An anonymous work is listed by its title.
-  parts.push(`${escape(who || title)} (${escape(year(e))}).`)
+  parts.push(`${escapeAttr(who || title)} (${escapeAttr(year(e))}).`)
   if (who && title) parts.push(container ? `${title}.` : `<em>${title}</em>.`)
   if (container) {
-    const vol = f.volume ? `, <em>${escape(f.volume)}</em>${f.number ? `(${escape(f.number)})` : ""}` : ""
-    parts.push(`<em>${escape(container)}</em>${vol}${f.pages ? `, ${escape(f.pages)}` : ""}.`)
+    const vol = f.volume ? `, <em>${escapeAttr(f.volume)}</em>${f.number ? `(${escapeAttr(f.number)})` : ""}` : ""
+    parts.push(`<em>${escapeAttr(container)}</em>${vol}${f.pages ? `, ${escapeAttr(f.pages)}` : ""}.`)
   }
-  if (f.publisher) parts.push(`${escape(f.publisher)}.`)
+  if (f.publisher) parts.push(`${escapeAttr(f.publisher)}.`)
   const link = f.doi ? `https://doi.org/${f.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//, "")}` : f.url
-  if (link && /^https?:\/\//.test(link)) parts.push(`<a href="${escape(link)}">${escape(link)}</a>`)
+  if (link && /^https?:\/\//.test(link)) parts.push(`<a href="${escapeAttr(link)}">${escapeAttr(link)}</a>`)
   return parts.join(" ")
 }
 
@@ -223,11 +224,11 @@ export function cite(md: string, bib: Map<string, BibEntry>, heading: string): C
         const entry = bib.get(key)
         if (!entry) {
           if (!missing.includes(key)) missing.push(key)
-          return `<span class="citation-missing">@${escape(key)}</span>`
+          return `<span class="citation-missing">@${escapeAttr(key)}</span>`
         }
         if (!keys.includes(key)) keys.push(key)
-        const text = `${suppress ? "" : `${escape(shortAuthors(entry))} `}${escape(year(entry))}${locator ? `, ${escape(locator.trim())}` : ""}`
-        return `${prefix.trim() ? `${escape(prefix.trim())} ` : ""}<a href="#ref-${encodeURIComponent(key)}" class="citation">${text}</a>`
+        const text = `${suppress ? "" : `${escapeAttr(shortAuthors(entry))} `}${escapeAttr(year(entry))}${locator ? `, ${escapeAttr(locator.trim())}` : ""}`
+        return `${prefix.trim() ? `${escapeAttr(prefix.trim())} ` : ""}<a href="#ref-${encodeURIComponent(key)}" class="citation">${text}</a>`
       })
       return `<cite class="citations">(${rendered.join("; ")})</cite>`
     })
@@ -238,8 +239,8 @@ export function cite(md: string, bib: Map<string, BibEntry>, heading: string): C
     const sorted = keys
       .map((k) => bib.get(k)!)
       .sort((a, b) => shortAuthors(a).localeCompare(shortAuthors(b)) || year(a).localeCompare(year(b)))
-    const items = sorted.map((e) => `<li id="ref-${escape(encodeURIComponent(e.key))}">${formatReference(e)}</li>`).join("")
-    result += `\n\n<section class="references"><h2 id="cited-references">${escape(heading)}</h2><ol>${items}</ol></section>\n`
+    const items = sorted.map((e) => `<li id="ref-${escapeAttr(encodeURIComponent(e.key))}">${formatReference(e)}</li>`).join("")
+    result += `\n\n<section class="references"><h2 id="cited-references">${escapeAttr(heading)}</h2><ol>${items}</ol></section>\n`
   }
   return { md: result, keys, missing }
 }

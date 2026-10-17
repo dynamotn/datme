@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 import type { Mention } from "../src/scripts/webmentions"
 
 type Wm = typeof import("../src/scripts/webmentions")

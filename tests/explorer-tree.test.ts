@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { getVault, type FolderNode, type Note } from "../src/lib/vault"
 import { explorerTree, trail } from "../src/lib/explorer"
-import { installDom, type Dom } from "./client-dom"
+import { installDom, until, type Dom } from "./client-dom"
 
 const tree = getVault().trees["vi-VN"]
 
@@ -108,5 +108,122 @@ describe("the explorer in the browser", () => {
     await explorer.ensureExplorer()
     expect(el.hasAttribute("data-explorer-partial")).toBe(true)
     expect(el.querySelector("[aria-current]")?.getAttribute("href")).toBe("/A/B/two")
+  })
+
+  const online = () =>
+    dom.set("fetch", async (url: string) => {
+      fetched.push(url)
+      return new Response(full)
+    })
+  const pageLoad = () => document.dispatchEvent(new dom.window.Event("astro:page-load") as unknown as Event)
+  const openDirs = (el: HTMLElement) => [...el.querySelectorAll<HTMLDetailsElement>("details")].filter((d) => d.open).map((d) => d.dataset.dir)
+
+  test("focus on a folder's toggle stays on that folder's toggle", async () => {
+    online()
+    const el = mount("nl-NL")
+    el.querySelector<HTMLElement>("details[data-dir='C'] > summary")!.focus()
+    await explorer.ensureExplorer()
+    expect(el.hasAttribute("data-explorer-partial")).toBe(false)
+    expect(document.activeElement).toBe(el.querySelector("details[data-dir='C'] > summary"))
+  })
+
+  test("remembered folders that cannot be read open none, only the page's own", async () => {
+    online()
+    localStorage.setItem("explorer-open", "{not json")
+    const el = mount("fr-FR")
+    await explorer.ensureExplorer()
+    expect(el.hasAttribute("data-explorer-partial")).toBe(false)
+    expect(openDirs(el).sort()).toEqual(["A", "A/B"])
+  })
+
+  test("the tree loads once the sidebar comes on screen, and then the browser is idle", async () => {
+    online()
+    fetched = []
+    const observers: { callback: (entries: { isIntersecting: boolean }[]) => void; observed: Element[]; disconnected: boolean }[] = []
+    dom.set(
+      "IntersectionObserver",
+      class {
+        observed: Element[] = []
+        disconnected = false
+        constructor(public callback: (entries: { isIntersecting: boolean }[]) => void) {
+          observers.push(this)
+        }
+        observe(el: Element) {
+          this.observed.push(el)
+        }
+        disconnect() {
+          this.disconnected = true
+        }
+      },
+    )
+    // A page without a partial explorer sets nothing up.
+    document.body.innerHTML = ""
+    pageLoad()
+    expect(observers).toHaveLength(0)
+
+    const el = mount("ja-JP")
+    pageLoad()
+    expect(observers).toHaveLength(1)
+    expect(observers[0].observed).toEqual([el])
+    // Out of sight, as in a closed drawer: nothing loads.
+    observers[0].callback([{ isIntersecting: false }])
+    expect(observers[0].disconnected).toBe(false)
+    expect(fetched).toHaveLength(0)
+    // Another page load drops the old observer for a new one.
+    pageLoad()
+    expect(observers[0].disconnected).toBe(true)
+    expect(observers).toHaveLength(2)
+    observers[1].callback([{ isIntersecting: false }, { isIntersecting: true }])
+    expect(observers[1].disconnected).toBe(true)
+    // happy-dom has no requestIdleCallback: a short timer stands in.
+    expect(el.hasAttribute("data-explorer-partial")).toBe(true)
+    await until(() => !el.hasAttribute("data-explorer-partial"))
+    expect(fetched).toEqual(["/static/explorer.ja-JP.html"])
+  })
+
+  test("reaching for the part loads the whole tree at once: a pointer over it, or a folder opened empty", async () => {
+    online()
+    fetched = []
+    const hovered = mount("it-IT")
+    document.body.dispatchEvent(new dom.window.Event("pointerover", { bubbles: true }) as unknown as Event)
+    expect(fetched).toHaveLength(0)
+    hovered.querySelector("a")!.dispatchEvent(new dom.window.Event("pointerover", { bubbles: true }) as unknown as Event)
+    await until(() => !hovered.hasAttribute("data-explorer-partial"))
+    expect(fetched).toEqual(["/static/explorer.it-IT.html"])
+
+    const el = mount("pt-BR")
+    const toggle = (dir: string, open: boolean) => {
+      const d = el.querySelector<HTMLDetailsElement>(`details[data-dir='${dir}']`)!
+      d.open = open
+      d.dispatchEvent(new dom.window.Event("toggle") as unknown as Event)
+    }
+    // Closing a folder, or opening one that already holds its notes, asks for nothing.
+    toggle("A", false)
+    toggle("A", true)
+    expect(fetched).toHaveLength(1)
+    toggle("C", true)
+    await until(() => !el.hasAttribute("data-explorer-partial"))
+    expect(fetched).toEqual(["/static/explorer.it-IT.html", "/static/explorer.pt-BR.html"])
+  })
+
+  test("without IntersectionObserver the tree loads when the browser is idle", async () => {
+    online()
+    fetched = []
+    const idle: number[] = []
+    // A window that has neither observer: requestIdleCallback is how the script waits.
+    dom.set("window", { requestIdleCallback: true })
+    dom.set("requestIdleCallback", (fn: () => void, opts: { timeout: number }) => {
+      idle.push(opts.timeout)
+      fn()
+    })
+    try {
+      const el = mount("es-ES")
+      pageLoad()
+      expect(idle).toEqual([3000])
+      await until(() => !el.hasAttribute("data-explorer-partial"))
+      expect(fetched).toEqual(["/static/explorer.es-ES.html"])
+    } finally {
+      dom.set("window", dom.window)
+    }
   })
 })

@@ -1,5 +1,5 @@
 import crypto from "node:crypto"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 
 /**
  * Layout syntax of popular plugins, turned into HTML wrappers around markdown

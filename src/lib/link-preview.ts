@@ -63,6 +63,9 @@ async function reachable(url: URL): Promise<boolean> {
   return addresses.every((a) => !isPrivate(a.address))
 }
 
+/** For a body cancelled on the way out: a stream that fails to cancel changes nothing. */
+const ignore = () => {}
+
 const decode = (s: string) =>
   s
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
@@ -108,7 +111,7 @@ export function parsePreview(html: string, url: string): Preview | undefined {
 async function fetchChecked(url: string, timeoutMs: number): Promise<Response | undefined> {
   const signal = AbortSignal.timeout(timeoutMs)
   let target = url
-  for (let hop = 0; ; hop++) {
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     if (!(await reachable(new URL(target)))) return undefined
     const res = await fetch(target, {
       redirect: "manual",
@@ -117,17 +120,18 @@ async function fetchChecked(url: string, timeoutMs: number): Promise<Response | 
     })
     const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null
     if (!location) return res
-    await res.body?.cancel().catch(() => {})
-    if (hop >= MAX_REDIRECTS) return undefined
-    target = new URL(location, target).href
+    await res.body?.cancel().catch(ignore)
+    // A redirect past the last one allowed is not followed.
+    if (hop < MAX_REDIRECTS) target = new URL(location, target).href
   }
+  return undefined
 }
 
 async function fetchHead(url: string, timeoutMs: number): Promise<string | undefined> {
   const res = await fetchChecked(url, timeoutMs)
   if (!res) return undefined
   if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html") || !res.body) {
-    await res.body?.cancel().catch(() => {})
+    await res.body?.cancel().catch(ignore)
     return undefined
   }
   const reader = res.body.getReader()
@@ -141,7 +145,7 @@ async function fetchHead(url: string, timeoutMs: number): Promise<string | undef
     // The head is enough; stop once it has ended.
     if (new TextDecoder().decode(value).includes("</head>")) break
   }
-  await reader.cancel().catch(() => {})
+  await reader.cancel().catch(ignore)
   return new TextDecoder().decode(Buffer.concat(chunks))
 }
 

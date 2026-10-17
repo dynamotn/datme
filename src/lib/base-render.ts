@@ -1,7 +1,7 @@
 import type { Lang } from "../site.config"
 import { getVault, type Doc } from "./vault"
 import { t } from "./i18n"
-import { escapeAttr } from "./obsidian"
+import { escapeAttr } from "./html"
 import { currentPage, engineFor, html } from "./dataview-render"
 import { parseBase, runView, BaseError, type BaseFile, type BaseView } from "./bases"
 import { DataviewError } from "./dataview"

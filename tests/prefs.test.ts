@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, spyOn, test } from "bun:test"
 import { Window } from "happy-dom"
 import { applyPrefs, parsePrefs, setupPrefs, step, SIZES } from "../src/scripts/prefs"
 import { langDir } from "../src/lib/i18n"
-import { installDom, type Dom } from "./cov-dom"
+import { installDom, type Dom } from "./client-dom"
 
 describe("reading preferences", () => {
   test("stored preferences are read defensively", () => {

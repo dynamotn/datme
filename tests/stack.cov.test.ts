@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { installDom, sharedOrFresh, until, type Dom } from "./cov-dom"
+import { installDom, until, type Dom } from "./client-dom"
 
 type Stack = typeof import("../src/scripts/stack")
 let dom: Dom
@@ -17,16 +17,14 @@ beforeAll(async () => {
     const page = served.get(String(url))
     return page ? page() : new Response("missing", { status: 404 })
   }) as unknown as typeof fetch
-  // The module keeps the root element of the document it was imported with.
-  stack = await sharedOrFresh<Stack>("../src/scripts/stack", (m) => {
-    const root = dom.document.documentElement
-    root.classList.add("stacking")
-    dom.document.body.innerHTML = `<div data-stack-row></div>`
-    m.setupStack(() => {})
-    const answered = !root.classList.contains("stacking")
-    dom.document.body.innerHTML = ""
-    return answered
-  })
+  stack = await import("../src/scripts/stack")
+  // The module keeps the root element of the document it was imported with: the shared page.
+  const root = dom.document.documentElement
+  root.classList.add("stacking")
+  dom.document.body.innerHTML = `<div data-stack-row></div>`
+  stack.setupStack(() => {})
+  expect(root.classList.contains("stacking")).toBe(false)
+  dom.document.body.innerHTML = ""
 })
 afterAll(() => {
   globalThis.fetch = realFetch

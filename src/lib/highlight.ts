@@ -107,5 +107,6 @@ export const rehypeHighlight: Plugin<[HighlightOptions], Root> = (options) => as
   if (options.defaultLanguage) langs.push(options.defaultLanguage)
   if (options.fallbackLanguage) langs.push(options.fallbackLanguage)
   await loadLanguages(h, langs)
-  await rehypeShikiFromHighlighter(h, options)(tree, undefined as never, () => {})
+  // The transformer reads only the tree: it takes no file and never calls back.
+  await rehypeShikiFromHighlighter(h, options)(tree, undefined as never, undefined as never)
 }

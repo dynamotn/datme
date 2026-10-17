@@ -8,6 +8,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { createRequire } from "node:module"
 import { site } from "../site.config"
+import { escapeAttrKeepGt } from "./html"
 
 const DATA = ".obsidian/plugins/obsidian-icon-folder/data.json"
 const PACKS = ".obsidian/icons"
@@ -110,18 +111,16 @@ export function lucideSvg(name: string): string | undefined {
   return lucides.get(id)
 }
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;")
-
 /** The HTML of an icon: an emoji, or an inline SVG; undefined when there is none to show. */
 export function iconHtml(name: string | undefined, color?: string, vault = site.vault): string | undefined {
   if (!name) return undefined
-  const style = color && /^[#\w(),.\s%-]+$/.test(color) ? ` style="color:${escape(color)}"` : ""
+  const style = color && /^[#\w(),.\s%-]+$/.test(color) ? ` style="color:${escapeAttrKeepGt(color)}"` : ""
   if (/^[A-Z][a-z][A-Z0-9]/.test(name)) {
     const svg = svgOf(name, vault)
     return svg ? `<span class="iconize"${style}>${svg}</span>` : undefined
   }
   // Anything else Iconize stores is an emoji.
-  return `<span class="iconize" aria-hidden="true"${style}>${escape(name)}</span>`
+  return `<span class="iconize" aria-hidden="true"${style}>${escapeAttrKeepGt(name)}</span>`
 }
 
 /** The icon of a folder, by its vault-relative path. */

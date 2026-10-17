@@ -7,6 +7,7 @@
  * Dataview inline field.
  */
 import { highlightOf } from "./obsidian"
+import { escapeAttrKeepGt } from "./html"
 
 /** Whether a note is a deck: a frontmatter tag, or an inline #tag in its body. */
 export function isDeck(tags: string[], body: string, deckTags: string[]): boolean {
@@ -36,7 +37,7 @@ function cloze(line: string): string {
 }
 
 export function flashcards(md: string, hint: string): string {
-  const hintAttr = hint.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
+  const hintAttr = escapeAttrKeepGt(hint)
   const lines = md.split("\n")
   // Lines outside cards are marked plain: only they turn highlights into clozes.
   const out: { text: string; plain?: boolean }[] = []

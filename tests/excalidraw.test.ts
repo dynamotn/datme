@@ -26,6 +26,16 @@ describe("reading drawings", () => {
     expect(parseDrawing("```compressed-json\n" + compressToBase64(json) + "\n```").elements).toHaveLength(1)
   })
 
+  test("a freehand stroke keeps its points and pressures, a value that is not a number reads as half pressure", () => {
+    const json = JSON.stringify({
+      elements: [{ id: "f", type: "freedraw", x: 0, y: 0, width: 10, height: 10, points: [[0, 0], [5, "x"], "bad", [10, 10]], pressures: [0.2, "x", null, 0.9], simulatePressure: false }],
+    })
+    const [stroke] = parseDrawing(json).elements
+    expect(stroke.points).toEqual([[0, 0], [5, 0], [10, 10]])
+    expect(stroke.pressures).toEqual([0.2, 0.5, 0.5, 0.9])
+    expect(stroke.simulatePressure).toBe(false)
+  })
+
   test("what is not a drawing is said so", () => {
     expect(() => parseDrawing("# Just a note")).toThrow(DrawingError)
     expect(() => parseDrawing("```json\n{oops\n```")).toThrow("not valid JSON")
