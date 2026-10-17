@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configured, as the notebook one does, instead of an empty garden.
 - Stage presets fall back to their English label in languages other than
   English and Vietnamese, instead of the Vietnamese one.
+- Stages follow the Zettelkasten: the only presets are `fleeting`,
+  `literature` and `permanent`. Any other text is a stage of the vault's own
+  with that label, so `atomic`, `structure`, `reference` and `project` now
+  show as written, with a generic icon; give them `{ icon, label }` to keep
+  the old look. A stage's icon and label can each be left out, the label
+  then being the folder's name.
 - A line that starts with an HTML comment is raw HTML, as in CommonMark:
   write the text after it on a line of its own to have it rendered as
   markdown.

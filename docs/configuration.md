@@ -50,10 +50,13 @@ conventions:
   flashcardTags: [flashcards] # decks: Q::A, Q:::A and ?-separated cards flip open
   timelineTags: [timeline, type/event]  # events dated by `date` on /timeline
 
-stages:                       # top-level folders shown as note maturity
-  Inbox: fleeting             # presets: fleeting, literature, atomic,
-  Notes: { icon: 🌳, label: Evergreen }  # permanent, structure, reference, project
-  seedling: { icon: 🌱, label: Seedling }  # or set by a property: `stage: seedling`
+stages:                       # top-level folders shown as note maturity, in this order
+  Inbox: fleeting             # presets: fleeting, literature, permanent
+  Sources: literature
+  Notes: permanent
+  Maps: Maps of content       # any other text is a stage of your own, with that label
+  Lab: { icon: 🧪, label: { en-US: Lab, vi-VN: Thử nghiệm } }  # icon and label both optional
+  seedling: { icon: 🌱 }      # or set by a property: `stage: seedling`
 
 types:                        # icons and labels for type/* tags (common ones built in)
   recipe: { icon: 🍲, label: Recipe }

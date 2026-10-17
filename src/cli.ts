@@ -304,11 +304,13 @@ home: index.md
 # Folders never published, on top of .obsidian, .trash, templates and private.
 ignore: []
 
-# Top-level folders shown as the maturity stage of a note. Presets:
-# fleeting, literature, atomic, permanent, structure, reference, project.
+# Top-level folders shown as the stage of a note: a preset (fleeting,
+# literature, permanent), a label of your own, or an icon and a label.
 stages: {}
 #  Inbox: fleeting
-#  Notes: { icon: "🌿", label: Evergreen }
+#  Sources: literature
+#  Notes: permanent
+#  Maps: { icon: "🗺️", label: Maps of content }
 
 footer: {}
 #  GitHub: https://github.com/you
