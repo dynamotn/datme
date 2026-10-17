@@ -1,0 +1,12 @@
+filters: 'file.inFolder("Reading")'
+views:
+  - type: cards
+    name: By status
+    order: [file.name]
+    groupBy: note.status
+  - type: cards
+    name: Sorted
+    order: [file.name]
+    sort:
+      - property: file.name
+        direction: DESC
