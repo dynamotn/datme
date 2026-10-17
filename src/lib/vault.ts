@@ -16,6 +16,7 @@ import katex from "katex"
 import crypto from "node:crypto"
 import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, type Scene } from "./excalidraw"
 import { urlPlaceholder, type DrawnDrawing } from "./obsidian"
+import { findInGarden } from "./neighbours"
 import { privateLinkText, showsName } from "./privacy"
 
 /** A published markdown file of the vault, independent of language. */
@@ -667,6 +668,14 @@ function buildVault(version: number): Vault {
     return privateLinkText(site.privateLinks, target, alias, t(lang).privateNote)
   }
 
+  /** A note of a neighbour garden; its home page while its index is unknown, e.g. offline on a first build. */
+  function gardenLink(name: string, target: string, lang: Lang) {
+    const url = site.neighbours[name]
+    if (!url) return undefined
+    const found = findInGarden(name, target, lang)
+    return found === undefined ? { home: url + "/" } : found
+  }
+
   // The same broken link shows up once per language; report it once.
   const seenProblems = new Set<string>()
   const privateLinks: PrivateLinkUse[] = []
@@ -676,7 +685,10 @@ function buildVault(version: number): Vault {
     seenProblems.add(id)
     const t = p.target.trim().replace(/^\/+/, "")
     const isNote = !/\.\w+$/.test(t) || MD_EXT.test(t)
-    if (p.kind === "drawing") {
+    if (p.kind === "garden") {
+    const [name, note] = [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)]
+    report("warning", file, `link to "${note}" not found in the garden "${name}" (${site.neighbours[name]})`)
+  } else if (p.kind === "drawing") {
       report("warning", file, `drawing "${t}" is not in the vault, so it is not shown`)
     } else if (isNote && isPrivateNote(t, path.posix.dirname(file))) {
       const shown = p.shown ?? t
@@ -796,6 +808,7 @@ function buildVault(version: number): Vault {
         slides,
         readText,
         privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
+        gardenLink: (name, target) => gardenLink(name, target, lang),
       })
       // A protected note's files travel inside its ciphertext, and the canvases and bases it links stay unpublished.
       if (!s.password) {
@@ -820,6 +833,7 @@ function buildVault(version: number): Vault {
           drawingPage: resolveDrawing,
           readText,
           privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
+          gardenLink: (name, target) => gardenLink(name, target, lang),
         })
         for (const problem of p.problems) linkProblem(relFile, problem)
         return { password, md: p.md }
@@ -934,6 +948,7 @@ function buildVault(version: number): Vault {
               drawingPage: resolveDrawing,
               readText,
               privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
+              gardenLink: (name, target) => gardenLink(name, target, lang),
             })
             pre.assets.forEach((a) => assets.add(a))
             doc.texts[lang][node.id] = pre.md

@@ -12,6 +12,7 @@ import { mediaFragment, parseCues, sidecars, transcriptHtml } from "./transcript
 import { markdownSafe } from "./excalidraw"
 import { CODE_SPAN } from "./links"
 import { t } from "./i18n"
+import { GARDEN_LINK } from "./neighbours"
 
 export interface LinkRef {
   key: string
@@ -20,7 +21,7 @@ export interface LinkRef {
 
 /** A link or embed the converter could not resolve, classified later by the vault. */
 export interface LinkProblem {
-  kind: "link" | "embed" | "drawing"
+  kind: "link" | "embed" | "drawing" | "garden"
   target: string
   /** For a link to a private note, the words it left on the page ("" for none). */
   shown?: string
@@ -56,6 +57,12 @@ interface Ctx {
   readText?(rel: string): string | undefined
   /** The words a link to a private note leaves ("" for none); undefined when the target is not one. */
   privateLink?(target: string, fromDir: string, alias: string | undefined): string | undefined
+  /**
+   * A note of a neighbour garden, for `[[name:Note]]`: its URL and title; null when the
+   * garden has no such note; undefined when `name` is no neighbour, or its index is unknown
+   * (then `home` is its address).
+   */
+  gardenLink?(name: string, target: string): { url: string; title: string } | null | { home: string } | undefined
 }
 
 const IMAGE = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i
@@ -389,6 +396,15 @@ export function preprocess(
     const name = file.split("/").pop()!.replace(/\.md$/i, "")
     const text = alias ?? [...(name ? [name] : []), ...(fragment ? fragment.split("#").map((f) => f.trim()) : [])].join(" > ")
     if (!file) return `<a href="${escapeAttr(anchorOf(fragment))}" class="internal anchor">${text}</a>`
+    // [[garden:Note]]: a note of a neighbour garden.
+    const garden = file.match(GARDEN_LINK)
+    const remote = garden ? ctx.gardenLink?.(garden[1], garden[2]) : undefined
+    if (garden && remote !== undefined) {
+      const words = alias ?? (remote && "title" in remote ? remote.title : garden[2].split("/").pop()!.replace(/\.md$/i, ""))
+      if (remote === null) return broken("garden", file, `<span class="broken-link" title="Not in ${escapeAttr(garden[1])}">${escapeAttr(words)}</span>`)
+      const href = "url" in remote ? remote.url + anchorOf(fragment) : remote.home
+      return `<a href="${escapeAttr(href)}" class="garden-link" data-garden="${escapeAttr(garden[1])}" rel="noopener">${escapeAttr(words)}</a>`
+    }
     const note = ctx.resolveNote(file, ctx.dir)
     if (!note) {
       const asset = ctx.resolveAsset(file, ctx.dir)

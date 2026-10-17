@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/practice` gathers the flashcards of every deck in one session, due
   cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
   a reader has practised, a 🧠 badge in the header counts the cards due.
+- `neighbours` names other datme gardens, and `[[name:Note]]` links to a
+  note of one of them, found in its public index and previewed on hover when
+  that garden allows it. `datme check` warns of a note the garden lacks.
 - With `related.semantic`, notes are grouped into topics by what they are
   about: the graph colours them by topic and `/stats` lists each topic with
   its notes. `topics` sets how many, or turns them off.

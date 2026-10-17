@@ -5,6 +5,7 @@ import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
 import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
+import { NEIGHBOURS_FILE } from "./lib/neighbours.ts"
 import { SOURCES, applyMigration, describePlan, planMigration, type Source } from "./lib/migrate.ts"
 
 /** Root of the datme package, where the Astro project lives. */
@@ -19,7 +20,7 @@ const CACHE = path.join(PACKAGE_ROOT, ".datme", "cache")
 /** Marks a directory as datme's build cache, so builds may delete in it. */
 const CACHE_MARKER = ".datme-cache"
 /** What datme writes in its cache: the kinds of render-cache and the dead links. */
-const CACHE_ENTRIES = ["notes", "og", "img", "img-size", "lqip", "diagrams", "embeddings", "preview", DEAD_LINKS_FILE]
+const CACHE_ENTRIES = ["notes", "og", "img", "img-size", "lqip", "diagrams", "embeddings", "preview", DEAD_LINKS_FILE, NEIGHBOURS_FILE]
 
 /** The build cache: DATME_CACHE moves it, an empty value turns it off. */
 function cacheDirOf(env: NodeJS.ProcessEnv, cwd: string): string | undefined {
@@ -247,7 +248,7 @@ export function pruneCache(root: string, since: number): void {
       if (e.isDirectory()) {
         walk(p)
         if (!fs.readdirSync(p).length) fs.rmdirSync(p)
-      } else if (e.name !== DEAD_LINKS_FILE && e.name !== CACHE_MARKER && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
+      } else if (e.name !== DEAD_LINKS_FILE && e.name !== NEIGHBOURS_FILE && e.name !== CACHE_MARKER && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
     }
   }
   walk(root)
@@ -464,6 +465,20 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     const { suggestionsFor, formatSuggestions } = await import("./lib/suggest.ts")
     const found = await suggestionsFor(rel, lang)
     return void console.log(args.json ? JSON.stringify(found) : formatSuggestions(found))
+  }
+
+  // Notes of neighbour gardens are looked up in their content index, fetched once before the notes convert.
+  if (["check", "build", "dev", "preview"].includes(args.command)) {
+    const { site } = await import("./site.config.ts")
+    if (Object.keys(site.neighbours).length) {
+      const { fetchNeighbours } = await import("./lib/neighbours.ts")
+      const cacheDir = cacheDirOf(env, cwd)
+      if (cacheDir) claimCache(cacheDir)
+      const file = path.join(cacheDir ?? path.join(PACKAGE_ROOT, ".datme"), NEIGHBOURS_FILE)
+      const failed = await fetchNeighbours(site.neighbours, site.langs, file)
+      if (failed.length) console.warn(`[datme] could not reach the gardens ${failed.join(", ")}; links to them use their last known notes`)
+      env.DATME_NEIGHBOURS = file
+    }
   }
 
   if (args.command === "check" && args.privacy) {

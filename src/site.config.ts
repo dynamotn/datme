@@ -374,6 +374,8 @@ const schema = z
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
+    /** Other datme gardens, by a short name: `[[name:Note]]` links to a note of one of them. */
+    neighbours: z.record(z.string().regex(/^[\w-]+$/, "expected a short name: letters, digits, - or _"), z.url()).default({}),
     /** Let other sites embed a card of each public note, by oEmbed; needs site.url. */
     oembed: z.boolean().default(true),
     /** Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text. */
@@ -525,6 +527,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ogImages: c.ogImages,
     llms: c.llms,
     oembed: c.oembed,
+    neighbours: Object.fromEntries(Object.entries(c.neighbours).map(([k, v]) => [k, v.replace(/\/+$/, "")])),
     askAi: [...new Set(c.askAi)],
     outdated: c.outdated,
     stats: c.stats,

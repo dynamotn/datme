@@ -1893,6 +1893,15 @@ dialog.graph-modal {
 .popover-small .prose {
   font-size: 14px;
 }
+.prose a.garden-link::after {
+  content: " 🌿";
+  font-size: 0.8em;
+}
+.popover-garden {
+  margin: -4px 0 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
 .popover h3 {
   margin: 0 0 8px;
   font-family: var(--font-read);

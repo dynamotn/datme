@@ -55,6 +55,63 @@ async function show(link: HTMLAnchorElement) {
   }
 }
 
+const remote = new Map<string, Promise<string | null>>()
+
+/** The markdown copy of a note of another garden, when that garden allows it (CORS). */
+function fetchRemote(href: string) {
+  const url = new URL(href)
+  const md = `${url.origin}${url.pathname.replace(/\/+$/, "")}.md`
+  let hit = remote.get(md)
+  if (!hit) {
+    hit = fetch(md, { mode: "cors" })
+      .then((r) => (r.ok ? r.text() : null))
+      .catch(() => null)
+    remote.set(md, hit)
+  }
+  return hit
+}
+
+/** The first paragraphs of a markdown note, as plain text: its title, and enough to know what it is about. */
+export function remotePreview(md: string): { title: string; text: string[] } {
+  const lines = md.split("\n")
+  const title = lines[0]?.startsWith("# ") ? lines.shift()!.slice(2).trim() : ""
+  const paragraphs = lines
+    .join("\n")
+    .split(/\n{2,}/)
+    // Code says little out of context; it is left out before the markup is stripped.
+    .filter((p) => !p.trimStart().startsWith("```"))
+    .map((p) =>
+      p
+        .replace(/!?\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_m, target: string, alias: string) => alias || target)
+        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/^[#>\-*\d.\s]+/gm, "")
+        .replace(/[*_`=]+/g, "")
+        .trim(),
+    )
+    .filter(Boolean)
+  return { title, text: paragraphs.slice(0, 3) }
+}
+
+async function showRemote(link: HTMLAnchorElement) {
+  const md = await fetchRemote(link.href)
+  if (!md || !link.matches(":hover")) return
+  hide()
+  const { title, text } = remotePreview(md)
+  el = document.createElement("div")
+  el.className = "popover"
+  const h = document.createElement("h3")
+  h.textContent = title || link.textContent || ""
+  const garden = document.createElement("p")
+  garden.className = "popover-garden"
+  garden.textContent = `🌿 ${new URL(link.href).host}`
+  const prose = document.createElement("div")
+  prose.className = "prose"
+  for (const p of text) prose.append(Object.assign(document.createElement("p"), { textContent: p }))
+  el.append(h, garden, prose)
+  document.body.append(el)
+  place(el, link)
+}
+
 /** Put a popover under its link, or above it when there is no room below. */
 function place(pop: HTMLElement, link: HTMLElement) {
   const r = link.getBoundingClientRect()
@@ -107,6 +164,16 @@ export function setupPopovers() {
     a.addEventListener("mouseenter", () => {
       clearTimeout(timer)
       timer = window.setTimeout(() => show(a), 280)
+    })
+    a.addEventListener("mouseleave", hide)
+  })
+  // Links to notes of neighbour gardens preview their markdown copy, when that garden allows it.
+  document.querySelectorAll<HTMLAnchorElement>(".prose a.garden-link").forEach((a) => {
+    if (a.closest(".popover") || a.dataset.popover) return
+    a.dataset.popover = "1"
+    a.addEventListener("mouseenter", () => {
+      clearTimeout(timer)
+      timer = window.setTimeout(() => showRemote(a), 280)
     })
     a.addEventListener("mouseleave", hide)
   })

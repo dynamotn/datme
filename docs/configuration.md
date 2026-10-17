@@ -157,6 +157,7 @@ subscribe:                    # a form for new notes by email, under notes and o
   provider: buttondown        # buttondown { username } or form { action, field?, topicField? }
   username: me
 ogImages: true                # social cards for the home page and notes without a banner
+neighbours: {}                # other datme gardens by name: [[name:Note]] links to one of their notes
 oembed: true                  # other sites can embed a card of each public note (needs site.url)
 llms: true                    # /llms.txt, /llms-full.txt and a .md copy of every public note (without comments)
 askAi: [chatgpt, claude]      # assistants a note's Markdown menu opens it in (needs site.url); [] for none

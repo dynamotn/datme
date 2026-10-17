@@ -81,6 +81,26 @@ gets a copy button; neither ends up in what you copy.
   and a transcript under the player. Clicking a time plays from there, and the
   line being spoken is marked as it plays. The transcript is searchable.
 
+### Links to other gardens
+
+Name other datme gardens in `datme.yaml`, then link to their notes as you
+would to your own, with the garden's name and a colon:
+
+```yaml
+neighbours:
+  ana: https://garden.ana.dev
+```
+
+```markdown
+Ana keeps notes on [[ana:Composting]] too, and on [[ana:Roses|her roses]].
+```
+
+The link goes to the note on Ana's site, marked 🌿, and hovering it previews
+the note when her site allows it (her `.md` copies, `llms: true`). datme finds
+the note in her garden's public index, fetched before each build and kept in
+the build cache, so a build without a network uses the last copy. `datme
+check` warns of a link to a note her garden does not have.
+
 ## Footnotes and citations
 
 Footnotes (`[^1]`, or inline as `^[text]`) move into the margin as sidenotes on wide screens, in
