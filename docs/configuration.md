@@ -82,7 +82,7 @@ appearance:
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
     Garden: garden
-  classic: [Writing]          # older spelling of `folders: { Writing: classic }`
+  # classic: [Writing]        # older spelling of `folders: { Writing: classic }`
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
 
 theme:

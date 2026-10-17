@@ -95,4 +95,10 @@ describe("garden style", () => {
     expect(read("Seeds/Idea/index.html")).toContain("Paths from here")
     expect(read("Seeds/Idea/index.html")).toMatch(/class="backlink-stage"[^>]*>🌳/)
   })
+
+  test("a note tended the day it was planted does not say so twice", () => {
+    const html = read("Seeds/Question/index.html")
+    expect(html).toMatch(/Planted <time datetime="[^"]+">/)
+    expect(html).not.toContain("Last tended")
+  })
 })

@@ -20,6 +20,8 @@ const tagUrl = (tag: string) => slugToUrl(langPrefix(note.lang) + "tags/" + tag)
 const minutes = Math.max(1, Math.round(words / 220))
 const stageFolder = note.dir.split("/")[0]
 const props = noteProperties(note)
+const tended =
+  note.updated && (!note.created || formatDate(note.updated, note.lang) !== formatDate(note.created, note.lang))
 ---
 
 <div class="chips">
@@ -47,15 +49,15 @@ const props = noteProperties(note)
 <div class="note-meta">
   {
     garden ? (
-      (note.created || note.updated) && (
+      (note.created || tended) && (
         <p class="garden-dates">
           {note.created && (
             <>
               {s.planted} <time datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>
             </>
           )}
-          {note.created && note.updated && " · "}
-          {note.updated && (
+          {note.created && tended && " · "}
+          {tended && note.updated && (
             <>
               {s.lastTended}{" "}
               <time datetime={note.updated.toISOString()} data-tended title={formatDate(note.updated, note.lang)}>
