@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/practice` gathers the flashcards of every deck in one session, due
   cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
   a reader has practised, a 🧠 badge in the header counts the cards due.
+- Readers can highlight passages of a note, add their own words, and export
+  every highlight as Markdown for their vault, each with a link back to the
+  passage. Highlights stay in their browser and find their words again after
+  the author edits the note.
 - `datme mcp` serves the published notes to AI assistants over the Model
   Context Protocol: search, read a note, its backlinks and related notes,
   each answer with the note's public URL to cite.

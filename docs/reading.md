@@ -111,6 +111,13 @@ before. See [Privacy](privacy.md#note-history) before turning it on.
 
 - Select text in a note to copy a link to that exact passage (`#:~:text=`). The
   link opens the page scrolled to the passage, highlighted.
+- Or press 🖍 Highlight to keep the passage, with words of your own: click a
+  highlight to write them. "My highlights" in the "Aa" menu lists every one,
+  page by page, and exports them as Markdown for your own vault: each passage
+  quoted, your words under it, a link back to the exact place. Highlights stay
+  in your browser. When the author rewrites a passage, its highlight finds the
+  words again from the text around them; one whose words are gone is kept and
+  marked as no longer found.
 - Every page has a social card, and JSON-LD for search engines.
 - Notes can show webmentions (likes, reposts, replies) and comments, when the
   site enables them.

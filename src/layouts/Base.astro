@@ -184,7 +184,7 @@ const pluginHead = await userHead()
     <Analytics />
     {pluginHead && <Fragment set:html={pluginHead} />}
   </head>
-  <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage}>
+  <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage} data-highlight={s.highlight} data-highlights={s.highlights} data-highlight-note={s.highlightNote} data-highlight-save={s.highlightSave} data-highlight-remove={s.highlightRemove} data-highlight-lost={s.highlightLost} data-highlights-empty={s.highlightsEmpty} data-highlights-export={s.highlightsExport}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
     {customCssFile() && <link rel="stylesheet" href="/custom.css" />}
     <header class="site-header">
@@ -248,6 +248,7 @@ const pluginHead = await userHead()
           </div>
           <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
           <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
+          <button type="button" class="prefs-forget" data-open-highlights>🖍 {s.highlights}</button>
           <button type="button" class="prefs-forget" data-forget-footprints data-done={s.forgotten}>{s.forgetFootprints}</button>
         </div>
       </div>

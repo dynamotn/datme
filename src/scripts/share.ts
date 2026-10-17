@@ -1,7 +1,10 @@
 /**
  * Select text in a note and copy a link that scrolls to it and highlights it,
- * with the browsers' text fragments (#:~:text=).
+ * with the browsers' text fragments (#:~:text=), or keep it as a highlight of
+ * your own.
  */
+import { highlightSelection } from "./highlights"
+
 
 /** Percent-encode a fragment part; text fragments also reserve "-", "," and "&". */
 const encodePart = (s: string) => encodeURIComponent(s).replace(/-/g, "%2D").replace(/,/g, "%2C").replace(/&/g, "%26")
@@ -20,47 +23,66 @@ export function textFragment(selected: string): string {
   return `#:~:text=${encodePart(start)},${encodePart(end)}`
 }
 
-let button: HTMLButtonElement | undefined
+let bar: HTMLDivElement | undefined
 
 function hideButton() {
-  button?.remove()
-  button = undefined
+  bar?.remove()
+  bar = undefined
 }
 
+function action(label: string, cls: string, on: (b: HTMLButtonElement) => void): HTMLButtonElement {
+  const b = document.createElement("button")
+  b.type = "button"
+  b.className = cls
+  b.textContent = label
+  b.onclick = () => on(b)
+  return b
+}
+
+/** Buttons over a selection in a note: copy a link to it, and highlight it. */
 function showButton() {
   const sel = document.getSelection()
   const text = sel?.toString() ?? ""
   const range = sel && sel.rangeCount ? sel.getRangeAt(0) : undefined
-  const inProse = range && (range.commonAncestorContainer.parentElement ?? (range.commonAncestorContainer as Element)).closest?.(".prose")
-  if (!range || !inProse || text.trim().length < 3) return hideButton()
+  const at = range && (range.commonAncestorContainer.parentElement ?? (range.commonAncestorContainer as Element))
+  const inProse = at?.closest?.(".prose")
+  if (!range || !at || !inProse || text.trim().length < 3) return hideButton()
   const labels = document.body.dataset
-  button ??= document.createElement("button")
-  button.type = "button"
-  button.className = "share-passage"
-  button.textContent = labels.sharePassage ?? "Copy link to passage"
-  const link = location.origin + location.pathname + textFragment(text)
-  button.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(link)
-      button!.textContent = labels.copied ?? "Copied"
-    } catch {
-      // No clipboard access: at least show the link in the address bar.
-      history.replaceState(history.state, "", link)
-    }
-    setTimeout(hideButton, 1200)
+  bar?.remove()
+  bar = document.createElement("div")
+  bar.className = "share-bar"
+  if (navigator.clipboard) {
+    const link = location.origin + location.pathname + textFragment(text)
+    bar.append(
+      action(labels.sharePassage ?? "Copy link to passage", "share-passage", async (b) => {
+        try {
+          await navigator.clipboard.writeText(link)
+          b.textContent = labels.copied ?? "Copied"
+        } catch {
+          // No clipboard access: at least show the link in the address bar.
+          history.replaceState(history.state, "", link)
+        }
+        setTimeout(hideButton, 1200)
+      }),
+    )
   }
+  // Highlights belong to the note on show, not to a preview or a stacked note.
+  if (at.closest("article.note .prose") && !at.closest("[data-stack-col]:not(:first-child)")) {
+    bar.append(action(labels.highlight ?? "Highlight", "share-passage", () => (highlightSelection(), hideButton())))
+  }
+  if (!bar.childElementCount) return hideButton()
   const r = range.getBoundingClientRect()
-  button.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - 80, window.innerWidth - 176))}px`
-  button.style.top = `${Math.max(8, r.top - 40)}px`
-  document.body.append(button)
+  bar.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - 120, window.innerWidth - 300))}px`
+  bar.style.top = `${Math.max(8, r.top - 44)}px`
+  document.body.append(bar)
 }
 
 let bound = false
 export function setupShare(): void {
-  if (bound || !navigator.clipboard) return
+  if (bound) return
   bound = true
   document.addEventListener("mouseup", (e) => {
-    if ((e.target as Element).closest?.(".share-passage")) return
+    if ((e.target as Element).closest?.(".share-bar")) return
     // After the click that clears a selection, the selection is already empty.
     setTimeout(showButton, 0)
   })
