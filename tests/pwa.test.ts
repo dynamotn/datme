@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { manifest, serviceWorker } from "../src/lib/pwa"
+import { manifest, serviceWorker, THEME_COLOR } from "../src/lib/pwa"
+import { STYLES } from "../src/site.config"
 import { renderIcon } from "../src/lib/og"
 
 describe("installable site", () => {
@@ -7,6 +8,11 @@ describe("installable site", () => {
     const m = JSON.parse(manifest())
     expect(m).toMatchObject({ name: "Khu vườn thử nghiệm", lang: "vi-VN", start_url: "/", display: "standalone" })
     expect(m.icons.map((i: { src: string }) => i.src)).toEqual(["/favicon.svg", "/icon-192.png", "/icon-512.png", "/icon-512.png"])
+  })
+
+  test("every style has a theme colour pair", () => {
+    expect(Object.keys(THEME_COLOR).sort()).toEqual([...STYLES].sort())
+    expect(THEME_COLOR.garden.light).toMatch(/^#[0-9a-f]{6}$/i)
   })
 
   test("icons are square PNGs of the requested size", async () => {
