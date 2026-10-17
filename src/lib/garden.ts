@@ -26,15 +26,22 @@ export function tileSize(stage: string | undefined, stages: Record<string, Stage
   return i === keys.length - 1 ? "large" : "medium"
 }
 
-/** Most mature first, then newest first; notes without a stage, or without a date, come last. */
+/**
+ * Stages dealt in turns, most mature first, so the bed opens on an evergreen
+ * and every column mixes sizes. Within a stage, newest first; notes without a
+ * stage form the least mature group, and notes without a date come last.
+ */
 export function gardenOrder<T extends Pick<Note, "stage" | "updated">>(notes: T[], stages: Record<string, StageDef> = site.stages): T[] {
-  const rank = (n: T) => (n.stage && stages[n.stage] ? stages[n.stage].order : -1)
+  const rank = (n: T) => (n.stage && stages[n.stage] ? stages[n.stage].order : -Infinity)
   const time = (n: T) => n.updated?.getTime() ?? -Infinity
-  return [...notes].sort((a, b) => {
-    if (rank(a) !== rank(b)) return rank(b) - rank(a)
-    if (time(a) === time(b)) return 0
-    return time(a) < time(b) ? 1 : -1
-  })
+  const groups = new Map<number, T[]>()
+  for (const n of notes) groups.set(rank(n), [...(groups.get(rank(n)) ?? []), n])
+  const rows = [...groups.entries()]
+    .sort(([a], [b]) => b - a)
+    .map(([, g]) => g.sort((a, b) => (time(a) === time(b) ? 0 : time(a) < time(b) ? 1 : -1)))
+  const out: T[] = []
+  for (let i = 0; out.length < notes.length; i++) for (const g of rows) if (i < g.length) out.push(g[i])
+  return out
 }
 
 export interface GardenChip {

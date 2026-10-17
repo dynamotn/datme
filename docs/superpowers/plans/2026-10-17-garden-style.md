@@ -186,7 +186,7 @@ test("folder pages use their folder's style", () => {
   - `export type TileSize = "small" | "medium" | "large"`
   - `export const RECENT_TILES = 6`, `export const HOME_TILES = 60`, `export const FILTER_TAGS = 12`
   - `export function tileSize(stage: string | undefined, stages?: Record<string, StageDef>): TileSize` — default `site.stages`. Ranks by `order`. ≥3 stages: first `small`, last `large`, others `medium`; exactly 2: `small`, `large`; 0 or 1 stage, or `stage` undefined/unknown: `medium`.
-  - `export function gardenOrder<T extends Pick<Note, "stage" | "updated">>(notes: T[], stages?: Record<string, StageDef>): T[]` — new array; most mature first (higher `order` first; notes without a stage after all staged ones), then `updated` newest first, missing `updated` last.
+  - `export function gardenOrder<T extends Pick<Note, "stage" | "updated">>(notes: T[], stages?: Record<string, StageDef>): T[]` — new array; (revised after visual check) ranks interleaved round-robin: group by rank (higher `order` first; notes without or with an unknown stage form the lowest group), each group sorted by `updated` newest first with missing `updated` last, then one note per group per round, most mature group first, skipping exhausted groups.
   - `export interface GardenChip { kind: "stage" | "folder"; value: string; icon: string; label: string; count: number }`
   - `export function gardenChips(notes: Note[], lang: Lang, stages = site.stages): GardenChip[]` — one chip per configured stage with `count > 0`, in stage order; when `site.stages` is empty, one chip per top-level folder of the notes (`icon: "📁"`, `label`: folder display name, `value`: the folder segment).
   - `export function topTags(notes: Pick<Note, "tags">[], n = FILTER_TAGS): { tag: string; count: number }[]` — excludes tags starting with `site.conventions.typePrefix`; sorted by count desc then name.
@@ -216,7 +216,7 @@ test("the garden opens on its most mature notes, newest first within a stage", (
     { k: 4, stage: undefined, updated: d("2026-10-16") },
     { k: 5, stage: "tree", updated: undefined },
   ]
-  expect(gardenOrder(notes, s(["seed", "tree"])).map((n) => n.k)).toEqual([3, 2, 5, 1, 4])
+  expect(gardenOrder(notes, s(["seed", "tree"])).map((n) => n.k)).toEqual([3, 1, 4, 2, 5])
 })
 test("chips list the stages that have notes, in stage order", () => {
   const chips = gardenChips(listed("en-US"), "en-US")

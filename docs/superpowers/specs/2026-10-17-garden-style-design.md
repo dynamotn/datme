@@ -139,10 +139,13 @@ the home note.
    screens. Not a vertical list, not cards with excerpts.
 3. **The garden bed**: the main view. Every listed note except the home and
    folder notes, as tiles in a masonry layout (CSS `columns`, so DOM order =
-   reading order for keyboard and screen readers). Order: by maturity rank,
-   most mature first, then by `updated` within a rank, so the bed opens on
-   evergreens rather than repeating the "recently tended" row, and never
-   reads as a timeline. Every note is in the HTML so filters and counts are
+   reading order for keyboard and screen readers). Order (revised after
+   visual check): ranks dealt round-robin, one note from each rank per
+   round, most mature rank first, newest `updated` first within a rank
+   (notes without a stage form the lowest rank), so the bed opens on an
+   evergreen rather than repeating the "recently tended" row, sizes mix in
+   every column instead of forming bands, and it never reads as a
+   timeline. Every note is in the HTML so filters and counts are
    complete; the script hides tiles past the first 60 until the reader
    presses "walk the whole garden" or applies a filter. Without JavaScript
    all tiles show. The archive page is not linked and stays as it is.
