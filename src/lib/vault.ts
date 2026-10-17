@@ -2,7 +2,8 @@ import fs from "node:fs"
 import path from "node:path"
 import { execFileSync } from "node:child_process"
 import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
-import { site, type Lang } from "../site.config"
+import { site, STYLES, type Lang, type Style } from "../site.config"
+import { pickOption, CHROMES, type Chrome } from "./look"
 import { langPrefix, t } from "./i18n"
 import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
 import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
@@ -73,6 +74,10 @@ export interface Note {
   cover?: string
   /** How the page is laid out (`layout` property): a page of its own text reshaped, or a collection of notes. */
   layout?: Layout
+  /** Style this page is drawn in (`style` property), instead of its folder's. */
+  style?: Style
+  /** Navigation frame of this page (`chrome` property), instead of the usual one. */
+  chrome?: Chrome
   cssclasses: string[]
   description?: string
   /** Configured stage of the note: its `stage` property, else its top-level folder. */
@@ -774,6 +779,14 @@ function buildVault(version: number): Vault {
       if (layoutField && !layout && lang === site.defaultLang) {
         report("warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
       }
+      const { value: style, invalid: badStyle } = pickOption(s.fm.style, STYLES)
+      if (badStyle && lang === site.defaultLang) {
+        report("warning", relFile, `style "${badStyle}" is not one of ${STYLES.join(", ")}, so the note keeps its usual style`)
+      }
+      const { value: chrome, invalid: badChrome } = pickOption(s.fm.chrome, CHROMES)
+      if (badChrome && lang === site.defaultLang) {
+        report("warning", relFile, `chrome "${badChrome}" is not one of ${CHROMES.join(", ")}, so the note keeps its usual frame`)
+      }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
       // An untranslated note shows its fallback language's blocks, not only its shared text.
@@ -864,6 +877,8 @@ function buildVault(version: number): Vault {
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
         cover: cover ?? banner,
         layout,
+        style,
+        chrome,
         // A board or a deck needs the width of the page.
         cssclasses: [
           ...toArray(s.fm.cssclasses ?? s.fm.cssclass),

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Notes can set `style:` (`notebook`, `classic`, `garden`, `resume` or
+  `darkroom`) and `chrome:` (`full` or `minimal`) in their properties; an
+  unknown value is reported as a warning and the note keeps its usual look.
 - A third look, `appearance.style: garden`, makes the site feel like a
   garden rather than a blog: warm cream paper (a deep green night in dark
   mode), moss and earth colours, Fraunces headings and Literata text. The

@@ -7,6 +7,8 @@ export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
   notebook: { light: "#f5f5f0", dark: "#121211" },
   classic: { light: "#f6f3ec", dark: "#111210" },
   garden: { light: "#f7f3e8", dark: "#121a14" },
+  resume: { light: "#e9e7e2", dark: "#1b1c1e" },
+  darkroom: { light: "#f4f2ee", dark: "#0b0b0b" },
 }
 
 /** The web app manifest: lets readers install the garden and open it like an app. */
