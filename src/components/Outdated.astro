@@ -1,0 +1,24 @@
+---
+import type { Note } from "~/lib/vault"
+import { site } from "~/site.config"
+import { t, formatDate } from "~/lib/i18n"
+import { dayNeighbours } from "~/lib/journal"
+import { isOutdated } from "~/scripts/outdated"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const since = note.updated ?? note.created
+const after = site.outdated?.after
+// A daily note is about its day: being old is what it is for.
+const offered = after && since && !note.isHome && note.source.fm.outdated !== false && !dayNeighbours(note)
+---
+
+{
+  offered && (
+    <p class="outdated" role="note" data-outdated data-since={since.toISOString()} data-after={after} hidden={!isOutdated(since, after)}>
+      ⏳ {t(note.lang).outdated.replace("{date}", formatDate(since, note.lang))}
+    </p>
+  )
+}

@@ -45,6 +45,11 @@ export function navLinks(lang: Lang): NavLink[] {
   return out
 }
 
+/** Whether a folder's page shows its notes in full, as a stream of short notes. */
+export function isStream(dir: string): boolean {
+  return site.appearance.stream.some((f) => dir === f || dir.startsWith(f + "/"))
+}
+
 /** Page style of a note: the site default, flipped for folders listed in appearance.classic. */
 export function lookOf(note: Pick<Note, "dir"> | undefined): "notebook" | "classic" {
   const { style, classic } = site.appearance

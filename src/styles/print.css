@@ -127,6 +127,7 @@
   }
   .reading-progress,
   .share-passage,
+  .page-menu,
   .practice-bar {
     display: none !important;
   }

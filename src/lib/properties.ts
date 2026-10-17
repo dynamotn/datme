@@ -36,6 +36,7 @@ export const HIDDEN_PROPERTIES = [
   "publishDate",
   "series_order",
   "trail",
+  "outdated",
   "seriesOrder",
   "uid",
   "id",

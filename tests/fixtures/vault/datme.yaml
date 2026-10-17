@@ -37,6 +37,7 @@ nav:
   - note: Missing note
 appearance:
   classic: [07_Project]
+  stream: [08_Journal]
 encryption:
   iterations: 100000
 analytics:
@@ -49,6 +50,8 @@ comments:
   category: Comments
   categoryId: DIC_test
 cname: true
+outdated:
+  after: 2
 subscribe:
   provider: buttondown
   username: test-garden

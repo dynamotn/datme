@@ -10,6 +10,8 @@ import { setupLightbox } from "./lightbox"
 import { setupSlides } from "./slides"
 import { setupPractice, setupClozes } from "./practice"
 import { setupShare } from "./share"
+import { setupPageMenu } from "./page-menu"
+import { setupOutdated } from "./outdated"
 import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
@@ -314,6 +316,8 @@ document.addEventListener("astro:page-load", () => {
   setupSlides()
   setupClozes()
   setupShare()
+  setupPageMenu()
+  setupOutdated()
   setupProgress()
   setupPrefs()
   setupPractice()

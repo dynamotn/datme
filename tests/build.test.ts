@@ -512,6 +512,55 @@ describe("static build", () => {
     expect(read("03_Atomic/Zettelkasten/index.html")).toContain('<link rel="alternate" type="text/markdown" href="/03_Atomic/Zettelkasten.md">')
   })
 
+  test("a note's markdown menu copies, shows or hands its markdown to a chat assistant", () => {
+    const menu = read("03_Atomic/Zettelkasten/index.html").match(/<details class="page-menu"[\s\S]*?<\/details>/)![0]
+    expect(menu).toMatch(/<button type="button" data-copy-markdown="\/03_Atomic\/Zettelkasten.md" hidden[^>]*>\s*Chép dạng markdown/)
+    expect(menu).toMatch(/<a href="\/03_Atomic\/Zettelkasten.md" type="text\/markdown"[^>]*>\s*Xem markdown/)
+    const prompt = encodeURIComponent("Đọc https://notes.dynamotn.dev/03_Atomic/Zettelkasten.md rồi giúp tôi hiểu nội dung, tôi sẽ hỏi thêm.")
+    expect(menu).toContain(`href="https://chatgpt.com/?q=${prompt}"`)
+    expect(menu).toContain(`href="https://claude.ai/new?q=${prompt}"`)
+    expect(read("en-US/03_Atomic/Zettelkasten-method/index.html")).toMatch(/>\s*Ask Claude ↗/)
+    // No markdown copy, no menu.
+    expect(read("index.html")).not.toContain('class="page-menu"')
+  })
+
+  test("a note not updated for the configured years says it may be out of date", () => {
+    const notice = read("03_Atomic/Zettelkasten/index.html").match(/<p class="outdated"[^>]*>[\s\S]*?<\/p>/)![0]
+    // The date is read in local time, so its hour depends on the machine.
+    expect(notice).toMatch(/data-since="2024-05-0[12]T\d\d:00:00.000Z" data-after="2"/)
+    expect(notice).not.toContain("hidden")
+    expect(notice).toMatch(/⏳ Cập nhật lần cuối .*2024: có thể một phần đã cũ\./)
+    // A recent note has it hidden, for the browser to show once it grows old.
+    expect(read("07_Project/Blog-post/index.html")).toMatch(/<p class="outdated"[^>]*data-after="2" hidden>/)
+    // Daily notes and the home page never get it.
+    expect(read("08_Journal/2026-10-05/index.html")).not.toContain('class="outdated"')
+    expect(read("index.html")).not.toContain('class="outdated"')
+  })
+
+  test("a stream folder shows its short notes in full instead of as cards", () => {
+    const page = read("08_Journal/index.html")
+    expect(page).toContain('<div class="stream">')
+    expect(page).not.toContain('class="card-wall"')
+    const item = page.match(/<article class="stream-item" data-key="08_Journal\/2026-10-05">[\s\S]*?<\/article>/)![0]
+    expect(item).toMatch(/<a class="internal" href="\/08_Journal\/2026-10-05">\s*2026-10-05\s*<\/a>/)
+    expect(item).toMatch(/<div class="prose"><p>Watered the garden on 2026-10-05\.<\/p>\s*<\/div>/)
+    expect(page).toContain('data-key="08_Journal/Garden plans"')
+    expect(page).not.toContain("Only for those with the link")
+    // Other folders keep their cards.
+    expect(read("03_Atomic/index.html")).not.toContain('class="stream"')
+  })
+
+  test("llms-full.txt holds every public note in full, each with its source", () => {
+    const full = read("llms-full.txt")
+    expect(full).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")
+    expect(full).toContain("Source: https://notes.dynamotn.dev/03_Atomic/Zettelkasten\n\n# Zettelkasten\n")
+    expect(full).toContain(read("03_Atomic/Zettelkasten.md"))
+    expect(full).toContain("Source: https://notes.dynamotn.dev/en-US/03_Atomic/Zettelkasten-method\n")
+    expect(full).not.toContain("a private comment")
+    expect(full).not.toContain("Source: https://notes.dynamotn.dev/06_Reference/Secret")
+    expect(read("llms.txt")).toContain("- [Full text](https://notes.dynamotn.dev/llms-full.txt): ")
+  })
+
   test("_headers sets safe defaults and caches hashed assets for good", () => {
     const headers = read("_headers")
     expect(headers).toStartWith("/*\n  X-Content-Type-Options: nosniff\n")

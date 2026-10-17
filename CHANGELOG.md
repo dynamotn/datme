@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Each note has a 📄 Markdown menu: copy the note as markdown, open its
+  markdown copy, or ask ChatGPT or Claude to read it. `askAi` picks the
+  assistants, or `[]` for none; they need `site.url`.
+- `/llms-full.txt` holds the markdown of every public note in one file, each
+  after the URL of its page, and `/llms.txt` links to it.
+- `outdated: { after: <years> }` tells readers when a note has not been
+  updated for that long. The browser checks again, so a site that is not
+  rebuilt still warns. Home and daily notes never get it; `outdated: false`
+  opts a note out.
+- `appearance.stream` lists folders of short notes whose page shows each
+  note in full, newest first, like a feed, instead of as cards.
 - A note's stage can be set with a `stage` property naming a configured
   stage, for vaults that do not sort notes into a folder per stage. It
   wins over the folder, and the home page counts it under that stage.

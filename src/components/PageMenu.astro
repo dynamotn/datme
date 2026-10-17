@@ -1,0 +1,40 @@
+---
+import type { Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { askAiLinks, hasMarkdown, mdUrl } from "~/lib/llms"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const s = t(note.lang)
+const md = mdUrl(note)
+const ask = askAiLinks(note)
+---
+
+{
+  hasMarkdown(note) && (
+    <details class="page-menu">
+      <summary>📄 {s.pageMarkdown}</summary>
+      <ul>
+        <li>
+          <button type="button" data-copy-markdown={md} hidden>
+            {s.copyMarkdown}
+          </button>
+        </li>
+        <li>
+          <a href={md} type="text/markdown">
+            {s.viewMarkdown}
+          </a>
+        </li>
+        {ask.map((a) => (
+          <li>
+            <a href={a.href} target="_blank" rel="noopener">
+              {a.name} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+}

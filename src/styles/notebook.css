@@ -737,6 +737,18 @@
   font-family: var(--font-mono);
   font-size: 12px;
 }
+[data-look="notebook"] .page-menu {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+[data-look="notebook"] .page-menu summary,
+[data-look="notebook"] .page-menu ul {
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+[data-look="notebook"] .page-menu ul {
+  box-shadow: 4px 4px 0 var(--ink);
+}
 
 /* ---------- prose ---------- */
 [data-look="notebook"] .prose {

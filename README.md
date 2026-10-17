@@ -113,10 +113,11 @@ for poems · audio and video from a timestamp, with captions and transcripts.
 
 ### Made to be read
 
-Notebook or quiet serif blog look, per folder · light and dark themes · reading
-progress and time left · a reader menu for larger text, a legible font or high
-contrast · links to an exact passage · lightbox for images and drawings ·
-print stylesheet · right-to-left languages.
+Notebook or quiet serif blog look, per folder · folders of short notes read as
+a feed · light and dark themes · reading progress and time left · a word on
+notes that may be out of date · a reader menu for larger text, a legible font
+or high contrast · links to an exact passage · lightbox for images and
+drawings · print stylesheet · right-to-left languages.
 
 ### Made to be explored
 
@@ -134,10 +135,11 @@ published note uses get copied.
 ### Ready for the open web
 
 Multilingual notes in one file · email subscriptions per folder or tag ·
-permalinks and redirects for old URLs · social
-cards · JSON-LD · sitemap · `llms.txt` · webmentions and comments · an
-installable offline app · dead links pointed at the Internet Archive · one-file
-EPUB or printable export of any folder.
+permalinks and redirects for old URLs · social cards · JSON-LD · sitemap ·
+`llms.txt` and `llms-full.txt` · a markdown menu that copies a note or hands it
+to ChatGPT or Claude · webmentions and comments · an installable offline app ·
+dead links pointed at the Internet Archive · one-file EPUB or printable export
+of any folder.
 
 ## Documentation
 

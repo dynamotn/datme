@@ -3,7 +3,8 @@ import type { Lang } from "~/site.config"
 import { site } from "~/site.config"
 import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { t } from "~/lib/i18n"
+import { t, formatDate } from "~/lib/i18n"
+import { isStream } from "~/lib/nav"
 import { feedPath } from "~/lib/feed"
 import Subscribe from "../Subscribe.astro"
 import { folderIcon } from "~/lib/icons"
@@ -25,6 +26,12 @@ const stage = site.stages[folder.segment]
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.folders[l].get(folder.dir)?.url]))
 const feed = "/" + feedPath(lang, { kind: "folder", dir: folder.dir })
 const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastIndexOf("/")) : ""
+// A stream shows short notes in full, newest first; a protected one only by its title.
+const stream = isStream(folder.dir)
+  ? await Promise.all(
+      byRecent(folder.notes, "created").map(async (note) => ({ note, html: note.protected ? undefined : (await renderNote(note)).html })),
+    )
+  : undefined
 ---
 
 <Base lang={lang} title={folder.name} description={intro?.description} alternates={alternates} feed={feed}>
@@ -50,7 +57,25 @@ const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastInd
       )
     }
     {
-      folder.notes.length > 0 &&
+      stream && stream.length > 0 && (
+        <div class="stream">
+          {stream.map(({ note, html }) => (
+            <article class="stream-item" data-key={note.key}>
+              <header>
+                <a class="internal" href={note.url}>
+                  {note.title}
+                </a>
+                {note.created && <time datetime={note.created.toISOString()}>{formatDate(note.created, lang)}</time>}
+              </header>
+              {html ? <div class="prose" set:html={html} /> : <p class="empty">🔒 {s.locked}</p>}
+            </article>
+          ))}
+        </div>
+      )
+    }
+    {
+      !stream &&
+        folder.notes.length > 0 &&
         (site.appearance.style === "notebook" ? (
           <div class="card-wall">
             {byRecent(folder.notes).map((n) => (

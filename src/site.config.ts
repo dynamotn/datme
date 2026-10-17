@@ -344,12 +344,22 @@ const schema = z
       }),
     /** BibTeX files, relative to the vault, that [@key] citations are looked up in. */
     bibliography: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+    /**
+     * Tell readers when a note has not been updated for this many years; `outdated: false`
+     * in a note opts it out. Home and daily notes never get it.
+     */
+    outdated: z
+      .object({ after: z.number().positive() })
+      .strict()
+      .optional(),
     /** Make the site installable and keep the pages a reader opened available offline. */
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
     /** Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text. */
     llms: z.boolean().default(true),
+    /** Chat assistants a note's markdown menu offers to open it in; needs llms and site.url. */
+    askAi: z.array(z.enum(["chatgpt", "claude"])).default(["chatgpt", "claude"]),
     /**
      * Write a _headers file (Netlify, Cloudflare Pages) with safe defaults and caching; `false` skips
      * it. `csp: true` adds a Content-Security-Policy built from the features in use.
@@ -374,9 +384,11 @@ const schema = z
         style: z.enum(["notebook", "classic"]).default("notebook"),
         /** Folders whose notes use the other style, e.g. long-form writing. */
         classic: z.array(z.string()).default([]),
+        /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
+        stream: z.array(z.string()).default([]),
       })
       .strict()
-      .default({ style: "notebook", classic: [] }),
+      .default({ style: "notebook", classic: [], stream: [] }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -490,6 +502,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     headers: c.headers,
     ogImages: c.ogImages,
     llms: c.llms,
+    askAi: [...new Set(c.askAi)],
+    outdated: c.outdated,
     offline: c.offline,
     drafts,
     map: c.map,
@@ -518,6 +532,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     appearance: {
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
+      stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
     },
     strings: c.strings,
   }

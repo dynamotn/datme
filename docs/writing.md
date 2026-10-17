@@ -47,6 +47,7 @@ that folder's page.
 | `draft`, `publish_date`, `unlisted`, `password` | See [Privacy](privacy.md) |
 | `lang` | The language the note is written in, when it isn't the site's default one |
 | `lineBreaks` | `true` to keep single line breaks (poems, lyrics) |
+| `outdated` | `false` to never say the note may be out of date (see [`outdated`](configuration.md#readers-and-the-social-web)) |
 | `series`, `series_order` | See [Series](#series) |
 | `start`, `end`, `location` | See [Timeline, map and stats](#timeline-map-and-stats) |
 

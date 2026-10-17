@@ -76,6 +76,7 @@ archiveDeadLinks: true        # dead links found by `check --external` point to 
 appearance:
   style: notebook             # index cards on dotted paper; or `classic`
   classic: [Writing]          # folders whose notes use the other style
+  stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
 
 theme:
   scheme: auto                # light or dark before readers use the toggle; auto follows their system
@@ -148,7 +149,9 @@ subscribe:                    # a form for new notes by email, under notes and o
   provider: buttondown        # buttondown { username } or form { action, field?, topicField? }
   username: me
 ogImages: true                # social cards for the home page and notes without a banner
-llms: true                    # /llms.txt and a .md copy of every public note (without comments)
+llms: true                    # /llms.txt, /llms-full.txt and a .md copy of every public note (without comments)
+askAi: [chatgpt, claude]      # assistants a note's Markdown menu opens it in (needs site.url); [] for none
+outdated: { after: 2 }        # say so on notes not updated for this many years (off by default)
 offline: true                 # installable app; pages a reader opened stay readable offline
 ```
 

@@ -71,6 +71,13 @@ type never leaves the page. Nothing loads until they press the button. It needs
   trail of index cards.
 - **Reading progress:** notes of 300 words or more show a progress bar and the
   minutes left.
+- **Old notes:** with `outdated: { after: 2 }`, a note not updated for two
+  years says when it last was, and that some of it may be out of date. The
+  browser checks again, so the notice appears even if the site is not rebuilt.
+  Home and daily notes never show it, and a note opts out with `outdated: false`.
+- **Short notes:** a folder listed in `appearance.stream` shows its notes in
+  full on its page, newest first, like a feed of passing thoughts, instead of
+  as cards.
 - **Reading preferences:** the "Aa" menu enlarges the text, switches to a
   legible font (Atkinson Hyperlegible) or high contrast. The choice stays in
   the reader's browser.
@@ -139,4 +146,6 @@ that service only.
 - **Print:** notes print cleanly. Footnotes return to the end, sidebars go
   away, and embeds show their links.
 - **Markdown:** with `llms: true`, every public note has a `.md` copy next to
-  its page, listed in `/llms.txt`.
+  its page, listed in `/llms.txt`; `/llms-full.txt` holds them all in one file.
+  The note's 📄 Markdown menu copies that text, opens it, or asks ChatGPT or
+  Claude to read it (`askAi`; only when `site.url` is set, as they fetch it).

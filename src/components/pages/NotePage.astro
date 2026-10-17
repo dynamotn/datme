@@ -9,6 +9,7 @@ import { lookOf } from "~/lib/nav"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
+import { hasMarkdown, mdUrl } from "~/lib/llms"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
@@ -21,6 +22,8 @@ import DevProblems from "../DevProblems.astro"
 import SeriesBox from "../SeriesBox.astro"
 import TrailBar from "../TrailBar.astro"
 import DayNav from "../DayNav.astro"
+import PageMenu from "../PageMenu.astro"
+import Outdated from "../Outdated.astro"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 
 interface Props {
@@ -55,7 +58,7 @@ const pagefindFilters = [`folder:${note.dir.split("/")[0]}`, ...note.types.map((
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={site.llms && !note.protected && !note.unlisted ? `${note.url}.md` : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
@@ -87,7 +90,9 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       <NoteMeta note={note} words={r.words}>
         <h1 class="note-title">{title}</h1>
       </NoteMeta>
+      <PageMenu note={note} />
     </header>
+    <Outdated note={note} />
     <TrailBar note={note} at="head" />
     <SeriesBox note={note} at="head" />
     {

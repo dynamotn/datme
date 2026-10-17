@@ -156,7 +156,7 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [] })
+    expect(c.appearance).toEqual({ style: "notebook", classic: [], stream: [] })
   })
 
   test("menu entries can be notes or URLs, with localised labels", () => {
@@ -164,13 +164,14 @@ describe("menu and appearance", () => {
       {
         languages: ["vi-VN", "en-US"],
         nav: [{ note: "About me", label: { "vi-VN": "Về tôi", "en-US": "About" } }, { url: "/cv.pdf", label: "CV" }],
-        appearance: { classic: ["/Writing/"] },
+        appearance: { classic: ["/Writing/"], stream: ["Notes/"] },
       },
       "/v",
     )
     expect(c.nav[0]).toEqual({ kind: "note", target: "About me", label: { "vi-VN": "Về tôi", "en-US": "About" } })
     expect(c.nav[1]).toEqual({ kind: "url", target: "/cv.pdf", label: { "vi-VN": "CV", "en-US": "CV" } })
     expect(c.appearance.classic).toEqual(["Writing"])
+    expect(c.appearance.stream).toEqual(["Notes"])
   })
 
   test("the archive is a built-in menu entry", () => {
@@ -180,6 +181,21 @@ describe("menu and appearance", () => {
   test("URL entries need a label and styles are checked", () => {
     expect(() => resolveConfig({ nav: [{ url: "/x" }] }, "/v")).toThrow(ConfigError)
     expect(() => resolveConfig({ appearance: { style: "neon" } }, "/v")).toThrow(ConfigError)
+  })
+})
+
+describe("reader tools", () => {
+  test("notes offer ChatGPT and Claude and never say they are outdated, by default", () => {
+    const c = resolveConfig({}, "/v")
+    expect(c.askAi).toEqual(["chatgpt", "claude"])
+    expect(c.outdated).toBeUndefined()
+  })
+
+  test("assistants and the age of outdated notes are checked", () => {
+    expect(resolveConfig({ askAi: [] }, "/v").askAi).toEqual([])
+    expect(resolveConfig({ outdated: { after: 1.5 } }, "/v").outdated).toEqual({ after: 1.5 })
+    expect(() => resolveConfig({ askAi: ["gemini"] }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ outdated: { after: 0 } }, "/v")).toThrow(ConfigError)
   })
 })
 

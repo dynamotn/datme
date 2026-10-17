@@ -594,6 +594,60 @@ kbd {
   width: 15px;
   height: 15px;
 }
+.page-menu {
+  position: relative;
+  display: block;
+  width: fit-content;
+  margin-top: 12px;
+  font: 600 12.5px var(--font-ui);
+}
+.page-menu summary {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.page-menu summary::-webkit-details-marker {
+  display: none;
+}
+.page-menu[open] summary,
+.page-menu summary:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.page-menu ul {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 190px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.page-menu li > * {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+.page-menu li > :hover,
+.page-menu li > :focus-visible {
+  background: var(--surface-2);
+}
 .note-head {
   padding-bottom: 22px;
   margin-bottom: 28px;
@@ -1304,6 +1358,42 @@ details.callout[open] > summary::after {
   font-size: 12px;
   color: var(--muted);
 }
+/* ---------- stream: a folder of short notes, each in full ---------- */
+.stream {
+  display: grid;
+  max-width: 72ch;
+}
+.stream-item {
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+.stream-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.stream-item header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 10px;
+  font: 600 14px var(--font-ui);
+}
+.stream-item header a {
+  min-width: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.stream-item time {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+}
+.stream-item .prose {
+  font-size: calc(1.08rem * var(--reading-scale, 1));
+}
+
 .note-list {
   list-style: none;
   margin: 0;
@@ -3748,6 +3838,15 @@ summary.ntn-col-head {
   border-left: 3px solid var(--clay);
   border-radius: var(--radius-sm);
   background: var(--clay-soft);
+  font-size: 14px;
+}
+.outdated {
+  margin: 0 0 22px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--muted);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink-2);
   font-size: 14px;
 }
 .untranslated a {
