@@ -3,7 +3,8 @@ import { ClientRouter } from "astro:transitions"
 import "~/styles/global.css"
 import "~/styles/notebook.css"
 import "~/styles/print.css"
-import { site, type Lang } from "~/site.config"
+import { site, type Lang, type Style } from "~/site.config"
+import { THEME_COLOR } from "~/lib/pwa"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "~/components/Icon.astro"
@@ -34,7 +35,7 @@ interface Props {
   /** Whether the right rail slot is used. */
   rail?: boolean
   /** Visual style of the page; defaults to the configured one. */
-  look?: "notebook" | "classic"
+  look?: Style
   /** schema.org structured data describing the page. */
   jsonLd?: JsonLd[]
   /** URL of the RSS feed of this page's notes, next to the site's. */
@@ -142,11 +143,11 @@ const pluginHead = await userHead()
     {
       site.theme.scheme === "auto" ? (
         <>
-          <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
-          <meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)" />
+          <meta name="theme-color" content={THEME_COLOR[look].light} media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content={THEME_COLOR[look].dark} media="(prefers-color-scheme: dark)" />
         </>
       ) : (
-        <meta name="theme-color" content={site.theme.scheme === "dark" ? "#111210" : "#f6f3ec"} />
+        <meta name="theme-color" content={THEME_COLOR[look][site.theme.scheme]} />
       )
     }
     <script is:inline>

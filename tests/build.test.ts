@@ -333,7 +333,7 @@ describe("static build", () => {
   test("without theme.scheme the reader's system picks light or dark", () => {
     const home = read("index.html")
     expect(home).not.toMatch(/<html[^>]* data-theme=/)
-    expect(home).toContain('<meta name="theme-color" content="#111210" media="(prefers-color-scheme: dark)">')
+    expect(home).toContain('<meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">')
   })
 
   test("code blocks and Mermaid diagrams take the configured themes", () => {

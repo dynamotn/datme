@@ -1,14 +1,18 @@
-import { site } from "../site.config"
+import { site, type Style } from "../site.config"
 import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
 
 /** Theme colours of the browser chrome, matching the light page background. */
-export const THEME_COLOR = { notebook: "#f5f5f0", classic: "#f6f3ec" } as const
+export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
+  notebook: { light: "#f5f5f0", dark: "#121211" },
+  classic: { light: "#f6f3ec", dark: "#111210" },
+  garden: { light: "#f7f3e8", dark: "#121a14" },
+}
 
 /** The web app manifest: lets readers install the garden and open it like an app. */
 export function manifest(): string {
   const lang = site.defaultLang
-  const color = THEME_COLOR[site.appearance.style]
+  const color = THEME_COLOR[site.appearance.style].light
   return JSON.stringify(
     {
       name: site.title[lang],
