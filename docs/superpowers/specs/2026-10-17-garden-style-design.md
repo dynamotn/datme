@@ -217,10 +217,31 @@ tended, paths from here, nearby, walk the whole garden, all stages.
 
 ## Page layouts: style and chrome per note
 
-Builds on branch `worktree-feat-note-layouts` (commit `2141bfc`), which adds
-the `layout` property (`cv`, `gallery`, `projects`, `books`). Today a layout
-only reshapes the note body and drops backlinks/related notes; colours,
-header, sidebars, TOC and graph stay those of the site.
+Builds on branch `worktree-feat-note-layouts`, which another session is
+still developing. State checked on 2026-10-17 (commits `2141bfc`,
+`7d0ee9f`, plus what that session reported as in progress):
+
+- `LAYOUTS` (in `src/lib/vault.ts`) has `cv`, `gallery`, `timeline`,
+  `links`, `projects`, `books`, `movies`. In progress: `uses`, `now`, `faq`,
+  `quotes`, `talks`, `recipes`, `places`, `shelf`; `books` and `movies`
+  become presets of `shelf`. An unknown `layout` value already warns and
+  renders as a plain note.
+- Transforms and collections live in `src/lib/note-layouts.ts`
+  (`layoutHtml`, `collectionOf`, `isCollection`); components are
+  `Collection.astro`, `CvHead.astro`, `LinksHead.astro`. Collections take
+  their notes from an embedded base when there is one, else `from`, else
+  the note's folder.
+- Outside the body, a layout today only: adds class `layout-<name>` to the
+  article; hides backlinks, related notes, unlinked mentions and the
+  reading-progress bar; replaces the note head for `cv` (unless protected)
+  and `links`; narrows `links` to 34rem. `Base.astro`, the rail (TOC,
+  graph), the header and the colour scheme are untouched. `print.css` hides
+  the CV print button and its breadcrumbs.
+- A folder note with a layout lays out its folder page; a collection layout
+  replaces the folder's note list.
+- Properties introduced there: `layout`, `cover`, `from`, and per-layout
+  ones (`role`, `status`, `rating`, …; planned `group`, `statuses`,
+  `fields`). None is named `style` or `chrome`.
 
 ### Properties (approved by the owner)
 
@@ -250,27 +271,40 @@ Implemented once, e.g. `src/lib/look.ts` exporting `lookOf(note)` and
 `chromeOf(note)` (moving `lookOf` out of `nav.ts`), so every page asks the
 same function.
 
-### Layout defaults (approved by the owner)
+### Layout defaults
 
-| layout | style | chrome | scheme |
-|---|---|---|---|
-| `cv` | `classic` | `minimal` | site default |
-| `gallery` | `classic` | `minimal` | dark by default |
-| `projects` | site's resolved style (tier 3/4) | `full` without TOC and graph | site default |
-| `books` | site's resolved style; `library` once it exists | `full` without TOC and graph | site default |
+The owner approved the model (layout default, note override) and the first
+four rows as originally proposed (`cv`, `gallery`, `projects`, `books`).
+Extending them to the layouts added since is **Claude's call**, grouped by
+what the page is:
 
+| group | layouts | style | chrome | scheme |
+|---|---|---|---|---|
+| standalone page | `cv`, `links` | `classic` | `minimal` | site default |
+| pictures | `gallery` | `classic` | `minimal` | dark by default |
+| page of the site | `timeline`, `now`, `uses`, `quotes` | site's resolved style (tier 3/4) | `full` without TOC and graph | site default |
+| reference page | `faq` | site's resolved style | `full` (the TOC helps) | site default |
+| collection | `projects`, `talks`, `recipes`, `places` | site's resolved style | `full` without TOC and graph | site default |
+| shelf | `shelf`, `books`, `movies` | site's resolved style; `library` once it exists | `full` without TOC and graph | site default |
+
+- The table lives in code as `Partial<Record<Layout, LayoutLook>>`, next to
+  the style resolution. A layout with no row gets no default (site style,
+  `full` chrome), so layouts added on the other branch never break the
+  build and only need a row when they want one.
+- Notes *listed by* a collection (a book, a project) have no layout of their
+  own and follow the usual precedence; the item detail header planned on
+  the layouts branch is body markup and needs nothing from this design.
+- `minimal` chrome also drops the breadcrumbs, which generalises what
+  `print.css` already does for `.layout-cv .crumbs`. **(Claude's call)**
 - "`full` without TOC and graph" is a third internal frame value
   (`full-norail`, say), reachable only through a layout default; the
   property only accepts `full` and `minimal`. **(Claude's call)**
-- Dark by default for `gallery` means: when the reader has no stored choice
-  and `theme.scheme` is `auto`, the page starts dark; a stored reader choice
-  still wins, and the toggle still works. Implemented as a per-page hint
-  (e.g. `data-scheme-default="dark"`) read by the inline theme script in
-  `Base.astro`. A site with `theme.scheme: light` still gets a dark gallery;
-  only the reader's own choice beats it. **(Claude's call)**
-- The defaults live in one table in code next to the layout list in
-  `note-layouts.ts`, so `library` replacing `books`' default is a one-line
-  change.
+- Dark by default for `gallery` means: when the reader has no stored choice,
+  the page starts dark; a stored reader choice still wins, and the toggle
+  still works. Implemented as a per-page hint (e.g.
+  `data-scheme-default="dark"`) read by the inline theme script in
+  `Base.astro`. A site with `theme.scheme: light` still gets a dark gallery.
+  **(Claude's call)**
 
 ### Folder pages with a layout
 
@@ -288,23 +322,31 @@ branch. The folder page then takes its look and chrome from that folder note
 - Search, command palette and keyboard shortcuts that depend on the header
   must not throw when it is absent.
 
-### Order of work (Claude's call, agreed in chat)
+### Order of work (Claude's call; revised after the owner agreed to "rebase first", because the layouts session will not rebase yet)
 
-1. Rebase `worktree-feat-note-layouts` onto `main` (it is one commit behind:
-   it predates `58eadf8`, so its diff currently reverts the stage presets
-   change; keep `main`'s stages when resolving).
-2. Build the garden style on top of it, with the style resolution in one
-   place and all four tiers.
-3. Add `chrome` and the per-layout defaults.
+1. Build the garden style on `main`, with the style resolution in one place
+   (`src/lib/look.ts`) already taking a note, so the layout tier is a later
+   addition, not a rewrite. This does not wait for the layouts branch.
+2. Once the layouts branch has landed on `main` (its session owns that
+   rebase; it forked at `62bb303`, before `58eadf8`, and does not plan to
+   rebase until it is done), add the layout tier, `chrome`, `full-norail`,
+   the scheme hint and the defaults table, on a branch from `main`.
+3. Until then, nothing in this design edits files owned by the layouts
+   branch (`note-layouts.ts`, `Collection.astro`, `CvHead.astro`,
+   `LinksHead.astro`); the shared hot spots are `NotePage.astro`,
+   `FolderPage.astro`, `vault.ts` and `global.css`/`print.css`, so step 1
+   keeps its edits there small.
 
 ### Tests for this part
 
 - look: each tier wins over the ones below it; unknown `style`/`chrome`
   values warn and are ignored.
-- build (layouts fixture): `cv` renders `data-look="classic"`
-  `data-chrome="minimal"` and no explorer, TOC, graph or main nav; a `cv`
-  with `style: garden` renders `data-look="garden"`; `gallery` carries the
-  dark scheme hint; `projects` renders no TOC or graph but keeps the header.
+- build (`tests/fixtures/layouts`): `cv` and `links` render
+  `data-look="classic"` `data-chrome="minimal"` and no explorer, TOC, graph,
+  main nav or breadcrumbs; a `cv` with `style: garden` renders
+  `data-look="garden"`; `gallery` carries the dark scheme hint; `projects`
+  renders no TOC or graph but keeps the header; a note with a layout that
+  has no row renders as today.
 
 ## Constraints
 
