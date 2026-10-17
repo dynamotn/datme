@@ -156,6 +156,7 @@ subscribe:                    # a form for new notes by email, under notes and o
 ogImages: true                # social cards for the home page and notes without a banner
 llms: true                    # /llms.txt, /llms-full.txt and a .md copy of every public note (without comments)
 askAi: [chatgpt, claude]      # assistants a note's Markdown menu opens it in (needs site.url); [] for none
+stats: { hide: [] }           # garden health left off /stats: density, structure, freshness, hubs
 outdated: { after: 2 }        # say so on notes not updated for this many years (off by default)
 offline: true                 # installable app; pages a reader opened stay readable offline
 ```

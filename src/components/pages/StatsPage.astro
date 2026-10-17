@@ -16,6 +16,10 @@ const W = 640
 const H = 160
 const path = growthPath(st.growth, W, H)
 const maxFolder = Math.max(1, ...st.folders.map((f) => f.count))
+const health = st.health
+const densityPath = health.density && health.density.trend.length > 1 ? growthPath(health.density.trend, W, H / 2) : ""
+const share = (n: number) => (st.notes ? `${Math.round((n / st.notes) * 100)}%` : "0%")
+const hasHealth = Object.keys(health).length > 0
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "stats")]))
 ---
 
@@ -59,6 +63,85 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
               ))}
             </table>
           </figure>
+        </section>
+      )
+    }
+    {
+      hasHealth && (
+        <section class="stats-health">
+          <h2>{s.statsHealth}</h2>
+          <p class="stats-lead">{s.statsHealthLead}</p>
+          <dl class="stats-tiles">
+            {health.density && (
+              <div>
+                <dt>{s.statsDensity}</dt>
+                <dd>{health.density.now.toLocaleString(lang)}</dd>
+              </div>
+            )}
+            {health.structure && (
+              <>
+                <div>
+                  <dt>{s.statsOrphans}</dt>
+                  <dd>
+                    {fmt(health.structure.orphans)} <small>{share(health.structure.orphans)}</small>
+                  </dd>
+                </div>
+                <div>
+                  <dt>{s.statsDeadEnds}</dt>
+                  <dd>
+                    {fmt(health.structure.deadEnds)} <small>{share(health.structure.deadEnds)}</small>
+                  </dd>
+                </div>
+              </>
+            )}
+            {health.freshness?.map((f) => (
+              <div>
+                <dt>{s.statsFresh.replace("{n}", fmt(f.days))}</dt>
+                <dd>
+                  {fmt(f.notes)} <small>{share(f.notes)}</small>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          {densityPath && (
+            <figure class="stats-growth stats-density">
+              <figcaption class="stats-density-title">{s.statsDensityTrend}</figcaption>
+              <svg viewBox={`0 0 ${W} ${H / 2}`} preserveAspectRatio="none" role="img" aria-label={s.statsDensityTrend}>
+                <path class="line" d={densityPath} />
+              </svg>
+              <figcaption>
+                <span>{health.density!.trend[0][0]}</span>
+                <span>{health.density!.trend.at(-1)![0]}</span>
+              </figcaption>
+              <table class="chart-data">
+                <tr>
+                  <th scope="col">{s.statsMonth}</th>
+                  <th scope="col">{s.statsDensity}</th>
+                </tr>
+                {health.density!.trend.map(([m, n]) => (
+                  <tr>
+                    <th scope="row">{m}</th>
+                    <td>{n}</td>
+                  </tr>
+                ))}
+              </table>
+            </figure>
+          )}
+          {health.hubs && health.hubs.length > 0 && (
+            <>
+              <h3>{s.statsHubs}</h3>
+              <ol class="stats-hubs">
+                {health.hubs.map((h) => (
+                  <li>
+                    <a class="internal" href={h.url}>
+                      {h.title}
+                    </a>
+                    <span>← {fmt(h.count)}</span>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
         </section>
       )
     }

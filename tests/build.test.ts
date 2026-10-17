@@ -572,6 +572,16 @@ describe("static build", () => {
     expect(read("03_Atomic/index.html")).not.toContain('class="stream"')
   })
 
+  test("/stats shows the garden's health: links per note, orphans, dead ends, freshness and hubs", () => {
+    const health = read("stats/index.html").match(/<section class="stats-health">[\s\S]*?<\/section>/)![0]
+    expect(health).toContain("<h2>Sức khỏe khu vườn</h2>")
+    expect(health).toContain("<dt>liên kết mỗi ghi chú</dt>")
+    expect(health).toMatch(/<dt>ngõ cụt, không trỏ tới ghi chú nào<\/dt><dd>\d+ <small>\d+%<\/small><\/dd>/)
+    expect(health).toContain("<dt>được chăm trong 365 ngày qua</dt>")
+    expect(health).toMatch(/<h3>Ghi chú được trỏ tới nhiều nhất<\/h3><ol class="stats-hubs"><li><a class="internal" href="\/[^"]+">/)
+    expect(read("en-US/stats/index.html")).toContain("<h2>Garden health</h2>")
+  })
+
   test("llms-full.txt holds every public note in full, each with its source", () => {
     const full = read("llms-full.txt")
     expect(full).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")

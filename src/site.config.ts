@@ -357,6 +357,13 @@ const schema = z
       .object({ after: z.number().positive() })
       .strict()
       .optional(),
+    stats: z
+      .object({
+        /** Garden health indicators left off /stats, for authors who prefer not to publish them. */
+        hide: z.array(z.enum(["density", "structure", "freshness", "hubs"])).default([]),
+      })
+      .strict()
+      .default({ hide: [] }),
     /** Make the site installable and keep the pages a reader opened available offline. */
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
@@ -511,6 +518,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     llms: c.llms,
     askAi: [...new Set(c.askAi)],
     outdated: c.outdated,
+    stats: c.stats,
     offline: c.offline,
     drafts,
     map: c.map,

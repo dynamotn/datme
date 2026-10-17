@@ -1,5 +1,6 @@
 import { site } from "../site.config"
-import { getVault, type PrivateLinkUse, type Problem } from "./vault"
+import type { Lang } from "../site.config"
+import { getVault, type Note, type PrivateLinkUse, type Problem } from "./vault"
 import { externalUrls } from "./links"
 import { docUrl } from "./obsidian"
 import { noteProperties } from "./properties"
@@ -21,14 +22,20 @@ export function linkMedian(counts: number[]): number {
 /** Whether a note's outgoing links make it a hub among notes of this median. */
 export const isHub = (links: number, median: number) => median > 0 && links >= HUB_MIN && links >= HUB_FACTOR * median
 
-/**
- * Notices about the shape of the garden, in the default language: notes no
- * one links to (orphans), notes linking nowhere (dead ends), and notes with
- * far more links than the others (hubs, which a map of content could split).
- */
-export function structureProblems(): Problem[] {
+export interface GardenShape {
+  /** Notes no one links to, that neither the menu, the calendar nor the explorer leads to. */
+  orphans: Note[]
+  /** Notes linking to no published note. */
+  deadEnds: Note[]
+  /** Notes with far more links than the others, which a map of content could split. */
+  hubs: { note: Note; links: number }[]
+  /** Median number of outgoing links among notes that link somewhere. */
+  median: number
+}
+
+/** The shape of the garden in a language: its orphans, dead ends and hubs. Daily notes are none of them. */
+export function gardenShape(lang: Lang): GardenShape {
   const vault = getVault()
-  const lang = site.defaultLang
   const notes = vault.notes[lang]
   const backlinks = vault.backlinks[lang]
   // Notes the menu leads to are found without a link.
@@ -40,18 +47,33 @@ export function structureProblems(): Problem[] {
   const folderNotes = new Set([...vault.folders[lang].values()].flatMap((f) => (f.folderNote ? [f.folderNote.key] : [])))
   const outgoing = new Map(notes.map((n) => [n.key, new Set(n.protected ? [] : n.links.map((l) => l.key).filter((k) => k !== n.key))]))
   const median = linkMedian([...outgoing.values()].map((s) => s.size))
-  const problems: Problem[] = []
+  const shape: GardenShape = { orphans: [], deadEnds: [], hubs: [], median }
   for (const n of notes) {
-    const file = n.key + ".md"
     const links = outgoing.get(n.key)!.size
     if (days.has(n.key)) continue
-    if (!n.isHome && !n.unlisted && !inNav.has(n.key) && !folderNotes.has(n.key) && !(backlinks.get(n.key) ?? []).length) {
-      problems.push({ level: "info", file, message: "orphan: no published note links here, and the menu does not either" })
-    }
-    if (!n.protected && links === 0) problems.push({ level: "info", file, message: "dead end: links to no published note" })
-    if (!n.isHome && !n.isMoc && isHub(links, median)) {
-      problems.push({ level: "info", file, message: `hub: links to ${links} notes, ${Math.round(links / median)} times the median of ${median}; a map of content could split it` })
-    }
+    if (!n.isHome && !n.unlisted && !inNav.has(n.key) && !folderNotes.has(n.key) && !(backlinks.get(n.key) ?? []).length) shape.orphans.push(n)
+    if (!n.protected && links === 0) shape.deadEnds.push(n)
+    if (!n.isHome && !n.isMoc && isHub(links, median)) shape.hubs.push({ note: n, links })
+  }
+  return shape
+}
+
+/**
+ * Notices about the shape of the garden, in the default language: notes no
+ * one links to (orphans), notes linking nowhere (dead ends), and notes with
+ * far more links than the others (hubs, which a map of content could split).
+ */
+export function structureProblems(): Problem[] {
+  const { orphans, deadEnds, hubs, median } = gardenShape(site.defaultLang)
+  const problems: Problem[] = []
+  for (const n of orphans) problems.push({ level: "info", file: n.key + ".md", message: "orphan: no published note links here, and the menu does not either" })
+  for (const n of deadEnds) problems.push({ level: "info", file: n.key + ".md", message: "dead end: links to no published note" })
+  for (const { note, links } of hubs) {
+    problems.push({
+      level: "info",
+      file: note.key + ".md",
+      message: `hub: links to ${links} notes, ${Math.round(links / median)} times the median of ${median}; a map of content could split it`,
+    })
   }
   return problems
 }

@@ -215,6 +215,12 @@ describe("reader tools", () => {
     expect(c.outdated).toBeUndefined()
   })
 
+  test("stats show every health indicator unless hidden", () => {
+    expect(resolveConfig({}, "/v").stats).toEqual({ hide: [] })
+    expect(resolveConfig({ stats: { hide: ["hubs"] } }, "/v").stats.hide).toEqual(["hubs"])
+    expect(() => resolveConfig({ stats: { hide: ["mood"] } }, "/v")).toThrow(ConfigError)
+  })
+
   test("assistants and the age of outdated notes are checked", () => {
     expect(resolveConfig({ askAi: [] }, "/v").askAi).toEqual([])
     expect(resolveConfig({ outdated: { after: 1.5 } }, "/v").outdated).toEqual({ after: 1.5 })

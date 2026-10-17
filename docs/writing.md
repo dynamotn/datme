@@ -134,7 +134,11 @@ this off.
   events. Dates can be `1927`, `1927-12` or `1927-12-08`, and `-0500` for BCE.
 - Notes with `location: [lat, lng]` appear on `/map`.
 - `/stats` shows the garden in numbers: notes, words, links, growth by month,
-  folders and top tags.
+  folders and top tags. Its garden health part tells how connected and fresh
+  the garden is: links per note and their trend, orphans and dead ends (as
+  `datme check` counts them), notes tended in the last 30, 90 and 365 days,
+  and the most linked notes. `stats: { hide: [density, structure, freshness,
+  hubs] }` leaves any of them out.
 
 Each of these pages exists only when some note qualifies. Protected notes
 never show up on them.

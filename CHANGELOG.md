@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search filters notes by when they were last tended (the last 30 days, the
   last year, or longer ago), and by stage when notes set their own `stage`.
   The graph filters by stage and colours notes by stage or freshness.
+- `/stats` shows the garden's health: links per note and their trend,
+  the share of orphan and dead-end notes, notes tended in the last 30, 90
+  and 365 days, and the most linked notes. `stats.hide` leaves any of them
+  out.
 - `appearance.stream` lists folders of short notes whose page shows each
   note in full, newest first, like a feed, instead of as cards.
 - A note's stage can be set with a `stage` property naming a configured

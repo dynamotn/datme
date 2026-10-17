@@ -2206,6 +2206,39 @@ dialog.graph-modal {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+.stats-tiles dd small {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.stats-health {
+  margin-bottom: 28px;
+}
+.stats-lead {
+  margin: -6px 0 16px;
+  color: var(--muted);
+}
+.stats-density svg {
+  height: 80px;
+}
+.stats-density .stats-density-title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.stats-hubs {
+  margin: 0;
+  padding-inline-start: 1.4em;
+}
+.stats-hubs li {
+  margin-bottom: 4px;
+}
+.stats-hubs li span {
+  margin-inline-start: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
 .stats-columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
