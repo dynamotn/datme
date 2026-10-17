@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A gallery (`layout: gallery`, or `style: darkroom` on any note) now shows
   its pictures in rows of equal height across almost the whole page, uncropped,
   on near-black with only neutral greys around them; captions sit under each
-  picture on phones and appear on hover or focus on larger screens, album
-  headings are quiet small-caps labels, and an enlarged picture opens on pure
-  black. Light mode turns the page into an off-white gallery wall.
+  picture, while a base's covers show their titles on hover or focus on
+  larger screens and stand upright. Album headings are quiet small-caps
+  labels, and an enlarged picture opens on pure black. Light mode turns the
+  page into an off-white gallery wall.
 - A résumé (`layout: cv`, or `style: resume` on any note) now reads as one
   A4 sheet on a grey desk: the photo, name, role and contacts in a narrow
   left column, the summary and sections on the right with their headings in

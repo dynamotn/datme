@@ -102,8 +102,8 @@
 }
 [data-look="darkroom"] .gallery-item {
   position: relative;
-  flex: var(--ar, 1.5) 1 calc(var(--ar, 1.5) * var(--row));
-  max-width: calc(var(--ar, 1.5) * var(--row) * 2.4);
+  flex: var(--ar, 0.6667) 1 calc(var(--ar, 0.6667) * var(--row));
+  max-width: calc(var(--ar, 0.6667) * var(--row) * 2.4);
   min-width: 0;
   margin: 0;
 }
@@ -111,11 +111,11 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: var(--ar, 1.5);
+  aspect-ratio: var(--ar, 0.6667);
   object-fit: cover;
   border-radius: 0;
 }
-/* A picture of unknown size (a base's cover) is shown whole, never cropped. */
+/* A picture of unknown size (a base's cover) gets an upright 2:3 frame and is shown whole. */
 [data-look="darkroom"] .gallery-item:not([style*="--ar"]) img {
   object-fit: contain;
 }
@@ -129,9 +129,12 @@
   color: inherit;
 }
 
-/* Larger screens with a pointer: the caption shows over the picture on hover or focus. */
+/*
+ * Larger screens with a pointer: a linked picture's caption shows over it on
+ * hover or focus. A plain picture cannot take focus, so its caption stays shown.
+ */
 @media (min-width: 761px) and (hover: hover) {
-  [data-look="darkroom"] .gallery-item figcaption {
+  [data-look="darkroom"] .gallery-item:has(a) figcaption {
     position: absolute;
     inset: auto 0 0;
     margin: 0;
@@ -142,8 +145,8 @@
     transition: opacity 0.15s;
     pointer-events: none;
   }
-  [data-look="darkroom"] .gallery-item:hover figcaption,
-  [data-look="darkroom"] .gallery-item:focus-within figcaption {
+  [data-look="darkroom"] .gallery-item:has(a):hover figcaption,
+  [data-look="darkroom"] .gallery-item:has(a):focus-within figcaption {
     opacity: 1;
     pointer-events: auto;
   }
