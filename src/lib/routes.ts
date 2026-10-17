@@ -6,6 +6,7 @@ import { docSlug } from "./obsidian"
 import { hasMap, hasTimeline } from "./places"
 import { hasJournal } from "./journal"
 import { hasDecks } from "./decks"
+import { hasChanges } from "./changes"
 import { hasHistory } from "./history"
 
 export type Page =
@@ -23,6 +24,7 @@ export type Page =
   | { kind: "map"; lang: Lang }
   | { kind: "stats"; lang: Lang }
   | { kind: "practice"; lang: Lang }
+  | { kind: "changes"; lang: Lang }
   | { kind: "calendar"; lang: Lang }
   | { kind: "history"; lang: Lang; note: Note }
 
@@ -54,6 +56,7 @@ export function routes(): Map<string, Page> {
     if (hasMap(lang)) claim(prefix + "map", { kind: "map", lang })
     if (hasJournal(lang)) claim(prefix + "calendar", { kind: "calendar", lang })
     if (hasDecks(lang)) claim(prefix + "practice", { kind: "practice", lang })
+    if (hasChanges(lang)) claim(prefix + "changes", { kind: "changes", lang })
     for (const tag of vault.tags[lang].keys()) claim(prefix + "tags/" + tag, { kind: "tag", lang, tag })
     if (site.history) {
       for (const note of vault.notes[lang]) if (!note.isHome && hasHistory(note)) claim(note.slug + "/history", { kind: "history", lang, note })

@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/practice` gathers the flashcards of every deck in one session, due
   cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
   a reader has practised, a 🧠 badge in the header counts the cards due.
+- With `history: true`, `/changes` shows each change to a note, grouped by
+  week, with the paragraphs that grew and were cut, leaving typo fixes out.
+  `/changes.xml` and a `changes.xml` per folder and tag announce them.
 - `appearance.stream` lists folders of short notes whose page shows each
   note in full, newest first, like a feed, instead of as cards.
 - A note's stage can be set with a `stage` property naming a configured

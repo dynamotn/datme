@@ -4,6 +4,8 @@ import { listed, byRecent, getVault, type Note } from "./vault"
 import { renderNote } from "./markdown"
 import { langPrefix } from "./i18n"
 import { sluggify } from "./slug"
+import { gardenChanges } from "./changes"
+import { t } from "./i18n"
 
 /** What a feed covers: the whole site, a folder (with its subfolders) or a tag (with its subtags). */
 export type FeedScope = { kind: "site" } | { kind: "folder"; dir: string } | { kind: "tag"; tag: string }
@@ -49,5 +51,33 @@ export async function feed(lang: Lang, scope: FeedScope = { kind: "site" }): Pro
         }
       }),
     ),
+  })
+}
+
+/** Path of the changes feed of a scope: changes.xml next to its index.xml. */
+export const changesPath = (lang: Lang, scope: FeedScope) => feedPath(lang, scope).replace(/index\.xml$/, "changes.xml")
+
+/** RSS of the changes to notes, not only new ones: each item a version, with what grew and what was cut. */
+export function changesFeed(lang: Lang, scope: FeedScope = { kind: "site" }): Promise<Response> {
+  const s = t(lang)
+  const name =
+    scope.kind === "folder" ? getVault().folders[lang].get(scope.dir)?.name : scope.kind === "tag" ? `#${scope.tag}` : undefined
+  return rss({
+    title: `${s.changes} · ${name ? `${name} · ` : ""}${site.title[lang]}`,
+    description: s.changesLead,
+    site: site.url ?? "http://localhost:4321",
+    customData: `<language>${lang}</language>`,
+    items: gardenChanges(lang, scope, 50).map((c) => {
+      const summary = c.planted ? s.changeNew : s.changesSummary.replace("{added}", String(c.added)).replace("{removed}", String(c.removed))
+      return {
+        title: `${c.note.title} (${summary})`,
+        link: c.url,
+        // A note changes many times: each version is an item of its own.
+        customData: `<guid isPermaLink="false">${new URL(c.note.url, "https://x").pathname}@${c.date.toISOString()}</guid>`,
+        pubDate: c.date,
+        description: c.excerpt,
+        categories: c.note.tags,
+      }
+    }),
   })
 }

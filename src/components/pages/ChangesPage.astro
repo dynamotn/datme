@@ -1,0 +1,55 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t, langPrefix, formatDate } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { gardenChanges, hasChanges, weekOf, type GardenChange } from "~/lib/changes"
+import { changesPath } from "~/lib/feed"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const weeks = new Map<string, GardenChange[]>()
+for (const c of gardenChanges(lang)) weeks.set(weekOf(c.date), [...(weeks.get(weekOf(c.date)) ?? []), c])
+const feed = "/" + changesPath(lang, { kind: "site" })
+const alternates = Object.fromEntries(site.langs.filter(hasChanges).map((l) => [l, slugToUrl(langPrefix(l) + "changes")]))
+---
+
+<Base lang={lang} title={s.changes} alternates={alternates} feed={feed}>
+  <div class="note is-wide archive-page changes-page">
+    <header class="page-head">
+      <span class="chip type">🪴 {s.changes}</span>
+      <h1>{s.changes}</h1>
+      <p>{s.changesLead} · <a href={feed}>{s.rss}</a></p>
+    </header>
+    {
+      [...weeks].map(([week, list]) => (
+        <section class="archive-year">
+          <h2>
+            {s.changesWeek.replace("{date}", formatDate(new Date(week + "T00:00:00Z"), lang))} <small>{list.length}</small>
+          </h2>
+          <ol class="archive-list changes-list">
+            {list.map((c) => (
+              <li>
+                <time datetime={c.date.toISOString()}>{formatDate(c.date, lang)}</time>
+                <a class="internal" href={c.url}>
+                  {c.note.title}
+                </a>
+                {c.planted ? (
+                  <span class="change is-new">{s.changeNew}</span>
+                ) : (
+                  <span class="change is-updated">
+                    <ins>+{c.added}</ins> <del>−{c.removed}</del>
+                  </span>
+                )}
+                {c.excerpt && <p class="changes-excerpt">{c.excerpt}</p>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
+</Base>

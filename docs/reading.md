@@ -109,6 +109,11 @@ before. See [Privacy](privacy.md#note-history) before turning it on.
 ## Following the garden
 
 - **Feeds:** every folder and tag has an RSS feed, linked from its page.
+- **Changes:** with `history: true`, `/changes` follows how the garden is
+  tended, not only what is planted: each change to a note, grouped by week,
+  with the paragraphs that grew and were cut and a glimpse of what grew.
+  Typo-size edits are left out. `/changes.xml`, and `changes.xml` next to every
+  folder and tag feed, announce the same; add `changes` to `nav` to link it.
 - **Email:** with `subscribe` set, a form under each note and on folder and tag
   pages signs readers up for new notes. See [below](#email-subscriptions).
 

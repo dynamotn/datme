@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import * as childProcess from "node:child_process"
 import { diffParagraphs, noteVersions, publicText } from "../src/lib/history"
+import { weekOf, wordsChanged } from "../src/lib/changes"
 import { getVault } from "../src/lib/vault"
 
 describe("what a version showed", () => {
@@ -61,6 +62,20 @@ describe("what changed", () => {
   })
 })
 
+describe("changes", () => {
+  test("words changed count additions and removals, so a typo fix is small", () => {
+    expect(wordsChanged("Roses need sun.", "Roses need sunlight.")).toBe(2)
+    expect(wordsChanged("", "Tulips want a cold winter first.")).toBe(6)
+    expect(wordsChanged("a b c", "a b c")).toBe(0)
+  })
+
+  test("changes are grouped by the Monday of their week", () => {
+    expect(weekOf(new Date("2026-05-12T10:00:00Z"))).toBe("2026-05-11")
+    expect(weekOf(new Date("2026-05-17T23:00:00Z"))).toBe("2026-05-11")
+    expect(weekOf(new Date("2026-05-11T00:00:00Z"))).toBe("2026-05-11")
+  })
+})
+
 describe("history pages", () => {
   const root = path.resolve(import.meta.dir, "..")
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-history-"))
@@ -95,6 +110,9 @@ describe("history pages", () => {
     commit("Idea.md", "---\npublish: true\ntags: [x]\n---\nSeed idea.\n\nIt grew a branch.", "tags only", "2026-04-01T10:00:00Z")
     commit("Quiet.md", "---\npublish: true\nhistory: false\n---\nOne.", "quiet", "2026-02-01T10:00:00Z")
     commit("Quiet.md", "---\npublish: true\nhistory: false\n---\nOne.\n\nTwo.", "quiet 2", "2026-03-01T10:00:00Z")
+    commit("Garden.md", "---\npublish: true\ntags: [plants]\n---\nRoses need sun.", "garden", "2026-05-04T10:00:00Z")
+    commit("Garden.md", "---\npublish: true\ntags: [plants]\n---\nRoses need sunlight.", "typo", "2026-05-05T10:00:00Z")
+    commit("Garden.md", "---\npublish: true\ntags: [plants]\n---\nRoses need sunlight.\n\nTulips want a cold winter first.", "tulips", "2026-05-12T10:00:00Z")
     const build = Bun.spawnSync(["bun", "bin/datme.ts", "build", vault, "--out", out], {
       cwd: root,
       env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: "" },
@@ -122,6 +140,23 @@ describe("history pages", () => {
       const leaked = ["secret draft", "private aside", "Locked leaf", "hunter2", "SECRET MESSAGE"].find((x) => text.includes(x))
       expect(leaked ? `${file}: ${leaked}` : "").toBe("")
     }
+  })
+
+  test("/changes lists each public change, newest first, grouped by week; typo fixes are left out", () => {
+    const html = fs.readFileSync(path.join(out, "changes/index.html"), "utf8")
+    const titles = [...html.matchAll(/<a class="internal" href="([^"]+)">\s*([^<]+?)\s*<\/a>/g)].map((m) => `${m[1]} ${m[2]}`)
+    expect(titles.slice(0, 2)).toEqual(["/Garden/history Garden", "/Garden/history Garden"])
+    expect(html).toContain("<ins>+1</ins> <del>−0</del>")
+    expect(html).toContain('<p class="changes-excerpt">Tulips want a cold winter first.</p>')
+    expect(html).toMatch(/Week of May 11, 2026/)
+    const lists = [...html.matchAll(/<ol class="archive-list changes-list">[\s\S]*?<\/ol>/g)].map((m) => m[0]).join("")
+    expect(lists).toContain("Idea")
+    expect(lists).not.toContain("Quiet")
+    const feed = fs.readFileSync(path.join(out, "changes.xml"), "utf8")
+    expect(feed.match(/<item>/g)!.length).toBe(4)
+    expect(feed).toContain("<title>Garden (+1 −0 paragraphs)</title>")
+    expect(feed).toContain('<guid isPermaLink="false">/Garden@2026-05-12T10:00:00.000Z</guid>')
+    expect(fs.existsSync(path.join(out, "tags/plants/changes.xml"))).toBe(true)
   })
 
   test("a note can opt out", () => {

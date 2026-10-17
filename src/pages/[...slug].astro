@@ -17,6 +17,7 @@ import HistoryPage from "~/components/pages/HistoryPage.astro"
 import MapPage from "~/components/pages/MapPage.astro"
 import StatsPage from "~/components/pages/StatsPage.astro"
 import PracticePage from "~/components/pages/PracticePage.astro"
+import ChangesPage from "~/components/pages/ChangesPage.astro"
 
 
 export const getStaticPaths = (() =>
@@ -41,3 +42,4 @@ const { page } = Astro.props as { page: Page }
 {page.kind === "map" && <MapPage lang={page.lang} />}
 {page.kind === "stats" && <StatsPage lang={page.lang} />}
 {page.kind === "practice" && <PracticePage lang={page.lang} />}
+{page.kind === "changes" && <ChangesPage lang={page.lang} />}

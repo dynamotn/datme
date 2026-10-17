@@ -94,7 +94,7 @@ theme:
   d2: { light: 0, dark: 200 }                        # D2 theme ids, unless a diagram sets its own
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats, calendar, practice
+  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats, calendar, practice, changes
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf
@@ -104,7 +104,8 @@ footer:
   GitHub: https://github.com/me
 poweredBy: true               # the "grown with datme" line under the footer; false hides it
 
-history: false                # a page per note showing how it grew, from git (see Privacy)
+history: false                # a page per note showing how it grew, from git (see Privacy),
+                              # and /changes with its feeds
 related:                      # under each note: notes sharing tags or links,
   count: 5                    # and notes naming it without a link
   mentions: true
