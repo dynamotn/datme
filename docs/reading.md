@@ -7,11 +7,13 @@ This is what someone visiting your garden can do. None of it needs setting up.
 
 ## Finding things
 
-- **Search** (`Ctrl K`) covers every note. You can narrow it by folder and note
-  type, or by tag with `#tag`. For large vaults, `search: { engine: pagefind }`
-  loads only what each query needs.
-- **Graph** (`Ctrl G`) shows the whole garden. Filter it by folder and tag, and
-  colour notes by folder or type. Its time slider replays how the garden grew,
+- **Search** (`Ctrl K`) covers every note. You can narrow it by folder, note
+  type and when a note was last tended (the last 30 days, the last year, or
+  longer ago), or by tag with `#tag`. When notes set their own `stage`, a stage
+  filter joins them. For large vaults, `search: { engine: pagefind }` loads only
+  what each query needs.
+- **Graph** (`Ctrl G`) shows the whole garden. Filter it by folder, tag and
+  stage, and colour notes by folder, type, stage or freshness. Its time slider replays how the garden grew,
   and its 3D button lays the garden out in space: drag to turn it, scroll to zoom.
   Each note also has a local graph in its sidebar, showing its own links (1)
   or their links too (2); the reader's choice is remembered.
@@ -72,7 +74,8 @@ type never leaves the page. Nothing loads until they press the button. It needs
 - **Reading progress:** notes of 300 words or more show a progress bar and the
   minutes left.
 - **Old notes:** with `outdated: { after: 2 }`, a note not updated for two
-  years says when it last was, and that some of it may be out of date. The
+  years says when it last was, and that some of it may be out of date; its
+  cards and rows in lists carry a ⏳. The
   browser checks again, so the notice appears even if the site is not rebuilt.
   Home and daily notes never show it, and a note opts out with `outdated: false`.
 - **Short notes:** a folder listed in `appearance.stream` shows its notes in

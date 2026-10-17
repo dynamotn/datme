@@ -4,6 +4,7 @@ import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
 import { formatDate, t, langMeta } from "~/lib/i18n"
 import { typeInfo } from "~/lib/types"
+import Outdated from "./Outdated.astro"
 
 interface Props {
   note: Note
@@ -43,6 +44,7 @@ const initials = title
   }
   <p class="index-card-meta">
     {d && <time datetime={d.toISOString()}>{formatDate(d, note.lang)}</time>}
+    <Outdated note={note} badge />
     {stage && <span>{stage.icon} {stage.label[note.lang]}</span>}
     {note.protected && <span title={s.locked}>🔒</span>}
     {!note.translated && <span class="lang-badge" title={langMeta(note.sourceLang).name}>{langMeta(note.sourceLang).short}</span>}

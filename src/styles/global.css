@@ -3840,6 +3840,14 @@ summary.ntn-col-head {
   background: var(--clay-soft);
   font-size: 14px;
 }
+/* A ⏳ on the cards and rows of notes not tended for a while. */
+.wilt {
+  margin-inline-end: 4px;
+  cursor: help;
+}
+.wilt[hidden] {
+  display: none;
+}
 .outdated {
   margin: 0 0 22px;
   padding: 10px 14px;

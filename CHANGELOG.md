@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   updated for that long. The browser checks again, so a site that is not
   rebuilt still warns. Home and daily notes never get it; `outdated: false`
   opts a note out.
+- Notes not tended for `outdated.after` years carry a ⏳ on their cards and
+  rows in lists, too.
+- Search filters notes by when they were last tended (the last 30 days, the
+  last year, or longer ago), and by stage when notes set their own `stage`.
+  The graph filters by stage and colours notes by stage or freshness.
 - `appearance.stream` lists folders of short notes whose page shows each
   note in full, newest first, like a feed, instead of as cards.
 - A note's stage can be set with a `stage` property naming a configured

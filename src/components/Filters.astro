@@ -6,7 +6,7 @@ import { t } from "~/lib/i18n"
 interface Props {
   lang: Lang
   /** Which selects to show. */
-  kinds: ("folder" | "type" | "tag")[]
+  kinds: ("folder" | "type" | "tag" | "stage" | "fresh")[]
   /** Prefix of the data attributes the client script looks for. */
   scope: "search" | "graph"
 }
@@ -22,6 +22,21 @@ const typeCounts = new Map<string, number>()
 for (const n of listed(lang)) for (const ty of n.types) typeCounts.set(ty, (typeCounts.get(ty) ?? 0) + 1)
 const types = [...typeCounts].sort(([a], [b]) => a.localeCompare(b))
 const tags = [...vault.tags[lang]].filter(([tag]) => !tag.startsWith(site.conventions.typePrefix))
+// Stages get a select of their own only when some note's stage is not its folder's, which the folder select covers.
+const stageCounts = new Map<string, number>()
+let ownStages = false
+for (const n of listed(lang)) {
+  if (!n.stage) continue
+  const label = site.stages[n.stage].label[lang]
+  stageCounts.set(label, (stageCounts.get(label) ?? 0) + 1)
+  if (n.stage !== n.dir.split("/")[0]) ownStages = true
+}
+const stages = ownStages ? Object.values(site.stages).filter((d) => stageCounts.has(d.label[lang])) : []
+const fresh = [
+  ["month", s.freshMonth],
+  ["year", s.freshYear],
+  ["older", s.freshOlder],
+]
 ---
 
 <div class="filters" data-filters={scope}>
@@ -45,6 +60,28 @@ const tags = [...vault.tags[lang]].filter(([tag]) => !tag.startsWith(site.conven
           <option value={ty}>
             {ty} ({count})
           </option>
+        ))}
+      </select>
+    )
+  }
+  {
+    kinds.includes("stage") && stages.length > 0 && (
+      <select data-filter="stage" aria-label={s.graphColorStage}>
+        <option value="">{s.allStages}</option>
+        {stages.map((d) => (
+          <option value={d.label[lang]}>
+            {d.icon} {d.label[lang]} ({stageCounts.get(d.label[lang])})
+          </option>
+        ))}
+      </select>
+    )
+  }
+  {
+    kinds.includes("fresh") && (
+      <select data-filter="fresh" aria-label={s.graphColorFresh}>
+        <option value="">{s.freshAny}</option>
+        {fresh.map(([value, label]) => (
+          <option value={value}>{label}</option>
         ))}
       </select>
     )

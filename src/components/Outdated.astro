@@ -1,24 +1,27 @@
 ---
 import type { Note } from "~/lib/vault"
-import { site } from "~/site.config"
 import { t, formatDate } from "~/lib/i18n"
-import { dayNeighbours } from "~/lib/journal"
-import { isOutdated } from "~/scripts/outdated"
+import { wilting } from "~/lib/outdated"
 
 interface Props {
   note: Note
+  /** A ⏳ next to a card's date instead of the sentence under a note's title. */
+  badge?: boolean
 }
-const { note } = Astro.props
-const since = note.updated ?? note.created
-const after = site.outdated?.after
-// A daily note is about its day: being old is what it is for.
-const offered = after && since && !note.isHome && note.source.fm.outdated !== false && !dayNeighbours(note)
+const { note, badge = false } = Astro.props
+const w = wilting(note)
+const text = w && t(note.lang).outdated.replace("{date}", formatDate(w.since, note.lang))
 ---
 
 {
-  offered && (
-    <p class="outdated" role="note" data-outdated data-since={since.toISOString()} data-after={after} hidden={!isOutdated(since, after)}>
-      ⏳ {t(note.lang).outdated.replace("{date}", formatDate(since, note.lang))}
-    </p>
-  )
+  w &&
+    (badge ? (
+      <span class="wilt" title={text} data-outdated data-since={w.since.toISOString()} data-after={w.after} hidden={!w.now}>
+        ⏳<span class="sr-only">{text}</span>
+      </span>
+    ) : (
+      <p class="outdated" role="note" data-outdated data-since={w.since.toISOString()} data-after={w.after} hidden={!w.now}>
+        ⏳ {text}
+      </p>
+    ))
 }

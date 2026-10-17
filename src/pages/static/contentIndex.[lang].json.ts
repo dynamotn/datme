@@ -21,12 +21,16 @@ export const GET: APIRoute = async ({ params }) => {
         a: n.aliases,
         g: n.tags,
         s: n.stage ? site.stages[n.stage].icon : null,
+        // Stage label, for the stage filter and graph colours.
+        st: n.stage ? site.stages[n.stage].label[lang] : "",
         f: folders.get(n.dir)?.name ?? "",
         p: n.dir.split("/")[0],
         y: n.types,
         d: r.description,
         // Day the note was planted, for the graph's time slider.
         k: n.created ? Math.floor(n.created.getTime() / 86_400_000) : null,
+        // Day the note was last tended, for its freshness.
+        m: (n.updated ?? n.created) ? Math.floor((n.updated ?? n.created)!.getTime() / 86_400_000) : null,
         // Pagefind searches the pages themselves; the graph and filters only need the rest.
         c: site.search.engine === "pagefind" ? "" : r.text.slice(0, 6000),
       }

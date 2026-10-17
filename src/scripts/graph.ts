@@ -2,6 +2,7 @@ import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, t
 import { navigate } from "astro:transitions/client"
 import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
 import { groupColors } from "./graph-colors"
+import { freshness } from "./outdated"
 import { neighbourhood, parseDepth, type Depth } from "./graph-hops"
 import { bounds, project, tilt, type Camera } from "./graph-3d"
 
@@ -13,7 +14,7 @@ interface GNode extends SimulationNodeDatum {
   r: number
   /** Day the note was created, null when unknown. */
   k: number | null
-  /** Group it is coloured by: its top folder or its first type. */
+  /** Group it is coloured by: its top folder, first type, stage or freshness. */
   g: string
   /** Links away from the current note, in the local graph. */
   hop: number
@@ -75,6 +76,17 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   if (!canvas.isConnected) return
 
   const colorBy = canvas.dataset.colorBy
+  const freshLabels = JSON.parse(canvas.dataset.freshLabels ?? "{}") as Record<string, string>
+  const groupOf = (n: (typeof data.notes)[number]) =>
+    colorBy === "type"
+      ? (n.y[0] ?? "")
+      : colorBy === "folder"
+        ? n.p
+        : colorBy === "stage"
+          ? (n.st ?? "")
+          : colorBy === "fresh" && n.m != null
+            ? (freshLabels[freshness(n.m)] ?? "")
+            : ""
   const all = data.notes.map(
     (n, i) =>
       ({
@@ -85,7 +97,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
         r: 4,
         hop: 0,
         k: n.k ?? null,
-        g: colorBy === "type" ? (n.y[0] ?? "") : colorBy === "folder" ? n.p : "",
+        g: groupOf(n),
         sx: 0,
         sy: 0,
         ss: 1,
@@ -440,7 +452,9 @@ async function drawGlobal(dialog: HTMLDialogElement) {
   stopGlobal = undefined
   const mine = ++globalDraws
   const canvas = dialog.querySelector<HTMLCanvasElement>("canvas")!
-  canvas.dataset.colorBy = dialog.querySelector<HTMLSelectElement>("[data-graph-color]")?.value ?? ""
+  const color = dialog.querySelector<HTMLSelectElement>("[data-graph-color]")
+  canvas.dataset.colorBy = color?.value ?? ""
+  canvas.dataset.freshLabels = color?.dataset.freshLabels ?? "{}"
   const space = (recall(SPACE_KEY) ?? dialog.dataset.view) === "3d"
   dialog.querySelector("[data-graph-3d]")?.setAttribute("aria-pressed", String(space))
   const stop = await mountGraph(canvas, "global", readFilters(dialog), { space })

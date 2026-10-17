@@ -336,7 +336,7 @@ const pluginHead = await userHead()
         }
         <kbd>Esc</kbd>
       </div>
-      <Filters lang={lang} kinds={["folder", "type"]} scope="search" />
+      <Filters lang={lang} kinds={["folder", "type", "stage", "fresh"]} scope="search" />
       <ul id="search-results" class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
       <div class="modal-foot">
         <span><kbd>↑</kbd> <kbd>↓</kbd> {s.navigate}</span>
@@ -348,11 +348,17 @@ const pluginHead = await userHead()
     <dialog class="modal graph-modal" data-graph-dialog data-view={site.graph.view}>
       <div class="modal-head">
         <span>{s.globalGraph}</span>
-        <Filters lang={lang} kinds={["folder", "tag"]} scope="graph" />
-        <select data-graph-color aria-label={s.graphColorBy}>
+        <Filters lang={lang} kinds={["folder", "tag", "stage"]} scope="graph" />
+        <select
+          data-graph-color
+          aria-label={s.graphColorBy}
+          data-fresh-labels={JSON.stringify({ month: s.freshMonth, year: s.freshYear, older: s.freshOlder })}
+        >
           <option value="">{s.graphColorBy}: {s.graphColorNone}</option>
           <option value="folder">{s.graphColorBy}: {s.folder}</option>
           <option value="type">{s.graphColorBy}: {s.graphColorType}</option>
+          {Object.keys(site.stages).length > 0 && <option value="stage">{s.graphColorBy}: {s.graphColorStage}</option>}
+          <option value="fresh">{s.graphColorBy}: {s.graphColorFresh}</option>
         </select>
         <button class="graph-space" type="button" data-graph-3d aria-pressed="false" title={s.graph3d}>3D</button>
         <button class="icon-btn" type="button" data-close-dialog aria-label={s.close}>

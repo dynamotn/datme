@@ -63,4 +63,14 @@ describe("matchesFilter", () => {
     expect(matchesFilter(note, { tag: "theme/pkm" })).toBe(true)
     expect(matchesFilter(note, { tag: "them" })).toBe(false)
   })
+
+  test("stage and freshness match the note's stage label and when it was last tended", () => {
+    const today = Math.floor(Date.now() / 86_400_000)
+    const tended = { ...note, st: "Literature", m: today - 10 }
+    expect(matchesFilter(tended, { stage: "Literature", fresh: "month" })).toBe(true)
+    expect(matchesFilter(tended, { stage: "Permanent" })).toBe(false)
+    expect(matchesFilter(tended, { fresh: "older" })).toBe(false)
+    expect(matchesFilter({ ...tended, m: today - 400 }, { fresh: "older" })).toBe(true)
+    expect(matchesFilter(note, { fresh: "month" })).toBe(false)
+  })
 })

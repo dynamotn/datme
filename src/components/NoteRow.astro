@@ -4,6 +4,7 @@ import { getVault } from "~/lib/vault"
 import { site } from "~/site.config"
 import { formatDate } from "~/lib/i18n"
 import { typeInfo } from "~/lib/types"
+import Outdated from "./Outdated.astro"
 
 interface Props {
   note: Note
@@ -21,6 +22,11 @@ const d = note[date]
       <span class="title">{note.title}</span>
       <span class="sub">{[folder?.name, ...note.types].filter(Boolean).join(" · ")}</span>
     </span>
-    {d && <time datetime={d.toISOString()}>{formatDate(d, note.lang)}</time>}
+    {d && (
+      <time datetime={d.toISOString()}>
+        <Outdated note={note} badge />
+        {formatDate(d, note.lang)}
+      </time>
+    )}
   </a>
 </li>

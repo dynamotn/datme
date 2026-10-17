@@ -252,6 +252,28 @@ describe("static build", () => {
     expect(graph).not.toContain("type/")
   })
 
+  test("a stage set by a property gets a filter of its own; freshness filters search and colours the graph", () => {
+    const home = read("index.html")
+    const search = home.match(/<div class="filters" data-filters="search">[\s\S]*?<\/div>/)![0]
+    expect(search).toContain('<select data-filter="stage" aria-label="giai đoạn"><option value="">Mọi giai đoạn</option>')
+    // First walk counts under Atomic, its stage property, on top of the four notes of the folder.
+    expect(search).toContain('<option value="Nguyên tử">⚛️ Nguyên tử (5)</option>')
+    expect(search).toContain('<select data-filter="fresh" aria-label="độ tươi"><option value="">Chăm bất kỳ lúc nào</option><option value="month">')
+    expect(home).toContain('<option value="stage">Tô màu: giai đoạn</option>')
+    expect(home).toContain('<option value="fresh">Tô màu: độ tươi</option>')
+    expect(home).toMatch(/data-fresh-labels="{&quot;month&quot;:&quot;Chăm trong 30 ngày qua&quot;/)
+    const index = JSON.parse(read("static/contentIndex.vi-VN.json"))
+    const walk = index.notes.find((n: { u: string }) => n.u === "/05_Structure/First-walk")
+    expect(walk.st).toBe("Nguyên tử")
+    expect(typeof walk.m).toBe("number")
+  })
+
+  test("cards and rows of outdated notes carry a ⏳ that the browser keeps up to date", () => {
+    const card = read("03_Atomic/index.html").match(/<article class="index-card"[^>]*>(?:(?!<\/article>)[\s\S])*?href="\/03_Atomic\/Zettelkasten"[\s\S]*?<\/article>/)![0]
+    expect(card).toMatch(/<span class="wilt" title="Cập nhật lần cuối [^"]*2024: có thể một phần đã cũ\." data-outdated data-since="2024-05-0[12]T[^"]*" data-after="2">⏳/)
+    expect(read("08_Journal/index.html")).not.toContain('class="wilt"')
+  })
+
   test("the content index links notes for search and the graph", () => {
     const index = JSON.parse(read("static/contentIndex.en-US.json"))
     expect(index.notes.map((n: { t: string }) => n.t)).toContain("Zettelkasten method")

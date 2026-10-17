@@ -1,3 +1,5 @@
+import { freshness } from "./outdated"
+
 export interface IndexNote {
   u: string
   t: string
@@ -9,11 +11,15 @@ export interface IndexNote {
   y: string[]
   /** Icon of the note's stage, if any. */
   s: string | null
+  /** Label of the note's stage, "" without one. */
+  st?: string
   f: string
   d: string
   c: string
   /** Day the note was created, in days since 1970; null when unknown. */
   k?: number | null
+  /** Day the note was last tended, in days since 1970; null when unknown. */
+  m?: number | null
 }
 export interface ContentIndex {
   notes: IndexNote[]
@@ -50,6 +56,8 @@ export interface NoteFilter {
   folder?: string
   type?: string
   tag?: string
+  stage?: string
+  fresh?: string
 }
 
 /** Whether a note passes every set filter; a tag also matches its nested tags. */
@@ -57,11 +65,13 @@ export function matchesFilter(n: IndexNote, f: NoteFilter): boolean {
   if (f.folder && n.p !== f.folder) return false
   if (f.type && !n.y.includes(f.type)) return false
   if (f.tag && !n.g.some((g) => g === f.tag || g.startsWith(f.tag + "/"))) return false
+  if (f.stage && n.st !== f.stage) return false
+  if (f.fresh && (n.m == null || freshness(n.m) !== f.fresh)) return false
   return true
 }
 
 /** Current values of the filter selects of a dialog. */
 export function readFilters(root: ParentNode): NoteFilter {
   const value = (kind: string) => root.querySelector<HTMLSelectElement>(`select[data-filter="${kind}"]`)?.value || undefined
-  return { folder: value("folder"), type: value("type"), tag: value("tag") }
+  return { folder: value("folder"), type: value("type"), tag: value("tag"), stage: value("stage"), fresh: value("fresh") }
 }
