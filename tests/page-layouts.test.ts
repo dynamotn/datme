@@ -280,6 +280,13 @@ describe("page layouts", () => {
     expect(read("FAQ/index.html")).toContain('data-chrome="full"')
   })
 
+  test("only a page in the full frame stacks notes", () => {
+    expect(read("Life/index.html")).not.toContain("data-stack-row")
+    expect(read("CV/index.html")).not.toContain("data-stack-row")
+    expect(read("FAQ/index.html")).toContain("data-stack-row")
+    expect(read("Sketchbook/index.html")).toContain("data-stack-row")
+  })
+
   test("a note can override its layout's style and frame", () => {
     const html = read("Styled-CV/index.html")
     expect(html).toContain('data-look="garden"')

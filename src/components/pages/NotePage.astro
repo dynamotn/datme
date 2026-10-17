@@ -68,6 +68,7 @@ const html = layoutHtml(note, r.html)
 const plain = !note.layout
 const look = lookOf(note)
 const frame = frameOf(note)
+const stacks = frame === "full"
 const garden = look === "garden"
 const stageIcon = (n: Note) => (n.stage ? site.stages[n.stage]?.icon : undefined)
 // A book, a film or a project of a collection shows its cover beside its title.
@@ -78,8 +79,9 @@ const NOW_STALE_YEARS = 0.25
 ---
 
 <Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
-  <div class="stack-row" data-stack-row>
-  <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
+  {/* Stacked pages belong to the full frame, the only one with their toggle. */}
+  <div class="stack-row" data-stack-row={stacks ? "" : undefined}>
+  <div class="stack-col" data-stack-col={stacks ? "" : undefined} data-url={stacks ? note.url : undefined} data-title={stacks ? title : undefined}>
   <article
     data-pagefind-body={site.search.engine === "pagefind" && !note.protected ? "" : undefined}
     data-pagefind-filter={site.search.engine === "pagefind" ? pagefindFilters : undefined}
