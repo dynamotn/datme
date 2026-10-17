@@ -8,11 +8,11 @@
 
 **Tech Stack:** Astro, TypeScript, Bun (`bun test`, `bun run check`), zod (`astro/zod`), plain CSS.
 
-**Spec:** `docs/superpowers/specs/2026-10-17-garden-style-design.md`. This plan covers step 1 of its "Order of work" only: everything except the page-layout tier, `chrome`, `full-norail`, the scheme hint, `resume` and `darkroom`, which wait for branch `worktree-feat-note-layouts` to land on `main` and get their own plan.
+**Spec:** `docs/superpowers/specs/2026-10-17-garden-style-design.md`. This plan covers step 1 of its "Order of work" only: everything except the page-layout tier, `chrome`, `full-norail`, the scheme hint, `resume` and `darkroom`, which get their own plan (the layouts they depend on reached `main` in `12eea4f`).
 
 ## Global Constraints
 
-- Branch from `main` at `cdcc4a9` or later (that commit moved UI strings to `src/i18n/<lang>.json` and added `src/scripts/garden-practice.ts`, an unrelated flashcard feature). Do not edit `src/lib/note-layouts.ts`, `src/components/Collection.astro`, `CvHead.astro`, `LinksHead.astro` (they do not exist on `main`; they belong to the layouts branch). Keep edits to `NotePage.astro`, `FolderPage.astro`, `vault.ts`, `global.css`, `print.css` small: they are shared hot spots with that branch.
+- Branch from `main` at `cdcc4a9` or later (that commit moved UI strings to `src/i18n/<lang>.json` and added `src/scripts/garden-practice.ts`, an unrelated flashcard feature). Since `12eea4f` the page layouts are on `main`; this plan still does not edit `src/lib/note-layouts.ts`, `src/components/Collection.astro`, `CvHead.astro`, `LinksHead.astro` — the layout tier, `chrome`, `resume` and `darkroom` are the follow-up plan. Keep the layout behaviour in `NotePage.astro` and `FolderPage.astro` (layout notes hide backlinks; a folder note with a collection layout replaces the note list) intact; run `tests/page-layouts.test.ts` with the other tests. Keep edits to `NotePage.astro`, `FolderPage.astro`, `vault.ts`, `global.css`, `print.css` small: they are shared hot spots with that branch.
 - Every rule in `src/styles/garden.css` is scoped to `[data-look="garden"]`. `notebook` and `classic` rendering must not change, except the folder-page change in Task 3.
 - Garden CSS uses the existing token names (`--bg`, `--surface`, `--ink`, `--ink-2`, `--muted`, `--line`, `--accent`, `--accent-2`, `--accent-soft`, `--font-ui`, `--font-read`, …) so `themeCss()` accent and font overrides keep winning.
 - Pages work without JavaScript: every tile shows, filter controls stay hidden.
