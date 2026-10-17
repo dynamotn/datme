@@ -6,3 +6,4 @@ dist/
 bin/datme.js
 .lhci-site/
 .lhci-report/
+dist-cli/
