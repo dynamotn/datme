@@ -44,6 +44,7 @@ document.addEventListener("click", (e) => {
   else if (target.closest("[data-open-graph]")) openGraph()
   else if (target.closest("[data-random]")) void openRandom()
   else if (target.closest("[data-close-dialog]")) target.closest("dialog")?.close()
+  else if (target.closest("[data-print]")) window.print()
   else if (target.closest("[data-theme-toggle]")) {
     const next = root.dataset.theme === "dark" ? "light" : "dark"
     root.dataset.theme = next

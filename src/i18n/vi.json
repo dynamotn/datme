@@ -185,5 +185,19 @@
   "trailPrev": "Bước trước",
   "trailNext": "Bước tiếp",
   "trailEnd": "Hết lối dạo",
-  "trailLeave": "Rời lối dạo"
+  "trailLeave": "Rời lối dạo",
+  "statusActive": "Đang làm",
+  "statusPlanned": "Dự định",
+  "statusPaused": "Tạm dừng",
+  "statusDone": "Đã xong",
+  "statusArchived": "Đã cất",
+  "statusReading": "Đang đọc",
+  "statusToRead": "Sẽ đọc",
+  "statusRead": "Đã đọc",
+  "statusAbandoned": "Bỏ dở",
+  "statusOther": "Khác",
+  "now": "nay",
+  "printCv": "In / lưu PDF",
+  "ratingOf": "Chấm",
+  "emptyCollection": "Chưa có ghi chú nào ở đây."
 }

@@ -24,6 +24,9 @@ import TrailBar from "../TrailBar.astro"
 import DayNav from "../DayNav.astro"
 import PageMenu from "../PageMenu.astro"
 import Outdated from "../Outdated.astro"
+import Collection from "../Collection.astro"
+import CvHead from "../CvHead.astro"
+import { isCollection, layoutHtml } from "~/lib/note-layouts"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 
 interface Props {
@@ -56,6 +59,9 @@ const pagefindFilters = [`folder:${note.dir.split("/")[0]}`, ...note.types.map((
   .map((f) => f.replace(/,/g, " "))
   .join(", ")
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
+// A résumé and a gallery reshape the note's text; a page with a layout is a destination, not a note among others.
+const html = layoutHtml(note.layout, r.html)
+const plain = !note.layout
 ---
 
 <Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
@@ -64,7 +70,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
   <article
     data-pagefind-body={site.search.engine === "pagefind" && !note.protected ? "" : undefined}
     data-pagefind-filter={site.search.engine === "pagefind" ? pagefindFilters : undefined}
-    class:list={["note", { "is-blog": note.isBlog }, ...note.cssclasses]}
+    class:list={["note", { "is-blog": note.isBlog }, note.layout && `layout-${note.layout}`, ...note.cssclasses]}
     data-key={note.key}
     transition:name="note"
   >
@@ -77,7 +83,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
     }
     <Breadcrumbs lang={note.lang} dir={note.dir} />
     {
-      r.words >= 300 && (
+      plain && r.words >= 300 && (
         <div class="reading-progress" data-progress data-words={r.words} data-left={s.minutesLeft} aria-hidden="true">
           <span class="reading-progress-fill" />
           <span class="reading-progress-left" hidden />
@@ -86,12 +92,18 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
     }
     {note.draft && <p class="draft-banner" role="note">✏️ {s.draftBanner}</p>}
     <DevProblems file={note.source.key + ".md"} />
-    <header class="note-head">
-      <NoteMeta note={note} words={r.words}>
-        <h1 class="note-title">{title}</h1>
-      </NoteMeta>
-      <PageMenu note={note} />
-    </header>
+    {
+      note.layout === "cv" && !note.protected ? (
+        <CvHead note={note} title={title} />
+      ) : (
+        <header class="note-head">
+          <NoteMeta note={note} words={r.words}>
+            <h1 class="note-title">{title}</h1>
+          </NoteMeta>
+          <PageMenu note={note} />
+        </header>
+      )
+    }
     <Outdated note={note} />
     <TrailBar note={note} at="head" />
     <SeriesBox note={note} at="head" />
@@ -136,7 +148,8 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
               </a>
             </p>
           )}
-          <div class="prose" lang={original ? langMeta(original.lang).html : undefined} set:html={r.html} />
+          <div class="prose" lang={original ? langMeta(original.lang).html : undefined} set:html={html} />
+          {isCollection(note.layout) && <Collection note={note} kind={note.layout} />}
         </>
       )
     }
@@ -151,7 +164,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
       )
     }
   </article>
-  <section class="backlinks">
+  {plain && <section class="backlinks">
     <h2>{s.backlinks} <span class="count">{backlinks.length}</span></h2>
     {
       backlinks.length ? (
@@ -167,9 +180,9 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
         <p class="empty">{s.noBacklinks}</p>
       )
     }
-  </section>
+  </section>}
   {
-    related.length > 0 && (
+    plain && related.length > 0 && (
       <section class="backlinks related">
         <h2>{s.related}</h2>
         <div class="backlink-grid">
@@ -184,7 +197,7 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
     )
   }
   {
-    mentions.length > 0 && (
+    plain && mentions.length > 0 && (
       <details class="backlinks mentions">
         <summary>
           <h2>

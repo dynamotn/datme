@@ -185,5 +185,19 @@
   "trailPrev": "Étape précédente",
   "trailNext": "Étape suivante",
   "trailEnd": "Fin du sentier",
-  "trailLeave": "Quitter le sentier"
+  "trailLeave": "Quitter le sentier",
+  "statusActive": "En cours",
+  "statusPlanned": "Prévu",
+  "statusPaused": "En pause",
+  "statusDone": "Terminé",
+  "statusArchived": "Archivé",
+  "statusReading": "En lecture",
+  "statusToRead": "À lire",
+  "statusRead": "Lu",
+  "statusAbandoned": "Abandonné",
+  "statusOther": "Autres",
+  "now": "aujourd’hui",
+  "printCv": "Imprimer / enregistrer en PDF",
+  "ratingOf": "Note",
+  "emptyCollection": "Aucune note ici pour l’instant."
 }

@@ -43,6 +43,8 @@ that folder's page.
 | `created`, `updated` | Dates; without them datme uses the git history, then the file's times |
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
+| `layout` | `cv`, `gallery`, `projects` or `books`: see [Page layouts](#page-layouts) |
+| `cover` | The picture that stands for the note on a projects or books page (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |
 | `draft`, `publish_date`, `unlisted`, `password` | See [Privacy](privacy.md) |
 | `lang` | The language the note is written in, when it isn't the site's default one |
@@ -142,6 +144,57 @@ this off.
 
 Each of these pages exists only when some note qualifies. Protected notes
 never show up on them.
+
+## Page layouts
+
+A note with a `layout` property gets a page made for what it holds. It is
+still an ordinary note in the vault, and the page leaves out backlinks and
+related notes.
+
+- **`cv`**: a résumé. The title is your name, and `role`, `location`,
+  `phone`, `email` and `links` (a map of label to URL), plus `cover` for a
+  photo, make the head. The text before the first heading is the summary.
+  Each `##` section is a row with its heading at the side. A button prints
+  the page or saves it as a PDF.
+- **`gallery`**: pictures embedded one after another (`![[a.jpg]]`) become
+  a grid, and clicking one opens it large. `![[a.jpg|Caption]]` captions a
+  picture. Text and headings stay as they are, so each heading can start an
+  album.
+- **`projects`**: a card for each note of the collection, with its `cover`,
+  `description`, the years from `start` to `end`, `role`, `stack` (or
+  `tech`), and links from `repo`, `url`, `demo` and `links`.
+- **`books`**: a shelf of covers, with `author`, `year` and a `rating` out
+  of five.
+
+Projects and books list the notes in the layout note's folder, or the
+folders and `#tags` given in `from`. They are grouped by `status`: projects
+go in progress, planned, paused, done, archived; books go reading, to read,
+read, abandoned. Usual spellings of each status count (`ongoing`,
+`completed`, `want-to-read`, `dnf`, …). Any other status gets its own group
+after these, and notes without one come last.
+
+```markdown
+---
+layout: books
+from: "#book"
+---
+
+What I have been reading.
+```
+
+```markdown
+---
+tags: [book]
+status: read
+author: "[[Cal Newport]]"
+rating: 4
+cover: deep-work.jpg
+---
+```
+
+A folder note with a `layout` lays out its folder's page as well:
+`Projects/Projects.md` with `layout: projects` turns `/Projects` into the
+projects page.
 
 ## Poems and lyrics
 

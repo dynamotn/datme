@@ -1,0 +1,31 @@
+---
+import type { Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { linksOf, plain } from "~/lib/note-layouts"
+
+interface Props {
+  note: Note
+  title: string
+}
+const { note, title } = Astro.props
+const fm = note.source.fm
+const s = t(note.lang)
+const role = plain(fm.role ?? fm.headline)
+const email = plain(fm.email)
+const contacts = [plain(fm.location), plain(fm.phone)].filter(Boolean)
+const links = linksOf(note)
+---
+
+<header class="cv-head">
+  {fm.cover && note.cover && <img class="cv-photo" src={note.cover} alt="" />}
+  <div class="cv-id">
+    <h1 class="note-title">{title}</h1>
+    {role && <p class="cv-role">{role}</p>}
+    <p class="cv-contact">
+      {contacts.map((c) => <span>{c}</span>)}
+      {email && <a href={`mailto:${email}`}>{email}</a>}
+      {links.map((l) => <a href={l.href} rel="me noopener">{l.label}</a>)}
+    </p>
+  </div>
+  <button type="button" class="cv-print" data-print>{s.printCv}</button>
+</header>

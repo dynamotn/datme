@@ -13,6 +13,8 @@ import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteRow from "../NoteRow.astro"
 import Icon from "../Icon.astro"
 import IndexCard from "../IndexCard.astro"
+import Collection from "../Collection.astro"
+import { isCollection, layoutHtml } from "~/lib/note-layouts"
 
 interface Props {
   lang: Lang
@@ -23,6 +25,9 @@ const s = t(lang)
 const vault = getVault()
 const intro = folder.folderNote ? await renderNote(folder.folderNote) : undefined
 const stage = site.stages[folder.segment]
+// A folder note with a layout lays out its folder too: a collection replaces the list of notes.
+const layout = folder.folderNote?.protected ? undefined : folder.folderNote?.layout
+const collection = isCollection(layout) ? layout : undefined
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.folders[l].get(folder.dir)?.url]))
 const feed = "/" + feedPath(lang, { kind: "folder", dir: folder.dir })
 const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastIndexOf("/")) : ""
@@ -42,7 +47,8 @@ const stream = isStream(folder.dir)
       <h1>{folder.name}</h1>
       <p>{s.notesCount(countNotes(folder))} · <a href={feed}>{s.rss}</a></p>
     </header>
-    {intro && <div class="prose" style="margin-bottom: 36px" set:html={intro.html} />}
+    {intro && <div class="prose" style="margin-bottom: 36px" set:html={layoutHtml(layout, intro.html)} />}
+    {collection && folder.folderNote && <Collection note={folder.folderNote} kind={collection} />}
     {
       folder.folders.length > 0 && (
         <div class="folder-grid">
@@ -57,7 +63,7 @@ const stream = isStream(folder.dir)
       )
     }
     {
-      stream && stream.length > 0 && (
+      !collection && stream && stream.length > 0 && (
         <div class="stream">
           {stream.map(({ note, html }) => (
             <article class="stream-item" data-key={note.key}>
@@ -74,7 +80,8 @@ const stream = isStream(folder.dir)
       )
     }
     {
-      !stream &&
+      !collection &&
+        !stream &&
         folder.notes.length > 0 &&
         (site.appearance.style === "notebook" ? (
           <div class="card-wall">

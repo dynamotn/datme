@@ -126,6 +126,8 @@
     clip: auto;
   }
   .reading-progress,
+  .cv-print,
+  .layout-cv .crumbs,
   .share-passage,
   .page-menu,
   .practice-bar {

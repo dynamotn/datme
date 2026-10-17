@@ -4408,3 +4408,257 @@ summary.ntn-col-head {
     font-size: max(16px, 1em) !important;
   }
 }
+
+/* ---------- page layouts: résumé, gallery, projects and books ---------- */
+.cv-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 0 0 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+.cv-photo {
+  width: 104px;
+  height: 104px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.cv-id {
+  flex: 1;
+  min-width: 0;
+}
+.cv-id .note-title {
+  margin: 0;
+}
+.cv-role {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  color: var(--ink-2);
+}
+.cv-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--muted);
+}
+.cv-print {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+}
+.cv-print:hover {
+  border-color: var(--line-strong);
+}
+.layout-cv .cv-summary {
+  margin-bottom: 8px;
+  font-size: 1.05em;
+}
+.layout-cv .cv-section {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 0 28px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.layout-cv .cv-section > h2 {
+  margin: 0.15em 0 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.layout-cv .cv-body > :first-child,
+.layout-cv .cv-body h3:first-child {
+  margin-top: 0;
+}
+.layout-cv .cv-body > :last-child {
+  margin-bottom: 0;
+}
+.layout-cv .cv-body h3 {
+  margin: 1.1em 0 0.2em;
+  font-size: 1.05rem;
+}
+@media (max-width: 640px) {
+  .cv-head {
+    flex-wrap: wrap;
+  }
+  .layout-cv .cv-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .layout-cv .cv-section > h2 {
+    margin-bottom: 10px;
+  }
+}
+
+.gallery-grid {
+  columns: 3 220px;
+  column-gap: 12px;
+  margin: 1.2em 0;
+}
+.gallery-item {
+  break-inside: avoid;
+  margin: 0 0 12px;
+}
+.gallery-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+.gallery-item figcaption {
+  margin-top: 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.collection {
+  margin-top: 8px;
+}
+.collection-group + .collection-group {
+  margin-top: 40px;
+}
+.collection-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 1.2rem;
+}
+.collection-title .count {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 99px;
+  padding: 1px 8px;
+}
+/* The whole card opens the project; its outside links stay clickable above it. */
+.project-card {
+  position: relative;
+}
+.project-card .card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+.project-card .card-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.project-meta {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.project-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.project-stack li {
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.project-links {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: auto 0 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.book-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 26px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.book {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.book-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.book-cover {
+  display: block;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 3px 6px 6px 3px;
+  background: var(--title-grad, var(--surface-2));
+  box-shadow: var(--shadow), inset 4px 0 0 rgb(0 0 0 / 0.12);
+  transition: transform 0.2s;
+}
+.book-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.book-cover-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 14px;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink-2);
+}
+@media (hover: hover) {
+  .book-link:hover .book-cover {
+    transform: translateY(-4px);
+  }
+}
+.book-title {
+  font-weight: 600;
+  line-height: 1.3;
+}
+.book-author {
+  color: var(--muted);
+}
+.book-rating {
+  color: var(--clay, var(--accent));
+  letter-spacing: 1px;
+}
+.book-rating-rest {
+  color: var(--line-strong);
+}

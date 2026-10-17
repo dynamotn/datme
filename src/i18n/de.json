@@ -185,5 +185,19 @@
   "trailPrev": "Vorheriger Schritt",
   "trailNext": "Nächster Schritt",
   "trailEnd": "Ende des Pfads",
-  "trailLeave": "Pfad verlassen"
+  "trailLeave": "Pfad verlassen",
+  "statusActive": "In Arbeit",
+  "statusPlanned": "Geplant",
+  "statusPaused": "Pausiert",
+  "statusDone": "Fertig",
+  "statusArchived": "Archiviert",
+  "statusReading": "Lese ich",
+  "statusToRead": "Zu lesen",
+  "statusRead": "Gelesen",
+  "statusAbandoned": "Abgebrochen",
+  "statusOther": "Sonstiges",
+  "now": "heute",
+  "printCv": "Drucken / als PDF speichern",
+  "ratingOf": "Bewertet mit",
+  "emptyCollection": "Hier gibt es noch keine Notizen."
 }

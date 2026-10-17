@@ -1,0 +1,5 @@
+# Pages with their own layout: a résumé, projects, books and a gallery.
+site:
+  title: Layouts
+  author: Tester
+publish: all

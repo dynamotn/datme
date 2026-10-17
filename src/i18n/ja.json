@@ -185,5 +185,19 @@
   "trailPrev": "前のステップ",
   "trailNext": "次のステップ",
   "trailEnd": "小道の終わり",
-  "trailLeave": "小道を離れる"
+  "trailLeave": "小道を離れる",
+  "statusActive": "進行中",
+  "statusPlanned": "予定",
+  "statusPaused": "一時停止",
+  "statusDone": "完了",
+  "statusArchived": "アーカイブ",
+  "statusReading": "読書中",
+  "statusToRead": "読みたい",
+  "statusRead": "読了",
+  "statusAbandoned": "中断",
+  "statusOther": "その他",
+  "now": "現在",
+  "printCv": "印刷 / PDF で保存",
+  "ratingOf": "評価",
+  "emptyCollection": "まだノートがありません。"
 }

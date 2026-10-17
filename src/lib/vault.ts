@@ -33,6 +33,10 @@ export interface SourceNote {
   password?: string
 }
 
+/** Page layouts a note can ask for with its `layout` property. */
+export const LAYOUTS = ["cv", "gallery", "projects", "books"] as const
+export type Layout = (typeof LAYOUTS)[number]
+
 /** A source note as seen in one language. */
 export interface Note {
   key: string
@@ -48,6 +52,10 @@ export interface Note {
   updated?: Date
   banner?: string
   bannerPos: string
+  /** Picture standing for the note in a collection: its `cover` property, else its banner. */
+  cover?: string
+  /** How the page is laid out (`layout` property): a résumé, a gallery or a collection of notes. */
+  layout?: Layout
   cssclasses: string[]
   description?: string
   /** Configured stage of the note: its `stage` property, else its top-level folder. */
@@ -717,17 +725,26 @@ function buildVault(version: number): Vault {
       const updated =
         toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? git.get(relFile)?.updated ?? stat.mtime
 
-      let banner: string | undefined
-      if (typeof s.fm.banner === "string" && s.fm.banner) {
-        const b = s.fm.banner.replace(/^!?\[\[|\]\]$/g, "")
-        if (/^https?:\/\//.test(b)) banner = b
-        else {
-          const asset = resolveAsset(b, s.dir)
-          if (asset) {
-            assets.add(asset)
-            banner = assetUrl(asset)
-          } else if (lang === site.defaultLang) report("error", relFile, `banner "${b}" is not in the vault`)
+      // A picture property: a URL, or a file of the vault that is then published.
+      const picture = (field: "banner" | "cover"): string | undefined => {
+        const v = s.fm[field]
+        if (typeof v !== "string" || !v) return undefined
+        const b = v.replace(/^!?\[\[|\]\]$/g, "").replace(/\|.*$/, "")
+        if (/^https?:\/\//.test(b)) return b
+        const asset = resolveAsset(b, s.dir)
+        if (asset) {
+          assets.add(asset)
+          return assetUrl(asset)
         }
+        if (lang === site.defaultLang) report("error", relFile, `${field} "${b}" is not in the vault`)
+        return undefined
+      }
+      const banner = picture("banner")
+      const cover = picture("cover")
+      const layoutField = typeof s.fm.layout === "string" ? s.fm.layout.trim().toLowerCase() : undefined
+      const layout = LAYOUTS.find((l) => l === layoutField)
+      if (layoutField && !layout && lang === site.defaultLang) {
+        report("warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
@@ -815,6 +832,8 @@ function buildVault(version: number): Vault {
         updated,
         banner,
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
+        cover: cover ?? banner,
+        layout,
         // A board or a deck needs the width of the page.
         cssclasses: [
           ...toArray(s.fm.cssclasses ?? s.fm.cssclass),

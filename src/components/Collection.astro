@@ -1,0 +1,100 @@
+---
+import type { Note } from "~/lib/vault"
+import { renderNote } from "~/lib/markdown"
+import { t } from "~/lib/i18n"
+import { collectionOf, linksOf, periodOf, plain, ratingOf, type Collection } from "~/lib/note-layouts"
+
+interface Props {
+  note: Note
+  kind: Collection
+}
+const { note, kind } = Astro.props
+const s = t(note.lang)
+const groups = collectionOf(note, kind)
+const described = new Map(
+  await Promise.all(
+    groups.flatMap((g) => g.notes).map(async (n) => [n.key, n.description ?? (await renderNote(n)).description] as const),
+  ),
+)
+const list = (v: unknown) => (Array.isArray(v) ? v.map(plain) : plain(v) ? plain(v).split(/\s*,\s*/) : []).filter(Boolean)
+---
+
+<div class:list={["collection", `collection-${kind}`]}>
+  {groups.length === 0 && <p class="empty">{s.emptyCollection}</p>}
+  {
+    groups.map((g) => (
+      <section class="collection-group" data-status={g.key || undefined}>
+        <h2 class="collection-title">
+          {g.label} <span class="count">{g.notes.length}</span>
+        </h2>
+        {kind === "projects" ? (
+          <div class="card-grid project-grid">
+            {g.notes.map((n) => {
+              const period = periodOf(n, note.lang)
+              const stack = list(n.source.fm.stack ?? n.source.fm.tech)
+              const links = linksOf(n)
+              const role = plain(n.source.fm.role)
+              return (
+                <article class="card project-card">
+                  {n.cover && (
+                    <a class="card-media internal" href={n.url} tabindex="-1" aria-hidden="true">
+                      <img src={n.cover} alt="" loading="lazy" />
+                    </a>
+                  )}
+                  <div class="card-body">
+                    <h3 class="card-title">
+                      <a class="internal" href={n.url}>{n.title}</a>
+                    </h3>
+                    {(period || role) && <p class="project-meta">{[period, role].filter(Boolean).join(" · ")}</p>}
+                    {described.get(n.key) && <p class="card-desc">{described.get(n.key)}</p>}
+                    {stack.length > 0 && (
+                      <ul class="project-stack">
+                        {stack.map((x) => (
+                          <li>{x}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {links.length > 0 && (
+                      <p class="project-links">
+                        {links.map((l) => (
+                          <a href={l.href} rel="noopener">
+                            {l.label} ↗
+                          </a>
+                        ))}
+                      </p>
+                    )}
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        ) : (
+          <ul class="book-shelf">
+            {g.notes.map((n) => {
+              const author = plain(n.source.fm.author ?? n.source.fm.authors)
+              const year = plain(n.source.fm.year ?? n.source.fm.published)
+              const rating = ratingOf(n)
+              return (
+                <li class="book">
+                  <a class="book-link internal" href={n.url}>
+                    <span class="book-cover">
+                      {n.cover ? <img src={n.cover} alt="" loading="lazy" /> : <span class="book-cover-text">{n.title}</span>}
+                    </span>
+                    <span class="book-title">{n.title}</span>
+                  </a>
+                  {(author || year) && <span class="book-author">{[author, year].filter(Boolean).join(", ")}</span>}
+                  {rating && (
+                    <span class="book-rating" title={`${s.ratingOf} ${rating}/5`} aria-label={`${s.ratingOf} ${rating}/5`}>
+                      {"★".repeat(Math.round(rating))}
+                      <span class="book-rating-rest">{"★".repeat(5 - Math.round(rating))}</span>
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
+    ))
+  }
+</div>

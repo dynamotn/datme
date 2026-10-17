@@ -185,5 +185,19 @@
   "trailPrev": "上一步",
   "trailNext": "下一步",
   "trailEnd": "小径终点",
-  "trailLeave": "离开小径"
+  "trailLeave": "离开小径",
+  "statusActive": "进行中",
+  "statusPlanned": "计划中",
+  "statusPaused": "已暂停",
+  "statusDone": "已完成",
+  "statusArchived": "已归档",
+  "statusReading": "在读",
+  "statusToRead": "想读",
+  "statusRead": "读过",
+  "statusAbandoned": "弃了",
+  "statusOther": "其他",
+  "now": "至今",
+  "printCv": "打印 / 存为 PDF",
+  "ratingOf": "评分",
+  "emptyCollection": "这里还没有笔记。"
 }

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Notes can take a page layout with `layout`. `cv` makes a printable résumé
+  from the note, `gallery` turns its pictures into a grid, and `projects`
+  and `books` show the notes of a folder or tag as project cards or a shelf
+  of covers, grouped by `status`. A `cover` property gives each note its
+  picture.
 - Each note has a 📄 Markdown menu: copy the note as markdown, open its
   markdown copy, or ask ChatGPT or Claude to read it. `askAi` picks the
   assistants, or `[]` for none; they need `site.url`.
