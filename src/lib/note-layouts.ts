@@ -436,7 +436,11 @@ export function galleryHtml(html: string): string {
     if (inner !== undefined && IMAGE_ONLY.test(inner) && inner.includes("<img")) {
       for (const img of inner.match(IMG)!) {
         const alt = img.match(/\balt="([^"]*)"/)?.[1] ?? ""
-        grid.push(`<figure class="gallery-item">${img}${alt ? `<figcaption>${alt}</figcaption>` : ""}</figure>`)
+        const w = Number(img.match(/\swidth="(\d+(?:\.\d+)?)"/)?.[1])
+        const h = Number(img.match(/\sheight="(\d+(?:\.\d+)?)"/)?.[1])
+        // The aspect ratio lets the darkroom style justify rows; without it, CSS falls back.
+        const ar = w > 0 && h > 0 ? ` style="--ar: ${+(w / h).toFixed(4)}"` : ""
+        grid.push(`<figure class="gallery-item"${ar}>${img}${alt ? `<figcaption>${alt}</figcaption>` : ""}</figure>`)
       }
     } else if (part.trim() || !grid.length) {
       flush()

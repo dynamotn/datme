@@ -25,6 +25,14 @@ describe("layout transforms", () => {
     )
   })
 
+  test("a gallery picture with a known size carries its aspect ratio", () => {
+    expect(galleryHtml(`<p><img src="a.jpg" width="300" height="200"></p>`)).toContain(
+      `<figure class="gallery-item" style="--ar: 1.5"><img`,
+    )
+    expect(galleryHtml(`<p><img src="a.jpg" width="1000" height="3000"></p>`)).toContain(`style="--ar: 0.3333"`)
+    expect(galleryHtml(`<p><img src="a.jpg"></p>`)).not.toContain("style=")
+  })
+
   test("a résumé puts each H2 section beside its heading, after the summary", () => {
     expect(cvHtml(`<p>Hi</p><h2 id="a">A</h2><p>x</p><h2>B</h2><ul><li>y</li></ul>`)).toBe(
       `<div class="cv-summary"><p>Hi</p></div>` +
@@ -131,7 +139,8 @@ describe("page layouts", () => {
     const html = article("Photos/index.html")
     expect(html).toContain('class="note layout-gallery h-entry"')
     expect(html.match(/<div class="gallery-grid">/g)).toHaveLength(1)
-    expect(html.match(/<figure class="gallery-item">/g)).toHaveLength(3)
+    expect(html.match(/<figure class="gallery-item"[ >]/g)).toHaveLength(3)
+    expect(html).toContain('<figure class="gallery-item" style="--ar: 2"><img src="/assets/_assets/road.png"')
     expect(html).toContain("<figcaption>Morning fog</figcaption>")
     expect(html).toContain("<p>Text between albums stays text.</p>")
   })

@@ -45,3 +45,9 @@ describe("resume look", () => {
     expect(print).toContain('[data-look="resume"][data-theme="dark"]')
   })
 })
+
+describe("darkroom look", () => {
+  test("every rule is scoped to the darkroom look", () => {
+    expectScoped("darkroom.css", "darkroom")
+  })
+})
