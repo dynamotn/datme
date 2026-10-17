@@ -43,6 +43,8 @@ Usage:
                                                  hosts: github, gitlab, netlify, cloudflare
   datme export  <folder> [vault] [--format epub|html] [--out file] [--lang xx]
                                                  a folder as an EPUB, or one page to print
+  datme mcp     [vault]                          serve the published notes to AI assistants
+                                                 over MCP (stdio)
   datme migrate <from> [vault] [--write]         switch from another publisher; prints the
                                                  changes, --write applies them
                                                  from: publish, digital-garden, quartz
@@ -69,7 +71,7 @@ Options:
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "doctor" | "deploy" | "export" | "url" | "related" | "migrate" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "doctor" | "deploy" | "export" | "url" | "related" | "migrate" | "mcp" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -138,7 +140,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", ...operands] = positionals
-  if (!["dev", "build", "preview", "check", "init", "doctor", "deploy", "export", "url", "related", "migrate", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "doctor", "deploy", "export", "url", "related", "migrate", "mcp", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   let target: Target | undefined
@@ -446,6 +448,11 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     console.log(formatDiagnosis(findings))
     if (findings.some((f) => f.level === "fail")) throw new CliError("doctor found something to fix.")
     return
+  }
+
+  if (args.command === "mcp") {
+    const { serveStdio } = await import("./lib/mcp.ts")
+    return serveStdio()
   }
 
   if (args.command === "related") {

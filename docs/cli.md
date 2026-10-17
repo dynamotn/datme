@@ -21,6 +21,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or a printable page |
 | `datme doctor [vault]` | Checks the machine and the vault before a build: the Bun or Node version, the optional packages the vault's notes need (D2, Typst, transformers.js), git, the `DATME_LOCK_…` variables of group passwords, and `site.url`. Each problem comes with the command that fixes it; exits 1 if one must be fixed |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
+| `datme mcp [vault]` | Serves the published notes to AI assistants over the Model Context Protocol (stdio); see [AI assistants](#ai-assistants) |
 | `datme migrate <from> [vault]` | Lists what switching from `publish` (Obsidian Publish), `digital-garden` or `quartz` changes; `--write` applies it (see [Coming from another publisher](migrating.md)) |
 | `datme related <note> [vault]` | Lists the published notes related to a note (published or not), and the places where its text names one without a link; `--json` for tools such as the Obsidian plugin |
 | `datme url <note> [vault]` | Prints the URL path of a published note, canvas or drawing (`--lang` picks the language); fails for a private one |
@@ -95,3 +96,28 @@ The cache lives in datme's `.datme/cache`. `$DATME_CACHE` moves it (handy for
 CI caches), an empty value turns it off, and `--fresh` starts from scratch.
 Since datme deletes what a build no longer uses, `$DATME_CACHE` must name an
 empty directory or one datme filled; any other stops the build.
+
+## AI assistants
+
+`datme mcp` lets an assistant such as Claude read the garden as the public
+does: the same notes, without private or protected ones, locked parts or
+comments. It offers four tools, `search`, `read_note`, `backlinks` and
+`related`, and every published note as a resource. Each answer carries the
+note's public URL, so the assistant can cite it.
+
+```bash
+claude mcp add garden -- bunx @dynamotn/datme mcp ~/MyVault   # Claude Code
+```
+
+Other clients take the same command in their settings, such as Claude
+Desktop's `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "garden": { "command": "bunx", "args": ["@dynamotn/datme", "mcp", "/path/to/MyVault"] }
+  }
+}
+```
+
+URLs are full when `site.url` is set; without it they are paths of the site.
