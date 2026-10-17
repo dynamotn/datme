@@ -24,7 +24,7 @@
   --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px -12px rgb(0 0 0 / 0.2);
   --radius: 4px;
   --radius-sm: 2px;
-  --row: 280px;
+  --row: 230px;
   --gap: 6px;
 }
 
@@ -90,8 +90,8 @@
 
 /* ---------- justified rows ----------
  * Each picture's basis and growth follow its aspect ratio (--ar, set at build
- * time), so a row's pictures share one height and fill the width. A row that
- * would grow past 2.4 times the row height (a short last row) stops there.
+ * time), so a row's pictures share one height and fill the width. The last
+ * row stays at --row; a row that would grow past 1.6 times it stops there.
  */
 [data-look="darkroom"] .gallery-grid {
   display: flex;
@@ -100,12 +100,25 @@
   columns: auto;
   margin: 0.8em 0 1.6em;
 }
+/* The last row keeps the target height instead of stretching. */
+[data-look="darkroom"] .gallery-grid::after {
+  content: "";
+  flex: 1e9 1 0;
+}
 [data-look="darkroom"] .gallery-item {
   position: relative;
   flex: var(--ar, 0.6667) 1 calc(var(--ar, 0.6667) * var(--row));
-  max-width: calc(var(--ar, 0.6667) * var(--row) * 2.4);
+  max-width: calc(var(--ar, 0.6667) * var(--row) * 1.6);
   min-width: 0;
   margin: 0;
+}
+[data-look="darkroom"] .gallery-item > a {
+  display: block;
+}
+[data-look="darkroom"] .gallery-item > a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 0;
 }
 [data-look="darkroom"] .gallery-item img {
   display: block;
@@ -154,7 +167,7 @@
 
 @media (max-width: 760px) {
   [data-look="darkroom"] {
-    --row: 160px;
+    --row: 130px;
     --gap: 4px;
   }
 }
