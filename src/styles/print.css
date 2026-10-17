@@ -1,4 +1,4 @@
-/* ---------- print: the note alone, black on white, in either look and theme ---------- */
+/* ---------- print: the note alone, black on white, in every look (notebook, classic, garden) and theme ---------- */
 @media print {
   @page {
     margin: 18mm 16mm;
