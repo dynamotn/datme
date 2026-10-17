@@ -9,17 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A third look, `appearance.style: garden`, makes the site feel like a
+  garden rather than a blog: warm cream paper (a deep green night in dark
+  mode), moss and earth colours, Fraunces headings and Literata text. The
+  home opens on the notes tended most recently, then the maps of content as
+  paths in, then every note as a tile in a bed, larger and greener as it
+  matures; folder and tag pages are beds too. `theme.accent` and
+  `theme.fonts` still override its colours and fonts, and it prints like
+  `classic`.
+- Readers can filter a garden bed by stage (or folder) and by tag, and the
+  home shows its first 60 tiles until they choose to walk the whole garden.
 - In the garden style, a note says when it was planted and last tended, and
   its backlinks and related notes read as "paths from here" and "nearby",
   each marked with the stage of the note it leads to.
-- `appearance.style: garden` opens the home on the notes tended most
-  recently, then the maps of content as paths in, then the whole garden.
-- In the garden style, notes are tiles scattered in a bed, larger and
-  greener as they mature; folder and tag pages are beds too.
-- Readers can filter a garden bed by stage (or folder) and by tag, and the
-  home shows its first 60 tiles until they choose to walk the whole garden.
 - `appearance.folders` gives a folder its own style, subfolders included,
-  for example `Writing: classic` on a notebook site.
+  for example `Writing: classic` on a notebook site. The starter config of
+  `datme init` lists the styles and has a place for it.
 - Notes can take a page layout with `layout`. `cv` makes a printable résumé
   from the note, `gallery` turns its pictures into a grid, `timeline` puts
   its sections on a line down the page, `links` makes a link-in-bio page of

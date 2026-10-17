@@ -3,6 +3,9 @@
  * grown they are. Everything is scoped to [data-look="garden"], so pages in
  * the other looks keep their own stylesheets untouched.
  */
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/literata/opsz-italic.css";
 
 [data-look="garden"] {
   --bg: #f7f3e8;
@@ -15,18 +18,22 @@
   --line: #e0d9c4;
   --line-strong: #c9c0a6;
   --accent: #466f33;
-  --accent-2: #85592a;
+  --accent-2: #7f5527;
   --accent-soft: rgb(79 122 58 / 0.12);
-  /* Earth, darkened from #a0703c so small text keeps AA contrast on cream. */
-  --earth: #85592a;
+  /* Earth, darkened from #a0703c so small text keeps AA contrast on the greenest tile. */
+  --earth: #7f5527;
+  --clay: var(--earth);
+  --clay-soft: rgb(160 112 60 / 0.14);
   --growth-small: color-mix(in srgb, var(--accent) 5%, var(--surface));
   --growth-medium: color-mix(in srgb, var(--accent) 11%, var(--surface));
-  --growth-large: color-mix(in srgb, var(--accent) 19%, var(--surface));
+  --growth-large: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  --title-grad: linear-gradient(135deg, #4f7a3a 0%, #6d8f45 50%, #a0703c 100%);
+  --shadow: 0 1px 2px rgb(60 50 20 / 0.05), 0 10px 26px -16px rgb(60 50 20 / 0.28);
   --font-ui: "Inter Variable", "Inter", system-ui, sans-serif;
-  --font-read: "Literata", Georgia, serif;
-  --font-heading: "Fraunces", Georgia, serif;
+  --font-read: "Literata Variable", "Literata", Georgia, serif;
+  --font-heading: "Fraunces Variable", "Fraunces", Georgia, serif;
   --radius: 18px;
-  --radius-sm: 10px;
+  --radius-sm: 12px;
   --tile-radius: 22px 16px 24px 14px;
 }
 
@@ -37,78 +44,148 @@
   --surface-3: #283629;
   --ink: #ece6d4;
   --ink-2: #d2ccb8;
-  --muted: #a9a58f;
+  --muted: #b1ad97;
   --line: #2a382c;
   --line-strong: #3a4a3b;
   --accent: #9cc47f;
   --accent-2: #d6a36c;
   --accent-soft: rgb(156 196 127 / 0.14);
   --earth: #d6a36c;
+  --clay: var(--earth);
+  --clay-soft: rgb(214 163 108 / 0.14);
+  --growth-small: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  --growth-medium: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --growth-large: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  --title-grad: linear-gradient(135deg, #9cc47f 0%, #c5d98a 50%, #d6a36c 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 26px -16px rgb(0 0 0 / 0.7);
 }
 
+/* Paper with a little morning light in one corner, not a flat page. */
 [data-look="garden"] body {
-  background: var(--bg);
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
   font-family: var(--font-read);
+}
+
+/* ---------- type: Fraunces for names and headings, Literata to read ---------- */
+[data-look="garden"] .brand-name,
+[data-look="garden"] .note-title,
+[data-look="garden"] .prose h1,
+[data-look="garden"] .prose h2,
+[data-look="garden"] .prose h3,
+[data-look="garden"] .prose h4,
+[data-look="garden"] .prose h5,
+[data-look="garden"] .garden-gate h1,
+[data-look="garden"] .garden-recent h2,
+[data-look="garden"] .garden-paths h2,
+[data-look="garden"] .garden-main h2,
+[data-look="garden"] .backlinks h2,
+[data-look="garden"] .garden-tile-title {
+  font-family: var(--font-heading);
+  font-variation-settings: "SOFT" 60;
+}
+[data-look="garden"] .brand-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+[data-look="garden"] .note-title {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+[data-look="garden"] .prose h1,
+[data-look="garden"] .prose h2,
+[data-look="garden"] .prose h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+[data-look="garden"] .prose a.internal {
+  border-radius: 6px;
 }
 
 /* ---------- home ---------- */
 [data-look="garden"] .garden-gate {
   max-width: 44rem;
-  margin: 8px 0 40px;
+  margin: 8px 0 44px;
 }
 [data-look="garden"] .garden-gate h1,
 [data-look="garden"] .garden-recent h2,
 [data-look="garden"] .garden-paths h2,
 [data-look="garden"] .garden-main h2 {
-  font-family: var(--font-heading);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 [data-look="garden"] .garden-gate h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  line-height: 1.1;
-  margin: 0 0 8px;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.05;
+  margin: 0 0 10px;
+  color: var(--ink);
 }
 [data-look="garden"] .garden-tagline {
   color: var(--muted);
-  font-family: var(--font-ui);
+  font-family: var(--font-read);
+  font-size: 1.15rem;
+  font-style: italic;
   margin: 0 0 16px;
 }
 [data-look="garden"] .garden-recent,
 [data-look="garden"] .garden-paths,
 [data-look="garden"] .garden-main,
 [data-look="garden"] .garden-beds {
-  margin: 0 0 40px;
+  margin: 0 0 44px;
 }
 [data-look="garden"] .garden-recent h2,
 [data-look="garden"] .garden-paths h2,
 [data-look="garden"] .garden-main h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 1.35rem;
   margin: 0 0 14px;
+}
+/* A short furrow after each heading, instead of a full rule. */
+[data-look="garden"] .garden-recent h2::after,
+[data-look="garden"] .garden-paths h2::after,
+[data-look="garden"] .garden-main h2::after {
+  content: "";
+  flex: 0 0 3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line-strong);
 }
 
 /* A sideways row: recently tended notes and the paths in. */
 [data-look="garden"] .garden-row {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   overflow-x: auto;
   scroll-snap-type: x proximity;
-  padding: 2px 2px 10px;
+  padding: 4px 2px 12px;
+  scrollbar-width: thin;
 }
 [data-look="garden"] .garden-row > .garden-tile {
   flex: 0 0 auto;
-  width: 13rem;
+  width: 12.5rem;
   margin: 0;
   scroll-snap-align: start;
 }
 [data-look="garden"] .garden-row > .garden-tile.is-path {
   width: 18rem;
 }
+/* A trailhead: the path is marked out in earth, not filled in. */
+[data-look="garden"] .garden-tile.is-path {
+  background: var(--surface);
+  border: 1.5px dashed color-mix(in srgb, var(--earth) 55%, transparent);
+}
 
 [data-look="garden"] .garden-beds {
   display: grid;
-  gap: 24px;
+  gap: 8px 32px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+[data-look="garden"] .garden-shelf > :first-child {
+  margin-top: 0;
 }
 
 /* ---------- filters ---------- */
@@ -117,7 +194,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  margin: 0 0 18px;
+  margin: 0 0 20px;
   font-family: var(--font-ui);
 }
 [data-look="garden"] .garden-chips {
@@ -131,24 +208,55 @@
   font: inherit;
   font-family: var(--font-ui);
   font-size: 14px;
+  line-height: 1.4;
   color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   padding: 6px 14px;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 [data-look="garden"] .garden-chip small {
+  margin-left: 2px;
   color: var(--muted);
+  font-size: 12px;
+}
+[data-look="garden"] .garden-chip:hover,
+[data-look="garden"] .garden-tag-select:hover {
+  border-color: var(--accent);
 }
 [data-look="garden"] .garden-chip[aria-pressed="true"] {
-  background: var(--accent-soft);
+  background: var(--accent);
   border-color: var(--accent);
+  color: var(--bg);
   font-weight: 600;
+}
+[data-look="garden"] .garden-chip[aria-pressed="true"] small {
+  color: inherit;
+}
+[data-look="garden"] .garden-chip:focus-visible,
+[data-look="garden"] .garden-tag-select:focus-visible,
+[data-look="garden"] .garden-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+[data-look="garden"] .garden-tag-select {
+  max-width: 100%;
+  padding-right: 10px;
 }
 [data-look="garden"] .garden-more {
   display: block;
-  margin: 18px auto 0;
+  margin: 22px auto 0;
+  padding: 9px 20px;
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+[data-look="garden"] .garden-more:hover {
+  background: var(--accent-soft);
 }
 [data-look="garden"] .garden-more[hidden] {
   display: none;
@@ -156,16 +264,19 @@
 
 /* ---------- the bed: masonry by columns, so tile order is DOM order ---------- */
 [data-look="garden"] .garden-bed {
-  columns: 15rem;
-  column-gap: 16px;
+  columns: 12rem;
+  column-gap: 14px;
 }
 [data-look="garden"] .garden-tile {
   break-inside: avoid;
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   padding: 12px 14px;
   border-radius: var(--tile-radius);
   background: var(--growth-medium);
   color: var(--ink);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 [data-look="garden"] .garden-tile[hidden] {
   display: none;
@@ -173,9 +284,37 @@
 [data-look="garden"] .garden-tile:nth-child(3n + 2) {
   border-radius: 16px 24px 14px 22px;
 }
+[data-look="garden"] .garden-tile:nth-child(3n) {
+  border-radius: 26px 14px 18px 20px;
+}
+@media (hover: hover) {
+  [data-look="garden"] .garden-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+}
+[data-look="garden"] .garden-tile:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Seedlings sprout side by side as small pills; grown notes take the width. */
 [data-look="garden"] .garden-tile[data-size="small"] {
   background: var(--growth-small);
-  padding: 10px 12px;
+  padding: 8px 14px;
+  border-radius: 999px 999px 999px 14px;
+}
+[data-look="garden"] .garden-bed > .garden-tile[data-size="small"] {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0 6px 12px 0;
+  vertical-align: top;
+}
+[data-look="garden"] .garden-bed > .garden-tile[data-size="small"][hidden] {
+  display: none;
+}
+[data-look="garden"] .garden-tile[data-size="small"] .garden-tile-title {
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 [data-look="garden"] .garden-tile[data-size="large"] {
   background: var(--growth-large);
@@ -186,13 +325,18 @@
   gap: 8px;
   align-items: baseline;
   margin: 0;
-  font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 [data-look="garden"] .garden-tile[data-size="large"] .garden-tile-title {
-  font-size: 1.3rem;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+[data-look="garden"] .garden-tile-icon {
+  flex: none;
+  font-family: var(--font-ui);
 }
 [data-look="garden"] .garden-tile-title a {
   color: inherit;
@@ -200,8 +344,13 @@
 }
 [data-look="garden"] .garden-tile-title a:hover,
 [data-look="garden"] .garden-tile-title a:focus-visible {
-  color: var(--accent);
   text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+[data-look="garden"] .garden-tile-title a:focus-visible {
+  outline: none;
 }
 [data-look="garden"] .garden-tile-desc {
   display: -webkit-box;
@@ -212,6 +361,7 @@
   margin: 8px 0 0;
   color: var(--ink-2);
   font-size: 0.95rem;
+  line-height: 1.5;
 }
 [data-look="garden"] .garden-tile-date {
   margin: 6px 0 0;
@@ -222,7 +372,7 @@
 [data-look="garden"] .garden-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px 10px;
   list-style: none;
   margin: 10px 0 0;
   padding: 0;
@@ -230,9 +380,142 @@
 [data-look="garden"] .garden-tag {
   font-family: var(--font-ui);
   font-size: 12px;
+  font-weight: 500;
   color: var(--earth);
   text-decoration: none;
 }
 [data-look="garden"] .garden-tag:hover {
   text-decoration: underline;
+}
+
+/* ---------- note pages ---------- */
+[data-look="garden"] .chip.garden-stage {
+  height: 30px;
+  padding: 0 13px;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  background: var(--growth-large);
+  color: var(--ink);
+  border-radius: 999px 999px 999px 8px;
+}
+[data-look="garden"] a.chip.garden-stage:hover {
+  background: var(--growth-large);
+  color: var(--ink);
+  text-decoration: underline;
+}
+[data-look="garden"] .garden-dates {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-read);
+  font-style: italic;
+  font-size: 15px;
+}
+[data-look="garden"] .garden-dates time {
+  font-style: normal;
+  color: var(--ink-2);
+}
+
+[data-look="garden"] .backlinks {
+  border-top: 0;
+  padding-top: 0;
+}
+[data-look="garden"] .backlinks h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+[data-look="garden"] .backlinks h2 .count {
+  font-family: var(--font-ui);
+  background: var(--growth-medium);
+  color: var(--ink-2);
+}
+[data-look="garden"] .backlink-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+}
+[data-look="garden"] .backlink {
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  border: 0;
+  border-radius: var(--tile-radius);
+  background: var(--growth-small);
+}
+[data-look="garden"] .backlink:nth-child(even) {
+  border-radius: 16px 24px 14px 22px;
+}
+[data-look="garden"] .backlink:hover {
+  background: var(--growth-medium);
+}
+[data-look="garden"] .backlink strong {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+[data-look="garden"] .backlink p {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+
+/* Stream folders keep their markup: whole notes, one after another, divided by furrows. */
+[data-look="garden"] .stream-item {
+  border-top: 1.5px dashed var(--line-strong);
+}
+[data-look="garden"] .stream-item:first-child {
+  border-top: 0;
+}
+[data-look="garden"] .stream-item header {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-variation-settings: "SOFT" 60;
+}
+[data-look="garden"] .stream-item time {
+  font-family: var(--font-ui);
+}
+
+/* ---------- narrow screens: two beds side by side, then one ---------- */
+@media (max-width: 520px) {
+  [data-look="garden"] .garden-bed {
+    columns: 2;
+    column-gap: 10px;
+  }
+  [data-look="garden"] .garden-tile {
+    margin-bottom: 10px;
+    padding: 10px 12px;
+  }
+  [data-look="garden"] .garden-tile[data-size="large"] {
+    padding: 14px 13px 12px;
+  }
+  [data-look="garden"] .garden-tile[data-size="large"] .garden-tile-title {
+    font-size: 1.12rem;
+  }
+  [data-look="garden"] .garden-tile-title {
+    font-size: 0.98rem;
+    gap: 6px;
+  }
+  [data-look="garden"] .garden-tile-desc {
+    font-size: 0.88rem;
+  }
+  [data-look="garden"] .garden-tile-date {
+    font-size: 12px;
+  }
+  [data-look="garden"] .garden-row > .garden-tile {
+    width: 11rem;
+  }
+  [data-look="garden"] .garden-row > .garden-tile.is-path {
+    width: 15rem;
+  }
+}
+@media (max-width: 340px) {
+  [data-look="garden"] .garden-bed {
+    columns: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-look="garden"] .garden-tile,
+  [data-look="garden"] .garden-chip {
+    transition: none;
+  }
 }

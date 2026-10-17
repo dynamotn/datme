@@ -7,7 +7,9 @@
   :root,
   :root[data-theme="dark"],
   [data-look="notebook"],
-  [data-look="notebook"][data-theme="dark"] {
+  [data-look="notebook"][data-theme="dark"],
+  [data-look="garden"],
+  [data-look="garden"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;
@@ -35,6 +37,17 @@
     --shadow: none;
     --shadow-lg: none;
     --margin-line: transparent;
+  }
+  [data-look="garden"],
+  [data-look="garden"][data-theme="dark"] {
+    --earth: #000;
+    --growth-small: #fff;
+    --growth-medium: #f4f4f2;
+    --growth-large: #ebebe8;
+  }
+  [data-look="garden"] .garden-filters,
+  [data-look="garden"] .garden-more {
+    display: none !important;
   }
 
   html,
