@@ -596,6 +596,32 @@ describe("static build", () => {
     expect(exists("en-US/practice/index.html")).toBe(true)
   })
 
+  test("other sites can embed a card of a public note by oEmbed", () => {
+    const page = read("03_Atomic/Zettelkasten/index.html")
+    expect(page).toContain('<link rel="alternate" type="application/json+oembed" href="https://notes.dynamotn.dev/03_Atomic/Zettelkasten.oembed.json" title="Zettelkasten">')
+    const json = JSON.parse(read("03_Atomic/Zettelkasten.oembed.json"))
+    expect(json).toMatchObject({
+      version: "1.0",
+      type: "rich",
+      title: "Zettelkasten",
+      author_name: "Tester",
+      provider_name: "Khu vườn thử nghiệm",
+      provider_url: "https://notes.dynamotn.dev/",
+      height: 190,
+    })
+    expect(json.html).toStartWith('<iframe src="https://notes.dynamotn.dev/03_Atomic/Zettelkasten/embed" width="600" height="190"')
+    const card = read("03_Atomic/Zettelkasten/embed/index.html")
+    expect(card).toMatch(/<a class="card" href="https:\/\/notes.dynamotn.dev\/03_Atomic\/Zettelkasten" target="_blank" rel="noopener">/)
+    expect(card).toContain("<h1>Zettelkasten</h1>")
+    expect(card).toContain('<meta name="robots" content="noindex">')
+    expect(read("sitemap-0.xml")).not.toContain("/embed")
+    expect(read("_headers")).toContain("/*/embed\n  Content-Security-Policy: frame-ancestors *\n")
+    // Protected notes and the home page are not embeddable.
+    expect(exists("06_Reference/Secret.oembed.json")).toBe(false)
+    expect(exists("06_Reference/Secret/embed/index.html")).toBe(false)
+    expect(read("index.html")).not.toContain("json+oembed")
+  })
+
   test("llms-full.txt holds every public note in full, each with its source", () => {
     const full = read("llms-full.txt")
     expect(full).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")
@@ -611,8 +637,8 @@ describe("static build", () => {
     const headers = read("_headers")
     expect(headers).toStartWith("/*\n  X-Content-Type-Options: nosniff\n")
     expect(headers).toContain("/_astro/*\n  Cache-Control: public, max-age=31536000, immutable")
-    // CSP is opt-in: a strict one could block embeds written by hand in notes.
-    expect(headers).not.toContain("Content-Security-Policy")
+    // CSP is opt-in: a strict one could block embeds written by hand in notes. Only note cards set frame-ancestors.
+    expect(headers.split("\n\n")[0]).not.toContain("Content-Security-Policy")
   })
 
   test("RSS feeds and the sitemap are generated", () => {

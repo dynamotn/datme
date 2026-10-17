@@ -106,6 +106,16 @@ before. See [Privacy](privacy.md#note-history) before turning it on.
 - Notes can show webmentions (likes, reposts, replies) and comments, when the
   site enables them.
 
+## Embedding a note elsewhere
+
+Each public note announces an oEmbed description (`<note>.oembed.json`), so
+sites and tools that support oEmbed turn a link to it into a card: its title,
+excerpt and image, linking back. The card lives at `<note>/embed` for any page
+to put in an iframe. The `_headers` file lets every site frame those cards
+(`frame-ancestors *`); with `headers: { csp: true }` the site-wide policy still
+applies to them, so embedding then needs a host that can drop a header for a
+path. Turn it off with `oembed: false`. It needs `site.url`.
+
 ## Following the garden
 
 - **Feeds:** every folder and tag has an RSS feed, linked from its page.

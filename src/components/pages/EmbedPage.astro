@@ -1,0 +1,120 @@
+---
+import type { Note } from "~/lib/vault"
+import { site } from "~/site.config"
+import { renderNote } from "~/lib/markdown"
+import { langMeta, langDir, formatDate } from "~/lib/i18n"
+import { cardImage } from "~/lib/oembed"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const r = await renderNote(note)
+const title = r.h1 ?? note.title
+const image = cardImage(note)
+const href = new URL(note.url, site.url + "/").href
+---
+
+<!doctype html>
+<html lang={langMeta(note.lang).html} dir={langDir(note.lang)}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{title} · {site.title[note.lang]}</title>
+    <link rel="canonical" href={href} />
+    <style is:inline>
+      :root {
+        --bg: #fffdf8;
+        --ink: #1d1b17;
+        --muted: #7d776b;
+        --line: #e2dccf;
+        --accent: #2d6a4f;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #181916;
+          --ink: #ecebe5;
+          --muted: #8d897e;
+          --line: #2a2b27;
+          --accent: #82c7a0;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: transparent;
+        font: 15px/1.45 system-ui, sans-serif;
+      }
+      a.card {
+        display: flex;
+        gap: 14px;
+        height: 100vh;
+        max-height: 190px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--bg);
+        color: var(--ink);
+        text-decoration: none;
+        overflow: hidden;
+      }
+      a.card:hover h1 {
+        color: var(--accent);
+      }
+      img {
+        flex: none;
+        width: 34%;
+        max-width: 220px;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+      .text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 17px;
+        line-height: 1.3;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      footer {
+        margin-top: auto;
+        padding-top: 8px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      @media (max-width: 420px) {
+        img {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="card" href={href} target="_blank" rel="noopener">
+      {image && <img src={new URL(image, site.url + "/").href} alt="" loading="lazy" />}
+      <span class="text">
+        <h1>{title}</h1>
+        {r.description && <p>{r.description}</p>}
+        <footer>
+          {site.logo} {site.title[note.lang]}
+          {note.updated && <> · {formatDate(note.updated, note.lang)}</>}
+        </footer>
+      </span>
+    </a>
+  </body>
+</html>

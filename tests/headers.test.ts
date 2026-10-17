@@ -48,4 +48,10 @@ describe("CSP", () => {
     expect(resolveConfig({ headers: false }, "/v").headers).toBe(false)
     expect(headersFile(resolveConfig({}, "/v"))).not.toContain("Content-Security-Policy")
   })
+
+  test("note cards may be framed by any site when oEmbed is on and the site has a URL", () => {
+    expect(headersFile(resolveConfig({ site: { url: "https://x.dev" } }, "/v"))).toContain("/*/embed\n  Content-Security-Policy: frame-ancestors *")
+    expect(headersFile(resolveConfig({ site: { url: "https://x.dev" }, oembed: false }, "/v"))).not.toContain("/*/embed")
+    expect(headersFile(resolveConfig({}, "/v"))).not.toContain("/*/embed")
+  })
 })

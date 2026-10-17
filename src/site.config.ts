@@ -369,6 +369,8 @@ const schema = z
     offline: z.boolean().default(true),
     /** Generate social preview images for the home page and for notes without a banner. */
     ogImages: z.boolean().default(true),
+    /** Let other sites embed a card of each public note, by oEmbed; needs site.url. */
+    oembed: z.boolean().default(true),
     /** Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text. */
     llms: z.boolean().default(true),
     /** Chat assistants a note's markdown menu offers to open it in; needs llms and site.url. */
@@ -517,6 +519,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     headers: c.headers,
     ogImages: c.ogImages,
     llms: c.llms,
+    oembed: c.oembed,
     askAi: [...new Set(c.askAi)],
     outdated: c.outdated,
     stats: c.stats,

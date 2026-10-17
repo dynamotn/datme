@@ -109,6 +109,14 @@ export function headersFile(site: SiteConfig, scriptHashes: string[] = []): stri
     "/_astro/*",
     "  Cache-Control: public, max-age=31536000, immutable",
     "",
+    ...(site.oembed && site.url
+      ? [
+          "# Note cards are made to be embedded by other sites; frame-ancestors overrides X-Frame-Options.",
+          "/*/embed",
+          "  Content-Security-Policy: frame-ancestors *",
+          "",
+        ]
+      : []),
     "# The service worker must update as soon as the site does.",
     "/sw.js",
     "  Cache-Control: no-cache",

@@ -1,0 +1,23 @@
+---
+/**
+ * The card of a note that other sites embed, at <note>/embed. A page of its
+ * own rather than a kind of [...slug]: it must load none of the site's
+ * stylesheets or scripts, only its own few lines.
+ */
+import type { GetStaticPaths } from "astro"
+import { site, type Lang } from "~/site.config"
+import { listed, type Note } from "~/lib/vault"
+import { embeddable, embedUrl } from "~/lib/oembed"
+import EmbedPage from "~/components/pages/EmbedPage.astro"
+
+export const getStaticPaths = (() =>
+  site.langs.flatMap((lang: Lang) =>
+    listed(lang)
+      .filter(embeddable)
+      .map((note) => ({ params: { path: decodeURI(embedUrl(note)).replace(/^\//, "").replace(/\/embed$/, "") }, props: { note } })),
+  )) satisfies GetStaticPaths
+
+const { note } = Astro.props as { note: Note }
+---
+
+<EmbedPage note={note} />

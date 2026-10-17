@@ -10,6 +10,7 @@ import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
 import { hasMarkdown, mdUrl } from "~/lib/llms"
+import { embeddable, oembedUrl } from "~/lib/oembed"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
@@ -72,7 +73,7 @@ const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefi
 const NOW_STALE_YEARS = 0.25
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article

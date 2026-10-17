@@ -41,6 +41,8 @@ interface Props {
   feed?: string
   /** URL of the page as plain markdown. */
   mdAlternate?: string
+  /** URL of the page's oEmbed JSON, for sites that embed it. */
+  oembed?: string
   /** Keep the page out of search engines, e.g. a draft built for preview. */
   noindex?: boolean
 }
@@ -57,6 +59,7 @@ const {
   jsonLd = [],
   feed,
   mdAlternate,
+  oembed,
   noindex = false,
 } = Astro.props
 const nav = navLinks(lang)
@@ -106,6 +109,7 @@ const pluginHead = await userHead()
     <link rel="alternate" type="application/rss+xml" title={siteTitle} href={rss} />
     {feed && <link rel="alternate" type="application/rss+xml" title={fullTitle} href={feed} />}
     {mdAlternate && <link rel="alternate" type="text/markdown" href={mdAlternate} />}
+    {oembed && <link rel="alternate" type="application/json+oembed" href={abs(oembed)} title={title} />}
     {
       site.langs.map(
         (l) =>
