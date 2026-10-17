@@ -4662,3 +4662,121 @@ summary.ntn-col-head {
 .book-rating-rest {
   color: var(--line-strong);
 }
+
+/* A timeline: moments on a line down the page, each heading on its dot. */
+.life-timeline {
+  position: relative;
+  margin: 1.6em 0 0;
+  padding: 0 0 0 28px;
+  list-style: none;
+}
+.life-timeline::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.life-event {
+  position: relative;
+  margin: 0;
+  padding: 0 0 28px;
+}
+.life-event:last-child {
+  padding-bottom: 0;
+}
+.life-event::before {
+  content: "";
+  position: absolute;
+  top: 0.45em;
+  left: -27px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg);
+}
+.life-event > h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.life-body > :first-child {
+  margin-top: 0;
+}
+.life-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* A page of links: one centred column of buttons under an avatar. */
+.layout-links {
+  max-width: 34rem;
+  margin-inline: auto;
+}
+.hub-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 28px;
+  text-align: center;
+}
+.hub-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.hub-head .note-title {
+  margin: 0;
+}
+.hub-tagline {
+  margin: 0;
+  color: var(--muted);
+}
+.layout-links .prose {
+  text-align: center;
+}
+.prose ul.link-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 1.2em 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+.prose ul.link-hub > li {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.prose ul.link-hub > li::marker {
+  content: none;
+}
+.prose ul.link-hub > li > a:first-child {
+  display: block;
+  margin-bottom: 4px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+@media (hover: hover) {
+  .prose ul.link-hub > li > a:first-child:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+  }
+}

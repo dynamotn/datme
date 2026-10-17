@@ -1,0 +1,15 @@
+---
+import type { Note } from "~/lib/vault"
+
+interface Props {
+  note: Note
+  title: string
+}
+const { note, title } = Astro.props
+---
+
+<header class="hub-head">
+  {note.source.fm.cover && note.cover && <img class="hub-avatar" src={note.cover} alt="" />}
+  <h1 class="note-title">{title}</h1>
+  {note.description && <p class="hub-tagline">{note.description}</p>}
+</header>

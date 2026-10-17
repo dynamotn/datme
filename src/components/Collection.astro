@@ -71,8 +71,9 @@ const list = (v: unknown) => (Array.isArray(v) ? v.map(plain) : plain(v) ? plain
         ) : (
           <ul class="book-shelf">
             {g.notes.map((n) => {
-              const author = plain(n.source.fm.author ?? n.source.fm.authors)
-              const year = plain(n.source.fm.year ?? n.source.fm.published)
+              const fm = n.source.fm
+              const author = plain(fm.author ?? fm.authors ?? fm.director ?? fm.directors)
+              const year = plain(fm.year ?? fm.published ?? fm.released)
               const rating = ratingOf(n)
               return (
                 <li class="book">

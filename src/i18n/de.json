@@ -199,5 +199,8 @@
   "now": "heute",
   "printCv": "Drucken / als PDF speichern",
   "ratingOf": "Bewertet mit",
-  "emptyCollection": "Hier gibt es noch keine Notizen."
+  "emptyCollection": "Hier gibt es noch keine Notizen.",
+  "statusWatching": "Schaue ich",
+  "statusToWatch": "Zu sehen",
+  "statusWatched": "Gesehen"
 }

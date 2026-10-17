@@ -199,5 +199,8 @@
   "now": "hoy",
   "printCv": "Imprimir / guardar como PDF",
   "ratingOf": "Valoración",
-  "emptyCollection": "Todavía no hay notas aquí."
+  "emptyCollection": "Todavía no hay notas aquí.",
+  "statusWatching": "Viendo",
+  "statusToWatch": "Por ver",
+  "statusWatched": "Visto"
 }

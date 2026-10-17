@@ -199,5 +199,8 @@
   "now": "現在",
   "printCv": "印刷 / PDF で保存",
   "ratingOf": "評価",
-  "emptyCollection": "まだノートがありません。"
+  "emptyCollection": "まだノートがありません。",
+  "statusWatching": "視聴中",
+  "statusToWatch": "観たい",
+  "statusWatched": "視聴済み"
 }

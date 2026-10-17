@@ -34,7 +34,7 @@ export interface SourceNote {
 }
 
 /** Page layouts a note can ask for with its `layout` property. */
-export const LAYOUTS = ["cv", "gallery", "projects", "books"] as const
+export const LAYOUTS = ["cv", "gallery", "timeline", "links", "projects", "books", "movies"] as const
 export type Layout = (typeof LAYOUTS)[number]
 
 /** A source note as seen in one language. */

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { cvHtml, galleryHtml, plain } from "../src/lib/note-layouts"
+import { cvHtml, galleryHtml, linksHtml, plain, timelineHtml } from "../src/lib/note-layouts"
 
 describe("layout transforms", () => {
   test("a gallery gathers runs of picture-only paragraphs into one grid", () => {
@@ -21,6 +21,20 @@ describe("layout transforms", () => {
         `<section class="cv-section"><h2>B</h2><div class="cv-body"><ul><li>y</li></ul></div></section>`,
     )
     expect(cvHtml(`<h2>Only</h2><p>x</p>`)).not.toContain("cv-summary")
+  })
+
+  test("a timeline puts each H2 on the line, after the introduction", () => {
+    expect(timelineHtml(`<p>Hi</p><h2>2015</h2><p>x</p>`)).toBe(
+      `<p>Hi</p><ol class="life-timeline"><li class="life-event"><h2>2015</h2><div class="life-body"><p>x</p></div></li></ol>`,
+    )
+    expect(timelineHtml(`<p>No moments</p>`)).toBe(`<p>No moments</p>`)
+  })
+
+  test("only lists of links become buttons", () => {
+    const links = `<ul>\n<li><a href="/a">A</a> — note</li>\n<li> <a class="internal" href="/b">B</a></li>\n</ul>`
+    expect(linksHtml(links)).toStartWith('<ul class="link-hub">')
+    expect(linksHtml(`<ul><li>text</li><li><a href="/a">A</a></li></ul>`)).toStartWith("<ul>")
+    expect(linksHtml(`<ul><li><a href="/a">A</a><ul><li>x</li></ul></li></ul>`)).not.toContain("link-hub")
   })
 
   test("frontmatter values read as plain text, wikilinks by their alias or name", () => {
@@ -104,6 +118,27 @@ describe("page layouts", () => {
     expect(html).toContain('<span class="book-cover-text">How to Take Smart Notes</span>')
     expect(html).toContain('<span class="book-author">Sönke Ahrens, 2017</span>')
     expect(html).toContain('aria-label="Rated 4/5">★★★★<span class="book-rating-rest">★</span>')
+  })
+
+  test("a timeline of moments", () => {
+    const html = article("Life/index.html")
+    expect(html).toContain('class="note layout-timeline"')
+    expect(html.match(/<li class="life-event">/g)).toHaveLength(2)
+  })
+
+  test("a page of links: an avatar, a tagline and buttons, no dates", () => {
+    const html = article("Links/index.html")
+    expect(html).toContain('<header class="hub-head"><img class="hub-avatar" src="/assets/_assets/portrait.png"')
+    expect(html).toContain('<p class="hub-tagline">Find me elsewhere.</p>')
+    expect(html.match(/<ul class="link-hub">/g)).toHaveLength(1)
+    expect(html).not.toContain('class="note-head"')
+  })
+
+  test("movies by folder: directors, release years and the watchlist first after watching", () => {
+    const html = article("Movies/index.html")
+    const groups = [...html.matchAll(/data-status="([^"]+)"/g)].map((m) => m[1])
+    expect(groups).toEqual(["to-watch", "watched"])
+    expect(html).toContain('<span class="book-author">Andrei Tarkovsky, 1979</span>')
   })
 
   test("a note without a layout keeps the usual page", () => {

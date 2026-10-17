@@ -26,6 +26,7 @@ import PageMenu from "../PageMenu.astro"
 import Outdated from "../Outdated.astro"
 import Collection from "../Collection.astro"
 import CvHead from "../CvHead.astro"
+import LinksHead from "../LinksHead.astro"
 import { isCollection, layoutHtml } from "~/lib/note-layouts"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 
@@ -95,6 +96,8 @@ const plain = !note.layout
     {
       note.layout === "cv" && !note.protected ? (
         <CvHead note={note} title={title} />
+      ) : note.layout === "links" ? (
+        <LinksHead note={note} title={title} />
       ) : (
         <header class="note-head">
           <NoteMeta note={note} words={r.words}>

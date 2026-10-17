@@ -43,8 +43,8 @@ that folder's page.
 | `created`, `updated` | Dates; without them datme uses the git history, then the file's times |
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
-| `layout` | `cv`, `gallery`, `projects` or `books`: see [Page layouts](#page-layouts) |
-| `cover` | The picture that stands for the note on a projects or books page (a vault file or a URL); the banner otherwise |
+| `layout` | `cv`, `gallery`, `timeline`, `links`, `projects`, `books` or `movies`: see [Page layouts](#page-layouts) |
+| `cover` | The picture that stands for the note on a projects, books or movies page (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |
 | `draft`, `publish_date`, `unlisted`, `password` | See [Privacy](privacy.md) |
 | `lang` | The language the note is written in, when it isn't the site's default one |
@@ -160,17 +160,26 @@ related notes.
   a grid, and clicking one opens it large. `![[a.jpg|Caption]]` captions a
   picture. Text and headings stay as they are, so each heading can start an
   album.
+- **`timeline`**: each `##` heading is a moment on a line down the page (a
+  year, a date, a chapter), with its text beside it.
+- **`links`**: a page of links, as in a link-in-bio. `cover` is the
+  avatar and `description` the line under the title. Every list whose
+  items each start with a link becomes a column of buttons; the words after
+  a link describe it.
 - **`projects`**: a card for each note of the collection, with its `cover`,
   `description`, the years from `start` to `end`, `role`, `stack` (or
   `tech`), and links from `repo`, `url`, `demo` and `links`.
 - **`books`**: a shelf of covers, with `author`, `year` and a `rating` out
   of five.
+- **`movies`**: a shelf of posters, with `director`, `released` (or `year`)
+  and a `rating`.
 
-Projects and books list the notes in the layout note's folder, or the
-folders and `#tags` given in `from`. They are grouped by `status`: projects
-go in progress, planned, paused, done, archived; books go reading, to read,
-read, abandoned. Usual spellings of each status count (`ongoing`,
-`completed`, `want-to-read`, `dnf`, …). Any other status gets its own group
+Projects, books and movies list the notes in the layout note's folder, or
+the folders and `#tags` given in `from`. They are grouped by `status`:
+projects go in progress, planned, paused, done, archived; books go reading,
+to read, read, abandoned; movies go watching, to watch, watched, abandoned.
+Usual spellings of each status count (`ongoing`, `completed`,
+`want-to-read`, `dnf`, `watchlist`, `seen`, …). Any other status gets its own group
 after these, and notes without one come last.
 
 ```markdown

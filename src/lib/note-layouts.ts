@@ -4,13 +4,13 @@ import { slugTag } from "./slug"
 import { t, type StringKey } from "./i18n"
 
 /**
- * Page layouts a note asks for with its `layout` property. A résumé and a
- * gallery reshape the note's own text; projects and books list other notes,
- * grouped by their `status`.
+ * Page layouts a note asks for with its `layout` property. A résumé, a
+ * gallery, a timeline and a page of links reshape the note's own text;
+ * projects, books and movies list other notes, grouped by their `status`.
  */
 
 /** Statuses in reading order, each with the spellings that mean it. */
-const STATUSES: Record<"projects" | "books", [key: string, label: Extract<StringKey, `status${string}`>, spellings: string[]][]> = {
+const STATUSES: Record<Collection, [key: string, label: Extract<StringKey, `status${string}`>, spellings: string[]][]> = {
   projects: [
     ["active", "statusActive", ["active", "ongoing", "in-progress", "doing", "wip", "current"]],
     ["planned", "statusPlanned", ["planned", "idea", "todo", "next"]],
@@ -24,9 +24,15 @@ const STATUSES: Record<"projects" | "books", [key: string, label: Extract<String
     ["read", "statusRead", ["read", "finished", "done", "completed"]],
     ["abandoned", "statusAbandoned", ["abandoned", "dnf", "dropped"]],
   ],
+  movies: [
+    ["watching", "statusWatching", ["watching", "current", "in-progress"]],
+    ["to-watch", "statusToWatch", ["to-watch", "want", "want-to-watch", "watchlist", "planned"]],
+    ["watched", "statusWatched", ["watched", "seen", "finished", "done", "completed"]],
+    ["abandoned", "statusAbandoned", ["abandoned", "dropped"]],
+  ],
 }
 
-export type Collection = "projects" | "books"
+export type Collection = "projects" | "books" | "movies"
 
 export interface CollectionGroup {
   /** The status every note of the group has; "" for notes without one. */
@@ -36,7 +42,7 @@ export interface CollectionGroup {
 }
 
 export const isCollection = (layout: Layout | undefined): layout is Collection =>
-  layout === "projects" || layout === "books"
+  layout === "projects" || layout === "books" || layout === "movies"
 
 const normalize = (v: string) => v.trim().toLowerCase().replace(/[\s_]+/g, "-")
 
@@ -66,14 +72,14 @@ export function sourcesOf(note: Note): { folders: string[]; tags: string[] } {
 /** When a note in a collection happened, for the newest-first order: its end, else its start. */
 function dateOf(n: Note): number {
   const fm = n.source.fm
-  for (const v of [fm.end, fm.finished, fm.start, fm.started]) {
+  for (const v of [fm.end, fm.finished, fm.watched, fm.start, fm.started]) {
     const d = v == null || v === "" ? NaN : new Date(String(v)).getTime()
     if (!Number.isNaN(d)) return d
   }
   return n.created?.getTime() ?? 0
 }
 
-/** The notes a projects or books page lists, grouped by status in reading order. */
+/** The notes a collection page lists, grouped by status in reading order. */
 export function collectionOf(note: Note, kind: Collection): CollectionGroup[] {
   const { folders, tags } = sourcesOf(note)
   const inFolder = (n: Note) => folders.some((f) => f === "" || n.dir === f || n.dir.startsWith(f + "/"))
@@ -175,21 +181,64 @@ export function galleryHtml(html: string): string {
   return out.join("")
 }
 
+/** What comes before the first H2, and each H2 split from the text below it. */
+function sections(html: string): { intro: string; parts: { heading: string; body: string }[] } {
+  const parts = html.split(/(?=<h2[\s>])/)
+  const [intro, ...rest] = /^<h2[\s>]/.test(parts[0]) ? ["", ...parts] : parts
+  return {
+    intro,
+    parts: rest.map((section) => {
+      const end = section.indexOf("</h2>") + "</h2>".length
+      return { heading: section.slice(0, end), body: section.slice(end) }
+    }),
+  }
+}
+
 /**
  * A résumé: each H2 section becomes a row with its heading beside its text;
  * what comes before the first H2 is the summary.
  */
 export function cvHtml(html: string): string {
-  const parts = html.split(/(?=<h2[\s>])/)
-  const [intro, ...sections] = /^<h2[\s>]/.test(parts[0]) ? ["", ...parts] : parts
-  const rows = sections.map((section) => {
-    const end = section.indexOf("</h2>") + "</h2>".length
-    return `<section class="cv-section">${section.slice(0, end)}<div class="cv-body">${section.slice(end)}</div></section>`
-  })
+  const { intro, parts } = sections(html)
+  const rows = parts.map((p) => `<section class="cv-section">${p.heading}<div class="cv-body">${p.body}</div></section>`)
   return (intro.trim() ? `<div class="cv-summary">${intro}</div>` : "") + rows.join("")
+}
+
+/**
+ * A timeline: each H2 is a moment (a year, a date, a chapter of a life) on a
+ * line running down the page, its text beside it; what comes first introduces it.
+ */
+export function timelineHtml(html: string): string {
+  const { intro, parts } = sections(html)
+  if (!parts.length) return html
+  const events = parts.map((p) => `<li class="life-event">${p.heading}<div class="life-body">${p.body}</div></li>`)
+  return intro + `<ol class="life-timeline">${events.join("")}</ol>`
+}
+
+/**
+ * A page of links: every list whose items each start with a link becomes a
+ * column of buttons; the words after a link describe it.
+ */
+export function linksHtml(html: string): string {
+  return html.replace(/<ul>([\s\S]*?)<\/ul>/g, (list, inner: string) => {
+    if (inner.includes("<ul") || inner.includes("<ol")) return list
+    const items = inner.match(/<li>[\s\S]*?<\/li>/g) ?? []
+    return items.length && items.every((li) => /^<li>\s*<a\s/.test(li)) ? `<ul class="link-hub">${inner}</ul>` : list
+  })
 }
 
 /** A note's rendered text reshaped by its layout. */
 export function layoutHtml(layout: Layout | undefined, html: string): string {
-  return layout === "cv" ? cvHtml(html) : layout === "gallery" ? galleryHtml(html) : html
+  switch (layout) {
+    case "cv":
+      return cvHtml(html)
+    case "gallery":
+      return galleryHtml(html)
+    case "timeline":
+      return timelineHtml(html)
+    case "links":
+      return linksHtml(html)
+    default:
+      return html
+  }
 }

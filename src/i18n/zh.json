@@ -199,5 +199,8 @@
   "now": "至今",
   "printCv": "打印 / 存为 PDF",
   "ratingOf": "评分",
-  "emptyCollection": "这里还没有笔记。"
+  "emptyCollection": "这里还没有笔记。",
+  "statusWatching": "在看",
+  "statusToWatch": "想看",
+  "statusWatched": "看过"
 }

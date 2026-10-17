@@ -199,5 +199,8 @@
   "now": "nay",
   "printCv": "In / lưu PDF",
   "ratingOf": "Chấm",
-  "emptyCollection": "Chưa có ghi chú nào ở đây."
+  "emptyCollection": "Chưa có ghi chú nào ở đây.",
+  "statusWatching": "Đang xem",
+  "statusToWatch": "Sẽ xem",
+  "statusWatched": "Đã xem"
 }
