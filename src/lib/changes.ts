@@ -90,7 +90,7 @@ export function gardenChanges(lang: Lang, scope: FeedScope = { kind: "site" }, l
 }
 
 /** Whether the language has a changes page: history is on and some note has a public version. */
-export const hasChanges = (lang: Lang) => site.history && gardenChanges(lang, { kind: "site" }, 1).length > 0
+export const hasChanges = (lang: Lang) => site.history && listed(lang).some((n) => noteChanges(n).length > 0)
 
 /** Monday of the week of a date, as YYYY-MM-DD in UTC: the weeks the page groups changes by. */
 export function weekOf(d: Date): string {

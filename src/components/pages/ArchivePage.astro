@@ -7,7 +7,7 @@ import { typeInfo } from "~/lib/types"
 import { getVault } from "~/lib/vault"
 import Base from "~/layouts/Base.astro"
 import ActivityCalendar from "../ActivityCalendar.astro"
-import { dayKey } from "~/lib/calendar"
+import { dayKey, yearOf } from "~/lib/calendar"
 
 interface Props {
   lang: Lang
@@ -18,7 +18,7 @@ const folders = getVault().folders[lang]
 const notes = byRecent(listed(lang).filter((n) => !n.isHome && n.created), "created")
 const years = new Map<number, typeof notes>()
 for (const n of notes) {
-  const y = n.created!.getFullYear()
+  const y = yearOf(n.created!)
   years.set(y, [...(years.get(y) ?? []), n])
 }
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "archive")]))

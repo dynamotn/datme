@@ -5,6 +5,7 @@ import path from "node:path"
 import { load as loadYaml } from "js-yaml"
 import { deployFiles, projectName, TARGETS } from "../src/lib/deploy"
 import { parseArgs, run, CliError } from "../src/cli"
+import pkg from "../package.json"
 
 const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "datme-deploy-")))
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }))
@@ -14,7 +15,7 @@ describe("deployFiles", () => {
   test("every host gets a valid configuration that builds the vault on its branch", () => {
     for (const target of TARGETS) {
       const [file] = deployFiles(target, opts)
-      expect(file.content).toContain("bunx @dynamotn/datme build 'notes/My Vault' --out")
+      expect(file.content).toContain(`bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out`)
       expect(file.content).toContain("trunk")
       if (file.path.endsWith(".yml")) expect(() => loadYaml(file.content)).not.toThrow()
       else expect(() => Bun.TOML.parse(file.content)).not.toThrow()
@@ -38,6 +39,20 @@ describe("deployFiles", () => {
     const cf = deployFiles("cloudflare", opts)[0].content
     expect(cf).toContain("${{ secrets.CLOUDFLARE_API_TOKEN }}")
     expect(cf).toContain("--project-name=my-garden")
+  })
+
+  test("pipelines run this exact datme and Bun, and only the deploy job may publish", () => {
+    for (const target of TARGETS) {
+      const [file] = deployFiles(target, opts)
+      expect(file.content).toContain(`bunx @dynamotn/datme@${pkg.version} build`)
+    }
+    expect(deployFiles("gitlab", opts)[0].content).toMatch(/image: oven\/bun:\d+\.\d+\.\d+\n/)
+    expect(deployFiles("netlify", opts)[0].content).toMatch(/bun\.sh\/install \| bash -s bun-v\d+\.\d+\.\d+ /)
+    type Job = { permissions?: Record<string, string> }
+    const gh = loadYaml(deployFiles("github", opts)[0].content) as { permissions: Record<string, string>; jobs: Record<string, Job> }
+    expect(gh.permissions).toEqual({ contents: "read" })
+    expect(gh.jobs.build.permissions).toBeUndefined()
+    expect(gh.jobs.deploy.permissions).toEqual({ pages: "write", "id-token": "write" })
   })
 
   test("project names are what Cloudflare accepts", () => {
@@ -64,7 +79,7 @@ describe("datme deploy", () => {
     Bun.spawnSync(["git", "init", "-q", "-b", "garden", repo])
     await run({ command: "deploy", target: "github", vault: path.join(repo, "vault") }, {}, tmp)
     const wf = fs.readFileSync(path.join(repo, ".github/workflows/datme.yml"), "utf8")
-    expect(wf).toContain("bunx @dynamotn/datme build vault --out _site")
+    expect(wf).toContain(`bunx @dynamotn/datme@${pkg.version} build vault --out _site`)
     expect(wf).toContain("branches: [garden]")
     const again = await run({ command: "deploy", target: "github", vault: path.join(repo, "vault") }, {}, tmp).catch((e) => e)
     expect(again).toBeInstanceOf(CliError)

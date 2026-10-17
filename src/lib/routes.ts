@@ -1,5 +1,5 @@
 import { site, type Lang } from "../site.config"
-import { getVault, type Note, type FolderNode, type Doc } from "./vault"
+import { getVault, type Note, type FolderNode, type Doc, type Problem } from "./vault"
 import { langPrefix } from "./i18n"
 import { sluggify, slugToUrl } from "./slug"
 import { docSlug } from "./obsidian"
@@ -29,17 +29,58 @@ export type Page =
   | { kind: "calendar"; lang: Lang }
   | { kind: "history"; lang: Lang; note: Note }
 
+/** A page in words, and the vault file it comes from, for a report. */
+function describePage(page: Page): { what: string; file?: string } {
+  switch (page.kind) {
+    case "note":
+      return { what: `note ${page.note.key}.md`, file: page.note.key + ".md" }
+    case "history":
+      return { what: `the history of ${page.note.key}.md`, file: page.note.key + ".md" }
+    case "alias":
+      return { what: `a redirect to ${page.note.key}.md`, file: page.note.key + ".md" }
+    case "folder":
+      return { what: `the page of folder ${page.folder.dir}` }
+    case "tag":
+      return { what: page.tag ? `the page of tag ${page.tag}` : "the list of tags" }
+    case "canvas":
+    case "base":
+    case "drawing":
+      return { what: `${page.kind} ${page.doc.rel}`, file: page.doc.rel }
+    default:
+      return { what: `the ${page.kind} page` }
+  }
+}
+
 /**
- * Every page of the site by slug. First claim wins: notes, then folders, tags,
- * the archive, canvases and bases, and finally redirects from aliases and
- * from the old URL of notes with a permalink.
+ * Every page of the site by slug, and the pages lost to another of the same
+ * URL. First claim wins: notes, then folders, tags, the archive, canvases and
+ * bases, and finally redirects from aliases and from the old URL of notes
+ * with a permalink. Slugs differing only in case clash too: static hosts and
+ * macOS or Windows disks take them for one path, so one page would silently
+ * overwrite the other.
  */
-export function routes(): Map<string, Page> {
+function claimRoutes(): { pages: Map<string, Page>; problems: Problem[] } {
   const vault = getVault()
   const pages = new Map<string, Page>()
+  const byLower = new Map<string, Page>()
+  const problems: Problem[] = []
   const claim = (slug: string, page: Page) => {
     const key = slug.replace(/(^|\/)index$/, "")
-    if (!pages.has(key)) pages.set(key, page)
+    const winner = byLower.get(key.toLowerCase())
+    if (!winner) {
+      byLower.set(key.toLowerCase(), page)
+      pages.set(key, page)
+      return
+    }
+    // Two notes of one URL are reported by the vault; a note's own alias or old URL needs no redirect.
+    if (winner.kind === "note" && page.kind === "note") return
+    if ("note" in winner && "note" in page && winner.note === page.note) return
+    const [lost, kept] = [describePage(page), describePage(winner)]
+    problems.push({
+      level: "warning",
+      file: lost.file ?? kept.file ?? "datme.yaml",
+      message: `${lost.what} is not published: ${kept.what} has the same URL ${slugToUrl(key)}, regardless of case`,
+    })
   }
   for (const lang of site.langs) {
     const prefix = langPrefix(lang)
@@ -72,7 +113,17 @@ export function routes(): Map<string, Page> {
       }
     }
   }
-  return pages
+  return { pages, problems }
+}
+
+/** Every page of the site by slug; see claimRoutes for which page keeps a contested URL. */
+export function routes(): Map<string, Page> {
+  return claimRoutes().pages
+}
+
+/** Pages lost to another page of the same URL, reported by `datme check`. */
+export function routeProblems(): Problem[] {
+  return claimRoutes().problems
 }
 
 /** Permanent redirects, as lines of a Netlify / Cloudflare Pages `_redirects` file. */

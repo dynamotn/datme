@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { site } from "../site.config"
+import { onAccent } from "./contrast"
 
 /** The custom stylesheet of the vault, when there is one. */
 export function customCssFile(): string | undefined {
@@ -26,6 +27,11 @@ export function themeCss(): string {
     const d = typeof accent === "string" ? accent : accent.dark
     light.push(`--accent:${l}`, `--accent-2:${l}`, `--accent-soft:color-mix(in srgb, ${l} 12%, transparent)`)
     dark.push(`--accent:${d}`, `--accent-2:${d}`, `--accent-soft:color-mix(in srgb, ${d} 16%, transparent)`)
+    // Text on the accent (buttons, the notebook hero) follows its lightness; a colour not parsed keeps the look's own.
+    const onL = onAccent(l)
+    const onD = onAccent(d)
+    if (onL) light.push(`--on-accent:${onL}`)
+    if (onD) dark.push(`--on-accent:${onD}`)
   }
   const font = (name: string, fallback: string) => `"${name}", ${fallback}`
   if (fonts.heading) {

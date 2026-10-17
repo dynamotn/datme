@@ -22,7 +22,11 @@ type Node =
   | { k: "not"; n: Node }
   | { k: "and" | "or"; a: Node; b: Node }
 
-export class SearchQueryError extends Error {}
+export class SearchQueryError extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 /** Lowercase without accents: "Việt" matches "viet", as in Obsidian. */
 export const fold = (s: string) =>
@@ -35,7 +39,8 @@ export const fold = (s: string) =>
 
 function tokenize(src: string): string[] {
   const out: string[] = []
-  const re = /\s*(\(|\)|-?(?:[a-z]+:)?"[^"]*"|-?[a-z]+:\(|[^\s()]+)/gi
+  // "-(" is a negated group, as in Obsidian's `meeting -(work meetup)`.
+  const re = /\s*(-?\(|\)|-?(?:[a-z]+:)?"[^"]*"|-?[a-z]+:\(|[^\s()]+)/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(src))) if (m[1]) out.push(m[1])
   return out

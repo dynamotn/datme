@@ -1,4 +1,4 @@
-import MiniSearch from "minisearch"
+import type MiniSearch from "minisearch"
 import { navigate } from "astro:transitions/client"
 import { loadIndex, currentLang, matchesFilter, readFilters, samePath, type IndexNote } from "./data"
 import { fold, esc, highlight, snippet } from "./text"
@@ -9,7 +9,8 @@ const engines = new Map<string, Promise<{ ms: MiniSearch<IndexNote & { id: numbe
 function engine(lang: string) {
   let hit = engines.get(lang)
   if (!hit) {
-    hit = loadIndex(lang).then(({ notes }) => {
+    // MiniSearch is fetched with the index, when the reader first searches.
+    hit = Promise.all([loadIndex(lang), import("minisearch")]).then(([{ notes }, { default: MiniSearch }]) => {
       const ms = new MiniSearch<IndexNote & { id: number }>({
         fields: ["t", "a", "g", "c"],
         storeFields: ["u"],
@@ -81,14 +82,14 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
   const hits = await Promise.all(found.results.slice(0, 30).map((r) => r.data()))
   if (stale()) return
   if (!hits.length) {
-    show(list, `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`)
+    show(list, `<li class="empty" role="none">${esc(list.dataset.empty ?? "")}</li>`)
     return
   }
   // Pagefind's excerpts are page text with <mark> around the matches.
   show(
     list,
     hits.map(
-      (h) => `<li><a href="${esc(h.url)}" role="option">
+      (h) => `<li role="none"><a href="${esc(h.url)}" role="option">
         <div class="r-title"><span>📝</span>${esc(h.meta.title ?? h.url)}</div>
         <div class="r-snippet">${h.excerpt}</div>
       </a></li>`,
@@ -101,7 +102,7 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
 function resultHtml(n: IndexNote, terms: string[], sim?: number): string {
   const path = [n.f, ...n.g.slice(0, 3).map((g) => "#" + g)].filter(Boolean).join(" · ")
   const closeness = sim === undefined ? "" : `<span class="r-sim">≈ ${Math.round(sim * 100)}%</span>`
-  return `<li><a href="${esc(n.u)}" role="option">
+  return `<li role="none"><a href="${esc(n.u)}" role="option">
         <div class="r-title"><span>${n.s ?? "📝"}</span>${highlight(n.t, terms)}${closeness}</div>
         <div class="r-path">${esc(path)}</div>
         <div class="r-snippet">${highlight(snippet(n.c || n.d, terms), terms)}</div>
@@ -164,7 +165,7 @@ async function run(dialog: HTMLDialogElement, query: string) {
   const sims = new Map(meaning.map((m) => [m.url, m.sim]))
   const hits = ranked.filter(({ id }) => id !== undefined && matchesFilter(notes[id as number], filter)).slice(0, q ? 30 : 100)
   if (!hits.length) {
-    show(list, `<li class="empty">${esc(list.dataset.empty ?? "")}</li>`)
+    show(list, `<li class="empty" role="none">${esc(list.dataset.empty ?? "")}</li>`)
     return
   }
   show(list, hits.map(({ id }) => resultHtml(notes[id as number], terms, sims.get(notes[id as number].u))).join(""))

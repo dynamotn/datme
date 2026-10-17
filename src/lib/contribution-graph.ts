@@ -6,7 +6,7 @@
  * Heatmap Calendar, the other heatmap plugin, runs on DataviewJS and needs
  * Obsidian.
  */
-import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
+import { parseYaml } from "./yaml"
 import type { Lang } from "../site.config"
 import { parseQuery, runQuery, type Engine, type Page } from "./dataview"
 import { escapeAttr } from "./obsidian"
@@ -29,7 +29,7 @@ const COLOR = /^(#[0-9a-f]{3,8}|[a-z]+|(rgb|hsl)a?\([\d\s.,%]+\))$/i
 
 /** The options of a block, with the plugin's defaults: the last 180 days of every page by creation. */
 export function parseGraph(src: string, today = new Date()): GraphOptions {
-  const y = (loadYaml(src, { schema: JSON_SCHEMA }) ?? {}) as Record<string, unknown>
+  const y = (parseYaml(src, { json: true }) ?? {}) as Record<string, unknown>
   if (typeof y !== "object") throw new Error("expected YAML options")
   const ds = (y.dataSource ?? {}) as Record<string, unknown>
   const dateField = (ds.dateField ?? {}) as Record<string, unknown>
@@ -144,7 +144,7 @@ export function renderGraph(src: string, lang: Lang, engine: Engine, today = new
   return (
     `<figure class="activity contribution-graph">` +
     (o.title ? `<figcaption class="panel-title">${escapeAttr(o.title)} <span>${escapeAttr(String(total))}</span></figcaption>` : "") +
-    `<div class="activity-scroll"><div class="activity-grid" role="img" aria-label="${escapeAttr(`${o.title ?? s.activity}: ${total}`)}" style="grid-template-columns: repeat(${weeks}, 1fr); min-width: ${Math.max(weeks * 14, 120)}px">` +
+    `<div class="activity-scroll" tabindex="0" role="region" aria-label="${escapeAttr(o.title ?? s.activity)}"><div class="activity-grid" role="img" aria-label="${escapeAttr(`${o.title ?? s.activity}: ${total}`)}" style="grid-template-columns: repeat(${weeks}, 1fr); min-width: ${Math.max(weeks * 14, 120)}px">` +
     cells.join("") +
     `</div></div></figure>`
   )

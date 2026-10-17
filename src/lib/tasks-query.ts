@@ -26,7 +26,11 @@ export interface TasksQuery {
   limit?: number
 }
 
-export class TasksQueryError extends Error {}
+export class TasksQueryError extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 /** Priorities of the Tasks plugin, by emoji; higher sorts first. */
 const PRIORITIES: [string, string, number][] = [

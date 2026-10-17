@@ -31,7 +31,7 @@ export function noteMarkdown(n: Note): string {
 }
 
 /** Links and embeds of private notes as the words the page shows for them, following privateLinks. */
-function withoutPrivateLinks(md: string, n: Note): string {
+export function withoutPrivateLinks(md: string, n: Note): string {
   const vault = getVault()
   const words = (target: string, alias: string | undefined) => {
     let file = target.split("#")[0].trim()

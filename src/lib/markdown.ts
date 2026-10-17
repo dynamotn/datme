@@ -7,7 +7,8 @@ import rehypeRaw from "rehype-raw"
 import rehypeKatex from "rehype-katex"
 import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings"
-import rehypeShiki from "@shikijs/rehype"
+import { rehypeHighlight } from "./highlight"
+import { rehypeTaskLabels } from "./task-labels"
 import {
   transformerMetaHighlight,
   transformerNotationDiff,
@@ -725,10 +726,9 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(rehypeGlossary, { lang, key: stack[stack.length - 1] })
     .use(rehypeLinkCards)
     .use(rehypeSidenotes)
-    .use(rehypeShiki, {
+    .use(rehypeHighlight, {
       themes: site.theme.code,
       defaultColor: false,
-      lazy: true,
       fallbackLanguage: "text",
       defaultLanguage: "text",
       addLanguageClass: true,
@@ -744,6 +744,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(user.rehype)
     .use(rehypeTransclude, { lang, stack })
     .use(rehypeImages)
+    .use(rehypeTaskLabels)
     .use(rehypeStringify, { allowDangerousHtml: true })
 }
 

@@ -2,7 +2,7 @@ import { site, type Lang } from "../site.config"
 import { getVault, listed, type Layout, type Note } from "./vault"
 import { slugTag } from "./slug"
 import { formatDate, t, type StringKey } from "./i18n"
-import { engineFor } from "./dataview-render"
+import { currentPage, engineFor } from "./dataview-render"
 import { parseBase, runView, type BaseFile } from "./bases"
 import { parseLocation, type Place } from "./places"
 
@@ -172,7 +172,7 @@ export function runBase(note: Note, ref: BaseRef): BaseResult {
   const view = ref.base.views.find((v) => v.name === ref.view) ?? ref.base.views[0]
   if (!view) return { notes: [], sorted: false }
   const all = engineFor(note.lang)
-  const res = runView(ref.base, view, { ...all, current: all.pages.find((p) => p.key === note.key) })
+  const res = runView(ref.base, view, { ...all, current: currentPage(all, note.key) })
   const byKey = getVault().byKey[note.lang]
   const notesOf = (rows: { page: { key: string } }[]) =>
     rows.map((r) => byKey.get(r.page.key)).filter((n): n is Note => !!n && n.key !== note.key && !n.protected)
@@ -455,13 +455,13 @@ export function galleryHtml(html: string): string {
   return out.join("")
 }
 
-/** A gallery of the notes a base finds: each cover, captioned by its note. */
+/** A gallery of the notes a base finds: each cover, captioned by its note; the caption is the one link to tab to. */
 function galleryOfNotes(notes: Note[]): string {
   const items = notes
     .filter((n) => n.cover)
     .map(
       (n) =>
-        `<figure class="gallery-item"><a class="internal" href="${esc(n.url)}" data-key="${esc(n.key)}"><img src="${esc(n.cover!)}" alt="" loading="lazy"></a><figcaption><a class="internal" href="${esc(n.url)}">${esc(n.title)}</a></figcaption></figure>`,
+        `<figure class="gallery-item"><a class="internal" href="${esc(n.url)}" data-key="${esc(n.key)}" tabindex="-1" aria-hidden="true"><img src="${esc(n.cover!)}" alt="" loading="lazy"></a><figcaption><a class="internal" href="${esc(n.url)}">${esc(n.title)}</a></figcaption></figure>`,
     )
   return items.length ? `<div class="gallery-grid">${items.join("")}</div>` : ""
 }

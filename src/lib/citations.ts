@@ -94,7 +94,7 @@ export function parseBibtex(src: string): BibEntry[] {
       strings[name.toLowerCase()] = value()
       continue
     }
-    const key = src.slice(i).match(/^[^\s,]+/)?.[0]
+    const key = src.slice(i).match(/^[^\s,})]+/)?.[0]
     if (!key) continue
     i += key.length
     const fields: Record<string, string> = {}

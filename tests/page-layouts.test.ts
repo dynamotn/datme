@@ -251,6 +251,8 @@ describe("page layouts", () => {
   test("a gallery and a timeline show the notes their base finds", () => {
     const gallery = article("Covers/index.html")
     expect(gallery).toContain('<figure class="gallery-item"><a class="internal" href="/Reading/Deep-Work"')
+    // The cover repeats the caption's link, so only the caption is named and tabbed to.
+    expect(gallery).toMatch(/data-key="Reading\/Deep Work" tabindex="-1" aria-hidden="true"><img [^>]*alt=""/)
     expect(gallery).not.toContain("base-embed")
     const timeline = article("Reading-log/index.html")
     const dates = [...timeline.matchAll(/<p class="life-when"><time datetime="([^"]+)"/g)].map((m) => m[1].slice(0, 10))

@@ -2,14 +2,19 @@
 name: CI
 on: [push, pull_request]
 
+# Jobs read the repository; release asks for more on its own.
+# Third-party actions are pinned to commits; the comment names the release.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - run: bun install --frozen-lockfile
       - run: bunx astro check
       - run: bun test
@@ -22,16 +27,16 @@ jobs:
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - run: bun install --frozen-lockfile
       - run: bun bin/datme.ts build tests/fixtures/vault --out .lhci-site
-      - run: npx --yes @lhci/cli@0.14.x autorun
+      - run: npx --yes @lhci/cli@0.14.0 autorun
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lighthouse
           path: .lhci-report
@@ -47,20 +52,24 @@ jobs:
       id-token: write
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-      - run: bun install --frozen-lockfile
+      # No install scripts while the job can write releases; packing needs none.
+      - run: bun install --frozen-lockfile --ignore-scripts
       - name: Check the tag matches the package version
         run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
       - run: npm pack
       - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes ./*.tgz
         env:
           GH_TOKEN: ${{ github.token }}
-      - if: env.NODE_AUTH_TOKEN != ''
+      # The npm token reaches this step only.
+      - if: env.HAS_NPM_TOKEN == 'true'
         run: npm publish ./*.tgz --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

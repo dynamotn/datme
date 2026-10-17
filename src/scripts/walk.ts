@@ -5,7 +5,7 @@
  * graph knows. It lives in the browsing session, and a link can share it.
  */
 import { navigate } from "astro:transitions/client"
-import { loadIndex, samePath, type ContentIndex } from "./data"
+import { loadGraph, samePath, type GraphIndex } from "./data"
 
 const KEY = "datme-walk"
 const PARAM = "walk"
@@ -41,7 +41,7 @@ export const decodeWalk = (param: string) => param.split(",").filter(Boolean).ma
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").toLowerCase()
 
 /** Notes whose title or alias holds the query, titles that start with it first. */
-export function matchNotes(index: ContentIndex, query: string, except: string, limit = 8): number[] {
+export function matchNotes(index: GraphIndex, query: string, except: string, limit = 8): number[] {
   const q = fold(query.trim())
   if (!q) return []
   const hits: { i: number; rank: number }[] = []
@@ -132,7 +132,7 @@ function render(article: HTMLElement, urls: string[], titles: Map<string, string
 }
 
 /** The picker: type a note's name, pick it, walk there. */
-function openPicker(index: ContentIndex, s: DOMStringMap) {
+function openPicker(index: GraphIndex, s: DOMStringMap) {
   const from = index.notes.findIndex((n) => samePath(n.u, location.pathname))
   if (from < 0) return
   const dialog = el("dialog", "practice walk-picker")
@@ -192,14 +192,14 @@ export async function setupWalk(): Promise<void> {
   const s = (button ?? article).dataset
   const walk = active()
   if (!button && !walk) return
-  const index = await loadIndex(lang)
+  const index = await loadGraph(lang)
   if (button) button.hidden = false
   if (walk) render(article, walk, new Map(index.notes.map((n) => [n.u, n.t])), s)
   if (!bound) {
     bound = true
     document.addEventListener("click", (e) => {
       const open = (e.target as Element).closest<HTMLElement>("[data-walk-open]")
-      if (open) void loadIndex(document.documentElement.dataset.lang!).then((i) => openPicker(i, open.dataset))
+      if (open) void loadGraph(document.documentElement.dataset.lang!).then((i) => openPicker(i, open.dataset))
     })
   }
 }

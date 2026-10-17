@@ -1,7 +1,7 @@
 import crypto from "node:crypto"
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
-import { engineFor } from "./dataview-render"
+import { currentPage, engineFor } from "./dataview-render"
 import { parseQuery, scopeOf, type Page } from "./dataview"
 import { stamp } from "./images"
 
@@ -63,7 +63,7 @@ function querySignature(src: string, lang: Lang): string {
 
 /** What the note itself is to queries reading `this`: its links in and out among them. */
 function selfSignature(note: Note): string {
-  const page = engineFor(note.lang).pages.find((p) => p.key === note.key)
+  const page = currentPage(engineFor(note.lang), note.key)
   return page ? pageSignature(page, note) : ""
 }
 

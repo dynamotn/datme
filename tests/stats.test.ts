@@ -13,6 +13,21 @@ describe("stats", () => {
     expect(cumulativeByMonth([])).toEqual([])
   })
 
+  test("a date-only value counts in its written month, even west of UTC", () => {
+    const tz = process.env.TZ
+    process.env.TZ = "America/New_York"
+    try {
+      expect(cumulativeByMonth([new Date("2024-03-01"), new Date("2024-04-01")])).toEqual([
+        ["2024-03", 1],
+        ["2024-04", 2],
+      ])
+      expect(densityByMonth([{ key: "a", created: new Date("2024-03-01"), links: [] }])).toEqual([["2024-03", 0]])
+    } finally {
+      if (tz === undefined) delete process.env.TZ
+      else process.env.TZ = tz
+    }
+  })
+
   test("the curve fills the box, ending at the top", () => {
     expect(growthPath([["2024-01", 1], ["2024-02", 2]], 100, 50)).toBe("M0.0,25.0 L100.0,0.0")
   })

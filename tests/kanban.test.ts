@@ -30,10 +30,14 @@ describe("kanban", () => {
     expect(md).not.toContain("kanban:settings")
     expect(md).not.toContain("**Complete**")
     const html = await renderMarkdown(md, "en-US", "x")
-    expect(html).toMatch(/<div class="kanban">\s*<section class="kanban-lane">\s*<h2 id="to-do">To do/)
-    expect(html).toMatch(/<li class="task-list-item"><input type="checkbox" disabled> Write <strong>chapter<\/strong> one<\/li>/)
+    expect(html).toMatch(/<div class="kanban" tabindex="0" role="region" aria-label="Board">\s*<section class="kanban-lane">\s*<h2 id="to-do">To do/)
+    expect(html).toMatch(/<li class="task-list-item"><input type="checkbox" disabled aria-label="Write chapter one"> Write <strong>chapter<\/strong> one<\/li>/)
     expect(html.match(/class="kanban-lane"/g)).toHaveLength(2)
-    expect(html).toMatch(/<input type="checkbox" checked disabled> Outline/)
+    expect(html).toMatch(/<input type="checkbox" checked disabled aria-label="Outline"> Outline/)
+  })
+
+  test("the board scrolls sideways, so it is a named region the keyboard can reach", () => {
+    expect(kanban("## A\n- [ ] x", "Tableau \"<1>\"")).toContain('<div class="kanban" tabindex="0" role="region" aria-label="Tableau &quot;&lt;1>&quot;">')
   })
 
   test("a note without headings stays as it is", () => {

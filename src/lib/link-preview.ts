@@ -1,3 +1,5 @@
+import dns from "node:dns"
+import net from "node:net"
 import type { Element } from "hast"
 import { readCache, writeCache } from "./render-cache"
 
@@ -12,6 +14,54 @@ export interface Preview {
 const MAX_BYTES = 512 * 1024
 /** A failed fetch is tried again after this long. */
 const RETRY_AFTER = 7 * 86_400_000
+/** Redirects followed before giving up. */
+const MAX_REDIRECTS = 3
+
+/** Addresses of this machine and private networks, which a link in a note must not reach from the build. */
+const PRIVATE = new net.BlockList()
+for (const [address, prefix] of [
+  ["0.0.0.0", 8],
+  ["10.0.0.0", 8],
+  ["100.64.0.0", 10],
+  ["127.0.0.0", 8],
+  ["169.254.0.0", 16],
+  ["172.16.0.0", 12],
+  ["192.0.0.0", 24],
+  ["192.168.0.0", 16],
+  ["198.18.0.0", 15],
+  ["224.0.0.0", 4],
+  ["240.0.0.0", 4],
+] as const)
+  PRIVATE.addSubnet(address, prefix, "ipv4")
+for (const [address, prefix] of [
+  ["::", 128],
+  ["::1", 128],
+  ["fc00::", 7],
+  ["fe80::", 10],
+  ["ff00::", 8],
+] as const)
+  PRIVATE.addSubnet(address, prefix, "ipv6")
+
+// IPv4 rules also cover IPv4-mapped IPv6 addresses (::ffff:127.0.0.1).
+const isPrivate = (ip: string) => PRIVATE.check(ip, net.isIPv6(ip) ? "ipv6" : "ipv4")
+
+/**
+ * Whether the build may fetch a URL: on the web, and not on this machine or a private network,
+ * whatever its name resolves to. A name that does not resolve is left to fetch, which fails on it too.
+ */
+async function reachable(url: URL): Promise<boolean> {
+  if (url.protocol !== "https:" && url.protocol !== "http:") return false
+  const host = url.hostname.replace(/^\[|\]$/g, "").replace(/\.$/, "").toLowerCase()
+  if (host === "localhost" || host.endsWith(".localhost")) return false
+  if (net.isIP(host)) return !isPrivate(host)
+  let addresses: { address: string }[]
+  try {
+    addresses = await dns.promises.lookup(host, { all: true })
+  } catch {
+    return true
+  }
+  return addresses.every((a) => !isPrivate(a.address))
+}
 
 const decode = (s: string) =>
   s
@@ -54,12 +104,28 @@ export function parsePreview(html: string, url: string): Preview | undefined {
   }
 }
 
+/** The response at a URL, following redirects by hand so each address is checked before it is asked. */
+async function fetchChecked(url: string, timeoutMs: number): Promise<Response | undefined> {
+  const signal = AbortSignal.timeout(timeoutMs)
+  let target = url
+  for (let hop = 0; ; hop++) {
+    if (!(await reachable(new URL(target)))) return undefined
+    const res = await fetch(target, {
+      redirect: "manual",
+      signal,
+      headers: { "user-agent": "datme-link-preview (+https://gitlab.com/dynamo-brain/datme)", accept: "text/html" },
+    })
+    const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null
+    if (!location) return res
+    await res.body?.cancel().catch(() => {})
+    if (hop >= MAX_REDIRECTS) return undefined
+    target = new URL(location, target).href
+  }
+}
+
 async function fetchHead(url: string, timeoutMs: number): Promise<string | undefined> {
-  const res = await fetch(url, {
-    redirect: "follow",
-    signal: AbortSignal.timeout(timeoutMs),
-    headers: { "user-agent": "datme-link-preview (+https://gitlab.com/dynamo-brain/datme)", accept: "text/html" },
-  })
+  const res = await fetchChecked(url, timeoutMs)
+  if (!res) return undefined
   if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html") || !res.body) {
     await res.body?.cancel().catch(() => {})
     return undefined

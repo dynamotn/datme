@@ -183,6 +183,8 @@ function setupToc() {
 
 // ---- code blocks ----
 function setupCode() {
+  // Browsers offer the clipboard on secure origins only: no copy button on plain http.
+  if (!navigator.clipboard) return
   document.querySelectorAll<HTMLPreElement>(".prose pre:not(.mermaid)").forEach((pre) => {
     if (pre.querySelector(".copy-btn")) return
     const btn = document.createElement("button")
@@ -260,13 +262,16 @@ function setupLocalGraph() {
 }
 
 // ---- offline reading: register the service worker, or drop one a previous config installed ----
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
+/** Run once on load; exported so both choices can be tested. */
+export function setupOffline(): void {
+  if (!("serviceWorker" in navigator) || !import.meta.env.PROD) return
   if (root.dataset.offline != null) {
     window.addEventListener("load", () => void navigator.serviceWorker.register("/sw.js").catch(() => {}))
   } else {
     void navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()))
   }
 }
+setupOffline()
 
 // ---- printing: folded callouts and lazy images would be missing on paper ----
 let printOpened: HTMLDetailsElement[] = []

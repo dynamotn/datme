@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { load as loadYaml } from "js-yaml"
+import { parseYaml } from "./lib/yaml"
 import { z } from "astro/zod"
 import { bundledThemes } from "shiki"
 import { folderDisplayName } from "./lib/slug"
@@ -596,7 +596,7 @@ export function loadConfig(vault: string, env: Record<string, string | undefined
     if (!fs.existsSync(file)) continue
     let raw: unknown
     try {
-      raw = loadYaml(fs.readFileSync(file, "utf8"))
+      raw = parseYaml(fs.readFileSync(file, "utf8")) ?? {}
     } catch (e) {
       throw new ConfigError(`Cannot parse ${file}: ${(e as Error).message}`)
     }

@@ -8,6 +8,7 @@ import { outsideHosts, type Host } from "./privacy"
 import { parseLocation } from "./places"
 import { MONO_FONT_CSS } from "./fonts"
 import { journal } from "./journal"
+import { routeProblems } from "./routes"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -81,7 +82,7 @@ export function structureProblems(): Problem[] {
 /** Every problem of the vault and of datme.yaml, sorted by file. */
 export function checkVault(): Problem[] {
   const vault = getVault()
-  const problems = [...vault.problems, ...(site.check.structure ? structureProblems() : [])]
+  const problems = [...vault.problems, ...routeProblems(), ...(site.check.structure ? structureProblems() : [])]
   for (const item of site.nav) {
     if (item.kind !== "note") continue
     const source = vault.resolveNote(item.target!, "")

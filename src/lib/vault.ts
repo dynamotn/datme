@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { execFileSync } from "node:child_process"
-import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
+import { parseYaml } from "./yaml"
 import { site, STYLES, type Lang, type Style } from "../site.config"
 import { pickOption, CHROMES, type Chrome } from "./look"
 import { langPrefix, t } from "./i18n"
@@ -197,8 +197,19 @@ export interface PrivateLinkUse {
 
 const MD_EXT = /\.md$/i
 
-function isIgnored(rel: string): boolean {
-  return site.ignore.some((ig) => rel === ig || rel.startsWith(ig + "/"))
+/**
+ * A name as the lookups of links compare it: lowercase and in composed Unicode
+ * (NFC), since macOS may write file names decomposed (NFD) while links are typed composed.
+ */
+const fold = (s: string) => s.normalize("NFC").toLowerCase()
+
+/** Whether a vault-relative path is in an ignored folder; regardless of case, so Templates is ignored like templates. */
+export function isIgnored(rel: string): boolean {
+  const lower = rel.toLowerCase()
+  return site.ignore.some((ig) => {
+    const i = ig.toLowerCase()
+    return lower === i || lower.startsWith(i + "/")
+  })
 }
 
 function walk(dir: string, out: { md: string[]; files: string[] }, rel = ""): void {
@@ -230,12 +241,14 @@ export function markdownFiles(): string[] {
 const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
 export function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string; error?: string } {
+  // A byte order mark, as some Windows editors write, would hide the frontmatter.
+  src = src.replace(/^\uFEFF/, "")
   const m = src.match(FM_RE)
   if (!m) return { fm: {}, body: src }
   let fm: Record<string, unknown> = {}
   let error: string | undefined
   try {
-    const parsed = loadYaml(m[1], { schema: JSON_SCHEMA })
+    const parsed = parseYaml(m[1], { json: true })
     if (parsed && typeof parsed === "object") fm = parsed as Record<string, unknown>
   } catch (e) {
     // malformed frontmatter: treat the note as having none
@@ -389,14 +402,17 @@ export function filterLanguage(src: string, lang: Lang): string {
 function gitDates(): Map<string, { created: Date; updated: Date }> {
   const dates = new Map<string, { created: Date; updated: Date }>()
   try {
+    // stderr ignored: outside a repository git would print "fatal: not a git repository".
     const top = execFileSync("git", ["-C", site.vault, "rev-parse", "--show-toplevel"], {
       encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
     }).trim()
-    const prefix = path.relative(top, site.vault)
+    // git names files with "/", on Windows too.
+    const prefix = path.relative(top, site.vault).split(path.sep).join("/")
     const log = execFileSync(
       "git",
       ["-C", site.vault, "-c", "core.quotepath=off", "log", "--format=%x00%ct", "--name-only", "--", "*.md"],
-      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] },
     )
     let ts = 0
     for (const line of log.split("\n")) {
@@ -405,7 +421,7 @@ function gitDates(): Map<string, { created: Date; updated: Date }> {
         continue
       }
       if (!line) continue
-      const rel = prefix ? path.relative(prefix, line) : line
+      const rel = prefix ? path.posix.relative(prefix, line) : line
       const d = new Date(ts)
       const cur = dates.get(rel)
       if (!cur) dates.set(rel, { created: d, updated: d })
@@ -425,8 +441,8 @@ function buildVault(version: number): Vault {
   const assetByPath = new Map<string, string>()
   const assetByName = new Map<string, string[]>()
   for (const rel of found.files) {
-    assetByPath.set(rel.toLowerCase(), rel)
-    const name = path.posix.basename(rel).toLowerCase()
+    assetByPath.set(fold(rel), rel)
+    const name = fold(path.posix.basename(rel))
     assetByName.set(name, [...(assetByName.get(name) ?? []), rel])
   }
 
@@ -434,7 +450,7 @@ function buildVault(version: number): Vault {
   const drawingByPath = new Map<string, string>()
   const drawingByName = new Map<string, string[]>()
   for (const rel of [...found.md, ...found.files].filter((f) => /\.excalidraw(\.md)?$/i.test(f))) {
-    const lower = rel.toLowerCase()
+    const lower = fold(rel)
     drawingByPath.set(lower, rel)
     drawingByPath.set(lower.replace(/\.md$/, ""), rel)
     const name = path.posix.basename(lower).replace(/\.md$/, "")
@@ -446,7 +462,7 @@ function buildVault(version: number): Vault {
   // Every note of the vault, published or not, to tell a private link target from a missing one.
   const anyNote = new Set<string>()
   for (const rel of found.md) {
-    const key = rel.replace(MD_EXT, "").toLowerCase()
+    const key = fold(rel.replace(MD_EXT, ""))
     anyNote.add(key)
     anyNote.add(path.posix.basename(key))
   }
@@ -476,7 +492,7 @@ function buildVault(version: number): Vault {
       continue
     }
     const key = rel.replace(MD_EXT, "")
-    const isHome = rel.toLowerCase() === site.home.toLowerCase()
+    const isHome = fold(rel) === fold(site.home)
     if (isHome) {
       try {
         homeTarget = path.relative(site.vault, fs.realpathSync(abs)).replace(MD_EXT, "")
@@ -503,13 +519,13 @@ function buildVault(version: number): Vault {
   const byStem = new Map<string, SourceNote[]>()
   const byAlias = new Map<string, SourceNote>()
   for (const s of sources.values()) {
-    byPath.set(s.key.toLowerCase(), s)
-    const stem = s.stem.toLowerCase()
+    byPath.set(fold(s.key), s)
+    const stem = fold(s.stem)
     byStem.set(stem, [...(byStem.get(stem) ?? []), s])
   }
   for (const s of sources.values()) {
     for (const a of toArray(s.fm.aliases ?? s.fm.alias)) {
-      const lower = a.toLowerCase()
+      const lower = fold(a)
       const other = byAlias.get(lower) ?? byStem.get(lower)?.find((o) => o !== s)
       if (other && other !== s) {
         report("warning", s.key + ".md", `alias "${a}" is also the name or an alias of ${other.key}.md, so links to it are ambiguous`)
@@ -518,15 +534,15 @@ function buildVault(version: number): Vault {
     }
   }
   if (home && homeTarget && homeTarget !== home.key) {
-    const stem = path.posix.basename(homeTarget).toLowerCase()
+    const stem = fold(path.posix.basename(homeTarget))
     byStem.set(stem, [home, ...(byStem.get(stem) ?? [])])
   }
 
   function resolveNote(target: string, fromDir: string): SourceNote | undefined {
     const t = target.trim().replace(MD_EXT, "").replace(/^\/+/, "")
     if (!t) return undefined
-    const lower = t.toLowerCase()
-    const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
+    const lower = fold(t)
+    const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
     const hit = byPath.get(relative) ?? byPath.get(lower)
     if (hit) return hit
     if (!lower.includes("/")) {
@@ -534,15 +550,15 @@ function buildVault(version: number): Vault {
       if (cands?.length) return [...cands].sort((a, b) => a.key.length - b.key.length)[0]
     } else {
       // A partial path such as folder/Note: only notes of that name can end with it.
-      const hit = byStem.get(path.posix.basename(lower))?.find((s) => s.key.toLowerCase().endsWith("/" + lower))
+      const hit = byStem.get(path.posix.basename(lower))?.find((s) => fold(s.key).endsWith("/" + lower))
       if (hit) return hit
     }
     return byAlias.get(lower)
   }
 
   function resolveDrawing(target: string, fromDir: string): string | undefined {
-    const t = decodeTarget(target.trim()).replace(/^\/+/, "").toLowerCase()
-    const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
+    const t = fold(decodeTarget(target.trim()).replace(/^\/+/, ""))
+    const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
     const hit = drawingByPath.get(relative) ?? drawingByPath.get(t)
     if (hit) return hit
     const cands = drawingByName.get(path.posix.basename(t).replace(/\.md$/, ""))
@@ -653,10 +669,10 @@ function buildVault(version: number): Vault {
 
   function resolveAsset(target: string, fromDir: string): string | undefined {
     const t = decodeTarget(target.trim()).replace(/^\/+/, "")
-    const relative = path.posix.normalize(path.posix.join(fromDir, t)).toLowerCase()
-    const hit = assetByPath.get(relative) ?? assetByPath.get(t.toLowerCase())
+    const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
+    const hit = assetByPath.get(relative) ?? assetByPath.get(fold(t))
     if (hit) return hit
-    const cands = assetByName.get(path.posix.basename(t).toLowerCase())
+    const cands = assetByName.get(fold(path.posix.basename(t)))
     return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
   }
 
@@ -664,8 +680,8 @@ function buildVault(version: number): Vault {
   function isPrivateNote(target: string, fromDir: string): boolean {
     const t = target.trim().replace(/^\/+/, "")
     if (!t || (/\.\w+$/.test(t) && !MD_EXT.test(t))) return false
-    const name = t.replace(MD_EXT, "").toLowerCase()
-    return anyNote.has(name) || anyNote.has(path.posix.normalize(path.posix.join(fromDir, name)))
+    const name = fold(t.replace(MD_EXT, ""))
+    return anyNote.has(name) || anyNote.has(fold(path.posix.normalize(path.posix.join(fromDir, name))))
   }
 
   function privateLink(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined {
@@ -739,7 +755,8 @@ function buildVault(version: number): Vault {
       const titleMap =
         titleField && typeof titleField === "object" ? (titleField as Record<string, string>) : undefined
       const langTitle = titleMap?.[lang]
-      const title = langTitle ?? (typeof titleField === "string" ? titleField : s.stem)
+      // A title such as 2024 reads as a number in YAML.
+      const title = langTitle ?? (typeof titleField === "string" || typeof titleField === "number" ? String(titleField) : s.stem)
       const slugBase = s.isHome ? "index" : sluggify(path.posix.join(s.dir, langTitle ?? s.stem))
       // `permalink` (one value, or one per language) replaces the path-based URL; the old one redirects.
       const permalinkField = s.fm.permalink
@@ -751,7 +768,8 @@ function buildVault(version: number): Vault {
             : undefined
       const customSlug = !s.isHome && permalink ? sluggify(String(permalink).replace(/^\/+|\/+$/g, "")) : ""
       const slug = langPrefix(lang) + (customSlug || slugBase)
-      const tags = [...new Set(toArray(s.fm.tags ?? s.fm.tag).map((x) => slugTag(x.replace(/^#/, ""))))]
+      // An empty tag, such as "" or a bare "#", would link to the list of tags.
+      const tags = [...new Set(toArray(s.fm.tags ?? s.fm.tag).map((x) => slugTag(x.replace(/^#/, ""))))].filter(Boolean)
       const relFile = s.key + ".md"
       const stat = fs.statSync(s.file)
       const created = toDate(s.fm.created ?? s.fm.date) ?? git.get(relFile)?.created ?? stat.birthtime
@@ -801,7 +819,7 @@ function buildVault(version: number): Vault {
       const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
       const board = isKanban(s.fm)
       const slides = isSlides(s.fm)
-      let body = deck ? flashcards(filtered, t(lang).showAnswer) : board ? kanban(filtered) : filtered
+      let body = deck ? flashcards(filtered, t(lang).showAnswer) : board ? kanban(filtered, t(lang).kanbanBoard) : filtered
       if (body.includes("@")) {
         const cited = cite(body, bib, t(lang).references)
         body = cited.md

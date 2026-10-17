@@ -240,5 +240,8 @@
   "pathsIn": "入り口の小道",
   "pathsFromHere": "ここからの小道",
   "nearby": "近くのノート",
-  "walkGarden": "庭をすべて歩く"
+  "walkGarden": "庭をすべて歩く",
+  "kanbanBoard": "ボード",
+  "siteSections": "サイトのセクション",
+  "pageRail": "このページの関連情報"
 }

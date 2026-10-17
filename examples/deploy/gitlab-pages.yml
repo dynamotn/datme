@@ -1,13 +1,14 @@
 # Copy to .gitlab-ci.yml at the root of your vault repository to publish it
 # on GitLab Pages at every push to the default branch.
 pages:
-  image: oven/bun:1
+  image: oven/bun:1.4.2
   variables:
     ASTRO_TELEMETRY_DISABLED: "1"
     # Full history gives notes without created/updated frontmatter their real dates.
     GIT_DEPTH: "0"
   script:
-    - bunx @dynamotn/datme build "$CI_PROJECT_DIR" --out "$CI_PROJECT_DIR/public"
+    # Pin datme, so a build runs the version you chose; bump it to upgrade.
+    - bunx @dynamotn/datme@2.2.2 build "$CI_PROJECT_DIR" --out "$CI_PROJECT_DIR/public"
   artifacts:
     paths: [public]
   rules:

@@ -94,7 +94,7 @@ const stream = isStream(folder.dir)
         ) : look === "notebook" ? (
           <div class="card-wall">
             {byRecent(folder.notes).map((n) => (
-              <IndexCard note={n} />
+              <IndexCard note={n} level={2} />
             ))}
           </div>
         ) : (

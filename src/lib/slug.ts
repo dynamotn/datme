@@ -1,18 +1,24 @@
-/** Quartz-compatible slug of one path segment, so existing URLs keep working. */
+/**
+ * Quartz-compatible slug of one path segment, so existing URLs keep working.
+ * Composed Unicode (NFC), so a name macOS stored decomposed gets the same URL.
+ */
 export function sluggifySegment(s: string): string {
-  return s
+  const slug = s
+    .normalize("NFC")
     .replace(/\s/g, "-")
     .replace(/&/g, "-and-")
     .replace(/%/g, "-percent")
     .replace(/\?/g, "")
     .replace(/#/g, "")
+  // "." and ".." would name a folder above the page, not a page.
+  return slug === "." || slug === ".." ? "" : slug
 }
 
 export function sluggify(p: string): string {
   return p
     .split("/")
-    .filter(Boolean)
     .map(sluggifySegment)
+    .filter(Boolean)
     .join("/")
 }
 
@@ -20,6 +26,7 @@ export function slugTag(tag: string): string {
   return tag
     .split("/")
     .map((s) => sluggifySegment(s.trim()))
+    .filter(Boolean)
     .join("/")
 }
 

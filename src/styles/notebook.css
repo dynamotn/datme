@@ -19,6 +19,7 @@
   --accent: #0047ff;
   --accent-2: #0047ff;
   --accent-soft: rgb(0 71 255 / 0.1);
+  --on-accent: #fff;
   --clay: #ff3b28;
   --clay-soft: rgb(255 59 40 / 0.12);
   --yellow: #ffe800;
@@ -42,7 +43,8 @@
   --header-h: 66px;
   --font-ui: "Bricolage Grotesque Variable", system-ui, sans-serif;
   --font-read: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Iosevka Dynamo", ui-monospace, monospace;
+  /* The fallbacks match Iosevka's metrics (global.css), so code does not shift when it loads. */
+  --font-mono: "Iosevka Dynamo", "Iosevka Dynamo Fallback Consolas", "Iosevka Dynamo Fallback", ui-monospace, monospace;
   --ease: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
@@ -60,6 +62,8 @@
   --accent: #6c8dff;
   --accent-2: #6c8dff;
   --accent-soft: rgb(108 141 255 / 0.16);
+  /* The dark accent is light: text on it is ink, not white. */
+  --on-accent: #050505;
   --clay: #ff6b5b;
   --clay-soft: rgb(255 107 91 / 0.16);
   --mark: rgb(255 232 0 / 0.35);
@@ -403,7 +407,7 @@
   background: var(--green);
   color: #050505;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   box-shadow: 2px 2px 0 var(--ink);
@@ -496,7 +500,7 @@
 }
 [data-look="notebook"] .nb-hero-main {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   rotate: -0.4deg;
 }
 [data-look="notebook"] .nb-kicker {
@@ -518,11 +522,19 @@
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.03em;
+  /* A long word must not run out of the card on a narrow phone. */
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 [data-look="notebook"] .nb-hero-main .prose {
-  color: #fff;
+  color: var(--on-accent);
   font-size: 1.05rem;
-  opacity: 0.95;
+}
+[data-look="notebook"] .nb-hero-main .prose li::marker {
+  color: var(--on-accent);
+}
+[data-look="notebook"] .nb-hero-main .prose a:not(.internal, .tag-link) {
+  color: var(--on-accent);
 }
 [data-look="notebook"] .nb-hero-main .prose a.internal {
   color: #050505;
@@ -547,7 +559,7 @@
 [data-look="notebook"] .nb-metrics span {
   display: block;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   color: #4a4a4a;
@@ -693,7 +705,7 @@
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   box-shadow: 2px 2px 0 var(--ink);
@@ -1050,6 +1062,22 @@
   color: #050505;
   box-shadow: inset 0 0 0 2px var(--ink);
 }
+/* On the yellow, the path and snippet are dark too, in either scheme. */
+[data-look="notebook"] .search-results a[aria-selected="true"] :is(.r-path, .r-snippet) {
+  color: #3d3d3a;
+}
+/* Matches as solid yellow marker, ink on top; on the yellow row they are underlined instead. */
+[data-look="notebook"] .search-results mark {
+  background: var(--mark-yellow);
+  color: #050505;
+}
+[data-look="notebook"] .search-results a[aria-selected="true"] mark {
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline 2px;
+  text-underline-offset: 2px;
+}
 [data-look="notebook"] .search-results .r-title {
   font-family: var(--font-ui);
 }
@@ -1120,6 +1148,10 @@
   [data-look="notebook"] .nb-hero-main,
   [data-look="notebook"] .nb-hero-side {
     rotate: 0deg;
+  }
+  [data-look="notebook"] .nb-hero-main,
+  [data-look="notebook"] .nb-hero-side {
+    padding: 20px;
   }
 }
 

@@ -13,6 +13,7 @@ const read = (p: string) => fs.readFileSync(path.join(out, p), "utf8")
 beforeAll(() => {
   fs.cpSync(path.join(root, "tests/fixtures/minimal"), vault, { recursive: true })
   fs.writeFileSync(path.join(vault, "datme.yaml"), "search:\n  engine: pagefind\n")
+  fs.writeFileSync(path.join(vault, "Hidden.md"), "---\npublish: true\nunlisted: true\n---\nOnly for those with the link.\n")
   const proc = Bun.spawnSync(["bun", "bin/datme.ts", "build", vault, "--out", out], {
     cwd: root,
     env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: "" },
@@ -34,6 +35,11 @@ describe("pagefind search", () => {
     const note = read("Projects/Nested-note/index.html")
     expect(note).toMatch(/<article [^>]*data-pagefind-body(="")? data-pagefind-filter="folder:Projects"/)
     expect(read("tags/index.html")).not.toContain("data-pagefind-body")
+  })
+
+  test("an unlisted note is not indexed, as it is in no list", () => {
+    expect(read("Hidden/index.html")).toContain("Only for those with the link.")
+    expect(read("Hidden/index.html")).not.toContain("data-pagefind-body")
   })
 
   test("the search index no longer ships the text of every note", () => {

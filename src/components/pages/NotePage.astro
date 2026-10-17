@@ -83,7 +83,7 @@ const NOW_STALE_YEARS = 0.25
   <div class="stack-row" data-stack-row={stacks ? "" : undefined}>
   <div class="stack-col" data-stack-col={stacks ? "" : undefined} data-url={stacks ? note.url : undefined} data-title={title}>
   <article
-    data-pagefind-body={site.search.engine === "pagefind" && !note.protected ? "" : undefined}
+    data-pagefind-body={site.search.engine === "pagefind" && !note.protected && !note.unlisted ? "" : undefined}
     data-pagefind-filter={site.search.engine === "pagefind" ? pagefindFilters : undefined}
     class:list={["note", { "is-blog": note.isBlog }, note.layout && `layout-${note.layout}`, ...note.cssclasses, "h-entry"]}
     data-key={note.key}
@@ -92,7 +92,7 @@ const NOW_STALE_YEARS = 0.25
     {
       note.banner && (
         <figure class="banner">
-          <img src={note.banner} alt="" style={`object-position: ${note.bannerPos}`} />
+          <img src={note.banner} alt="" style={`object-position: ${note.bannerPos}`} fetchpriority="high" decoding="async" />
         </figure>
       )
     }

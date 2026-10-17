@@ -2,7 +2,7 @@
 import { site, type Lang } from "~/site.config"
 import { getVault, type Doc } from "~/lib/vault"
 import { renderMarkdown, renderNote } from "~/lib/markdown"
-import { bounds, canvasColor, edgePath, type CanvasNode } from "~/lib/canvas"
+import { bounds, canvasColor, edgePath, linkHref, type CanvasNode } from "~/lib/canvas"
 import { docUrl } from "~/lib/obsidian"
 import { t } from "~/lib/i18n"
 import Base from "~/layouts/Base.astro"
@@ -96,7 +96,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, docUrl(doc.rel, 
             if (n.type === "text") return <div class="cv-node cv-text prose" style={pos(n)} set:html={item.html} />
             if (n.type === "link")
               return (
-                <a class="cv-node cv-link" style={pos(n)} href={n.url} target="_blank" rel="noopener noreferrer">
+                <a class="cv-node cv-link" style={pos(n)} href={linkHref(n.url)} target="_blank" rel="noopener noreferrer">
                   <span>🔗 {n.url && URL.canParse(n.url) ? new URL(n.url).host : n.url}</span>
                   <small>{n.url}</small>
                 </a>

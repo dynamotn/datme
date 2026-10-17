@@ -9,11 +9,13 @@
  * parts of a drawing (`#^frame=`, `#^clippedframe=`, `#^group=`, `#^area=`)
  * and the plugin's export settings in the frontmatter.
  */
-// lz-string is CommonJS: named imports fail under Vite and Node.
-import LZString from "lz-string"
+import * as lzString from "lz-string"
 import rough from "roughjs"
 import type { Options as RoughOptions } from "roughjs/bin/core"
 import { getStroke } from "perfect-freehand"
+
+// lz-string is CommonJS: named imports fail under Vite and Node, which put it on the default export.
+const LZString = (lzString as { default?: typeof lzString }).default ?? lzString
 
 type Point = [number, number]
 
@@ -71,7 +73,11 @@ export interface Scene {
   exportOptions: { transparent?: boolean; dark?: boolean; padding?: number }
 }
 
-export class DrawingError extends Error {}
+export class DrawingError extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 // ---------- reading ----------
 
@@ -80,6 +86,79 @@ function frontmatter(src: string): Record<string, string> {
   const out: Record<string, string> = {}
   for (const m of fm.matchAll(/^([\w-]+):\s*(.*?)\s*$/gm)) out[m[1]] = m[2].replace(/^["']|["']$/g, "")
   return out
+}
+
+/** Every element type Excalidraw stores; anything else is not drawn. */
+const TYPES = ["rectangle", "diamond", "ellipse", "line", "arrow", "freedraw", "text", "image", "frame", "magicframe", "embeddable", "iframe", "selection"]
+
+const num = (v: unknown, d: number): number => (typeof v === "number" && Number.isFinite(v) ? v : d)
+const optNum = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined)
+const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined)
+const oneOf = (v: unknown, allowed: string[]): string | undefined => (typeof v === "string" && allowed.includes(v) ? v : undefined)
+
+/**
+ * An element as the scene stores it, every field checked: a drawing is a file anyone may have
+ * written, and its numbers go into the SVG as they are, so a string where a number belongs
+ * could carry markup onto the page.
+ */
+function cleanElement(raw: unknown): ExElement | undefined {
+  if (!raw || typeof raw !== "object") return undefined
+  const e = raw as Record<string, unknown>
+  const type = oneOf(e.type, TYPES)
+  if (!type) return undefined
+  const roundness = e.roundness && typeof e.roundness === "object" ? (e.roundness as Record<string, unknown>) : undefined
+  const crop = e.crop && typeof e.crop === "object" ? (e.crop as Record<string, unknown>) : undefined
+  return {
+    id: str(e.id) ?? "",
+    type,
+    x: num(e.x, 0),
+    y: num(e.y, 0),
+    width: num(e.width, 0),
+    height: num(e.height, 0),
+    angle: optNum(e.angle),
+    strokeColor: str(e.strokeColor),
+    backgroundColor: str(e.backgroundColor),
+    fillStyle: oneOf(e.fillStyle, ["hachure", "cross-hatch", "solid", "zigzag"]),
+    strokeWidth: optNum(e.strokeWidth),
+    strokeStyle: oneOf(e.strokeStyle, ["solid", "dashed", "dotted"]),
+    roughness: optNum(e.roughness),
+    opacity: optNum(e.opacity),
+    seed: optNum(e.seed),
+    roundness: roundness ? { type: num(roundness.type, 3), value: optNum(roundness.value) } : null,
+    isDeleted: e.isDeleted === true,
+    groupIds: Array.isArray(e.groupIds) ? e.groupIds.filter((g): g is string => typeof g === "string") : undefined,
+    frameId: str(e.frameId) ?? null,
+    link: str(e.link) ?? null,
+    name: typeof e.name === "string" ? e.name : e.name === null ? null : undefined,
+    points: Array.isArray(e.points)
+      ? e.points.filter((p): p is unknown[] => Array.isArray(p)).map((p): Point => [num(p[0], 0), num(p[1], 0)])
+      : undefined,
+    pressures: Array.isArray(e.pressures) ? e.pressures.map((p) => num(p, 0.5)) : undefined,
+    simulatePressure: typeof e.simulatePressure === "boolean" ? e.simulatePressure : undefined,
+    startArrowhead: str(e.startArrowhead) ?? null,
+    endArrowhead: str(e.endArrowhead) ?? null,
+    polygon: e.polygon === true,
+    text: str(e.text),
+    rawText: str(e.rawText),
+    originalText: str(e.originalText),
+    fontSize: optNum(e.fontSize),
+    fontFamily: optNum(e.fontFamily),
+    textAlign: oneOf(e.textAlign, ["left", "center", "right"]),
+    verticalAlign: oneOf(e.verticalAlign, ["top", "middle", "bottom"]),
+    lineHeight: optNum(e.lineHeight),
+    fileId: str(e.fileId) ?? null,
+    scale: Array.isArray(e.scale) ? [num(e.scale[0], 1), num(e.scale[1], 1)] : undefined,
+    crop: crop
+      ? {
+          x: num(crop.x, 0),
+          y: num(crop.y, 0),
+          width: num(crop.width, 0),
+          height: num(crop.height, 0),
+          naturalWidth: num(crop.naturalWidth, 0),
+          naturalHeight: num(crop.naturalHeight, 0),
+        }
+      : null,
+  }
 }
 
 /** The scene of a `.excalidraw.md` note or of a plain `.excalidraw` JSON file. */
@@ -101,7 +180,7 @@ export function parseDrawing(src: string): Scene {
     throw new DrawingError("the drawing is not valid JSON")
   }
   const files: Scene["files"] = {}
-  for (const [id, f] of Object.entries(data.files ?? {})) files[id] = { dataURL: f.dataURL }
+  for (const [id, f] of Object.entries(data.files ?? {})) files[id] = { dataURL: str(f?.dataURL) }
   // The plugin lists embedded files below the drawing: `fileId: [[image.png]]`, a URL, or `$$formula$$`.
   for (const m of src.matchAll(/^([0-9a-f]{20,64}):\s*(.+?)\s*$/gim)) {
     const value = m[2]
@@ -119,14 +198,15 @@ export function parseDrawing(src: string): Scene {
   const texts = new Map<string, string>()
   const section = src.match(/^#+ Text Elements\s*\n([\s\S]*?)(?=^#+ |^%%|```)/m)?.[1] ?? ""
   for (const m of section.matchAll(/([\s\S]*?)\s\^([\w-]+)\s*(?:\n|$)/g)) texts.set(m[2], m[1].trim())
-  const elements = (data.elements ?? [])
-    .filter((e) => !e.isDeleted)
+  const elements = (Array.isArray(data.elements) ? data.elements : [])
+    .map(cleanElement)
+    .filter((e): e is ExElement => !!e && !e.isDeleted)
     .map((e) => (e.type === "text" && !e.text && texts.has(e.id) ? { ...e, text: texts.get(e.id) } : e))
   const fm = frontmatter(src)
   const padding = Number(fm["excalidraw-export-padding"])
   return {
     elements,
-    background: data.appState?.viewBackgroundColor ?? "#ffffff",
+    background: str(data.appState?.viewBackgroundColor) ?? "#ffffff",
     files,
     exportOptions: {
       transparent: fm["excalidraw-export-transparent"] === "true",

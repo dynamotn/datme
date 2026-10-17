@@ -1,4 +1,4 @@
-import { load as loadYaml, JSON_SCHEMA } from "js-yaml"
+import { parseYaml } from "./yaml"
 import { escapeAttr } from "./obsidian"
 
 /** A chart of the Obsidian Charts plugin, as its YAML describes it. */
@@ -15,14 +15,19 @@ export interface ChartSpec {
   width?: string
 }
 
-export class ChartError extends Error {}
+export class ChartError extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 const TYPES = ["bar", "line", "pie", "doughnut", "radar", "polarArea"]
 
 export function parseChart(src: string): ChartSpec {
   let raw: unknown
   try {
-    raw = loadYaml(src, { schema: JSON_SCHEMA })
+    // An empty block is a chart without data, not invalid YAML.
+    raw = parseYaml(src, { json: true })
   } catch (e) {
     throw new ChartError(`invalid YAML: ${(e as Error).message.split("\n")[0]}`)
   }
@@ -61,7 +66,8 @@ export function parseChart(src: string): ChartSpec {
 export function renderChart(src: string): string {
   try {
     const spec = parseChart(src)
-    const head = `<tr><th></th>${spec.series.map((s) => `<th scope="col">${escapeAttr(s.title)}</th>`).join("")}</tr>`
+    // The corner cell heads nothing, so it is a plain cell: an empty header confuses screen readers.
+    const head = `<tr><td></td>${spec.series.map((s) => `<th scope="col">${escapeAttr(s.title)}</th>`).join("")}</tr>`
     const rows = spec.labels
       .map((l, i) => `<tr><th scope="row">${escapeAttr(l)}</th>${spec.series.map((s) => `<td>${s.data[i] ?? ""}</td>`).join("")}</tr>`)
       .join("")

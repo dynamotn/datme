@@ -11,8 +11,13 @@ import { parseSearch, search, highlight, SearchQueryError, type Searchable } fro
 import { listed } from "./vault"
 
 const engines = new Map<string, Engine>()
+/** Every page of an engine by key, unlisted ones too: a note links and queries itself as any note. */
+const everyPage = new WeakMap<Engine, Map<string, Page>>()
 
-/** The published, unprotected notes of a language, as Dataview pages. */
+/**
+ * The published, unprotected notes of a language, as Dataview pages. Queries list only the
+ * listed ones, as every other list of the site does; links still reach an unlisted note.
+ */
 export function engineFor(lang: Lang): Engine {
   const vault = getVault()
   const id = `${vault.version}:${lang}`
@@ -20,7 +25,7 @@ export function engineFor(lang: Lang): Engine {
   if (!engine) {
     const notes = vault.notes[lang].filter((n) => !n.protected)
     const back = vault.backlinks[lang]
-    const pages: Page[] = notes.map((n: Note) => ({
+    const all: Page[] = notes.map((n: Note) => ({
       key: n.key,
       title: n.title,
       url: n.url,
@@ -33,21 +38,27 @@ export function engineFor(lang: Lang): Engine {
       // Frontmatter wins over a field of the same name written in the text.
       fields: { ...inlineFields(withoutLocked(filterLanguage(n.source.raw, n.contentLang))), ...n.source.fm },
       outlinks: [...new Set(n.links.map((l) => l.key))],
-      inlinks: (back.get(n.key) ?? []).filter((b) => !b.note.protected).map((b) => b.note.key),
+      inlinks: (back.get(n.key) ?? []).filter((b) => !b.note.protected && !b.note.unlisted).map((b) => b.note.key),
       tasks: extractTasks(n.md),
     }))
-    const byKey = new Map(pages.map((p) => [p.key, p]))
+    const byKey = new Map(all.map((p) => [p.key, p]))
+    const unlisted = new Set(notes.filter((n) => n.unlisted).map((n) => n.key))
     engine = {
-      pages,
+      pages: all.filter((p) => !unlisted.has(p.key)),
       resolve: (target) => {
         const s = vault.resolveNote(target, "")
         return s ? byKey.get(s.key) : undefined
       },
     }
     engines.set(id, engine)
+    everyPage.set(engine, byKey)
   }
   return engine
 }
+
+/** The page of the note a query runs in, `this`, which may be unlisted. */
+export const currentPage = (engine: Engine, key: string | undefined): Page | undefined =>
+  key == null ? undefined : (everyPage.get(engine)?.get(key) ?? engine.pages.find((p) => p.key === key))
 
 export function html(v: Value, lang: Lang): string {
   if (v == null) return '<span class="dv-null">–</span>'
@@ -77,14 +88,14 @@ export function html(v: Value, lang: Lang): string {
 /** A ```contributionGraph block, over the published notes of a language. */
 export function renderContributionGraph(source: string, lang: Lang, currentKey: string): string {
   const engine = engineFor(lang)
-  return renderGraph(source, lang, { ...engine, current: engine.pages.find((p) => p.key === currentKey) })
+  return renderGraph(source, lang, { ...engine, current: currentPage(engine, currentKey) })
 }
 
 /** An inline query, `= expression`, as the HTML of its value; an error shows as Dataview shows it. */
 export function renderInlineQuery(source: string, lang: Lang, currentKey: string): string {
   try {
     const engine = engineFor(lang)
-    const value = evaluateInline(source, { ...engine, current: engine.pages.find((p) => p.key === currentKey) })
+    const value = evaluateInline(source, { ...engine, current: currentPage(engine, currentKey) })
     return `<span class="dataview dv-inline">${value == null ? "-" : html(value, lang)}</span>`
   } catch (e) {
     if (e instanceof DataviewError || e instanceof Unsupported) {
@@ -100,7 +111,7 @@ export function renderDataview(source: string, lang: Lang, currentKey: string): 
   if (!source.trim()) return ""
   try {
     const engine = engineFor(lang)
-    const res = runQuery(parseQuery(source), { ...engine, current: engine.pages.find((p) => p.key === currentKey) })
+    const res = runQuery(parseQuery(source), { ...engine, current: currentPage(engine, currentKey) })
     if (res.type === "task") {
       if (!res.groups?.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
       // Blank lines around the HTML let the task lists in between parse as markdown.

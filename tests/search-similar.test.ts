@@ -50,6 +50,13 @@ describe("the search dialog with nothing typed", () => {
     expect(first.id).toBeTruthy()
     expect(input.getAttribute("aria-activedescendant")).toBe(first.id)
   })
+
+  test("the listbox holds only options: its list items step aside", () => {
+    const items = [...document.querySelectorAll(".search-results > li")]
+    expect(items.length).toBeGreaterThan(1)
+    for (const li of items) expect(["none", "presentation"]).toContain(li.getAttribute("role")!)
+    for (const a of document.querySelectorAll(".search-results a")) expect(a.getAttribute("role")).toBe("option")
+  })
 })
 
 describe("the search dialog and Esc", () => {

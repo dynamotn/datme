@@ -189,14 +189,14 @@ describe("dataview", () => {
   test("TASK lists the tasks of each note as checkboxes, with their links rendered", async () => {
     const { html } = await queries
     expect(html).toContain('<div class="dataview dv-tasks">')
-    expect(html).toMatch(/<li class="task-list-item"><input type="checkbox" disabled> Ask <a href="\/06_Reference\/Niklas-Luhmann"/)
-    expect(html).toMatch(/<input type="checkbox" checked disabled> <strong>Read<\/strong> the paper/)
+    expect(html).toMatch(/<li class="task-list-item"><input type="checkbox" disabled aria-label="[^"]+"> Ask <a href="\/06_Reference\/Niklas-Luhmann"/)
+    expect(html).toMatch(/<input type="checkbox" checked disabled aria-label="[^"]+"> <strong>Read<\/strong> the paper/)
   })
 
   test("a tasks block lists the open tasks, each with a link to its note", async () => {
     const { html } = await queries
     const block = html.match(/<div class="dataview dv-tasks tasks-query">[\s\S]*?<\/div>/)![0]
-    expect(block).toMatch(/<input type="checkbox" disabled> Ask <a href="\/06_Reference\/Niklas-Luhmann"[^>]*>Niklas Luhmann<\/a> about it <a class="task-note internal" href="\/03_Atomic\/Queries">Queries<\/a>/)
+    expect(block).toMatch(/<input type="checkbox" disabled aria-label="Ask Niklas Luhmann about it"> Ask <a href="\/06_Reference\/Niklas-Luhmann"[^>]*>Niklas Luhmann<\/a> about it <a class="task-note internal" href="\/03_Atomic\/Queries">Queries<\/a>/)
     expect(block).not.toContain("Read")
   })
 
@@ -296,9 +296,9 @@ describe("obsidian flavoured rendering", () => {
 
   test("tasks of any status are tasks, their status kept for themes", async () => {
     const html = await render("- [?] ask\n- [-] dropped\n- [ ] open")
-    expect(html).toContain('<li class="task-list-item" data-task="?"><input type="checkbox" checked disabled> ask</li>')
-    expect(html).toContain('<li class="task-list-item" data-task="-"><input type="checkbox" checked disabled> dropped</li>')
-    expect(html).toContain('<li class="task-list-item"><input type="checkbox" disabled> open</li>')
+    expect(html).toContain('<li class="task-list-item" data-task="?"><input type="checkbox" checked disabled aria-label="ask"> ask</li>')
+    expect(html).toContain('<li class="task-list-item" data-task="-"><input type="checkbox" checked disabled aria-label="dropped"> dropped</li>')
+    expect(html).toContain('<li class="task-list-item"><input type="checkbox" disabled aria-label="open"> open</li>')
   })
 
   test("an embed among other lines of a paragraph leaves it, splitting it around itself", async () => {

@@ -35,6 +35,9 @@ describe("charts", () => {
     expect(() => parseChart("type: sankey\nlabels: []\nseries: [{data: []}]")).toThrow('unknown chart type "sankey"')
     expect(() => parseChart("labels: [a]")).toThrow(ChartError)
     expect(renderChart("type: [")).toContain('<p class="dataview dv-error">Chart: invalid YAML')
+    // An empty or comment-only block says what a chart needs, not that its YAML is invalid.
+    expect(() => parseChart("")).toThrow("expected type, labels and series")
+    expect(() => parseChart("# later\n")).toThrow("expected type, labels and series")
   })
 
   test("a canvas for the eye and a data table for screen readers and paper", async () => {
@@ -44,6 +47,9 @@ describe("charts", () => {
     expect(html).not.toContain("table-wrap")
     expect(html).toContain('<canvas role="img" aria-label="Notes, Links"></canvas>')
     expect(html).toContain('<tr><th scope="row">Wed</th><td></td><td>5</td></tr>')
+    // The corner heads nothing: a plain cell, not an empty header.
+    expect(html).toContain('<tr><td></td><th scope="col">Notes</th>')
+    expect(html).not.toContain("<th></th>")
   })
 
   test("a width that is not a plain CSS length is dropped", () => {

@@ -81,8 +81,16 @@ export interface Page {
   tasks?: Task[]
 }
 
-export class DataviewError extends Error {}
-export class Unsupported extends Error {}
+export class DataviewError extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
+export class Unsupported extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 // ---------- tokens ----------
 

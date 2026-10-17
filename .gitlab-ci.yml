@@ -1,5 +1,6 @@
 # Type-check and test datme on every push and merge request, and release v* tags.
-image: oven/bun:1
+# Images are pinned to releases, so a pipeline runs the tools it was tested with.
+image: oven/bun:1.4.2
 
 variables:
   ASTRO_TELEMETRY_DISABLED: "1"
@@ -42,7 +43,7 @@ pages:
 # A v* tag publishes a GitLab release once the tests pass.
 release:
   stage: deploy
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  image: registry.gitlab.com/gitlab-org/release-cli:v0.24.0
   needs: [test]
   cache: []
   rules:

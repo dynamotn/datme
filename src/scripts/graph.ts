@@ -1,6 +1,7 @@
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, type Simulation, type SimulationNodeDatum } from "d3-force"
+import type { Simulation, SimulationNodeDatum } from "d3-force"
+import { applyForces, unpackPositions, type Forces, type LayoutRequest } from "./graph-sim"
 import { navigate } from "astro:transitions/client"
-import { loadIndex, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
+import { loadGraph, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
 import { groupColors } from "./graph-colors"
 import { freshness } from "./outdated"
 import { hasVisited, readFootprints } from "./footprints"
@@ -39,8 +40,6 @@ export interface GraphOptions {
   space?: boolean
 }
 
-type Forces = Pick<typeof import("d3-force"), "forceLink" | "forceManyBody" | "forceCenter" | "forceCollide">
-
 const live = new Set<() => void>()
 
 /** Stop every running graph, e.g. before a page swap. */
@@ -62,9 +61,14 @@ function palette() {
   }
 }
 
-/** The force layout: d3-force for a flat graph; its 3D sibling is fetched only once someone asks for space. */
-async function layout(nodes: GNode[], space: boolean): Promise<{ sim: Simulation<GNode, GLink>; d3: Forces }> {
-  if (!space) return { sim: forceSimulation<GNode, GLink>(nodes), d3: { forceLink, forceManyBody, forceCenter, forceCollide } }
+type Layout = { sim: Simulation<GNode, GLink>; d3: Forces }
+
+/** The force layout on the page, fetched when a graph is first drawn: d3-force for a flat graph, its 3D sibling for space. */
+async function layout(nodes: GNode[], space: boolean): Promise<Layout> {
+  if (!space) {
+    const d3 = await import("d3-force")
+    return { sim: d3.forceSimulation<GNode, GLink>(nodes), d3 }
+  }
   const d3 = await import("d3-force-3d")
   return { sim: d3.forceSimulation<GNode, GLink>(nodes, 3), d3 }
 }
@@ -73,7 +77,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const { depth = 1, space = false } = opts
   const lang = canvas.dataset.lang!
   const current = canvas.dataset.current ?? location.pathname
-  const data = await loadIndex(lang)
+  const data = await loadGraph(lang)
   if (!canvas.isConnected) return
 
   const colorBy = canvas.dataset.colorBy
@@ -131,8 +135,9 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     neighbours.set(l.target, (neighbours.get(l.target) ?? new Set()).add(l.source))
   }
 
-  const { sim, d3 } = await layout(nodes, space)
-  if (!canvas.isConnected) return void sim.stop()
+  // The layout runs in a worker, so a large graph never holds the page up; on the page only where workers are missing.
+  const onPage = typeof Worker === "function" ? undefined : await layout(nodes, space)
+  if (!canvas.isConnected) return void onPage?.sim.stop()
 
   const ctx = canvas.getContext("2d")!
   let colors = palette()
@@ -206,7 +211,10 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     draw()
   }
 
+  // Nothing to draw until the layout has placed the notes.
+  let placed = !!onPage
   function draw() {
+    if (!placed) return
     place()
     ctx.clearRect(0, 0, width, height)
     const lit = hover ? (neighbours.get(hover) ?? new Set()) : undefined
@@ -262,12 +270,45 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     }
   }
 
-  sim
-    .force("link", d3.forceLink<GNode, GLink>(links).distance(mode === "local" ? 46 : 36))
-    .force("charge", d3.forceManyBody<GNode>().strength(mode === "local" ? -120 : -70))
-    .force("center", d3.forceCenter<GNode>(0, 0))
-    .force("collide", d3.forceCollide<GNode>((n) => n.r + 3))
-    .on("tick", draw)
+  // A tick draws at most once a frame; while the graph spins, the spin draws it already.
+  let pending = 0
+  const onTick = () => {
+    if (spinning || pending) return
+    pending = requestAnimationFrame(() => {
+      pending = 0
+      draw()
+    })
+  }
+  let stopped = false
+  let stopLayout: () => void
+  const runOnPage = ({ sim, d3 }: Layout) => {
+    if (stopped) return void sim.stop()
+    placed = true
+    applyForces(sim, d3, links, mode).on("tick", onTick)
+    stopLayout = () => sim.stop()
+  }
+  if (onPage) runOnPage(onPage)
+  else {
+    const worker = new Worker(new URL("./graph-worker.ts", import.meta.url), { type: "module" })
+    worker.onmessage = (e: MessageEvent<Float32Array>) => {
+      unpackPositions(nodes, e.data, space ? 3 : 2)
+      placed = true
+      onTick()
+    }
+    // A worker that cannot start, e.g. a browser without module workers: lay out on the page after all.
+    worker.onerror = () => {
+      worker.terminate()
+      void layout(nodes, space).then(runOnPage)
+    }
+    const at = new Map(nodes.map((n, i) => [n, i]))
+    worker.postMessage({
+      r: nodes.map((n) => n.r),
+      links: links.map((l) => [at.get(l.source)!, at.get(l.target)!]),
+      mode,
+      space,
+    } satisfies LayoutRequest)
+    stopLayout = () => worker.terminate()
+  }
 
   // In space the graph turns slowly by itself until the reader takes over, unless they want less motion.
   let spinning = space && !matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -369,8 +410,11 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const onTheme = () => ((colors = palette()), draw())
   document.addEventListener("themechange", onTheme)
   const stop = () => {
-    sim.stop()
+    stopped = true
+    stopLayout()
     still()
+    if (pending) cancelAnimationFrame(pending)
+    pending = 0
     ro.disconnect()
     canvas.removeEventListener("redraw", draw)
     document.removeEventListener("themechange", onTheme)
@@ -421,7 +465,7 @@ export function mountLocalGraph(canvas: HTMLCanvasElement) {
       void show(depth)
     }),
   )
-  // The index carries every note's text: fetch it only once the graph comes into view.
+  // Fetch the graph index and lay it out only once the graph comes into view: never while its rail is hidden.
   const watch = new IntersectionObserver(
     (entries) => {
       if (!entries.some((e) => e.isIntersecting)) return
@@ -477,7 +521,7 @@ async function setupTime(dialog: HTMLDialogElement, canvas: HTMLCanvasElement) {
   const range = dialog.querySelector<HTMLInputElement>("[data-graph-time]")
   const out = dialog.querySelector<HTMLOutputElement>("[data-graph-time-label]")
   if (!range || !out) return
-  const days = (await loadIndex(canvas.dataset.lang!)).notes.map((n) => n.k).filter((k): k is number => k != null)
+  const days = (await loadGraph(canvas.dataset.lang!)).notes.map((n) => n.k).filter((k): k is number => k != null)
   if (!days.length) return void (range.hidden = true)
   range.min = String(Math.min(...days))
   range.max = String(Math.max(...days))
@@ -487,7 +531,7 @@ async function setupTime(dialog: HTMLDialogElement, canvas: HTMLCanvasElement) {
     range.addEventListener("input", () => {
       const atEnd = range.value === range.max
       canvas.dataset.until = atEnd ? "" : range.value
-      out.textContent = atEnd ? "" : new Date(Number(range.value) * 86_400_000).toLocaleDateString(document.documentElement.lang)
+      out.textContent = atEnd ? "" : new Date(Number(range.value) * 86_400_000).toLocaleDateString(document.documentElement.lang || undefined)
       canvas.dispatchEvent(new Event("redraw"))
     })
   }

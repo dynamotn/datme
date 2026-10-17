@@ -3,6 +3,7 @@ import { getVault, listed, countNotes } from "./vault"
 import { renderNote } from "./markdown"
 import { gardenShape } from "./check"
 import { topics } from "./topics"
+import { monthKey } from "./calendar"
 
 export interface Stats {
   notes: number
@@ -38,9 +39,8 @@ const DAY = 86_400_000
 export function densityByMonth(notes: { created?: Date; links: string[]; key: string }[]): [string, number][] {
   const dated = notes.filter((n) => n.created)
   const months = cumulativeByMonth(dated.map((n) => n.created!)).map(([m]) => m)
-  const monthOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
   return months.map((m) => {
-    const planted = new Set(dated.filter((n) => monthOf(n.created!) <= m).map((n) => n.key))
+    const planted = new Set(dated.filter((n) => monthKey(n.created!) <= m).map((n) => n.key))
     const links = dated.filter((n) => planted.has(n.key)).reduce((sum, n) => sum + n.links.filter((k) => planted.has(k)).length, 0)
     return [m, Math.round((links / planted.size) * 100) / 100]
   })
@@ -54,18 +54,19 @@ export function freshnessCounts(dates: (Date | undefined)[], spans: number[], no
 /** Months from the first to the last, none skipped, so the curve keeps its real shape. */
 export function cumulativeByMonth(dates: Date[]): [string, number][] {
   if (!dates.length) return []
-  const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+  // By month, not by time: a date-only value counts in the month it is written in.
   const counts = new Map<string, number>()
-  for (const d of dates) counts.set(key(d), (counts.get(key(d)) ?? 0) + 1)
-  const sorted = [...dates].sort((a, b) => a.getTime() - b.getTime())
+  for (const d of dates) counts.set(monthKey(d), (counts.get(monthKey(d)) ?? 0) + 1)
+  const months = [...counts.keys()].sort()
   const out: [string, number][] = []
   let total = 0
-  for (let y = sorted[0].getFullYear(), m = sorted[0].getMonth(); ; m++) {
+  let [y, m] = months[0].split("-").map(Number)
+  for (m--; ; m++) {
     if (m > 11) (y++, (m = 0))
     const k = `${y}-${String(m + 1).padStart(2, "0")}`
     total += counts.get(k) ?? 0
     out.push([k, total])
-    if (k === key(sorted.at(-1)!)) break
+    if (k === months.at(-1)) break
   }
   return out
 }

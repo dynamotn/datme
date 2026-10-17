@@ -15,7 +15,7 @@ const scale = site.conventions.ratingScale
 ---
 
 <div class:list={["item-head", { "is-upright": item.upright }]}>
-  {note.cover && <img class="item-cover" src={note.cover} alt="" />}
+  {note.cover && <img class="item-cover" src={note.cover} alt="" fetchpriority="high" decoding="async" />}
   <div class="item-id">
     <slot />
     {item.byline.length > 0 && <p class="item-byline">{item.byline.join(" · ")}</p>}
