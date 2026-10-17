@@ -19,7 +19,7 @@ describe("garden data", () => {
     expect(tileSize("a", {})).toBe("medium")
   })
 
-  test("the garden opens on its most mature notes, newest first within a stage", () => {
+  test("the garden opens on its most mature note and mixes stages, newest first within each", () => {
     const d = (x: string) => new Date(x)
     const notes = [
       { k: 1, stage: "seed", updated: d("2026-10-10") },
@@ -28,7 +28,7 @@ describe("garden data", () => {
       { k: 4, stage: undefined, updated: d("2026-10-16") },
       { k: 5, stage: "tree", updated: undefined },
     ]
-    expect(gardenOrder(notes, s(["seed", "tree"])).map((n) => n.k)).toEqual([3, 2, 5, 1, 4])
+    expect(gardenOrder(notes, s(["seed", "tree"])).map((n) => n.k)).toEqual([3, 1, 4, 2, 5])
   })
 
   test("chips list the stages that have notes, in stage order", () => {

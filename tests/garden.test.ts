@@ -34,11 +34,12 @@ describe("garden style", () => {
     expect(home).not.toContain("hero-stats")
   })
 
-  test("every listed note is a tile in the bed, most mature first", () => {
+  test("every listed note is a tile in the bed, which opens on a mature note", () => {
     const bed = read("index.html").split('class="garden-bed"')[1]
     expect((bed.match(/class="garden-tile"/g) ?? []).length).toBe(6)
-    expect(bed.indexOf("Gardens")).toBeLessThan(bed.indexOf("Idea"))
-    expect(bed).toMatch(/data-size="large"[^>]*data-stage="Evergreen"|data-stage="Evergreen"[^>]*data-size="large"/)
+    const first = bed.match(/<article[^>]*>/)?.[0] ?? ""
+    expect(first).toContain('data-size="large"')
+    expect(first).toContain('data-stage="Evergreen"')
   })
 
   test("with fewer than 60 notes, the walk-the-garden button stays hidden", () => {

@@ -297,20 +297,15 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-/* Seedlings sprout side by side as small pills; grown notes take the width. */
+/* Seedlings are small pills among the grown notes, which take the column width. */
 [data-look="garden"] .garden-tile[data-size="small"] {
   background: var(--growth-small);
   padding: 8px 14px;
   border-radius: 999px 999px 999px 14px;
 }
 [data-look="garden"] .garden-bed > .garden-tile[data-size="small"] {
-  display: inline-block;
+  width: fit-content;
   max-width: 100%;
-  margin: 0 6px 12px 0;
-  vertical-align: top;
-}
-[data-look="garden"] .garden-bed > .garden-tile[data-size="small"][hidden] {
-  display: none;
 }
 [data-look="garden"] .garden-tile[data-size="small"] .garden-tile-title {
   font-size: 0.95rem;
