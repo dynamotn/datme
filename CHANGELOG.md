@@ -66,6 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A folder listed in `appearance.classic` now shows its own page in that style
+  too, not only its notes.
 - The browser's theme colour follows the page's style.
 - A flashcard keeps its id, and the reader's progress, whatever scripts
   changed on its page (popovers, copy buttons, revealed clozes) and on any
