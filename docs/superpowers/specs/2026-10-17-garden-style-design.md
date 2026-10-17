@@ -1,9 +1,13 @@
 # Garden style
 
 A third value of `appearance.style`, next to `notebook` and `classic`: a site
-that reads as a digital garden rather than a blog. First of three new styles
-(`garden`, then `library` and `vault`); the other two get their own design
-later.
+that reads as a digital garden rather than a blog. First of three new
+site-wide styles (`garden`, then `library` and `vault`); the other two get
+their own design later.
+
+The same design adds per-note styles and navigation frames driven by page
+layouts, and two styles made for layouts: `resume` for `cv` and `darkroom`
+for `gallery`.
 
 ## Intent
 
@@ -30,6 +34,8 @@ Prior art named by the owner: **maggieappleton.com**, where notes sit
 - Integrates with page layouts (branch `worktree-feat-note-layouts`): a note
   with a `layout` gets that layout's own style and navigation frame by
   default, and any note can override both.
+- A CV and a gallery each get a look made for them (`resume`, `darkroom`)
+  instead of borrowing a site-wide one.
 
 ## Anti-goals
 
@@ -45,8 +51,8 @@ Prior art named by the owner: **maggieappleton.com**, where notes sit
 - Free-form placement (notes at arbitrary positions, physics, drag). See the
   layout decision below.
 - Hand-drawn illustrations or per-note artwork.
-- New styles made just for one layout (a "résumé" or "darkroom" look): layouts
-  pick among the general styles.
+- Styles for layouts other than `cv` and `gallery`; they use the site-wide
+  styles until the owner asks for more.
 - Restyling bases (`base-render.ts` keeps emitting notebook card markup in
   every look today; that stays out of scope).
 
@@ -70,6 +76,8 @@ Owner:
   style, the note can override it.
 - Approved (in chat) the property names, precedence and per-layout defaults
   in "Page layouts" below, which Claude proposed.
+- `cv` and `gallery` need themes of their own. Approved Claude's sketch of
+  `resume` and `darkroom` (see "Layout styles" below) as proposed.
 
 ### Configuration (Claude's call)
 
@@ -245,8 +253,8 @@ still developing. State checked on 2026-10-17 (commits `2141bfc`,
 
 ### Properties (approved by the owner)
 
-- `style:` on a note: `notebook`, `classic` or `garden` (later `library`,
-  `vault`). Validated against the same `STYLES` list; an unknown value is a
+- `style:` on a note: `notebook`, `classic`, `garden`, `resume` or
+  `darkroom` (later `library`, `vault`). Validated against the same `STYLES` list; an unknown value is a
   build warning (through the existing problems/doctor channel) and is
   ignored.
 - `chrome:` on a note: the frame around it.
@@ -280,8 +288,9 @@ what the page is:
 
 | group | layouts | style | chrome | scheme |
 |---|---|---|---|---|
-| standalone page | `cv`, `links` | `classic` | `minimal` | site default |
-| pictures | `gallery` | `classic` | `minimal` | dark by default |
+| résumé | `cv` | `resume` | `minimal` | site default (print always light) |
+| standalone page | `links` | `classic` | `minimal` | site default |
+| pictures | `gallery` | `darkroom` | `minimal` | dark by default |
 | page of the site | `timeline`, `now`, `uses`, `quotes` | site's resolved style (tier 3/4) | `full` without TOC and graph | site default |
 | reference page | `faq` | site's resolved style | `full` (the TOC helps) | site default |
 | collection | `projects`, `talks`, `recipes`, `places` | site's resolved style | `full` without TOC and graph | site default |
@@ -299,12 +308,66 @@ what the page is:
 - "`full` without TOC and graph" is a third internal frame value
   (`full-norail`, say), reachable only through a layout default; the
   property only accepts `full` and `minimal`. **(Claude's call)**
-- Dark by default for `gallery` means: when the reader has no stored choice,
+- Dark by default belongs to the `darkroom` style, not to the `gallery`
+  layout, so `style: darkroom` on any note starts dark too. It means: when the reader has no stored choice,
   the page starts dark; a stored reader choice still wins, and the toggle
   still works. Implemented as a per-page hint (e.g.
   `data-scheme-default="dark"`) read by the inline theme script in
-  `Base.astro`. A site with `theme.scheme: light` still gets a dark gallery.
-  **(Claude's call)**
+  `Base.astro`. A site with `theme.scheme: light` still gets a dark
+  darkroom page. **(Claude's call)**
+
+### Layout styles: `resume` and `darkroom` (approved by the owner)
+
+Both join the one `STYLES` list, so any note can ask for them with `style:`
+and `appearance.style`/`folders` accept them. They are designed for a
+single page, so the docs recommend them only per note; nothing blocks a
+site-wide use, and home/folder/tag pages under them fall back to classic
+markup with their colours. **(Claude's call, as proposed)** Each lives in
+its own stylesheet (`src/styles/resume.css`, `src/styles/darkroom.css`),
+every rule scoped to its `[data-look=…]`, and gets a `THEME_COLOR` entry.
+
+**`resume`**, default of `cv`:
+
+- On screen the page is an A4 sheet (210mm wide, scaled down on narrow
+  screens) centred on a light grey desk, with a soft shadow, so it reads as
+  "a CV" at a glance.
+- Two columns: a narrow left column for the CV head (photo, name, role,
+  contacts, links), and the summary and `##` sections on the right, each
+  section heading set in the margin. On phones it becomes one column.
+- Sans-serif type, restrained, one accent colour for section headings and
+  links.
+- Print gives exactly that sheet: no grey desk, no shadow, always white
+  paper and dark ink even when the reader is in dark mode; the print button
+  stays hidden as today.
+- Dark mode only changes the screen: the sheet turns dark grey on a darker
+  desk and still reads as one sheet.
+- Builds on `CvHead.astro` markup from the layouts branch (`.cv-head`,
+  `.cv-photo`, `.cv-id`, `.cv-role`, `.cv-contact`). The left column holds
+  only that head: moving a `## Skills` section into it would need markup
+  changes on the layouts branch, so it stays on the right. **(Claude's call)**
+- A `cv` note that is protected keeps the normal note head (layouts-branch
+  behaviour); `resume` must still look right with it.
+
+**`darkroom`**, default of `gallery`:
+
+- Near-black background, text and rules in neutral greys only, no accent
+  colour, so nothing tints the pictures. Links still need a visible,
+  non-colour cue (underline).
+- Pictures in rows of equal height filling almost the full width
+  (justified rows), with thin gaps. Captions small: under each picture on
+  phones, on hover/focus on larger screens (always reachable by keyboard).
+- The lightbox (`src/scripts/lightbox.ts`) on pure black.
+- Light mode is a "gallery wall": off-white background, same neutral
+  greys. Dark is the default (see the scheme hint above); the toggle
+  works.
+- Builds on the layouts branch's `galleryHtml` markup
+  (`.gallery-grid > figure.gallery-item > img + figcaption`). Justified rows
+  need each picture's aspect ratio; if the `img` tags do not carry
+  `width`/`height`, the builder either adds them on the layouts side
+  (coordinated with that branch) or falls back to a uniform-height masonry
+  without cropping. **(Claude's call)**
+- Headings in a gallery note still start albums, set as quiet small-caps
+  labels above each grid.
 
 ### Folder pages with a layout
 
@@ -331,7 +394,9 @@ branch. The folder page then takes its look and chrome from that folder note
    rebase; it forked at `62bb303`, before `58eadf8`, and does not plan to
    rebase until it is done), add the layout tier, `chrome`, `full-norail`,
    the scheme hint and the defaults table, on a branch from `main`.
-3. Until then, nothing in this design edits files owned by the layouts
+3. Then `resume` and `darkroom`, which style markup that only exists on the
+   layouts branch.
+4. Until then, nothing in this design edits files owned by the layouts
    branch (`note-layouts.ts`, `Collection.astro`, `CvHead.astro`,
    `LinksHead.astro`); the shared hot spots are `NotePage.astro`,
    `FolderPage.astro`, `vault.ts` and `global.css`/`print.css`, so step 1
@@ -341,10 +406,11 @@ branch. The folder page then takes its look and chrome from that folder note
 
 - look: each tier wins over the ones below it; unknown `style`/`chrome`
   values warn and are ignored.
-- build (`tests/fixtures/layouts`): `cv` and `links` render
-  `data-look="classic"` `data-chrome="minimal"` and no explorer, TOC, graph,
-  main nav or breadcrumbs; a `cv` with `style: garden` renders
-  `data-look="garden"`; `gallery` carries the dark scheme hint; `projects`
+- build (`tests/fixtures/layouts`): `cv` renders `data-look="resume"`,
+  `links` renders `data-look="classic"`, both with `data-chrome="minimal"`
+  and no explorer, TOC, graph, main nav or breadcrumbs; a `cv` with
+  `style: garden` renders `data-look="garden"`; `gallery` renders
+  `data-look="darkroom"` with the dark scheme hint; `projects`
   renders no TOC or graph but keeps the header; a note with a layout that
   has no row renders as today.
 
@@ -374,7 +440,9 @@ branch. The folder page then takes its look and chrome from that folder note
     folder page with `data-look="garden"` and `garden-tile` markup; a fixture
     build with `style: garden` renders the recently-tended row and the
     garden bed on the home, with every listed note present as a tile.
-  - styles: every selector in `garden.css` starts with `[data-look="garden"]`.
+  - styles: every selector in `garden.css`, `resume.css` and `darkroom.css`
+    starts with its own `[data-look=…]`; `print.css` forces light paper for
+    `resume`.
 - Updated docs: `docs/configuration.md` (style values, `folders`),
   `README.md` feature line, the `datme init` config template in
   `src/cli.ts`, and the CHANGELOG.
