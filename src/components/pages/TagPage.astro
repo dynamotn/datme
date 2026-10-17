@@ -10,6 +10,7 @@ import Base from "~/layouts/Base.astro"
 import NoteRow from "../NoteRow.astro"
 import NoteCard from "../NoteCard.astro"
 import IndexCard from "../IndexCard.astro"
+import GardenBed from "../garden/GardenBed.astro"
 
 interface Props {
   lang: Lang
@@ -62,7 +63,9 @@ const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
               ))}
             </div>
           )}
-          {site.appearance.style === "notebook" ? (
+          {site.appearance.style === "garden" ? (
+            <GardenBed notes={notes} lang={lang} />
+          ) : site.appearance.style === "notebook" ? (
             <div class="card-wall">
               {notes.map((n) => (
                 <IndexCard note={n} date="created" media={showCards} />

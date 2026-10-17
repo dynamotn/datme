@@ -1,0 +1,57 @@
+---
+import type { Lang } from "~/site.config"
+import type { Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { gardenChips, gardenOrder, topTags } from "~/lib/garden"
+import GardenTile from "./GardenTile.astro"
+
+interface Props {
+  notes: Note[]
+  lang: Lang
+  /** Tiles shown before "walk the whole garden"; every tile shows when unset. */
+  cap?: number
+}
+const { notes, lang, cap } = Astro.props
+const s = t(lang)
+const chips = gardenChips(notes, lang)
+const tags = topTags(notes)
+// Without stages the chips are folders, so "all" says which.
+const all = chips[0]?.kind === "folder" ? s.allFolders : s.allStages
+---
+
+<div class="garden" data-garden data-cap={cap}>
+  <div class="garden-filters" data-garden-filters hidden>
+    <div class="garden-chips">
+      <button type="button" class="garden-chip" data-garden-chip data-kind="all" data-value="" aria-pressed="true">{all}</button>
+      {
+        chips.map((c) => (
+          <button type="button" class="garden-chip" data-garden-chip data-kind={c.kind} data-value={c.value} aria-pressed="false">
+            <span aria-hidden="true">{c.icon}</span> {c.label} <small>{c.count}</small>
+          </button>
+        ))
+      }
+    </div>
+    {
+      tags.length > 0 && (
+        <select class="garden-tag-select" data-garden-tag aria-label={s.tags}>
+          <option value="">{s.allTagsFilter}</option>
+          {tags.map(({ tag, count }) => (
+            <option value={tag}>
+              #{tag} ({count})
+            </option>
+          ))}
+        </select>
+      )
+    }
+  </div>
+  <div class="garden-bed">
+    {gardenOrder(notes).map((n) => <GardenTile note={n} />)}
+  </div>
+  {
+    cap !== undefined && (
+      <button type="button" class="garden-more" data-garden-more hidden>
+        {s.walkGarden}
+      </button>
+    )
+  }
+</div>

@@ -207,5 +207,12 @@
   "linkVideo": "Video",
   "linkPaper": "Paper",
   "nowUpdated": "Last updated {date}",
-  "nowStale": "This page has not been updated in a while, so it may be out of date."
+  "nowStale": "This page has not been updated in a while, so it may be out of date.",
+  "recentlyTended": "Recently tended",
+  "tended": "Tended",
+  "lastTended": "Last tended",
+  "pathsIn": "Paths in",
+  "pathsFromHere": "Paths from here",
+  "nearby": "Nearby",
+  "walkGarden": "Walk the whole garden"
 }

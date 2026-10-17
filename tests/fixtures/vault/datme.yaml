@@ -37,6 +37,8 @@ nav:
   - note: Missing note
 appearance:
   classic: [07_Project]
+  folders:
+    05_Structure: garden
   stream: [08_Journal]
 encryption:
   iterations: 100000

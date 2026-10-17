@@ -1,0 +1,71 @@
+---
+import type { Lang } from "~/site.config"
+import { site } from "~/site.config"
+import { listed, byRecent } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { HOME_TILES, RECENT_TILES } from "~/lib/garden"
+import GardenTile from "./GardenTile.astro"
+import GardenBed from "./GardenBed.astro"
+
+interface Props {
+  lang: Lang
+  /** The home note up to its first H2. */
+  intro: string
+  /** The H2 sections of the home note. */
+  shelves: string[]
+  title: string
+}
+const { lang, intro, shelves, title } = Astro.props
+const s = t(lang)
+// Folder notes introduce their folder, which has a page of its own.
+const notes = listed(lang).filter((n) => !n.isHome && n.source.stem !== n.dir.split("/").at(-1))
+const recent = byRecent(notes).slice(0, RECENT_TILES)
+const mocs = notes.filter((n) => n.isMoc)
+---
+
+<section class="garden-gate">
+  <h1>{title}</h1>
+  {site.tagline[lang] && <p class="garden-tagline">{site.tagline[lang]}</p>}
+  {intro && <div class="prose" set:html={intro} />}
+</section>
+
+{
+  recent.length > 0 && (
+    <section class="garden-recent" aria-labelledby="garden-recent-title">
+      <h2 id="garden-recent-title">{s.recentlyTended}</h2>
+      <div class="garden-row">
+        {recent.map((n) => (
+          <GardenTile note={n} variant="recent" />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+{
+  mocs.length > 0 && (
+    <section class="garden-paths" aria-labelledby="garden-paths-title">
+      <h2 id="garden-paths-title">{s.pathsIn}</h2>
+      <div class="garden-row">
+        {mocs.map((n) => (
+          <GardenTile note={n} variant="path" />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<section class="garden-main" aria-labelledby="garden-main-title">
+  <h2 id="garden-main-title">{s.garden}</h2>
+  <GardenBed notes={notes} lang={lang} cap={HOME_TILES} />
+</section>
+
+{
+  shelves.length > 0 && (
+    <section class="garden-beds">
+      {shelves.map((html) => (
+        <div class="garden-shelf prose" set:html={html} />
+      ))}
+    </section>
+  )
+}

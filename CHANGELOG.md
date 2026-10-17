@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `appearance.style: garden` opens the home on the notes tended most
+  recently, then the maps of content as paths in, then the whole garden.
+- In the garden style, notes are tiles scattered in a bed, larger and
+  greener as they mature; folder and tag pages are beds too.
+- Readers can filter a garden bed by stage (or folder) and by tag, and the
+  home shows its first 60 tiles until they choose to walk the whole garden.
 - `appearance.folders` gives a folder its own style, subfolders included,
   for example `Writing: classic` on a notebook site.
 - Notes can take a page layout with `layout`. `cv` makes a printable résumé
