@@ -19,6 +19,7 @@ import { openRandom, step } from "./wander"
 import { revealHash } from "./tabs"
 import { setupMedia } from "./media"
 import { setupTrail, trailStep } from "./trail"
+import { setupWalk } from "./walk"
 
 const root = document.documentElement
 
@@ -327,6 +328,7 @@ document.addEventListener("astro:page-load", () => {
   void setupDueBadge()
   setupMedia()
   setupTrail()
+  void setupWalk()
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())

@@ -737,11 +737,13 @@
   font-family: var(--font-mono);
   font-size: 12px;
 }
-[data-look="notebook"] .page-menu {
+[data-look="notebook"] .page-menu,
+[data-look="notebook"] .walk-open {
   font-family: var(--font-mono);
   font-size: 12px;
 }
 [data-look="notebook"] .page-menu summary,
+[data-look="notebook"] .walk-open,
 [data-look="notebook"] .page-menu ul {
   border: 2px solid var(--ink);
   border-radius: 4px;

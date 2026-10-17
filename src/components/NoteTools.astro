@@ -1,0 +1,36 @@
+---
+import type { Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import PageMenu from "./PageMenu.astro"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const s = t(note.lang)
+---
+
+<div class="note-tools">
+  <PageMenu note={note} />
+  {
+    !note.unlisted && !note.isHome && (
+      <button
+        type="button"
+        class="walk-open"
+        data-walk-open
+        data-walk-label={s.walk}
+        data-walk-pick={s.walkPick}
+        data-walk-none={s.walkNone}
+        data-walk-share={s.walkShare}
+        data-walk-leave={s.trailLeave}
+        data-walk-end={s.walkEnd}
+        data-trail-prev={s.trailPrev}
+        data-trail-next={s.trailNext}
+        data-close={s.close}
+        hidden
+      >
+        🥾 {s.walkTo}
+      </button>
+    )
+  }
+</div>

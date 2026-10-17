@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/practice` gathers the flashcards of every deck in one session, due
   cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
   a reader has practised, a 🧠 badge in the header counts the cards due.
+- "Walk from here to…" finds the shortest chain of links from a note to
+  another and guides the reader along it like a trail, with `n` and `p`,
+  and a link to share the walk.
 - Other sites can embed a card of a public note: each one announces an
   oEmbed description, and its card lives at `<note>/embed`. `oembed: false`
   turns it off; it needs `site.url`.

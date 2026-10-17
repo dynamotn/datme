@@ -41,7 +41,8 @@ export function setupTrail() {
 
 /** The next or previous stop of the trail on show, if any. */
 export function trailStep(dir: 1 | -1): boolean {
-  const nav = [...document.querySelectorAll<HTMLElement>("nav[data-trail]")].find((n) => !n.hidden)
+  // A generated walk counts as a trail too.
+  const nav = [...document.querySelectorAll<HTMLElement>("nav[data-walk], nav[data-trail]")].find((n) => !n.hidden)
   const link = nav?.querySelector<HTMLAnchorElement>(dir > 0 ? "[data-trail-next], [data-trail-end]" : "[data-trail-prev]")
   if (!link) return false
   link.click()

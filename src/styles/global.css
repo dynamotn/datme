@@ -594,11 +594,76 @@ kbd {
   width: 15px;
   height: 15px;
 }
+.note-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+}
+.note-tools:not(:has(> :not([hidden]))) {
+  display: none;
+}
+.walk-open {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: 600 12.5px var(--font-ui);
+  cursor: pointer;
+}
+.walk-open:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.walk-open[hidden] {
+  display: none;
+}
+.walk-label {
+  display: grid;
+  gap: 6px;
+  font: 600 14px var(--font-ui);
+}
+.walk-label input {
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px var(--font-ui);
+}
+.walk-results {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.walk-results button {
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.walk-results button:hover,
+.walk-results button:focus-visible {
+  background: var(--surface-2);
+}
+.walk-status {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.walk-end {
+  text-align: right;
+}
 .page-menu {
   position: relative;
   display: block;
   width: fit-content;
-  margin-top: 12px;
   font: 600 12.5px var(--font-ui);
 }
 .page-menu summary {

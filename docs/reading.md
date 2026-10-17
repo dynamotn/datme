@@ -25,6 +25,10 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - **Trails:** a [trail](writing.md#trails) is a guided walk the author laid
   out. Once started, every stop shows where you are on it; `n` and `p` go to
   the next and previous stop.
+- **Walks:** "🥾 Walk from here to…" under a note's title asks for another
+  note and finds the shortest chain of links between them, followed either
+  way. The walk then guides like a trail, `n` and `p` included, and its bar
+  copies a link that hands the same walk to someone else.
 - **Overview pages:** `/tags`, `/archive` (with a yearly activity calendar),
   `/recent`, and `/timeline`, `/map`, `/stats` and `/calendar` (daily notes)
   when some note qualifies.

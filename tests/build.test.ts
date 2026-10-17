@@ -622,6 +622,15 @@ describe("static build", () => {
     expect(read("index.html")).not.toContain("json+oembed")
   })
 
+  test("a note offers to walk from it to another, with the labels the walk shows", () => {
+    const button = read("03_Atomic/Zettelkasten/index.html").match(/<button type="button" class="walk-open"[^>]*>[\s\S]*?<\/button>/)![0]
+    expect(button).toContain('data-walk-label="Lối đi"')
+    expect(button).toContain('data-walk-none="Không có lối liên kết nào từ đây tới đó."')
+    expect(button).toContain(" hidden>")
+    expect(button).toMatch(/🥾 Đi từ đây tới…/)
+    expect(read("index.html")).not.toContain("data-walk-open")
+  })
+
   test("llms-full.txt holds every public note in full, each with its source", () => {
     const full = read("llms-full.txt")
     expect(full).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")

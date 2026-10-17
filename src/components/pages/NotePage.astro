@@ -23,7 +23,7 @@ import DevProblems from "../DevProblems.astro"
 import SeriesBox from "../SeriesBox.astro"
 import TrailBar from "../TrailBar.astro"
 import DayNav from "../DayNav.astro"
-import PageMenu from "../PageMenu.astro"
+import NoteTools from "../NoteTools.astro"
 import Outdated from "../Outdated.astro"
 import Collection from "../Collection.astro"
 import CvHead from "../CvHead.astro"
@@ -112,7 +112,7 @@ const NOW_STALE_YEARS = 0.25
             <NoteMeta note={note} words={r.words}>
               <h1 class="note-title">{title}</h1>
             </NoteMeta>
-            <PageMenu note={note} />
+            <NoteTools note={note} />
           </header>
         </ItemHead>
       ) : (
@@ -120,7 +120,7 @@ const NOW_STALE_YEARS = 0.25
           <NoteMeta note={note} words={r.words}>
             <h1 class="note-title">{title}</h1>
           </NoteMeta>
-          <PageMenu note={note} />
+          <NoteTools note={note} />
         </header>
       )
     }
