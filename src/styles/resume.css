@@ -1,0 +1,169 @@
+/*
+ * Resume look: the note is one A4 sheet on a grey desk, the CV head in a
+ * narrow left column and the sections on the right. Sans-serif throughout,
+ * one accent for section headings and links. Everything is scoped to
+ * [data-look="resume"]; print.css turns the sheet into plain white paper.
+ */
+
+[data-look="resume"] {
+  --bg: #e9e7e2;
+  --surface: #ffffff;
+  --surface-2: #f3f2ef;
+  --surface-3: #e9e8e4;
+  --ink: #1c1d1f;
+  --ink-2: #3b3d41;
+  --muted: #5d6066;
+  --line: #e0ded8;
+  --line-strong: #c4c1b9;
+  --accent: #1f5f8b;
+  --accent-2: #1f5f8b;
+  --accent-soft: rgb(31 95 139 / 0.1);
+  --clay: var(--accent);
+  --clay-soft: var(--accent-soft);
+  --title-grad: linear-gradient(135deg, #1f5f8b 0%, #2f7cb0 100%);
+  --shadow: 0 1px 2px rgb(30 30 30 / 0.06), 0 6px 18px -10px rgb(30 30 30 / 0.2);
+  --sheet-shadow: 0 1px 3px rgb(30 30 30 / 0.08), 0 18px 40px -18px rgb(30 30 30 / 0.3);
+  --font-read: var(--font-ui);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+[data-look="resume"][data-theme="dark"] {
+  --bg: #1b1c1e;
+  --surface: #2a2b2e;
+  --surface-2: #323337;
+  --surface-3: #3a3b3f;
+  --ink: #ececed;
+  --ink-2: #d0d1d4;
+  --muted: #a7a9ae;
+  --line: #3d3e42;
+  --line-strong: #4f5055;
+  --accent: #8cc1e6;
+  --accent-2: #8cc1e6;
+  --accent-soft: rgb(140 193 230 / 0.14);
+  --title-grad: linear-gradient(135deg, #2c6a96 0%, #3d84b6 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px -10px rgb(0 0 0 / 0.6);
+  --sheet-shadow: 0 1px 3px rgb(0 0 0 / 0.4), 0 18px 40px -18px rgb(0 0 0 / 0.8);
+}
+
+/* ---------- the sheet: A4 wide, print margins inside, narrower on small screens ---------- */
+[data-look="resume"] .note {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 8px auto 24px;
+  padding: 18mm 16mm;
+  background: var(--surface);
+  border-radius: 3px;
+  box-shadow: var(--sheet-shadow);
+}
+[data-look="resume"] .note-title {
+  font-family: var(--font-ui);
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+[data-look="resume"] .prose {
+  font-size: calc(0.95rem * var(--reading-scale, 1));
+  line-height: 1.6;
+}
+[data-look="resume"] .prose h3 {
+  font-size: 1.02em;
+}
+
+/* ---------- two columns: the head on the left, the sections on the right ---------- */
+[data-look="resume"] .layout-cv:has(> .cv-head) {
+  display: grid;
+  grid-template-columns: 11.5rem minmax(0, 1fr);
+  column-gap: 2.25rem;
+  align-content: start;
+}
+[data-look="resume"] .layout-cv:has(> .cv-head) > * {
+  grid-column: 2;
+  min-width: 0;
+}
+/* Spans every row the right column fills, so the sections start at the top. */
+[data-look="resume"] .layout-cv > .cv-head {
+  grid-column: 1;
+  grid-row: 1 / span 40;
+  align-self: start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+[data-look="resume"] .cv-photo {
+  width: 96px;
+  height: 96px;
+}
+[data-look="resume"] .cv-id .note-title {
+  font-size: 1.6rem;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+[data-look="resume"] .cv-role {
+  margin-top: 6px;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+[data-look="resume"] .cv-contact {
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+  font-size: 13px;
+  overflow-wrap: break-word;
+}
+[data-look="resume"] .cv-contact a {
+  color: var(--accent);
+}
+@media (hover: hover) {
+  [data-look="resume"] .cv-contact a:hover {
+    text-decoration: underline;
+  }
+}
+[data-look="resume"] .cv-print {
+  align-self: flex-start;
+}
+[data-look="resume"] .layout-cv .cv-summary {
+  margin-bottom: 4px;
+  font-size: 1.04em;
+  color: var(--ink-2);
+}
+[data-look="resume"] .layout-cv .cv-section {
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0 20px;
+  padding: 14px 0;
+}
+[data-look="resume"] .layout-cv .cv-section > h2 {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* The light accent of the dark sheet needs dark text on it. */
+[data-look="resume"][data-theme="dark"] .locked button {
+  color: #14202a;
+}
+
+/* ---------- phones: one column, a sheet edge to edge of the screen's gutter ---------- */
+@media screen and (max-width: 760px) {
+  [data-look="resume"] .note {
+    min-height: 0;
+    margin-top: 0;
+    padding: 28px 22px;
+  }
+  [data-look="resume"] .layout-cv:has(> .cv-head) {
+    display: block;
+  }
+  [data-look="resume"] .layout-cv > .cv-head {
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  [data-look="resume"] .cv-photo {
+    width: 72px;
+    height: 72px;
+  }
+}

@@ -1,4 +1,4 @@
-/* ---------- print: the note alone, black on white, in every look (notebook, classic, garden) and theme ---------- */
+/* ---------- print: the note alone, black on white, in every look (notebook, classic, garden, resume) and theme ---------- */
 @media print {
   @page {
     margin: 18mm 16mm;
@@ -9,7 +9,9 @@
   [data-look="notebook"],
   [data-look="notebook"][data-theme="dark"],
   [data-look="garden"],
-  [data-look="garden"][data-theme="dark"] {
+  [data-look="garden"][data-theme="dark"],
+  [data-look="resume"],
+  [data-look="resume"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;
@@ -44,6 +46,21 @@
     --growth-small: #fff;
     --growth-medium: #f4f4f2;
     --growth-large: #ebebe8;
+  }
+  /* A résumé prints as its sheet alone: white paper, dark ink, the one accent kept dark. */
+  [data-look="resume"],
+  [data-look="resume"][data-theme="dark"] {
+    --accent: #1f5f8b;
+    --sheet-shadow: none;
+  }
+  [data-look="resume"] .note {
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
   }
   [data-look="garden"] .garden-filters,
   [data-look="garden"] .garden-more {

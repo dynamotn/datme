@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A résumé (`layout: cv`, or `style: resume` on any note) now reads as one
+  A4 sheet on a grey desk: the photo, name, role and contacts in a narrow
+  left column, the summary and sections on the right with their headings in
+  the margin, in one column on phones. Dark mode turns the sheet dark grey,
+  and printing gives exactly that sheet on white paper, even from dark mode.
 - Page layouts pick a fitting style by default: `cv` pages use the resume
   style, `gallery` pages the darkroom style and `links` pages the classic
   one, and a note's own `style:` still wins. A folder whose folder note has

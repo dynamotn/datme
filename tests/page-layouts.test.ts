@@ -287,6 +287,13 @@ describe("page layouts", () => {
     expect(read("Sketchbook/index.html")).toContain("data-stack-row")
   })
 
+  test("a protected résumé keeps the normal head, in the resume style", () => {
+    const html = read("CV-locked/index.html")
+    expect(html).toContain('data-look="resume"')
+    expect(html).toContain('class="note-head"')
+    expect(html).not.toContain('class="cv-head"')
+  })
+
   test("a note can override its layout's style and frame", () => {
     const html = read("Styled-CV/index.html")
     expect(html).toContain('data-look="garden"')
