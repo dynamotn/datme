@@ -8,6 +8,7 @@ site:
   logo: 🌱
 languages: [en-US]
 publish: all
+ignore: [superpowers]         # design notes for contributors, not pages
 home: README.md
 nav:
   - home
