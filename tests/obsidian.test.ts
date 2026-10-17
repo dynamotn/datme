@@ -131,8 +131,8 @@ describe("inline syntax", () => {
     expect(run("# Title").md).toBe("# Title")
   })
 
-  test("html comments are removed", () => {
-    expect(run("a <!-- query --> b").md).toBe("a  b")
+  test("html comments lose their words", () => {
+    expect(run("a <!-- query --> b").md).toBe("a <!----> b")
   })
 })
 
@@ -231,8 +231,20 @@ describe("obsidian flavoured details", () => {
 
   test("inline math is left alone, and a lone dollar is a dollar", () => {
     expect(run("$a^[1]$ and $x==y==z$").md).toBe("$a^[1]$ and $x==y==z$")
-    expect(run("$5 and ==hl== $10").md).toBe("\\$5 and <mark>hl</mark> \\$10")
+    expect(run("$5 and ==hl== $10").md).toBe("&#36;5 and <mark>hl</mark> &#36;10")
+    expect(run("<pre>$5</pre>").md).toBe("<pre>&#36;5</pre>")
+    expect(run("see https://x.test/$y").md).toBe("see https://x.test/$y")
     expect(run("a $$y$$ b").md).toBe("a $$y$$ b")
+  })
+
+  test("indented code stays as written, the next paragraph of a list item does not", () => {
+    expect(run("Text\n\n    [[Target]] ==y== #tag").md).toBe("Text\n\n    [[Target]] ==y== #tag")
+    expect(run("- item\n\n    [[Target]] after").md).toContain(`<a href="${url}"`)
+  })
+
+  test("a link to a heading is not a tag, and a comment keeps its place but not its words", () => {
+    expect(run("[go](#part) and (#tag)").md).toBe('[go](#part) and (<a href="/tags/tag" class="tag-link">#tag</a>)')
+    expect(run("- a\n\n<!-- private -->\n\n- b").md).toBe("- a\n\n<!---->\n\n- b")
   })
 
   test("a block id on a line of its own is kept for the block before it", () => {

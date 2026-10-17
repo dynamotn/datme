@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configured, as the notebook one does, instead of an empty garden.
 - Stage presets fall back to their English label in languages other than
   English and Vietnamese, instead of the Vietnamese one.
+- A line that starts with an HTML comment is raw HTML, as in CommonMark:
+  write the text after it on a line of its own to have it rendered as
+  markdown.
+- An HTML comment loses its words but keeps its place, as an empty
+  comment, so it still separates two lists or ends a block, as in
+  CommonMark. Text right after a comment on the same line now stays raw
+  HTML, as CommonMark reads it.
 - Wikilinks read as Obsidian shows them: `[[Note.md]]` as "Note",
   `[[Note#Part]]` as "Note > Part", and `[[Note|]]` as "Note" instead of an
   empty link.
@@ -49,9 +56,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dollars read as Obsidian reads them: "$5 and $10" stays text, and
   `^[`, `==` or `#` inside `$…$` math no longer turn into a footnote, a
   highlight or a tag.
+- A link to a heading, `[text](#part)`, no longer turns `#part` into a tag.
+- Indented code blocks keep wikilinks, tags and highlights as written.
+- A `$` inside raw HTML, such as a `<pre>` block, shows as a dollar instead
+  of `\$`.
+- A footnote keeps its space before the link back to its reference.
 - A note embedded twice, or embedding a heading the page also has, no longer
   repeats an id on the page: links, footnotes and block ids of each embed
   point inside that embed.
+- Plain CommonMark and GFM render as the specs say, checked against every
+  example of both:
+  - indented code blocks stay as written, without links, tags or
+    highlights made inside them;
+  - `[text](#heading)` links to the heading instead of turning `#heading`
+    into a tag;
+  - a `$` in raw HTML no longer shows as `\$`;
+  - an HTML comment keeps its place without its words, so `<!-- -->`
+    still separates two lists, and `<!-->` counts as a whole comment.
+- The space before a footnote's ↩ link is kept.
 
 ## [2.2.2] - 2026-10-16
 

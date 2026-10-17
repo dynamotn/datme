@@ -38,8 +38,8 @@ describe("Marp decks", () => {
     expect(md).toContain("<!-- backgroundColor: #abc -->")
     expect(md).toContain("<style>h1{color:#def}</style>")
     expect(md).toContain('class="tag-link">#tag</a> <mark>hi</mark>')
-    // An ordinary note still drops its comments.
-    expect(preprocess("<!-- gone -->x", { ...ctx, slides: false }).md).toBe("x")
+    // An ordinary note still drops the words of its comments.
+    expect(preprocess("<!-- gone -->\n\nx", { ...ctx, slides: false }).md).toBe("<!---->\n\nx")
   })
 
   test("images stay markdown, so Marp reads backgrounds and sizes from the alt text", () => {

@@ -1,4 +1,8 @@
 import GithubSlugger from "github-slugger"
+import { unified } from "unified"
+import remarkParse from "remark-parse"
+import remarkGfm from "remark-gfm"
+import { visit } from "unist-util-visit"
 import type { Lang } from "../site.config"
 import { langPrefix } from "./i18n"
 import { sluggify, slugTag, slugToUrl } from "./slug"
@@ -115,12 +119,31 @@ function plainLine(line: string, words: LinkWords = (t, a) => a ?? t): string {
     .slice(0, 220)
 }
 
+/** An HTML comment, including the short `<!-->` and `<!--->` that CommonMark counts as whole comments. */
+const COMMENT = /<!--(?:-?>|[\s\S]*?-->)/g
+
 /**
  * Inline math as Obsidian reads it: no space just inside the dollars and no
  * digit right after the closing one, so "$5 and $10" stays text. `$$` is left
  * to the markdown parser.
  */
 const INLINE_MATH = /(?<![\\$])\$(?=[^\s$])(?:\\.|[^$\\\n])*?[^\s\\$]\$(?![\d$])/g
+
+/**
+ * Code blocks the fence pattern cannot see, indented by four spaces, found by
+ * the markdown parser itself: four spaces in a list item may be its next
+ * paragraph instead, which must still be converted.
+ */
+function maskIndentedCode(md: string, mask: (s: string) => string): string {
+  if (!/^(?: {4}|\t)/m.test(md)) return md
+  const spans: [number, number][] = []
+  visit(unified().use(remarkParse).use(remarkGfm).parse(md), "code", (node) => {
+    const { start, end } = node.position ?? {}
+    if (start?.offset != null && end?.offset != null) spans.push([start.offset, end.offset])
+  })
+  for (const [from, to] of spans.reverse()) md = md.slice(0, from) + mask(md.slice(from, to)) + md.slice(to)
+  return md
+}
 
 /**
  * Obsidian's inline footnotes, ^[text], as GFM footnotes defined at the end of
@@ -172,15 +195,16 @@ export function preprocess(
     text.replace(/^(\s*)(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)\n\s*\2[^\S\n]*$/gm, (m, _indent, _fence, info: string, body: string, offset: number) =>
       !ctx.slides && /^\s*tabs\s*$/i.test(info) ? maskFences(tabsHtml(body, `${ctx.dir}:${offset}`)) : mask(m),
     )
-  let md = maskFences(src)
+  let md = maskIndentedCode(maskFences(src), mask)
     .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
     .replace(CODE_SPAN, (m) => mask(m))
     .replace(INLINE_MATH, (m) => mask(m))
     .replace(/%%[\s\S]*?%%/g, "")
   // A deck keeps its comments (directives, speaker notes) and styles, untouched by tags and highlights.
+  // Elsewhere a comment loses its words but stays, empty: like any comment it may end a list or start a block of HTML.
   md = ctx.slides
     ? md.replace(/<!--[\s\S]*?-->|<style\b[\s\S]*?<\/style>/gi, (m) => mask(m))
-    : md.replace(/<!--[\s\S]*?-->/g, "")
+    : md.replace(COMMENT, "<!---->")
 
   // Multi-Column Markdown regions; their settings block is masked like any code by now.
   if (!ctx.slides) md = columnsHtml(md, (text) => masks[Number(text.match(/^\u0000(\d+)\u0000$/)?.[1] ?? NaN)])
@@ -438,7 +462,8 @@ export function preprocess(
       const { color, text } = highlightOf(inner)
       return color ? `<mark class="mark-${color}">${text}</mark>` : `<mark>${text}</mark>`
     })
-    .replace(/(^|[\s(])#([\p{L}_][\p{L}\p{N}_/-]*)/gu, (_m, pre: string, tag: string) => {
+    // `(#tag)` is a tag, but `[link](#heading)` links to a heading.
+    .replace(/(^|\s|(?<!\])\()#([\p{L}_][\p{L}\p{N}_/-]*)/gu, (_m, pre: string, tag: string) => {
       const url = slugToUrl(langPrefix(ctx.lang) + "tags/" + slugTag(tag))
       return `${pre}<a href="${url}" class="tag-link">#${tag}</a>`
     })
@@ -447,7 +472,10 @@ export function preprocess(
     .replace(/^\^([A-Za-z0-9-]+)[^\S\n]*$/gm, '<span class="block-id" id="^$1"></span>')
 
   // Math is masked by now: a `$` left in the text is a dollar, as Obsidian reads "$5 and $10", not the start of math.
-  if (!ctx.slides) md = md.replace(/(<[^>\n]*>)|(?<![\\$])\$(?!\$)/g, (_m, tag: string | undefined) => tag ?? "\\$")
+  // As a character reference it reads as a dollar in raw HTML too; tags, scripts, styles and URLs keep theirs.
+  if (!ctx.slides) {
+    md = md.replace(/(<(script|style)\b[\s\S]*?<\/\2>|<[^>\n]*>|https?:\/\/\S+)|(?<![\\$])\$(?!\$)/gi, (_m, kept: string | undefined) => kept ?? "&#36;")
+  }
 
   md = md.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
   return { md, links, assets, docs, problems }

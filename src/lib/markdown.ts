@@ -446,7 +446,8 @@ const rehypeSidenotes: Plugin<[], HastRoot> = () => (tree) => {
     const parts: ElementContent[] = []
     blocks.forEach((p, i) => {
       if (i) parts.push({ type: "element", tagName: "br", properties: {}, children: [] })
-      parts.push(...p.children.filter((c) => !(isElement(c) && "dataFootnoteBackref" in c.properties)))
+      // Copies: trimming the sidenote must leave the footnote itself as it is.
+      parts.push(...structuredClone(p.children.filter((c) => !(isElement(c) && "dataFootnoteBackref" in c.properties))))
     })
     const last = parts.at(-1)
     if (last?.type === "text") last.value = last.value.trimEnd()
