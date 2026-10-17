@@ -3323,6 +3323,252 @@ a.drawing-link tspan {
   color: var(--ink-2);
 }
 
+/* Map view: the Maps plugin's round markers, and the list only for readers without the map. */
+.base-map.is-page .map-canvas {
+  height: min(75vh, 720px);
+}
+.base-map:has(.leaflet-container) .map-list {
+  display: none;
+}
+.base-marker-wrap {
+  background: none;
+  border: 0;
+}
+.base-marker {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgb(255 255 255 / 0.3);
+  border-radius: 50%;
+  background: var(--marker, var(--accent));
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+.map-popup {
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.map-popup > a {
+  font-weight: 600;
+}
+.map-popup dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  margin: 6px 0 0;
+}
+.map-popup dt {
+  color: var(--muted);
+}
+.map-popup dd {
+  margin: 0;
+}
+
+/* Notion-style views of the Extended Base plugin. */
+.ntn {
+  --pill-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.ntn-pill {
+  display: inline-block;
+  margin: 1px 4px 1px 0;
+  padding: 0 6px;
+  border-radius: var(--pill-radius);
+  background: var(--pill-bg);
+  color: var(--pill-fg);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: nowrap;
+  text-decoration: none;
+}
+:root[data-theme="dark"] .ntn-pill {
+  background: var(--pill-bg-dark);
+  color: var(--pill-fg-dark);
+}
+.ntn-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.ntn-title:hover span {
+  text-decoration: underline;
+}
+.ntn-page-icon,
+.ntn-col-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--muted);
+}
+.ntn-col-icon {
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+.ntn-scroll {
+  overflow-x: auto;
+}
+.prose table.ntn-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+.prose .ntn-table th,
+.prose .ntn-table td {
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.prose .ntn-table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+.prose .ntn-table.has-lines th + th,
+.prose .ntn-table.has-lines td + td {
+  border-left: 1px solid var(--line);
+}
+.prose .ntn-table.is-wrapping td,
+.prose .ntn-table td.is-wrapped {
+  white-space: normal;
+}
+.ntn-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ntn-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.ntn-props {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  color: var(--ink-2);
+}
+.ntn-prop-name {
+  margin-right: 4px;
+  color: var(--muted);
+}
+.ntn-board {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.ntn-col {
+  flex: none;
+  width: var(--ntn-col-width);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+.ntn-col.is-tinted {
+  background: var(--col-bg);
+}
+:root[data-theme="dark"] .ntn-col.is-tinted {
+  background: var(--col-bg-dark);
+}
+.ntn-col.is-hidden:not([open]) {
+  width: auto;
+}
+.ntn-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 8px;
+  font-weight: 600;
+}
+summary.ntn-col-head {
+  cursor: pointer;
+}
+.ntn-count {
+  color: var(--muted);
+  font-weight: 400;
+}
+.ntn-cards {
+  display: grid;
+  gap: 8px;
+}
+.ntn-card {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+.ntn-card .ntn-props {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.ntn-feed {
+  display: grid;
+  gap: 24px;
+}
+.ntn-feed-item {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.prose .ntn-feed-title {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+.ntn-feed-body {
+  margin-top: 12px;
+}
+/* The note is the item itself: no "embedded from" line, no frame. */
+.ntn-feed-body > .transclude {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.ntn-feed-body > .transclude > .transclude-src {
+  display: none;
+}
+/* Rows past the page size, until the reader asks for them. */
+.ntn:not(:has(> .ntn-more input:checked)) .ntn-extra {
+  display: none;
+}
+.ntn-more {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: pointer;
+}
+.ntn-more:hover,
+.ntn-more:focus-within {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.ntn-more input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.ntn:has(> .ntn-more input:checked) > .ntn-more {
+  display: none;
+}
+
 /* ---------- archive ---------- */
 .archive-year {
   margin-bottom: 36px;

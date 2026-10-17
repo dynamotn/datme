@@ -5,6 +5,8 @@ import { escapeAttr } from "./obsidian"
 import { engineFor, html } from "./dataview-render"
 import { parseBase, runView, BaseError, type BaseFile, type BaseView } from "./bases"
 import { DataviewError } from "./dataview"
+import { renderMapView } from "./base-map"
+import { renderNotionTable, renderNotionList, renderNotionBoard, renderNotionFeed } from "./base-notion"
 
 const parsed = new Map<string, BaseFile>()
 
@@ -27,11 +29,15 @@ export function baseViews(doc: Doc): string[] {
   }
 }
 
-/** HTML of one view of a base (the first when no name is given), with `this` the note at `currentKey`. */
-export function renderBaseView(doc: Doc, viewName: string | undefined, lang: Lang, currentKey?: string): string {
+/**
+ * HTML of one view of a base (the first when no name is given), with `this`
+ * the note at `currentKey`. `embedded` when it shows inside a note rather
+ * than on the base's own page.
+ */
+export function renderBaseView(doc: Doc, viewName: string | undefined, lang: Lang, currentKey?: string, embedded = true): string {
   try {
     const base = baseOf(doc)
-    return renderView(base, base.views.find((v) => v.name === viewName) ?? base.views[0], lang, currentKey)
+    return renderView(base, base.views.find((v) => v.name === viewName) ?? base.views[0], lang, currentKey, embedded)
   } catch (e) {
     return errorOf(e, doc.name)
   }
@@ -58,12 +64,18 @@ function errorOf(e: unknown, name: string): string {
   throw e
 }
 
-function renderView(base: BaseFile, view: BaseView, lang: Lang, currentKey?: string): string {
+function renderView(base: BaseFile, view: BaseView, lang: Lang, currentKey?: string, embedded = true): string {
   const s = t(lang)
-  const engine = engineFor(lang)
-  const res = runView(base, view, { ...engine, current: currentKey ? engine.pages.find((p) => p.key === currentKey) : undefined })
+  const all = engineFor(lang)
+  const engine = { ...all, current: currentKey ? all.pages.find((p) => p.key === currentKey) : undefined }
+  const res = runView(base, view, engine)
   const notes = getVault().byKey[lang]
   if (!res.rows.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
+  if (view.type === "map") return renderMapView(res, base, engine, lang, embedded)
+  if (view.type === "notion-table") return renderNotionTable(res, lang)
+  if (view.type === "notion-list") return renderNotionList(res, lang)
+  if (view.type === "notion-board") return renderNotionBoard(res, lang)
+  if (view.type === "notion-feed") return renderNotionFeed(res, lang)
   if (view.type === "cards") {
     const cards = res.rows
       .map(({ page, cells, image }) => {

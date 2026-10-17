@@ -81,6 +81,17 @@ function clock(src: string): string | undefined | null {
 }
 
 /**
+ * Whether a base the note shows has a feed view, which holds the full text of
+ * the notes it lists: any of them changing changes the page, so it is not cached.
+ */
+function showsFeed(md: string, fences: RegExpMatchArray[]): boolean {
+  const feed = /\bnotion-feed\b/
+  if (fences.some((m) => m[2].toLowerCase() === "base" && feed.test(m[3]))) return true
+  const docs = getVault().docs
+  return [...md.matchAll(/class="base-ph" data-rel="([^"]*)"/g)].some((m) => feed.test(docs.get(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))?.src ?? ""))
+}
+
+/**
  * What a note reads beyond its own markdown, as cache key parts: empty for a
  * self-contained note, undefined for one that cannot be cached (it shows the
  * time). Embedded notes are followed as deep as rendering goes.
@@ -93,6 +104,7 @@ export function dependencies(note: Note, depth = 0, seen = new Set<string>()): s
   const fences = [...md.matchAll(FENCE)]
   const inline = [...md.matchAll(/`=\s([^`]*)`/g)].map((m) => m[1])
   if (fences.length || inline.length || /base-ph/.test(md)) parts.push(`self:${selfSignature(note)}`)
+  if (showsFeed(md, fences)) return undefined
   for (const src of [...fences.map((m) => m[3]), ...inline]) {
     const day = clock(src)
     if (day === null) return undefined

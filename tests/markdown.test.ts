@@ -3,7 +3,8 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { getVault } from "../src/lib/vault"
-import { renderNote, renderSecret, renderMarkdown } from "../src/lib/markdown"
+import { renderNote, renderSecret, renderMarkdown, expandEmbeds } from "../src/lib/markdown"
+import { renderBaseBlock } from "../src/lib/base-render"
 import { preprocess } from "../src/lib/obsidian"
 
 const vi = getVault().byKey["vi-VN"]
@@ -213,6 +214,18 @@ describe("dataview", () => {
     expect(one).not.toContain("base-view-name")
     const bad = await renderMarkdown("```base\nviews: [{ type: table, filters: 'nope()' }]\n```", "en-US", "x")
     expect(bad).toContain('<p class="dataview dv-error">base: unknown function nope()</p>')
+  })
+
+  test("a feed view embeds each note it lists, on a note and on a page of its own", async () => {
+    const src = "views: [{ type: notion-feed, filters: 'file.name == \"Niklas Luhmann\"' }]"
+    const html = await renderMarkdown("```base\n" + src + "\n```", "en-US", "x")
+    expect(html).toContain('<div class="ntn-feed-body"><div class="transclude"')
+    expect(html).not.toContain("transclude-ph")
+    const fromPage = await expandEmbeds(renderBaseBlock(src, "en-US", "x"), "en-US")
+    expect(fromPage).toContain('<div class="ntn-feed-body"><div class="transclude"')
+    // A note listed in a feed it holds does not embed itself.
+    const self = await renderMarkdown("```base\n" + src + "\n```", "en-US", "06_Reference/Niklas Luhmann")
+    expect(self).toMatch(/<div class="ntn-feed-body"><div class="transclude"[^>]*><a class="transclude-src internal"[^>]*>[^<]*<\/a><\/div><\/div>/)
   })
 
   test("a query block lists matching published notes with the line that matched", async () => {

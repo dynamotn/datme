@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `^block-id` on a line of its own names the list, quote or table above
   it, so links to it and embeds of it work.
 - PDF embeds open at `#page=N` and take their height from `#height=N`.
+- Bases show `map` views like Obsidian's Maps plugin: a marker per note at
+  its coordinates, coloured and with an icon from its properties, and a
+  popup of the view's properties.
+- Bases show the Notion-style views of the Extended Base plugin: table,
+  list, board (a column per `groupBy` value) and feed (each note in full),
+  with coloured pills and note icons.
 
 ### Changed
 

@@ -322,7 +322,7 @@ document.addEventListener("astro:page-load", () => {
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())
-  // Leaflet is only fetched on pages with a map: /map, or a note with a ```leaflet block.
+  // Leaflet is only fetched on pages with a map: /map, a ```leaflet block or a map view of a base.
   const mapEls = document.querySelectorAll<HTMLElement>("[data-map]")
   if (mapEls.length) void import("./map").then((m) => mapEls.forEach((el) => m.mountMap(el)))
   void setupWebmentions()

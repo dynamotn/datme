@@ -883,6 +883,16 @@ export async function renderMarkdown(md: string, lang: Lang, key: string): Promi
   return String(await processorFor(lang, [key], {}, false, await plugins()).process(md))
 }
 
+/**
+ * Fill in the notes embedded in HTML rendered outside any note, such as the
+ * feed view on a base's own page.
+ */
+export async function expandEmbeds(html: string, lang: Lang): Promise<string> {
+  if (!html.includes("transclude-ph")) return html
+  const processor = unified().use(rehypeTransclude, { lang, stack: [] }).use(rehypeImages).use(rehypeStringify, { allowDangerousHtml: true })
+  return processor.stringify(await processor.run(fromHtml(html, { fragment: true })))
+}
+
 /** The full rendering of a protected note, only for encrypting its page; its own files are inside. */
 export async function renderSecret(note: Note): Promise<Rendered> {
   const r = await renderFull(note, [note.key])

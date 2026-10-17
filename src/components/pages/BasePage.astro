@@ -2,6 +2,7 @@
 import { site, type Lang } from "~/site.config"
 import type { Doc } from "~/lib/vault"
 import { baseViews, renderBaseView } from "~/lib/base-render"
+import { expandEmbeds } from "~/lib/markdown"
 import { docUrl } from "~/lib/obsidian"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
@@ -13,6 +14,8 @@ interface Props {
 const { lang, doc } = Astro.props
 const views = baseViews(doc)
 const alternates = Object.fromEntries(site.langs.map((l) => [l, docUrl(doc.rel, l)]))
+// A feed view embeds its notes, filled in here as a note's renderer would.
+const sections = await Promise.all((views.length ? views : [undefined]).map(async (name) => ({ name, html: await expandEmbeds(renderBaseView(doc, name, lang, undefined, false), lang) })))
 ---
 
 <Base lang={lang} title={doc.name} alternates={alternates}>
@@ -23,10 +26,10 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, docUrl(doc.rel, 
       <h1>{doc.name}</h1>
     </header>
     {
-      (views.length ? views : [undefined]).map((name) => (
+      sections.map(({ name, html }) => (
         <section class="base-section">
           {views.length > 1 && <h2>{name}</h2>}
-          <div class="prose" set:html={renderBaseView(doc, name, lang)} />
+          <div class="prose" set:html={html} />
         </section>
       ))
     }

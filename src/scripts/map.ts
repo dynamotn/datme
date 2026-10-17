@@ -8,17 +8,43 @@ interface Place {
   title: string
   url: string
   description?: string
+  /** A map view of a base: the marker's CSS colour, its icon as SVG, and its popup as HTML. */
+  color?: string
+  icon?: string
+  popup?: string
 }
 
 const maps = new Map<HTMLElement, L.Map>()
-const layers = new Map<HTMLElement, L.TileLayer>()
-
-/** Tiles for the page's colour scheme: the dark ones when there are, else the light ones, inverted by CSS. */
-const tilesOf = (el: HTMLElement) => (document.documentElement.dataset.theme === "dark" && el.dataset.tilesDark) || el.dataset.tiles!
+const layers = new Map<HTMLElement, L.TileLayer[]>()
 
 /**
- * Places as dots, on the map page or a ```leaflet block; a click shows the
- * note's title and links to it. `data-center` and `data-zoom` fix the view.
+ * Tiles for the page's colour scheme: the dark ones when there are, else the
+ * light ones, inverted by CSS. Several URLs, space-separated, stack as layers.
+ */
+const tilesOf = (el: HTMLElement) => ((document.documentElement.dataset.theme === "dark" && el.dataset.tilesDark) || el.dataset.tiles!).split(" ")
+
+function addTiles(el: HTMLElement, map: L.Map): void {
+  const maxZoom = el.dataset.maxZoom ? Number(el.dataset.maxZoom) : 18
+  layers.set(
+    el,
+    tilesOf(el).map((url, i) => L.tileLayer(url, { attribution: i ? undefined : el.dataset.attribution, maxZoom }).addTo(map)),
+  )
+}
+
+/** A round marker in the colour of the note, with its icon in the middle, as the Maps plugin draws them. */
+function pin(p: Place): L.DivIcon {
+  const span = document.createElement("span")
+  span.className = "base-marker"
+  if (p.color) span.style.setProperty("--marker", p.color)
+  // The SVG of a Lucide icon, read from the package at build time.
+  if (p.icon) span.innerHTML = p.icon
+  return L.divIcon({ html: span, className: "base-marker-wrap", iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -12] })
+}
+
+/**
+ * Places as dots, on the map page, a ```leaflet block or a map view of a
+ * base; a click shows the note's title and links to it. `data-center` and
+ * `data-zoom` fix the view, `data-min-zoom` and `data-max-zoom` bound it.
  */
 export function mountMap(el: HTMLElement): void {
   maps.get(el)?.remove()
@@ -30,24 +56,38 @@ export function mountMap(el: HTMLElement): void {
     document.head.append(link)
   }
   const places = JSON.parse(el.dataset.map ?? "[]") as Place[]
-  const map = L.map(el, { scrollWheelZoom: false })
+  const map = L.map(el, {
+    scrollWheelZoom: false,
+    ...(el.dataset.minZoom ? { minZoom: Number(el.dataset.minZoom) } : {}),
+    ...(el.dataset.maxZoom ? { maxZoom: Number(el.dataset.maxZoom) } : {}),
+  })
   maps.set(el, map)
-  layers.set(el, L.tileLayer(tilesOf(el), { attribution: el.dataset.attribution, maxZoom: 18 }).addTo(map))
+  addTiles(el, map)
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2d6a4f"
   for (const p of places) {
     const popup = document.createElement("div")
-    // A marker of a ```leaflet block may name a place without a note.
-    const a = document.createElement(p.url ? "a" : "strong")
-    if (a instanceof HTMLAnchorElement) a.href = p.url
-    a.textContent = p.title
-    popup.append(a)
-    if (p.description) {
-      const d = document.createElement("p")
-      d.textContent = p.description
-      popup.append(d)
+    if (p.popup != null) {
+      // Built at build time from the notes' properties, escaped there.
+      popup.className = "map-popup"
+      popup.innerHTML = p.popup
+    } else {
+      // A marker of a ```leaflet block may name a place without a note.
+      const a = document.createElement(p.url ? "a" : "strong")
+      if (a instanceof HTMLAnchorElement) a.href = p.url
+      a.textContent = p.title
+      popup.append(a)
+      if (p.description) {
+        const d = document.createElement("p")
+        d.textContent = p.description
+        popup.append(d)
+      }
     }
     // Circle markers need no image files, which bundlers tend to lose.
-    L.circleMarker([p.lat, p.lng], { radius: 8, color: accent, weight: 2, fillOpacity: 0.6 }).bindPopup(popup).addTo(map)
+    const marker =
+      p.color || p.icon
+        ? L.marker([p.lat, p.lng], { icon: pin(p), title: p.title })
+        : L.circleMarker([p.lat, p.lng], { radius: 8, color: accent, weight: 2, fillOpacity: 0.6 })
+    marker.bindPopup(popup).addTo(map)
   }
   const center = el.dataset.center?.split(",").map(Number) as [number, number] | undefined
   const zoom = el.dataset.zoom ? Number(el.dataset.zoom) : undefined
@@ -59,7 +99,12 @@ export function mountMap(el: HTMLElement): void {
 
 /** Swap the tiles of every map when the theme changes and the site has dark ones. */
 export function retileMaps(): void {
-  for (const [el, layer] of layers) layer.setUrl(tilesOf(el))
+  for (const [el, old] of layers) {
+    const map = maps.get(el)
+    if (!map) continue
+    for (const layer of old) layer.remove()
+    addTiles(el, map)
+  }
 }
 
 export function unmountMap(): void {

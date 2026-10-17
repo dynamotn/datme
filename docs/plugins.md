@@ -86,8 +86,48 @@ several. Supported:
   `file.hasTag("book") && rating >= 4`.
 - `formulas` and `properties.displayName`.
 - `table`, `cards` and `list` views, with `order`, `sort` and `limit`.
+- `groupBy`, which the board view below lays out as columns.
 - `this`, the note that embeds the base or holds the block:
   `file.hasLink(this.file)` lists the notes linking to it.
+
+### Map view
+
+The `map` view of Obsidian's Maps plugin shows a marker for each note of the
+view, drawn with Leaflet like the site's map page:
+
+- `coordinates` names the property holding `[lat, lng]` or `"lat, lng"`.
+  Without it, the view reads `coordinates` or `location`, as the map page does.
+- `markerColor` names a property holding a CSS colour, and `markerIcon` one
+  holding a Lucide icon name such as `map-pin`.
+- The popup shows the view's `order`: the first property as a link to the
+  note, the others as rows.
+- `center`, `defaultZoom`, `minZoom` and `maxZoom` set the view.
+  `mapHeight` sets the height of an embedded map; on the base's own page the
+  map fills the screen.
+- `mapTiles` and `mapTilesDark` take tile URLs with `{z}/{x}/{y}`, stacked
+  when there are several. A MapLibre style URL cannot be drawn by Leaflet,
+  so the site's `map.tiles` are used instead.
+
+### Notion-style views
+
+The four views of the Extended Base plugin render as in Obsidian:
+
+- **Table** (`type: bases`): titles with their note's icon, list values as
+  pills, and `columnNames`, `columnIcons`, `columnWidths`, `hiddenColumns`,
+  `wrapCells`, `wrapColumns`, `verticalLines` and `rowLimit`.
+- **List** (`notion-list`): one line per note, with `rowCount`.
+- **Board** (`notion-board`): a column per value of `groupBy`, with
+  `boardColumnWidth`, `groupColorDisplay`, `propertyLabelDisplay` and
+  `hiddenGroups`, which fold away rather than disappear. Grouping by folder
+  is not split into subfolders.
+- **Feed** (`notion-feed`): each note in full under its title and pills,
+  with `rowCount`.
+
+All four take `showTitleIcon`, `titleIconProperty` (`icon` by default: a
+Lucide name or an emoji), `pillProperties` and `pinnedColors`
+(`done=green`, `blocked=red:40`). Rows past `rowLimit` or `rowCount` are on
+the page behind a "Show more" button. `openMode` and `syncPrettyProperties`
+only matter inside Obsidian.
 
 ## Excalidraw
 

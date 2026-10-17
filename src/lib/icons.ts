@@ -59,12 +59,7 @@ function svgOf(name: string, vault: string): string | undefined {
   if (m) {
     const [, prefix, rest] = m
     if (prefix === "Li") {
-      try {
-        const lucide = path.dirname(createRequire(import.meta.url).resolve("lucide-static/package.json"))
-        svg = fs.readFileSync(path.join(lucide, "icons", `${kebab(rest)}.svg`), "utf8")
-      } catch {
-        // not a Lucide icon
-      }
+      svg = lucideFile(kebab(rest))
     } else {
       try {
         for (const pack of fs.readdirSync(path.join(vault, PACKS))) {
@@ -79,15 +74,40 @@ function svgOf(name: string, vault: string): string | undefined {
       }
     }
   }
-  // Sized to the text around it; licence comments and fixed sizes go.
-  svg = svg
-    ?.replace(/<!--[\s\S]*?-->/g, "")
+  svg = svg && sized(svg)
+  svgs.set(id, svg)
+  return svg
+}
+
+/** Sized to the text around it; licence comments and fixed sizes go. */
+const sized = (svg: string) =>
+  svg
+    .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/\s(width|height|class)="[^"]*"/g, "")
     .replace(/<svg\b/, '<svg width="1em" height="1em" aria-hidden="true" focusable="false"')
     .replace(/\s+/g, " ")
     .trim()
-  svgs.set(id, svg)
-  return svg
+
+function lucideFile(name: string): string | undefined {
+  try {
+    const lucide = path.dirname(createRequire(import.meta.url).resolve("lucide-static/package.json"))
+    return fs.readFileSync(path.join(lucide, "icons", `${name}.svg`), "utf8")
+  } catch {
+    return undefined
+  }
+}
+
+const lucides = new Map<string, string | undefined>()
+
+/** The SVG of a Lucide icon by its own name, `map-pin` or `lucide-map-pin`, as Obsidian names them; undefined when unknown. */
+export function lucideSvg(name: string): string | undefined {
+  const id = name.trim().toLowerCase().replace(/^lucide-/, "")
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) return undefined
+  if (!lucides.has(id)) {
+    const svg = lucideFile(id)
+    lucides.set(id, svg && sized(svg))
+  }
+  return lucides.get(id)
 }
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;")

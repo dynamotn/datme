@@ -9,14 +9,33 @@ export class BaseError extends Error {}
 
 type Filter = string | { and?: Filter[]; or?: Filter[]; not?: Filter[] }
 
+/**
+ * Core views, the map of the Maps plugin, and the Notion-style views of the
+ * Extended Base plugin; that plugin stores its table as `bases`.
+ */
+export type ViewType = "table" | "cards" | "list" | "map" | "notion-table" | "notion-list" | "notion-board" | "notion-feed"
+
+const VIEW_TYPES: Record<string, ViewType> = {
+  cards: "cards",
+  list: "list",
+  map: "map",
+  bases: "notion-table",
+  "notion-list": "notion-list",
+  "notion-board": "notion-board",
+  "notion-feed": "notion-feed",
+}
+
 export interface BaseView {
-  type: "table" | "cards" | "list"
+  type: ViewType
   name: string
   filters?: Filter
   order: string[]
   sort: { property: string; direction: "ASC" | "DESC" }[]
   limit?: number
   image?: string
+  groupBy?: { property: string; direction: "ASC" | "DESC" }
+  /** Every key of the view as written, for the options of plugin views. */
+  options: Record<string, unknown>
 }
 
 export interface BaseFile {
@@ -33,6 +52,15 @@ function list<T>(v: unknown, what: string, fallback: T[] = []): T[] {
   return v
 }
 
+/** `groupBy: note.status` or `groupBy: { property: note.status, direction: DESC }`. */
+function groupOf(v: unknown): BaseView["groupBy"] {
+  if (typeof v === "string" && v) return { property: v, direction: "ASC" }
+  if (!v || typeof v !== "object") return undefined
+  const g = v as { property?: unknown; direction?: unknown }
+  if (g.property == null) throw new BaseError("groupBy needs a property")
+  return { property: String(g.property), direction: String(g.direction ?? "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC" }
+}
+
 export function parseBase(src: string): BaseFile {
   let raw: Record<string, unknown>
   try {
@@ -47,7 +75,7 @@ export function parseBase(src: string): BaseFile {
   const views = list<Record<string, unknown> | null>(raw.views, "views", [{ type: "table", name: "Table" }]).map((v, i): BaseView => {
     if (!v || typeof v !== "object") throw new BaseError(`view ${i + 1} is empty`)
     return {
-      type: v.type === "cards" ? "cards" : v.type === "list" ? "list" : "table",
+      type: VIEW_TYPES[String(v.type)] ?? "table",
       name: String(v.name ?? `View ${i + 1}`),
       filters: v.filters as Filter | undefined,
       order: list(v.order, "order", ["file.name"]).map(String),
@@ -57,6 +85,8 @@ export function parseBase(src: string): BaseFile {
       }),
       limit: typeof v.limit === "number" ? v.limit : undefined,
       image: typeof v.image === "string" ? v.image : undefined,
+      groupBy: groupOf(v.groupBy),
+      options: v,
     }
   })
   return {
@@ -439,10 +469,18 @@ function passes(filter: Filter | undefined, page: Page, engine: Engine, formulas
   return true
 }
 
+export interface Row {
+  page: Page
+  cells: Value[]
+  image?: Value
+}
+
 export interface ViewResult {
   view: BaseView
   columns: { id: string; name: string }[]
-  rows: { page: Page; cells: Value[]; image?: Value }[]
+  rows: Row[]
+  /** The rows by the value of `groupBy`, in its direction; rows without one come last, under a null key. */
+  groups?: { key: Value; rows: Row[] }[]
 }
 
 /** Default column names: the configured displayName, else the property without its namespace. */
@@ -466,15 +504,36 @@ export function runView(base: BaseFile, view: BaseView, engine: Engine): ViewRes
     pages = keyed.map((k) => k.p)
   }
   if (view.limit) pages = pages.slice(0, view.limit)
-  return {
-    view,
-    columns: view.order.map((id) => ({ id, name: columnName(id, base) })),
-    rows: pages.map((page) => ({
+  const rows = pages.map(
+    (page): Row => ({
       page,
       cells: view.order.map((id) =>
         id === "file.name" ? ({ kind: "link", key: page.key, title: page.title, url: page.url } as Link) : property(id, page, engine, base.formulas),
       ),
       image: view.image ? property(view.image, page, engine, base.formulas) : undefined,
-    })),
+    }),
+  )
+  return {
+    view,
+    columns: view.order.map((id) => ({ id, name: columnName(id, base) })),
+    rows,
+    groups: view.groupBy && groupRows(rows, view.groupBy, engine, base.formulas),
   }
+}
+
+function groupRows(rows: Row[], by: NonNullable<BaseView["groupBy"]>, engine: Engine, formulas: Record<string, string>): ViewResult["groups"] {
+  const groups = new Map<string, { key: Value; rows: Row[] }>()
+  for (const row of rows) {
+    const value = property(by.property, row.page, engine, formulas)
+    const key = Array.isArray(value) && !value.length ? null : value
+    const id = key == null || key === "" ? "\0" : JSON.stringify(key)
+    let g = groups.get(id)
+    if (!g) groups.set(id, (g = { key: id === "\0" ? null : key, rows: [] }))
+    g.rows.push(row)
+  }
+  return [...groups.values()].sort((a, b) => {
+    if (a.key == null || b.key == null) return a.key == null ? (b.key == null ? 0 : 1) : -1
+    const d = compare(a.key, b.key)
+    return by.direction === "DESC" ? -d : d
+  })
 }
