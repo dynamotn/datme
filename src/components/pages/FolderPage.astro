@@ -5,7 +5,7 @@ import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { t, formatDate } from "~/lib/i18n"
 import { isStream } from "~/lib/nav"
-import { lookOfDir } from "~/lib/look"
+import { lookOf, lookOfDir } from "~/lib/look"
 import { feedPath } from "~/lib/feed"
 import Subscribe from "../Subscribe.astro"
 import { folderIcon } from "~/lib/icons"
@@ -26,7 +26,9 @@ const { lang, folder } = Astro.props
 const s = t(lang)
 const vault = getVault()
 const intro = folder.folderNote ? await renderNote(folder.folderNote) : undefined
-const look = lookOfDir(folder.dir)
+// A folder note with a layout (and not protected) gives its folder its look.
+const owner = folder.folderNote && !folder.folderNote.protected ? folder.folderNote : undefined
+const look = owner ? lookOf(owner) : lookOfDir(folder.dir)
 const stage = site.stages[folder.segment]
 // A folder note with a layout lays out its folder too: a collection replaces the list of notes.
 const layout = folder.folderNote?.protected ? undefined : folder.folderNote?.layout

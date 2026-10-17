@@ -1,5 +1,5 @@
 import { site, type SiteConfig, type Style } from "../site.config"
-import type { Note } from "./vault"
+import type { Layout, Note } from "./vault"
 
 /** Navigation frames a note can ask for with its `chrome` property. */
 export const CHROMES = ["full", "minimal"] as const
@@ -39,7 +39,43 @@ export function lookOfDir(dir: string): Style {
   return resolveLook(dir, site.appearance)
 }
 
-/** Page style of a note: that of its folder; the site style when there is no note. */
-export function lookOf(note: Pick<Note, "dir"> | undefined): Style {
-  return note ? lookOfDir(note.dir) : site.appearance.style
+/** What a layout asks for by default: a style (none: the site's own) and a frame. */
+export interface LayoutLook {
+  style?: Style
+  frame: Frame
+}
+
+// books, movies and shelf follow the site style until a `library` style exists.
+export const LAYOUT_LOOKS: Partial<Record<Layout, LayoutLook>> = {
+  cv: { style: "resume", frame: "minimal" },
+  links: { style: "classic", frame: "minimal" },
+  gallery: { style: "darkroom", frame: "minimal" },
+  timeline: { frame: "full-norail" },
+  now: { frame: "full-norail" },
+  uses: { frame: "full-norail" },
+  quotes: { frame: "full-norail" },
+  faq: { frame: "full" },
+  projects: { frame: "full-norail" },
+  talks: { frame: "full-norail" },
+  recipes: { frame: "full-norail" },
+  places: { frame: "full-norail" },
+  shelf: { frame: "full-norail" },
+  books: { frame: "full-norail" },
+  movies: { frame: "full-norail" },
+}
+
+/** Page style of a note: its own `style`, else its layout's, else that of its folder; the site style when there is no note. */
+export function lookOf(note: Pick<Note, "dir" | "style" | "layout"> | undefined): Style {
+  if (!note) return site.appearance.style
+  return note.style ?? (note.layout && LAYOUT_LOOKS[note.layout]?.style) ?? lookOfDir(note.dir)
+}
+
+/** Frame of a note's page: its own `chrome`, else its layout's, else full. */
+export function frameOf(note: Pick<Note, "chrome" | "layout"> | undefined): Frame {
+  return note?.chrome ?? (note?.layout && LAYOUT_LOOKS[note.layout]?.frame) ?? "full"
+}
+
+/** Whether a style opens dark when the reader has not chosen a scheme. */
+export function startsDark(look: Style): boolean {
+  return look === "darkroom"
 }

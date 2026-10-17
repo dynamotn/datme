@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Page layouts pick a fitting style by default: `cv` pages use the resume
+  style, `gallery` pages the darkroom style and `links` pages the classic
+  one, and a note's own `style:` still wins. A folder whose folder note has
+  a layout takes that look too.
 - Notes can set `style:` (`notebook`, `classic`, `garden`, `resume` or
   `darkroom`) and `chrome:` (`full` or `minimal`) in their properties; an
   unknown value is reported as a warning and the note keeps its usual look.
