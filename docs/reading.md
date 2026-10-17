@@ -122,6 +122,32 @@ before. See [Privacy](privacy.md#note-history) before turning it on.
 - Notes can show webmentions (likes, reposts, replies) and comments, when the
   site enables them.
 
+## On the fediverse
+
+People on Mastodon and other fediverse servers can follow the garden. A static
+site cannot send posts to followers itself, so datme hands that to
+[Bridgy Fed](https://fed.brid.gy):
+
+```yaml
+site:
+  url: https://garden.example
+activitypub: bridgy
+```
+
+datme then redirects WebFinger to Bridgy Fed (in `_redirects`, so on Netlify or
+Cloudflare Pages) and marks pages with microformats: the author on the home
+page, and each note's title, text, date and address. Sign the site up at
+fed.brid.gy; the garden becomes `@garden.example@garden.example`, and replies
+come back as [webmentions](#following-the-garden). Bridgy Fed's
+[documentation](https://fed.brid.gy/docs) explains how new notes reach
+followers.
+
+Where Bridgy Fed is not wanted, `activitypub: { username: notes }` publishes
+only the static parts: WebFinger, an actor and an outbox of the 20 newest
+notes. Searching `@notes@garden.example` on a fediverse server then finds the
+garden and shows those notes, but following it does nothing, as no server
+answers.
+
 ## Embedding a note elsewhere
 
 Each public note announces an oEmbed description (`<note>.oembed.json`), so

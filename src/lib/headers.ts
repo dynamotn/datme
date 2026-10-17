@@ -1,6 +1,7 @@
 import crypto from "node:crypto"
 import type { SiteConfig } from "../site.config"
 import { MONO_FONT_ORIGIN } from "./fonts"
+import { STATIC_HEADERS } from "./activitypub"
 
 /** Hashes of the inline scripts of built pages, for a CSP without 'unsafe-inline'. */
 export function inlineScriptHashes(pages: string[]): string[] {
@@ -117,6 +118,7 @@ export function headersFile(site: SiteConfig, scriptHashes: string[] = []): stri
           "",
         ]
       : []),
+    ...(site.activitypub && site.activitypub !== "bridgy" ? ["# The fediverse reads these as JSON from other servers.", ...STATIC_HEADERS] : []),
     "# The service worker must update as soon as the site does.",
     "/sw.js",
     "  Cache-Control: no-cache",

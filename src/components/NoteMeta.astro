@@ -47,7 +47,7 @@ const props = noteProperties(note)
     note.created && (
       <span title={s.created}>
         <Icon name="calendar" />
-        <time datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>
+        <time class="dt-published" datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>
       </span>
     )
   }
@@ -55,7 +55,7 @@ const props = noteProperties(note)
     note.updated && formatDate(note.updated, note.lang) !== formatDate(note.created, note.lang) && (
       <span title={s.updated}>
         <Icon name="edit" />
-        <time datetime={note.updated.toISOString()}>{formatDate(note.updated, note.lang)}</time>
+        <time class="dt-updated" datetime={note.updated.toISOString()}>{formatDate(note.updated, note.lang)}</time>
       </span>
     )
   }

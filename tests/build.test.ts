@@ -200,7 +200,7 @@ describe("static build", () => {
     expect(html).toContain('<p class="untranslated">')
     expect(html).toContain('<link rel="canonical" href="https://notes.dynamotn.dev/06_Reference/Niklas-Luhmann">')
     expect(html).not.toContain('<link rel="alternate" hreflang="en-US"')
-    expect(html).toContain('<div class="prose" lang="vi-VN">')
+    expect(html).toContain('<div class="prose e-content" lang="vi-VN">')
     const translated = read("en-US/03_Atomic/Zettelkasten-method/index.html")
     expect(translated).not.toContain('class="untranslated"')
     expect(translated).toContain('<link rel="alternate" hreflang="en-US"')
@@ -210,7 +210,7 @@ describe("static build", () => {
   test("an untranslated page shows its fallback language's text, marked as such", () => {
     const html = read("en-US/03_Atomic/Vietnamese-only/index.html")
     expect(html).toContain('<p class="untranslated">')
-    expect(html).toContain('<div class="prose" lang="vi-VN">')
+    expect(html).toContain('<div class="prose e-content" lang="vi-VN">')
     expect(html).toContain("Nội dung chỉ được viết bằng tiếng Việt.")
     expect(html).not.toContain("A heading alone is not a translation")
     // The canonical page is the Vietnamese one: no /en-US/ prefix.

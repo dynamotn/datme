@@ -5,6 +5,7 @@ import { sluggify, slugToUrl } from "./slug"
 import { docSlug } from "./obsidian"
 import { hasMap, hasTimeline } from "./places"
 import { hasJournal } from "./journal"
+import { BRIDGY_REDIRECTS } from "./activitypub"
 import { hasDecks } from "./decks"
 import { hasChanges } from "./changes"
 import { hasHistory } from "./history"
@@ -80,5 +81,6 @@ export function redirectsFile(): string {
   for (const [slug, page] of routes()) {
     if (page.kind === "alias") lines.push(`${slugToUrl(slug)} ${page.note.url} 301`)
   }
+  if (site.activitypub === "bridgy") lines.push(...BRIDGY_REDIRECTS)
   return lines.join("\n") + (lines.length ? "\n" : "")
 }

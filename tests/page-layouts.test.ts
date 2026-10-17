@@ -115,7 +115,7 @@ describe("page layouts", () => {
   test("a résumé has a head of contacts and sections, and no backlinks", () => {
     const page = read("CV/index.html")
     const html = article("CV/index.html")
-    expect(html).toContain('class="note layout-cv"')
+    expect(html).toContain('class="note layout-cv h-entry"')
     expect(html).toContain('<img class="cv-photo" src="/assets/_assets/portrait.png"')
     expect(html).toContain('<p class="cv-role">Platform engineer</p>')
     expect(html).toContain('<a href="mailto:ada@example.com">ada@example.com</a>')
@@ -129,7 +129,7 @@ describe("page layouts", () => {
 
   test("a gallery shows its pictures as a grid, its text as text", () => {
     const html = article("Photos/index.html")
-    expect(html).toContain('class="note layout-gallery"')
+    expect(html).toContain('class="note layout-gallery h-entry"')
     expect(html.match(/<div class="gallery-grid">/g)).toHaveLength(1)
     expect(html.match(/<figure class="gallery-item">/g)).toHaveLength(3)
     expect(html).toContain("<figcaption>Morning fog</figcaption>")
@@ -166,7 +166,7 @@ describe("page layouts", () => {
 
   test("a timeline of moments", () => {
     const html = article("Life/index.html")
-    expect(html).toContain('class="note layout-timeline"')
+    expect(html).toContain('class="note layout-timeline h-entry"')
     expect(html.match(/<li class="life-event">/g)).toHaveLength(2)
   })
 

@@ -4,6 +4,9 @@ import path from "node:path"
 import { site } from "../site.config"
 import { redirectsFile } from "./routes"
 import { headersFile, inlineScriptHashes } from "./headers"
+import { ACTOR_PATH, OUTBOX_PATH, actor, outbox, webfinger } from "./activitypub"
+import { listed, byRecent } from "./vault"
+import { renderNote } from "./markdown"
 
 /** Every HTML file under a directory, as text. */
 function htmlFiles(dir: string): string[] {
@@ -25,6 +28,22 @@ export default function vaultWatcher(): AstroIntegration {
         if (site.redirects) {
           const lines = redirectsFile()
           if (lines) fs.writeFileSync(new URL("_redirects", dir), lines)
+        }
+        const ap = site.activitypub
+        if (ap && ap !== "bridgy" && site.url) {
+          // The static parts of an actor: found from Mastodon, read, not followed.
+          const write = (p: string, data: object) => {
+            const file = path.join(dir.pathname, p)
+            fs.mkdirSync(path.dirname(file), { recursive: true })
+            fs.writeFileSync(file, JSON.stringify(data))
+          }
+          const notes = byRecent(listed(site.defaultLang).filter((n) => !n.isHome && !n.protected && n.created), "created").slice(0, 20)
+          const items = await Promise.all(
+            notes.map(async (n) => ({ url: n.url, title: n.title, summary: (await renderNote(n)).description ?? "", published: n.created!, tags: n.tags })),
+          )
+          write(".well-known/webfinger", webfinger(site, ap.username))
+          write(ACTOR_PATH, actor(site, ap.username))
+          write(OUTBOX_PATH, outbox(site, items))
         }
         if (site.search.engine === "pagefind") {
           // Notes mark their body for Pagefind; every other page is left out of the index.

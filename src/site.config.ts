@@ -376,6 +376,13 @@ const schema = z
     ogImages: z.boolean().default(true),
     /** Other datme gardens, by a short name: `[[name:Note]]` links to a note of one of them. */
     neighbours: z.record(z.string().regex(/^[\w-]+$/, "expected a short name: letters, digits, - or _"), z.url()).default({}),
+    /**
+     * Let the fediverse find the garden: `bridgy` hands it to Bridgy Fed, which people can follow;
+     * `{ username }` publishes only a static actor and outbox, found but not followable. Needs site.url.
+     */
+    activitypub: z
+      .union([z.literal("bridgy"), z.object({ username: z.string().regex(/^[\w.-]+$/, "expected a username: letters, digits, ., - or _") }).strict()])
+      .optional(),
     /** Let other sites embed a card of each public note, by oEmbed; needs site.url. */
     oembed: z.boolean().default(true),
     /** Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text. */
@@ -472,6 +479,9 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     if (!domain) throw new ConfigError(`Invalid datme config in ${vault}:\n  - webmentions: needs site.url or webmentions.domain`)
     webmentions = { domain }
   }
+  if (c.activitypub && !url) {
+    throw new ConfigError(`Invalid datme config in ${vault}:\n  - activitypub: needs site.url, the address other servers reach`)
+  }
   if (c.search.meaning && !c.related.semantic) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - search.meaning: needs related.semantic, whose model it uses`)
   }
@@ -527,6 +537,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     ogImages: c.ogImages,
     llms: c.llms,
     oembed: c.oembed,
+    activitypub: c.activitypub,
     neighbours: Object.fromEntries(Object.entries(c.neighbours).map(([k, v]) => [k, v.replace(/\/+$/, "")])),
     askAi: [...new Set(c.askAi)],
     outdated: c.outdated,

@@ -79,7 +79,7 @@ const NOW_STALE_YEARS = 0.25
   <article
     data-pagefind-body={site.search.engine === "pagefind" && !note.protected ? "" : undefined}
     data-pagefind-filter={site.search.engine === "pagefind" ? pagefindFilters : undefined}
-    class:list={["note", { "is-blog": note.isBlog }, note.layout && `layout-${note.layout}`, ...note.cssclasses]}
+    class:list={["note", { "is-blog": note.isBlog }, note.layout && `layout-${note.layout}`, ...note.cssclasses, "h-entry"]}
     data-key={note.key}
     transition:name="note"
   >
@@ -110,7 +110,7 @@ const NOW_STALE_YEARS = 0.25
         <ItemHead note={note} item={item}>
           <header class="note-head">
             <NoteMeta note={note} words={r.words}>
-              <h1 class="note-title">{title}</h1>
+              <h1 class="note-title p-name">{title}</h1>
             </NoteMeta>
             <NoteTools note={note} />
           </header>
@@ -118,7 +118,7 @@ const NOW_STALE_YEARS = 0.25
       ) : (
         <header class="note-head">
           <NoteMeta note={note} words={r.words}>
-            <h1 class="note-title">{title}</h1>
+            <h1 class="note-title p-name">{title}</h1>
           </NoteMeta>
           <NoteTools note={note} />
         </header>
@@ -180,7 +180,7 @@ const NOW_STALE_YEARS = 0.25
               </a>
             </p>
           )}
-          <div class="prose" lang={original ? langMeta(original.lang).html : undefined} set:html={html} />
+          <div class="prose e-content" lang={original ? langMeta(original.lang).html : undefined} set:html={html} />
           {isCollection(note.layout) && <Collection note={note} kind={note.layout} />}
         </>
       )
@@ -188,6 +188,9 @@ const NOW_STALE_YEARS = 0.25
     <TrailBar note={note} at="foot" />
     <SeriesBox note={note} at="foot" />
     <DayNav note={note} />
+    {/* Microformats, for the fediverse bridges and IndieWeb readers: the note's address and author. */}
+    {site.url && <data class="u-url" value={new URL(note.url, site.url + "/").href} hidden />}
+    <a class="p-author h-card" href={site.url ? site.url + "/" : "/"} hidden>{site.author || site.title[note.lang]}</a>
     {
       !note.isHome && hasHistory(note) && (
         <p class="history-link">
