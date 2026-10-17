@@ -6,6 +6,7 @@
  */
 import fs from "node:fs"
 import path from "node:path"
+import { basePath, withBase } from "./base.ts"
 
 export const NEIGHBOURS_FILE = "neighbours.json"
 
@@ -69,9 +70,19 @@ export function findInGarden(name: string, target: string, lang: string, file?: 
         const tail = fold(p.replace(/\/+$/, ""))
         return tail.endsWith("/" + want.replace(/ /g, "-")) || tail.endsWith("/" + want)
       })
-    if (hit) return { url: new URL(hit.u, garden.url + "/").href, title: hit.t }
+    if (hit) return { url: remoteUrl(hit.u, garden.url), title: hit.t }
   }
   return null
+}
+
+/**
+ * The full URL of a note of a garden from its index. A garden served under a
+ * path lists its notes under it, unless it was built before datme knew of
+ * paths: those are put under it.
+ */
+function remoteUrl(u: string, gardenUrl: string): string {
+  const base = basePath(gardenUrl)
+  return new URL(u.startsWith(base) ? u : withBase(u, base), gardenUrl + "/").href
 }
 
 /** Fetch a URL as JSON within a few seconds, or undefined. */

@@ -2,6 +2,7 @@
 import Base from "~/layouts/Base.astro"
 import { site } from "~/site.config"
 import { t } from "~/lib/i18n"
+import { withBase } from "~/lib/base"
 
 const lang = site.defaultLang
 const s = t(lang)
@@ -15,8 +16,8 @@ const others = site.langs.slice(1)
     <p class="empty">{s.notFoundLead}</p>
     {others.map((l) => <p class="empty">{t(l).notFound} — {t(l).notFoundLead}</p>)}
     <p class="chips" style="justify-content: center">
-      <button class="chip not-found-back" type="button" hidden>← {s.backPrevious}</button>
-      <a class="chip stage" href="/">{s.backHome}</a>
+      <button class="chip not-found-back" type="button" data-base={withBase("/")} hidden>← {s.backPrevious}</button>
+      <a class="chip stage" href={withBase("/")}>{s.backHome}</a>
     </p>
   </div>
   <script is:inline>
@@ -30,6 +31,8 @@ const others = site.langs.slice(1)
         from = new URL(document.referrer)
       } catch {}
       if (!from || from.origin !== location.origin || from.href === location.href) return
+      // Another garden served from the same host is not this one.
+      if (!from.pathname.startsWith(back.dataset.base || "/")) return
       back.hidden = false
       back.addEventListener("click", () => history.back())
     })()

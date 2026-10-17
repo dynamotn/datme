@@ -5,7 +5,8 @@ import { parseYaml } from "./yaml"
 import { site, STYLES, type Lang, type Style } from "../site.config"
 import { pickOption, CHROMES, type Chrome } from "./look"
 import { langPrefix, t } from "./i18n"
-import { sluggify, slugTag, slugToUrl, folderDisplayName } from "./slug"
+import { sluggify, slugTag, slugToUrl, urlToSlug, folderDisplayName } from "./slug"
+import { withBase } from "./base"
 import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
 import { parseCanvas, type CanvasData } from "./canvas"
 import { flashcards, isDeck } from "./flashcards"
@@ -1006,7 +1007,7 @@ function buildVault(version: number): Vault {
         console.warn(`[datme] permalink of ${n.key} clashes with ${other.key}; keeping ${n.formerUrl}`)
         n.url = n.formerUrl
         // formerUrl already carries the language prefix.
-        n.slug = n.formerUrl.replace(/^\//, "").split("/").map(decodeURIComponent).join("/")
+        n.slug = urlToSlug(n.formerUrl)
         n.formerUrl = undefined
       } else taken.set(n.url, n)
     }
@@ -1138,7 +1139,7 @@ function buildTree(list: Note[], lang: Lang): { root: FolderNode; all: Map<strin
 }
 
 export function assetUrl(rel: string): string {
-  return "/assets/" + rel.split("/").map(encodeURIComponent).join("/")
+  return withBase("/assets/" + rel.split("/").map(encodeURIComponent).join("/"))
 }
 
 /** Number of notes under a folder, recursively; folder notes introduce their folder and are not counted. */

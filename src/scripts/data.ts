@@ -1,4 +1,5 @@
 import { freshness } from "./outdated"
+import { withBase } from "./base"
 
 /** A note in the graph index: what the graph, walks and random notes need. */
 export interface GraphNote {
@@ -50,10 +51,10 @@ function load<I>(url: string): Promise<I> {
 }
 
 /** Every note of a language with its text: only search needs it, as it is by far the larger file. */
-export const loadIndex = (lang: string) => load<ContentIndex>(`/static/contentIndex.${lang}.json`)
+export const loadIndex = (lang: string) => load<ContentIndex>(withBase(`/static/contentIndex.${lang}.json`))
 
 /** Every note of a language and their links, without their text: for the graph, walks and random notes. */
-export const loadGraph = (lang: string) => load<GraphIndex>(`/static/graph.${lang}.json`)
+export const loadGraph = (lang: string) => load<GraphIndex>(withBase(`/static/graph.${lang}.json`))
 
 /** Compare URL paths regardless of percent-encoding and trailing slashes. */
 export function samePath(a: string, b: string): boolean {

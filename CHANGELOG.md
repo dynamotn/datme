@@ -210,6 +210,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A site served under a path, such as a GitHub or GitLab project site
+  (`site.url: https://me.github.io/garden/`), now works: links between notes,
+  assets, canonical and social URLs, RSS feeds, the sitemap (still without
+  unlisted pages and redirects), `llms.txt`, search, the graph, the explorer,
+  link previews and offline reading all stay under its path.
 - A tag or `permalink` with a `.` or `..` segment no longer breaks the build.
 - With `headers: { csp: true }`, Giscus comments load their stylesheet.
 - In the notebook look, two headings in a row with no text between them

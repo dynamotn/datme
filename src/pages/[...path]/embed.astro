@@ -8,13 +8,14 @@ import type { GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
 import { listed, type Note } from "~/lib/vault"
 import { embeddable, embedUrl } from "~/lib/oembed"
+import { stripBase } from "~/lib/base"
 import EmbedPage from "~/components/pages/EmbedPage.astro"
 
 export const getStaticPaths = (() =>
   site.langs.flatMap((lang: Lang) =>
     listed(lang)
       .filter(embeddable)
-      .map((note) => ({ params: { path: decodeURI(embedUrl(note)).replace(/^\//, "").replace(/\/embed$/, "") }, props: { note } })),
+      .map((note) => ({ params: { path: decodeURI(stripBase(embedUrl(note))).replace(/^\//, "").replace(/\/embed$/, "") }, props: { note } })),
   )) satisfies GetStaticPaths
 
 const { note } = Astro.props as { note: Note }

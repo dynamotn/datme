@@ -42,6 +42,15 @@ Hand-written equivalents live in [`examples/deploy/`](https://gitlab.com/dynamo-
 Both fetch the full git history, so notes without `created` or `updated` get
 their real dates.
 
+## Project sites under a path
+
+GitHub and GitLab serve a project's site under its name, as
+`https://me.github.io/garden/` or `https://me.gitlab.io/garden/`. Set that
+whole address as `site.url`, path included, and datme builds the site for it:
+links, assets, feeds, the sitemap, search and offline reading all stay under
+`/garden/`. With a custom domain at the root, set `site.url` to the domain
+instead.
+
 ## Custom domains and host files
 
 - `cname: true` writes a `CNAME` file with the host of `site.url`.

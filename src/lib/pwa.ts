@@ -1,6 +1,7 @@
 import { site, type Style } from "../site.config"
 import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
+import { withBase } from "./base"
 
 /** Theme colours of the browser chrome, matching the light page background. */
 export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
@@ -21,16 +22,16 @@ export function manifest(): string {
       short_name: site.title[lang].length > 12 ? site.logo : site.title[lang],
       description: site.tagline[lang] || undefined,
       lang,
-      start_url: "/",
-      scope: "/",
+      start_url: withBase("/"),
+      scope: withBase("/"),
       display: "standalone",
       background_color: color,
       theme_color: color,
       icons: [
-        { src: "/favicon.svg", sizes: "any", type: "image/svg+xml" },
-        { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-        { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-        { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        { src: withBase("/favicon.svg"), sizes: "any", type: "image/svg+xml" },
+        { src: withBase("/icon-192.png"), sizes: "192x192", type: "image/png" },
+        { src: withBase("/icon-512.png"), sizes: "512x512", type: "image/png" },
+        { src: withBase("/icon-512.png"), sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     },
     null,
@@ -44,7 +45,7 @@ const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
 function offlinePage(): string {
   const lang = site.defaultLang
   const lines = site.langs.map((l) => `<p>${escapeHtml(t(l).offlineLead)}</p>`).join("")
-  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(t(lang).offline)}</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px;text-align:center;color:#1d1b17;background:#f6f3ec}@media(prefers-color-scheme:dark){body{color:#ecebe5;background:#111210}}a{color:inherit}</style></head><body><p style="font-size:48px;margin:0">📴</p><h1>${escapeHtml(t(lang).offline)}</h1>${lines}<p><a href="/">${escapeHtml(t(lang).backHome)}</a></p></body></html>`
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(t(lang).offline)}</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 16px;text-align:center;color:#1d1b17;background:#f6f3ec}@media(prefers-color-scheme:dark){body{color:#ecebe5;background:#111210}}a{color:inherit}</style></head><body><p style="font-size:48px;margin:0">📴</p><h1>${escapeHtml(t(lang).offline)}</h1>${lines}<p><a href="${withBase("/")}">${escapeHtml(t(lang).backHome)}</a></p></body></html>`
 }
 
 /** Pages kept for offline reading; the oldest ones are dropped beyond this. */
@@ -61,11 +62,13 @@ export const MAX_ASSETS = 300
 export function serviceWorker(version: string): string {
   // Not the search index: every install would download every note's text. Indexes are cached once fetched.
   const precache = site.langs.map((l) => slugToUrl(langPrefix(l) + "index"))
+  // Gardens served under paths of one host (project Pages) share its caches: each keeps to its own names.
+  const ns = site.base === "/" ? "datme-" : `datme${site.base}`
   return `// datme service worker, build ${version}
 const VERSION = ${JSON.stringify(version)}
-const CORE = "datme-core-" + VERSION
-const ASSETS = "datme-assets-" + VERSION
-const PAGES = "datme-pages"
+const CORE = "${ns}core-" + VERSION
+const ASSETS = "${ns}assets-" + VERSION
+const PAGES = "${ns}pages"
 const PRECACHE = ${JSON.stringify(precache)}
 const OFFLINE = ${JSON.stringify(offlinePage())}
 const MAX_PAGES = ${MAX_PAGES}
@@ -84,7 +87,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("datme-") && k !== CORE && k !== ASSETS && k !== PAGES).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("${ns}") && k !== CORE && k !== ASSETS && k !== PAGES).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   )
 })
@@ -146,13 +149,13 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
-  if (url.pathname === "/sw.js") return
+  if (url.pathname === "${withBase("/sw.js")}") return
   // Client-side navigations fetch the next page as HTML rather than navigating.
   if (request.mode === "navigate" || (request.headers.get("accept") ?? "").includes("text/html")) {
     event.respondWith(page(request))
-  } else if (url.pathname.startsWith("/_astro/")) {
+  } else if (url.pathname.startsWith("${withBase("/_astro/")}")) {
     event.respondWith(asset(request))
-  } else if (url.pathname.startsWith("/static/") || url.pathname.startsWith("/assets/")) {
+  } else if (url.pathname.startsWith("${withBase("/static/")}") || url.pathname.startsWith("${withBase("/assets/")}")) {
     event.respondWith(fresh(request))
   }
 })

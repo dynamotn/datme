@@ -10,11 +10,12 @@ import { getVault, type Note } from "./vault"
 import { noteMarkdown, plainNotes } from "./llms"
 import { relatedNotes } from "./related"
 import { renderNote } from "./markdown"
+import { absUrl, stripBase } from "./base"
 
 export const PROTOCOL_VERSION = "2025-06-18"
 
 /** The public URL of a note, absolute when the site has a URL. */
-const urlOf = (n: Note) => (site.url ? new URL(n.url, site.url + "/").href : n.url)
+const urlOf = (n: Note) => absUrl(n.url)
 
 /** The notes a language offers: the same as its markdown copies. */
 const notesOf = (lang: Lang) => plainNotes(lang)
@@ -34,6 +35,8 @@ export function findNote(ref: string, lang: Lang): Note | undefined {
   const lower = ref.trim().toLowerCase()
   return (
     notes.find((n) => decodeURI(n.url).replace(/\/+$/, "") === bare) ??
+    // On a site served under a path, also the path without it.
+    notes.find((n) => decodeURI(stripBase(n.url)).replace(/\/+$/, "") === bare) ??
     notes.find((n) => n.title.toLowerCase() === lower) ??
     notes.find((n) => n.aliases.some((a) => a.toLowerCase() === lower)) ??
     notes.find((n) => n.key === ref.trim().replace(/\.md$/, "").replace(/^\/+/, ""))

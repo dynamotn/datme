@@ -3,6 +3,7 @@ import path from "node:path"
 import sharp from "sharp"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
+import { withBase } from "./base"
 
 /** Formats worth resizing; GIFs may be animated and SVGs scale on their own. */
 export const RASTER = /\.(png|jpe?g|webp|avif)$/i
@@ -63,7 +64,7 @@ export function variantWidths(width: number): number[] {
 
 /** Site URL of an asset, path segments encoded. */
 export function assetPath(rel: string): string {
-  return "/assets/" + rel.split("/").map(encodeURIComponent).join("/")
+  return withBase("/assets/" + rel.split("/").map(encodeURIComponent).join("/"))
 }
 
 export function variantPath(rel: string, width: number): string {

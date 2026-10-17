@@ -3,6 +3,7 @@
  * cards first, and a badge in the header counting the cards due.
  */
 import { collect, deckPath, hasPractised, loadDeck, queue, runSession, type Card, type CardState, type Item } from "./practice"
+import { withBase } from "./base"
 
 export interface Deck {
   /** URL of the deck's page, where its progress is kept. */
@@ -18,7 +19,7 @@ const cache = new Map<string, Promise<Deck[]>>()
 export function loadDecks(lang: string): Promise<Deck[]> {
   let hit = cache.get(lang)
   if (!hit) {
-    hit = fetch(`/static/cards.${lang}.json`)
+    hit = fetch(withBase(`/static/cards.${lang}.json`))
       .then((r) => (r.ok ? r.json() : { decks: [] }))
       .then((data: { decks: { u: string; t: string; g: string[]; h: string }[] }) =>
         data.decks.map((d) => {

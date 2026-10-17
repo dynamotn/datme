@@ -155,12 +155,31 @@ describe("the page script", () => {
     expect(registered).toEqual(["/sw.js"])
   })
 
+  test("a site served under a path registers its worker there, so the worker's scope is the site", async () => {
+    const { setupOffline } = await import("../src/scripts/app")
+    const prod = process.env.PROD
+    process.env.PROD = "1"
+    process.env.BASE_URL = "/garden/"
+    try {
+      setupOffline()
+      dom.window.dispatchEvent(new dom.window.Event("load") as unknown as Event)
+      await settle()
+      expect(registered.at(-1)).toBe("/garden/sw.js")
+    } finally {
+      if (prod === undefined) delete process.env.PROD
+      else process.env.PROD = prod
+      delete process.env.BASE_URL
+    }
+  })
+
   test("without offline reading, a service worker a previous config installed is dropped; dev builds leave it be", async () => {
     const { setupOffline } = await import("../src/scripts/app")
     const sw = Object.getOwnPropertyDescriptor(navigator, "serviceWorker")!
     const dropped: string[] = []
-    const reg = (scope: string) => ({ unregister: async () => void dropped.push(scope) })
-    Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { getRegistrations: async () => [reg("/a"), reg("/b")] } })
+    const reg = (scope: string) => ({ scope, unregister: async () => void dropped.push(scope) })
+    // Another site of the host, under a path of its own, keeps its worker.
+    const regs = [reg("https://garden.example/"), reg("https://garden.example/other/")]
+    Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { getRegistrations: async () => regs } })
     const prod = process.env.PROD
     delete root.dataset.offline
     try {
@@ -171,10 +190,16 @@ describe("the page script", () => {
       process.env.PROD = "1"
       setupOffline()
       await settle()
-      expect(dropped).toEqual(["/a", "/b"])
+      expect(dropped).toEqual(["https://garden.example/"])
+      // A site served under a path drops only the worker of that path.
+      process.env.BASE_URL = "/other/"
+      setupOffline()
+      await settle()
+      expect(dropped).toEqual(["https://garden.example/", "https://garden.example/other/"])
     } finally {
       if (prod === undefined) delete process.env.PROD
       else process.env.PROD = prod
+      delete process.env.BASE_URL
       root.dataset.offline = ""
       Object.defineProperty(navigator, "serviceWorker", sw)
     }

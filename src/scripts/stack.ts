@@ -3,6 +3,8 @@
  * note opens its target as a new column to the right instead of navigating.
  * The open columns live in ?stack=… so a stack can be shared.
  */
+import { base } from "./base"
+
 const root = document.documentElement
 const cache = new Map<string, Promise<Element | null>>()
 
@@ -18,11 +20,11 @@ function fetchColumn(url: string): Promise<Element | null> {
   return hit
 }
 
-/** `url` as a path on this site, or undefined when it points anywhere else. */
+/** `url` as a path on this site, or undefined when it points anywhere else, another site of the host included. */
 function local(url: string): string | undefined {
   try {
     const u = new URL(url, location.origin)
-    return u.origin === location.origin ? u.pathname + u.search + u.hash : undefined
+    return u.origin === location.origin && u.pathname.startsWith(base()) ? u.pathname + u.search + u.hash : undefined
   } catch {
     return undefined
   }

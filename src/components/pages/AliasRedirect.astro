@@ -1,13 +1,13 @@
 ---
 import type { Note } from "~/lib/vault"
-import { site } from "~/site.config"
 import { t, langMeta } from "~/lib/i18n"
+import { absUrl } from "~/lib/base"
 
 interface Props {
   note: Note
 }
 const { note } = Astro.props
-const target = site.url ? new URL(note.url, site.url + "/").href : note.url
+const target = absUrl(note.url)
 ---
 
 <!doctype html>

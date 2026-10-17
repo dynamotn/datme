@@ -42,6 +42,7 @@ import { encrypt } from "./encrypt"
 import { lockedPlaceholder } from "./locked"
 import { inlineAssets } from "./inline-assets"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
+import { withBase } from "./base"
 import { dependencies } from "./render-deps"
 
 export interface Heading {
@@ -631,9 +632,10 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
 
 /** Vault path of an /assets/ URL. */
 function assetOf(src: string): string | undefined {
-  if (!src.startsWith("/assets/")) return undefined
+  const prefix = withBase("/assets/")
+  if (!src.startsWith(prefix)) return undefined
   try {
-    return src.slice("/assets/".length).split("/").map(decodeURIComponent).join("/")
+    return src.slice(prefix.length).split("/").map(decodeURIComponent).join("/")
   } catch {
     return undefined
   }

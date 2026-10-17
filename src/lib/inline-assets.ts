@@ -5,6 +5,7 @@
  */
 import fs from "node:fs"
 import path from "node:path"
+import { withBase } from "./base"
 
 const TYPES: Record<string, string> = {
   png: "image/png",
@@ -37,7 +38,8 @@ export const mediaType = (rel: string) => TYPES[path.extname(rel).slice(1).toLow
  */
 export function inlineAssets(html: string, vault: string, isPublic: (rel: string) => boolean): { html: string; inlined: string[] } {
   const inlined = new Set<string>()
-  const out = html.replace(/\b(src|href)="\/assets\/([^"]+)"/g, (m, attr: string, url: string) => {
+  const prefix = withBase("/assets/").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const out = html.replace(new RegExp(`\\b(src|href)="${prefix}([^"]+)"`, "g"), (m, attr: string, url: string) => {
     let rel: string
     try {
       rel = url.split("/").map(decodeURIComponent).join("/")

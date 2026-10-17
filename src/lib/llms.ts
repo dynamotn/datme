@@ -3,6 +3,7 @@ import { getVault, listed, filterLanguage, type Note } from "./vault"
 import { langMeta, t } from "./i18n"
 import { renderNote } from "./markdown"
 import { withoutLocked } from "./locked"
+import { absUrl, withBase } from "./base"
 
 /** Notes offered as plain markdown: public, listed, not the home page. */
 export function plainNotes(lang: Lang): Note[] {
@@ -51,9 +52,6 @@ export function withoutPrivateLinks(md: string, n: Note): string {
     .replace(/\[([^\]\n]*)\]\(([^)\s]+?\.md)(#[^)\s]*)?\)/gi, (link, text: string, target: string) => words(target, text) ?? link)
 }
 
-/** A site path as a full URL, when the site has one. */
-const abs = (p: string) => (site.url ? new URL(p, site.url + "/").href : p)
-
 /** Chat assistants that take a first message in their URL. */
 const ASSISTANTS = {
   chatgpt: { name: "ChatGPT", url: "https://chatgpt.com/?q=" },
@@ -67,7 +65,7 @@ const ASSISTANTS = {
 export function askAiLinks(n: Note): { name: string; href: string }[] {
   if (!site.url || !hasMarkdown(n)) return []
   const s = t(n.lang)
-  const prompt = s.askAiPrompt.replace("{url}", abs(mdUrl(n)))
+  const prompt = s.askAiPrompt.replace("{url}", absUrl(mdUrl(n)))
   return site.askAi.map((id) => ({
     name: s.askAi.replace("{app}", ASSISTANTS[id].name),
     href: ASSISTANTS[id].url + encodeURIComponent(prompt),
@@ -94,11 +92,11 @@ export async function llmsTxt(): Promise<string> {
     lines.push(notesHeading(l), "")
     for (const n of notes) {
       const { description } = await renderNote(n)
-      lines.push(`- [${n.title}](${abs(mdUrl(n))})${description ? `: ${description}` : ""}`)
+      lines.push(`- [${n.title}](${absUrl(mdUrl(n))})${description ? `: ${description}` : ""}`)
     }
     lines.push("")
   }
-  lines.push("## Optional", "", `- [Full text](${abs("/llms-full.txt")}): every note above in one file`, "")
+  lines.push("## Optional", "", `- [Full text](${absUrl(withBase("/llms-full.txt"))}): every note above in one file`, "")
   return lines.join("\n")
 }
 
@@ -109,7 +107,7 @@ export function llmsFullTxt(): string {
     const notes = plainNotes(l)
     if (!notes.length) continue
     lines.push(notesHeading(l), "")
-    for (const n of notes) lines.push("---", "", `Source: ${abs(n.url)}`, "", noteMarkdown(n))
+    for (const n of notes) lines.push("---", "", `Source: ${absUrl(n.url)}`, "", noteMarkdown(n))
   }
   return lines.join("\n")
 }

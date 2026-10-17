@@ -4,6 +4,7 @@ import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
 import { langMeta, langDir, formatDate } from "~/lib/i18n"
 import { cardImage } from "~/lib/oembed"
+import { absUrl } from "~/lib/base"
 
 interface Props {
   note: Note
@@ -12,7 +13,7 @@ const { note } = Astro.props
 const r = await renderNote(note)
 const title = r.h1 ?? note.title
 const image = cardImage(note)
-const href = new URL(note.url, site.url + "/").href
+const href = absUrl(note.url)
 ---
 
 <!doctype html>
@@ -106,7 +107,7 @@ const href = new URL(note.url, site.url + "/").href
   </head>
   <body>
     <a class="card" href={href} target="_blank" rel="noopener">
-      {image && <img src={new URL(image, site.url + "/").href} alt="" loading="lazy" />}
+      {image && <img src={absUrl(image)} alt="" loading="lazy" />}
       <span class="text">
         <h1>{title}</h1>
         {r.description && <p>{r.description}</p>}

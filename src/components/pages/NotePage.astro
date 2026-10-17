@@ -11,6 +11,7 @@ import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
 import { hasMarkdown, mdUrl } from "~/lib/llms"
 import { embeddable, oembedUrl } from "~/lib/oembed"
+import { absUrl, withBase } from "~/lib/base"
 import Base from "~/layouts/Base.astro"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
@@ -195,8 +196,8 @@ const NOW_STALE_YEARS = 0.25
     <SeriesBox note={note} at="foot" />
     <DayNav note={note} />
     {/* Microformats, for the fediverse bridges and IndieWeb readers: the note's address and author. */}
-    {site.url && <data class="u-url" value={new URL(note.url, site.url + "/").href} hidden />}
-    <a class="p-author h-card" href={site.url ? site.url + "/" : "/"} hidden>{site.author || site.title[note.lang]}</a>
+    {site.url && <data class="u-url" value={absUrl(note.url)} hidden />}
+    <a class="p-author h-card" href={absUrl(withBase("/"))} hidden>{site.author || site.title[note.lang]}</a>
     {
       !note.isHome && hasHistory(note) && (
         <p class="history-link">

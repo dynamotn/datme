@@ -7,6 +7,7 @@ import { t, formatDate } from "~/lib/i18n"
 import { isStream } from "~/lib/nav"
 import { frameOf, lookOf, lookOfDir } from "~/lib/look"
 import { feedPath } from "~/lib/feed"
+import { withBase } from "~/lib/base"
 import Subscribe from "../Subscribe.astro"
 import { folderIcon } from "~/lib/icons"
 import Base from "~/layouts/Base.astro"
@@ -35,7 +36,7 @@ const stage = site.stages[folder.segment]
 const layout = owner?.layout
 const collection = isCollection(layout) ? layout : undefined
 const alternates = Object.fromEntries(site.langs.map((l) => [l, vault.folders[l].get(folder.dir)?.url]))
-const feed = "/" + feedPath(lang, { kind: "folder", dir: folder.dir })
+const feed = withBase("/" + feedPath(lang, { kind: "folder", dir: folder.dir }))
 const parent = folder.dir.includes("/") ? folder.dir.slice(0, folder.dir.lastIndexOf("/")) : ""
 // A stream shows short notes in full, newest first; a protected one only by its title.
 const stream = isStream(folder.dir)

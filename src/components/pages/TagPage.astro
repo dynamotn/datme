@@ -5,6 +5,7 @@ import { getVault, byRecent } from "~/lib/vault"
 import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import { feedPath } from "~/lib/feed"
+import { withBase } from "~/lib/base"
 import Subscribe from "../Subscribe.astro"
 import Base from "~/layouts/Base.astro"
 import NoteRow from "../NoteRow.astro"
@@ -27,7 +28,7 @@ const roots = [...all.entries()]
 const alternates = Object.fromEntries(
   site.langs.map((l) => [l, tag ? tagUrl(l, tag) : slugToUrl(langPrefix(l) + "tags")]),
 )
-const feed = tag ? "/" + feedPath(lang, { kind: "tag", tag }) : undefined
+const feed = tag ? withBase("/" + feedPath(lang, { kind: "tag", tag })) : undefined
 const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
 ---
 

@@ -1,6 +1,7 @@
 ---
 import { site, type Lang } from "~/site.config"
 import { t } from "~/lib/i18n"
+import { absUrl } from "~/lib/base"
 
 interface Props {
   lang: Lang
@@ -10,7 +11,7 @@ interface Props {
 const { lang, url } = Astro.props
 const s = t(lang)
 // Mentions target absolute URLs, so they need to know where the site lives.
-const target = site.webmentions && site.url ? new URL(url, site.url + "/").href : undefined
+const target = site.webmentions && site.url ? absUrl(url) : undefined
 ---
 
 {

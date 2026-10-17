@@ -10,6 +10,7 @@ import { getVault, type FolderNode, type Note } from "./vault"
 import { renderNote } from "./markdown"
 import { toXhtml } from "./xhtml"
 import { zip } from "./zip"
+import { absUrl, withBase } from "./base"
 
 /**
  * A folder of the garden as a book: an EPUB, or one HTML page to print to
@@ -96,7 +97,7 @@ async function collect(dir: string, lang: Lang): Promise<Book> {
   for (const [i, note] of notes.entries()) {
     const r = await renderNote(note)
     chapters.push({ note, title: r.h1 ?? note.title, html: r.html, file: `chapter-${i + 1}.xhtml` })
-    for (const a of note.assets) assets.set("/assets/" + a.split("/").map(encodeURIComponent).join("/"), a)
+    for (const a of note.assets) assets.set(withBase("/assets/" + a.split("/").map(encodeURIComponent).join("/")), a)
   }
   const title = folder.dir ? (folder.folderNote?.title ?? folder.name) : site.title[lang]
   return { title, lang, chapters, assets }
@@ -115,7 +116,7 @@ function rewrite(tree: Root, book: Book, target: (c: Chapter, hash: string) => s
       const [p, hash = ""] = href.split("#")
       const chapter = byUrl.get(decodeURI(p).replace(/\/$/, ""))
       if (chapter) el.properties.href = target(chapter, hash)
-      else if (site.url) el.properties.href = site.url + href
+      else if (site.url) el.properties.href = absUrl(href)
     }
     if (el.tagName === "img" && typeof el.properties.src === "string") {
       delete el.properties.srcSet
@@ -124,7 +125,7 @@ function rewrite(tree: Root, book: Book, target: (c: Chapter, hash: string) => s
       const rel = book.assets.get(el.properties.src)
       const src = rel && image(rel)
       if (src) el.properties.src = src
-      else if (el.properties.src.startsWith("/") && site.url) el.properties.src = site.url + el.properties.src
+      else if (el.properties.src.startsWith("/") && site.url) el.properties.src = absUrl(el.properties.src)
     }
   })
 }
