@@ -219,20 +219,20 @@ filters. Tag pages keep following the site style, as today. Folder cards for sub
 
 ### Strings
 
-New UI strings in `src/lib/i18n.ts`, Vietnamese and English (other languages
-fall back as usual): recently tended, tended {relative}, planted, last
+New UI strings in every `src/i18n/<lang>.json` (since `cdcc4a9` the seven
+built-in languages must share the English keys): recently tended, tended {relative}, planted, last
 tended, paths from here, nearby, walk the whole garden, all stages.
 
 ## Page layouts: style and chrome per note
 
-Builds on branch `worktree-feat-note-layouts`, which another session is
-still developing. State checked on 2026-10-17 (commits `2141bfc`,
-`7d0ee9f`, plus what that session reported as in progress):
+Builds on branch `worktree-feat-note-layouts`, which another session
+develops. State checked on 2026-10-17 17:21 (commits `ab0b062`, `9755916`,
+`12eea4f`, rebased onto `main` at `cdcc4a9`):
 
-- `LAYOUTS` (in `src/lib/vault.ts`) has `cv`, `gallery`, `timeline`,
-  `links`, `projects`, `books`, `movies`. In progress: `uses`, `now`, `faq`,
-  `quotes`, `talks`, `recipes`, `places`, `shelf`; `books` and `movies`
-  become presets of `shelf`. An unknown `layout` value already warns and
+- `LAYOUTS` (in `src/lib/vault.ts`) has all 15: `cv`, `gallery`,
+  `timeline`, `links`, `uses`, `now`, `faq`, `quotes`, `projects`, `books`,
+  `movies`, `talks`, `recipes`, `places`, `shelf` (commit `12eea4f`);
+  `books` and `movies` are presets of `shelf`. An unknown `layout` value already warns and
   renders as a plain note.
 - Transforms and collections live in `src/lib/note-layouts.ts`
   (`layoutHtml`, `collectionOf`, `isCollection`); components are
@@ -390,10 +390,11 @@ branch. The folder page then takes its look and chrome from that folder note
 1. Build the garden style on `main`, with the style resolution in one place
    (`src/lib/look.ts`) already taking a note, so the layout tier is a later
    addition, not a rewrite. This does not wait for the layouts branch.
-2. Once the layouts branch has landed on `main` (its session owns that
-   rebase; it forked at `62bb303`, before `58eadf8`, and does not plan to
-   rebase until it is done), add the layout tier, `chrome`, `full-norail`,
-   the scheme hint and the defaults table, on a branch from `main`.
+2. Once the layouts branch has landed on `main` (its session owns that;
+   as of 2026-10-17 17:21 it is rebased onto `main` at `cdcc4a9`, with all
+   15 layouts committed, but not merged), add the layout tier, `chrome`,
+   `full-norail`, the scheme hint and the defaults table, on a branch from
+   `main`.
 3. Then `resume` and `darkroom`, which style markup that only exists on the
    layouts branch.
 4. Until then, nothing in this design edits files owned by the layouts
