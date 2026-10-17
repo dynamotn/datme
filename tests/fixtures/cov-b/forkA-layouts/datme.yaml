@@ -1,0 +1,5 @@
+# note-layouts coverage: collections of every kind, bases and items.
+site:
+  title: Layout coverage
+  author: Tester
+publish: all
