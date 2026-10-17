@@ -26,7 +26,7 @@ const { lang, folder } = Astro.props
 const s = t(lang)
 const vault = getVault()
 const intro = folder.folderNote ? await renderNote(folder.folderNote) : undefined
-// A folder note with a layout (and not protected) gives its folder its look and frame.
+// Any unprotected folder note gives its folder its look and frame: its own style/chrome or its layout's defaults.
 const owner = folder.folderNote && !folder.folderNote.protected ? folder.folderNote : undefined
 const look = owner ? lookOf(owner) : lookOfDir(folder.dir)
 const frame = owner ? frameOf(owner) : "full"

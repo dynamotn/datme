@@ -197,7 +197,7 @@ export function highlightSelection(): boolean {
   const where = prose && selectionIn(prose)
   if (!prose || !where) return false
   const path = location.pathname
-  const page = loadPage(path) ?? { title: document.querySelector<HTMLElement>("[data-stack-col]")?.dataset.title ?? document.title, items: [] }
+  const page = loadPage(path) ?? { title: document.querySelector<HTMLElement>(".stack-col")?.dataset.title ?? document.title, items: [] }
   const text = prose.textContent ?? ""
   page.items.push(makeHighlight(text, where.start, where.end, Date.now()))
   savePage(path, page)

@@ -87,9 +87,12 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   const typing = (e.target as HTMLElement).closest("input, textarea, [contenteditable]")
   const mod = e.metaKey || e.ctrlKey
-  if (mod && e.key.toLowerCase() === "k") (e.preventDefault(), openSearch())
-  else if (mod && e.key.toLowerCase() === "g") (e.preventDefault(), openGraph())
-  else if (!typing && e.key === "/") (e.preventDefault(), openSearch())
+  // Minimal pages have no search or graph dialog, so the browser's own shortcut stays.
+  const hasSearch = !!document.querySelector("[data-search-dialog]")
+  const hasGraph = !!document.querySelector("[data-graph-dialog]")
+  if (mod && e.key.toLowerCase() === "k" && hasSearch) (e.preventDefault(), openSearch())
+  else if (mod && e.key.toLowerCase() === "g" && hasGraph) (e.preventDefault(), openGraph())
+  else if (!typing && e.key === "/" && hasSearch) (e.preventDefault(), openSearch())
   // Single-key shortcuts only without modifiers, so browser shortcuts keep working.
   else if (!typing && !mod && !e.altKey && !document.querySelector("dialog[open]")) {
     if (e.key === "j") step(1)

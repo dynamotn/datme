@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its pictures in rows of equal height across almost the whole page, uncropped,
   on near-black with only neutral greys around them; captions sit under each
   picture, while a base's covers show their titles on hover or focus on
-  larger screens and stand upright. Galleries start dark unless the reader
+  wide screens with a pointer and stand upright. Galleries start dark unless the reader
   chose a scheme. Album headings are quiet small-caps
   labels, and an enlarged picture opens on pure black. Light mode turns the
   page into an off-white gallery wall.
@@ -27,11 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one, each in a minimal frame. Timelines, collections, `uses`, `now` and
   `quotes` keep the header and the explorer but drop the table of contents,
   the graph and stacked pages; `faq` keeps the full frame. A note's own
-  `style:` and `chrome:` always win, and a folder whose folder note has a
-  layout takes that look too.
+  `style:` and `chrome:` always win, and a folder takes the look of its
+  folder note, whether that note sets `style:`/`chrome:` or has a layout.
 - The minimal frame keeps only a thin bar with the site's name and the
-  light/dark toggle, and a one-line footer: no menu, search, sidebars or
-  breadcrumbs. Any note can ask for it with `chrome: minimal`, or for the
+  light/dark toggle, and a one-line footer: no menu, search, language switch,
+  reader menu, sidebars or breadcrumbs, and no highlights or "forget where
+  I've been" buttons. Any note can ask for it with `chrome: minimal`, or for the
   full frame with `chrome: full`.
 - Notes can set `style:` (`notebook`, `classic`, `garden`, `resume` or
   `darkroom`) and `chrome:` (`full` or `minimal`) in their properties; an

@@ -79,7 +79,7 @@ export function setupFootprints(): void {
   const article = document.querySelector<HTMLElement>("article.note[data-key]")
   const here = location.pathname
   if (article) {
-    const title = article.closest<HTMLElement>("[data-stack-col]")?.dataset.title ?? document.title
+    const title = article.closest<HTMLElement>(".stack-col")?.dataset.title ?? document.title
     write(visit(readFootprints(), here, title, Date.now()))
     let restore: string | null = null
     try {

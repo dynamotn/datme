@@ -189,8 +189,8 @@ The `resume` style is an A4 sheet on a grey desk, in two columns, and prints
 as a clean white page even in dark mode. The `darkroom` style is a near-black
 gallery wall with pictures in rows of equal height; it starts dark unless the
 reader chose a theme, plain captions always show and cover captions appear on
-hover or focus. The `minimal` frame keeps a thin bar with the site's name and
-a light/dark toggle, and a one-line footer. Other layouts keep the header but
+hover or focus on wide screens with a pointer. The `minimal` frame keeps a thin bar with the site's name and
+a light/dark toggle, and a one-line footer. The remaining layouts (all but `faq`) keep the header but
 lose the right rail (table of contents and graph) and stacked pages.
 
 To override, set `style` and `chrome` on the note: `style: notebook` and
@@ -198,8 +198,9 @@ To override, set `style` and `chrome` on the note: `style: notebook` and
 note's `style`, then its layout's, then `appearance.folders` (the longest
 matching folder), then `appearance.style`; the frame is the note's `chrome`,
 then its layout's, then `full`. An unknown value is reported as a warning at
-build time and ignored. A folder note with a layout lends its style and frame
-to the folder page.
+build time and ignored. Any folder note (not protected) lends its style and frame
+to the folder page, whether from its own `style:` and `chrome:` or from its
+layout's defaults.
 
 ### Layouts of a note's own text
 

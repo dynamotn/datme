@@ -289,6 +289,12 @@ describe("page layouts", () => {
     expect(read("FAQ/index.html")).toContain('data-chrome="full"')
   })
 
+  test("every frame records the note title for footprints and highlights", () => {
+    expect(read("CV/index.html")).toMatch(/class="stack-col"[^>]*data-title="[^"]+"/)
+    expect(read("Life/index.html")).toMatch(/class="stack-col"[^>]*data-title="[^"]+"/)
+    expect(read("CV/index.html")).not.toContain("data-stack-col")
+  })
+
   test("only a page in the full frame stacks notes", () => {
     expect(read("Life/index.html")).not.toContain("data-stack-row")
     expect(read("CV/index.html")).not.toContain("data-stack-row")
