@@ -58,7 +58,7 @@ async function fetchHead(url: string, timeoutMs: number): Promise<string | undef
   const res = await fetch(url, {
     redirect: "follow",
     signal: AbortSignal.timeout(timeoutMs),
-    headers: { "user-agent": "datme-link-preview (+https://gitlab.com/dynamo-tools/datme)", accept: "text/html" },
+    headers: { "user-agent": "datme-link-preview (+https://gitlab.com/dynamo-brain/datme)", accept: "text/html" },
   })
   if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html") || !res.body) {
     await res.body?.cancel().catch(() => {})

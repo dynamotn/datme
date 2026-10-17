@@ -1,7 +1,7 @@
 # Contributing to datme
 
 Issues and merge requests are welcome on
-[GitLab](https://gitlab.com/dynamo-tools/datme). Before sending a change, run
+[GitLab](https://gitlab.com/dynamo-brain/datme). Before sending a change, run
 the checks CI runs:
 
 ```bash

@@ -16,7 +16,7 @@ title: "Extending"
   Obsidian.
 - `strings` overrides any text of the interface, per language. The built-in
   texts live in `src/i18n/<language>.json`; to add a language for everyone,
-  see [CONTRIBUTING](https://gitlab.com/dynamo-tools/datme/-/blob/main/CONTRIBUTING.md).
+  see [CONTRIBUTING](https://gitlab.com/dynamo-brain/datme/-/blob/main/CONTRIBUTING.md).
 
 ## Your own syntax: `datme.config.mjs`
 

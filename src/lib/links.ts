@@ -56,7 +56,7 @@ export async function probe(url: string, { timeoutMs = 10_000, fetch: get = fetc
       method,
       redirect: "follow",
       signal: AbortSignal.timeout(timeoutMs),
-      headers: { "user-agent": "datme-link-check (+https://gitlab.com/dynamo-tools/datme)", accept: "*/*" },
+      headers: { "user-agent": "datme-link-check (+https://gitlab.com/dynamo-brain/datme)", accept: "*/*" },
     })
   let res: Response | undefined
   let error: unknown

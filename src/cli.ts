@@ -305,7 +305,7 @@ export function deploy(target: Target, dir: string, branch?: string): void {
 /** A commented datme.yaml to start from, named after the vault. */
 export function starterConfig(vault: string): string {
   const name = path.basename(vault)
-  return `# datme settings: https://gitlab.com/dynamo-tools/datme
+  return `# datme settings: https://gitlab.com/dynamo-brain/datme
 site:
   title: ${JSON.stringify(name)}
   tagline: ""

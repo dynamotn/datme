@@ -18,7 +18,7 @@
   <a href="#quick-start">Quick start</a> ·
   <a href="#what-grows-in-it">Features</a> ·
   <a href="docs/README.md">Documentation</a> ·
-  <a href="https://dynamo-tools.gitlab.io/datme">Live demo</a>
+  <a href="https://dynamo-brain.gitlab.io/datme">Live demo</a>
 </p>
 
 ---
@@ -166,7 +166,7 @@ bun run test            # unit tests, end-to-end builds and accessibility checks
 ```
 
 Issues and merge requests are welcome on
-[GitLab](https://gitlab.com/dynamo-tools/datme). See [Extending](docs/extending.md#hacking-on-datme)
+[GitLab](https://gitlab.com/dynamo-brain/datme). See [Extending](docs/extending.md#hacking-on-datme)
 for a map of the code, and [CONTRIBUTING](CONTRIBUTING.md) to translate the
 interface into your language.
 

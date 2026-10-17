@@ -3,7 +3,7 @@
 site:
   title: datme
   tagline: Grow an Obsidian vault into a digital garden
-  url: https://dynamo-tools.gitlab.io/datme
+  url: https://dynamo-brain.gitlab.io/datme
   author: Trần Đức Nam
   logo: 🌱
 languages: [en-US]
@@ -17,6 +17,6 @@ nav:
   - tags
   - stats
 footer:
-  GitLab: https://gitlab.com/dynamo-tools/datme
+  GitLab: https://gitlab.com/dynamo-brain/datme
   npm: https://www.npmjs.com/package/@dynamotn/datme
 history: true

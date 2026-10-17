@@ -13,13 +13,13 @@
   ],
   "license": "MPL-2.0",
   "author": "Trần Đức Nam <me@dynamotn.dev>",
-  "homepage": "https://gitlab.com/dynamo-tools/datme",
+  "homepage": "https://gitlab.com/dynamo-brain/datme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dynamotn/datme.git"
   },
   "bugs": {
-    "url": "https://gitlab.com/dynamo-tools/datme/-/issues"
+    "url": "https://gitlab.com/dynamo-brain/datme/-/issues"
   },
   "type": "module",
   "bin": {

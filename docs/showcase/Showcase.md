@@ -6,7 +6,7 @@ description: Live examples of what datme renders from an Obsidian vault.
 
 Every note in this folder is a plain Obsidian note, published by datme as it
 is. Open one, then read its source on
-[GitLab](https://gitlab.com/dynamo-tools/datme/-/tree/main/docs/showcase) to
+[GitLab](https://gitlab.com/dynamo-brain/datme/-/tree/main/docs/showcase) to
 compare.
 
 - [[A first walk]]: a guided trail through this showcase.

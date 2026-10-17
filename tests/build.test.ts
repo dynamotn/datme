@@ -36,7 +36,7 @@ describe("static build", () => {
     const vi = read("index.html").match(/<p class="datme-credit">[\s\S]*?<\/p>/)![0]
     expect(vi).toMatch(/^<p class="datme-credit"><svg [^>]*class="datme-mark" aria-hidden="true" focusable="false"><path/)
     expect(vi).not.toContain("<title>")
-    expect(vi).toMatch(/Ươm mầm cùng\s*<a href="https:\/\/gitlab.com\/dynamo-tools\/datme" rel="noopener">datme<\/a>/)
+    expect(vi).toMatch(/Ươm mầm cùng\s*<a href="https:\/\/gitlab.com\/dynamo-brain\/datme" rel="noopener">datme<\/a>/)
     expect(read("en-US/index.html")).toMatch(/Grown with\s*<a [^>]*>datme<\/a>/)
   })
 
