@@ -166,4 +166,10 @@
     width: 72px;
     height: 72px;
   }
+  [data-look="resume"] .layout-cv .cv-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  [data-look="resume"] .layout-cv .cv-section > h2 {
+    margin-bottom: 10px;
+  }
 }
