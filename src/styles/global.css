@@ -937,7 +937,8 @@ kbd {
   border-top: 1px solid var(--line);
   margin-top: 3em;
 }
-.prose .block-id {
+.prose .block-id,
+.prose [id*="^"] {
   scroll-margin-top: calc(var(--header-h) + 40px);
 }
 

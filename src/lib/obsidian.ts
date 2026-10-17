@@ -116,6 +116,47 @@ function plainLine(line: string, words: LinkWords = (t, a) => a ?? t): string {
 }
 
 /**
+ * Inline math as Obsidian reads it: no space just inside the dollars and no
+ * digit right after the closing one, so "$5 and $10" stays text. `$$` is left
+ * to the markdown parser.
+ */
+const INLINE_MATH = /(?<![\\$])\$(?=[^\s$])(?:\\.|[^$\\\n])*?[^\s\\$]\$(?![\d$])/g
+
+/**
+ * Obsidian's inline footnotes, ^[text], as GFM footnotes defined at the end of
+ * the note; their text may hold brackets of its own, such as a link.
+ */
+function inlineFootnotes(md: string): string {
+  const defs: string[] = []
+  let out = ""
+  let i = 0
+  for (let at = md.indexOf("^[", i); at >= 0; at = md.indexOf("^[", i)) {
+    let depth = 0
+    let end = -1
+    for (let j = at + 1; j < md.length && md[j] !== "\n"; j++) {
+      if (md[j] === "\\") j++
+      else if (md[j] === "[") depth++
+      else if (md[j] === "]" && --depth === 0) {
+        end = j
+        break
+      }
+    }
+    const text = end > 0 ? md.slice(at + 2, end).trim() : ""
+    // Without its closing bracket on the same line, `^[` stays text.
+    if (!text) {
+      out += md.slice(i, at + 2)
+      i = at + 2
+      continue
+    }
+    defs.push(text)
+    out += md.slice(i, at) + `[^datme-inline-${defs.length}]`
+    i = end + 1
+  }
+  if (!defs.length) return md
+  return out + md.slice(i) + "\n\n" + defs.map((d, n) => `[^datme-inline-${n + 1}]: ${d}`).join("\n") + "\n"
+}
+
+/**
  * Convert Obsidian-only syntax into CommonMark + inline HTML, so the rest of
  * the pipeline only has to deal with standard markdown. Code is masked first.
  */
@@ -134,6 +175,7 @@ export function preprocess(
   let md = maskFences(src)
     .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
     .replace(CODE_SPAN, (m) => mask(m))
+    .replace(INLINE_MATH, (m) => mask(m))
     .replace(/%%[\s\S]*?%%/g, "")
   // A deck keeps its comments (directives, speaker notes) and styles, untouched by tags and highlights.
   md = ctx.slides
@@ -142,6 +184,10 @@ export function preprocess(
 
   // Multi-Column Markdown regions; their settings block is masked like any code by now.
   if (!ctx.slides) md = columnsHtml(md, (text) => masks[Number(text.match(/^\u0000(\d+)\u0000$/)?.[1] ?? NaN)])
+
+  // \== and \[[ are written out as they are, so no highlight or link may start there.
+  md = md.replace(/\\[=[]/g, (m) => mask(m))
+  if (!ctx.slides) md = inlineFootnotes(md)
 
   const links: LinkRef[] = []
   const assets: string[] = []
@@ -171,6 +217,13 @@ export function preprocess(
     return text.slice(text.lastIndexOf("\n", offset - 1) + 1, end < 0 ? undefined : end).replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
   }
 
+  /**
+   * A block an embed puts on the page, such as a PDF or a player with its
+   * transcript, as a placeholder the renderer opens out of its paragraph: as
+   * raw HTML at the start of a line it would swallow the lines after it.
+   */
+  const blockEmbed = (html: string) => mask(`<span class="block-embed" data-html="${escapeAttr(html).replace(/\n/g, "&#10;")}"></span>`)
+
   const internalLink = (src: LinkTarget, fragment: string, text: string) =>
     `<a href="${urlPlaceholder(src.key)}${escapeAttr(anchorOf(fragment))}" class="internal" data-key="${escapeAttr(src.key)}">${text}</a>`
 
@@ -196,7 +249,7 @@ export function preprocess(
     }
     // SubRip is not a format players read: the browser builds captions from the transcript instead.
     const fromCues = video && !track ? " data-captions-from-cues" : ""
-    return (
+    return blockEmbed(
       `<figure class="media-transcript"><${tag} src="${src}" controls preload="metadata"${fromCues} data-captions-label="${escapeAttr(s.captions)}" data-captions-lang="${escapeAttr(ctx.lang)}">${track}</${tag}>` +
       transcriptHtml(cues, s.transcript) +
       `</figure>`
@@ -216,13 +269,20 @@ export function preprocess(
       const size = alias?.match(/^(\d+)(?:x(\d+))?$/)
       const alt = size ? "" : (alias ?? "")
       const dims = size ? ` width="${size[1]}"${size[2] ? ` height="${size[2]}"` : ""}` : ""
-      return `<img src="${url}" alt="${escapeAttr(alt)}"${dims} loading="lazy">`
+      // In a span, so an image alone on its line does not start a block of raw HTML that swallows the next line.
+      return `<span class="image-embed"><img src="${url}" alt="${escapeAttr(alt)}"${dims} loading="lazy"></span>`
     }
     if (AUDIO.test(rel) && !ctx.slides) return embedMedia(rel, fragment, false)
     if (VIDEO.test(rel) && !ctx.slides) return embedMedia(rel, fragment, true)
     if (AUDIO.test(rel)) return `<audio src="${url}" controls></audio>`
     if (VIDEO.test(rel)) return `<video src="${url}" controls></video>`
-    if (PDF.test(rel)) return `<iframe class="pdf" src="${url}" loading="lazy"></iframe>`
+    if (PDF.test(rel)) {
+      // ![[a.pdf#page=3]] opens at that page, ![[a.pdf#height=400]] sets the frame's height.
+      const page = fragment.match(/(?:^|&)page=(\d+)/)?.[1]
+      const height = fragment.match(/(?:^|&)height=(\d+)/)?.[1]
+      const style = height ? ` style="height:${height}px"` : ""
+      return blockEmbed(`<iframe class="pdf" src="${url}${page ? `#page=${page}` : ""}"${style} loading="lazy"></iframe>`)
+    }
     return `<a href="${url}" class="attachment">${escapeAttr(alias ?? rel.split("/").pop()!)}</a>`
   }
 
@@ -261,7 +321,8 @@ export function preprocess(
     const raw = inner.replace(/\\\|/g, "|")
     const pipe = raw.indexOf("|")
     const target = pipe >= 0 ? raw.slice(0, pipe) : raw
-    const alias = pipe >= 0 ? raw.slice(pipe + 1).trim() : undefined
+    // An empty alias, [[note|]], shows the target as if there were none.
+    const alias = (pipe >= 0 && raw.slice(pipe + 1).trim()) || undefined
     const hash = target.indexOf("#")
     const file = (hash >= 0 ? target.slice(0, hash) : target).trim()
     const fragment = hash >= 0 ? target.slice(hash + 1).trim() : ""
@@ -300,7 +361,9 @@ export function preprocess(
       return broken("embed", file, `<span class="broken-link">${escapeAttr(alias ?? file)}</span>`)
     }
 
-    const text = alias ?? (fragment && !file ? fragment : file.split("/").pop()!)
+    // As Obsidian shows them: [[a/Note.md#Part]] reads "Note > Part".
+    const name = file.split("/").pop()!.replace(/\.md$/i, "")
+    const text = alias ?? [...(name ? [name] : []), ...(fragment ? fragment.split("#").map((f) => f.trim()) : [])].join(" > ")
     if (!file) return `<a href="${escapeAttr(anchorOf(fragment))}" class="internal anchor">${text}</a>`
     const note = ctx.resolveNote(file, ctx.dir)
     if (!note) {
@@ -321,12 +384,16 @@ export function preprocess(
   md = md.replace(/!\[([^\]\n]*)\]\((https?:\/\/[^)\s]+)\)/g, (m, alt: string, href: string) => embedExternal(alt, href) ?? m)
 
   // Standard markdown links pointing at vault notes or assets.
+  // A target in angle brackets, [a](<My note.md>), may hold spaces.
   md = md.replace(
-    /(!?)\[([^\]\n]*)\]\((?!https?:|mailto:|#|\/)([^)\s]+?)(#[^)\s]*)?\)/g,
-    (m, bang: string, text: string, target: string, frag: string | undefined, offset: number, whole: string) => {
+    /(!?)\[([^\]\n]*)\]\((?:<(?!https?:|mailto:|#|\/)([^<>#\n]+?)(#[^<>\n]*)?>|(?!https?:|mailto:|#|\/|<)([^)\s]+?)(#[^)\s]*)?)\)/g,
+    (m, bang: string, text: string, angled: string | undefined, angledFrag: string | undefined, bare: string | undefined, bareFrag: string | undefined, offset: number, whole: string) => {
+      const target = angled ?? bare!
+      let frag = angledFrag ?? bareFrag
       let decoded = target
       try {
         decoded = decodeURI(target)
+        if (frag) frag = decodeURIComponent(frag)
       } catch {
         // keep the raw target
       }
@@ -366,7 +433,8 @@ export function preprocess(
   })
 
   md = md
-    .replace(/==([^=\n]+)==/g, (_m, inner: string) => {
+    // A single `=` may sit inside a highlight: ==a=b==.
+    .replace(/==((?:[^=\n]|=(?!=))+)==/g, (_m, inner: string) => {
       const { color, text } = highlightOf(inner)
       return color ? `<mark class="mark-${color}">${text}</mark>` : `<mark>${text}</mark>`
     })
@@ -375,6 +443,11 @@ export function preprocess(
       return `${pre}<a href="${url}" class="tag-link">#${tag}</a>`
     })
     .replace(/[^\S\n]\^([A-Za-z0-9-]+)$/gm, ' <span class="block-id" id="^$1"></span>')
+    // On a line of its own, after a list, quote or table, the id names that block; the renderer moves it there.
+    .replace(/^\^([A-Za-z0-9-]+)[^\S\n]*$/gm, '<span class="block-id" id="^$1"></span>')
+
+  // Math is masked by now: a `$` left in the text is a dollar, as Obsidian reads "$5 and $10", not the start of math.
+  if (!ctx.slides) md = md.replace(/(<[^>\n]*>)|(?<![\\$])\$(?!\$)/g, (_m, tag: string | undefined) => tag ?? "\\$")
 
   md = md.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
   return { md, links, assets, docs, problems }

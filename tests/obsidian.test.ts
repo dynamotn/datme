@@ -19,6 +19,14 @@ const run = (src: string) =>
 
 const url = urlPlaceholder("06_Reference/Target")
 
+/** The HTML a block embed's placeholder holds, as the renderer opens it out. */
+const opened = (md: string) => {
+  const m = md.match(/^<span class="block-embed" data-html="([^"]*)"><\/span>$/)
+  expect(m).not.toBeNull()
+  return m![1].replace(/&#10;/g, "\n").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&")
+}
+
+
 describe("wikilinks", () => {
   test("resolve to an internal link with the note key", () => {
     const { md, links } = run("See [[Target]].")
@@ -68,12 +76,12 @@ describe("embeds", () => {
 
   test("images get the asset URL and an optional width", () => {
     const { md, assets: used } = run("![[pic.png|300]]")
-    expect(md).toBe('<img src="/assets/_assets/images/pic.png" alt="" width="300" loading="lazy">')
+    expect(md).toBe('<span class="image-embed"><img src="/assets/_assets/images/pic.png" alt="" width="300" loading="lazy"></span>')
     expect(used).toEqual(["_assets/images/pic.png"])
   })
 
   test("pdf embeds become an iframe", () => {
-    expect(run("![[doc.pdf]]").md).toContain('<iframe class="pdf" src="/assets/_assets/doc.pdf"')
+    expect(opened(run("![[doc.pdf]]").md)).toBe('<iframe class="pdf" src="/assets/_assets/doc.pdf" loading="lazy"></iframe>')
   })
 })
 
@@ -178,5 +186,56 @@ describe("excalidraw", () => {
 
   test("drawings that were never exported explain how to publish them", () => {
     expect(draw("![[Nope.excalidraw]]").md).toContain('class="drawing-missing"')
+  })
+})
+
+describe("obsidian flavoured details", () => {
+  test("a wikilink reads as Obsidian shows it: no .md, its heading after a >", () => {
+    expect(run("[[06_Reference/Target.md]]").md).toContain(">Target</a>")
+    expect(run("[[Target#Some Heading]]").md).toContain(">Target > Some Heading</a>")
+    expect(run("[[Target#A#B]]").md).toContain(">Target > A > B</a>")
+    expect(run("[[Target|]]").md).toContain(">Target</a>")
+  })
+
+  test("a markdown link may put its target in angle brackets, spaces and all", () => {
+    expect(run("[t](<06_Reference/Target.md>)").md).toContain(`<a href="${url}" class="internal"`)
+    expect(run("[t](<06_Reference/Target.md#Some Heading>)").md).toContain(`href="${url}#some-heading"`)
+    expect(run("![](<pic.png>)").md).toContain('<img src="/assets/_assets/images/pic.png"')
+  })
+
+  test("an encoded heading of a markdown link gets the same anchor as the heading", () => {
+    expect(run("[t](06_Reference/Target.md#Some%20Heading)").md).toContain(`href="${url}#some-heading"`)
+  })
+
+  test("a pdf embed opens at its page and takes its height", () => {
+    expect(opened(run("![[doc.pdf#page=3]]").md)).toContain('src="/assets/_assets/doc.pdf#page=3"')
+    expect(opened(run("![[doc.pdf#height=400]]").md)).toContain('style="height:400px"')
+  })
+
+  test("an escaped == or [[ stays as written", () => {
+    const { md, links } = run("\\==not\\== and \\[[Target]]")
+    expect(md).not.toContain("<mark>")
+    expect(links).toEqual([])
+  })
+
+  test("a highlight may hold a single =", () => {
+    expect(run("==a=b==").md).toBe("<mark>a=b</mark>")
+  })
+
+  test("inline footnotes become footnotes defined at the end", () => {
+    const { md } = run("Text^[a note with [[Target|a link]]] and on.")
+    expect(md).toMatch(/^Text\[\^datme-inline-1\] and on\.\n\n\[\^datme-inline-1\]: a note with <a [^>]+>a link<\/a>\n$/)
+    expect(run("x^[ unclosed").md).toBe("x^[ unclosed")
+    expect(run("`^[code]`").md).toBe("`^[code]`")
+  })
+
+  test("inline math is left alone, and a lone dollar is a dollar", () => {
+    expect(run("$a^[1]$ and $x==y==z$").md).toBe("$a^[1]$ and $x==y==z$")
+    expect(run("$5 and ==hl== $10").md).toBe("\\$5 and <mark>hl</mark> \\$10")
+    expect(run("a $$y$$ b").md).toBe("a $$y$$ b")
+  })
+
+  test("a block id on a line of its own is kept for the block before it", () => {
+    expect(run("- a\n\n^list-id").md).toBe('- a\n\n<span class="block-id" id="^list-id"></span>')
   })
 })

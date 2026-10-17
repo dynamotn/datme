@@ -749,8 +749,10 @@
   font-weight: 800;
   letter-spacing: -0.02em;
 }
+/* A strip as wide as its words, yet a block: two headings in a row stay on lines of their own. */
 [data-look="notebook"] .prose h2 {
-  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
   padding: 2px 10px;
   background: var(--ink);
   color: var(--surface);

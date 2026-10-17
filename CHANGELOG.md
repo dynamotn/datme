@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A note's stage can be set with a `stage` property naming a configured
   stage, for vaults that do not sort notes into a folder per stage. It
   wins over the folder, and the home page counts it under that stage.
+- Inline footnotes, `^[text]`, render as footnotes and sidenotes.
+- Tasks of any status (`- [?]`, `- [/]`, `- [-]`, …) render as tasks, their
+  status in `data-task` for themes to style.
+- A `^block-id` on a line of its own names the list, quote or table above
+  it, so links to it and embeds of it work.
+- PDF embeds open at `#page=N` and take their height from `#height=N`.
 
 ### Changed
 
@@ -21,6 +27,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configured, as the notebook one does, instead of an empty garden.
 - Stage presets fall back to their English label in languages other than
   English and Vietnamese, instead of the Vietnamese one.
+- Wikilinks read as Obsidian shows them: `[[Note.md]]` as "Note",
+  `[[Note#Part]]` as "Note > Part", and `[[Note|]]` as "Note" instead of an
+  empty link.
+
+### Fixed
+
+- In the notebook look, two headings in a row with no text between them
+  stay on separate lines instead of running into one line.
+- Markdown links with the target in angle brackets, `[text](<My note.md>)`,
+  resolve to the note or file instead of breaking the rest of the page.
+- An encoded heading in a markdown link (`Note.md#My%20part`) links to that
+  heading.
+- `\==text\==` and `\[[text]]` stay as written instead of turning into a
+  highlight or a link, and a highlight may hold a single `=`.
+- An embed on a line next to other text no longer puts a block inside a
+  paragraph.
+- An image, PDF or player with a transcript embedded alone on its line no
+  longer turns the line right after it into raw text.
+- `$$x$$` within a line renders as display math, as in Obsidian.
+- Dollars read as Obsidian reads them: "$5 and $10" stays text, and
+  `^[`, `==` or `#` inside `$…$` math no longer turn into a footnote, a
+  highlight or a tag.
+- A note embedded twice, or embedding a heading the page also has, no longer
+  repeats an id on the page: links, footnotes and block ids of each embed
+  point inside that embed.
 
 ## [2.2.2] - 2026-10-16
 

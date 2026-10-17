@@ -18,6 +18,13 @@ const text: Record<string, string> = {
   "talks/clip.srt": "1\n00:00:00,000 --> 00:00:01,000\nHi\n",
   "elsewhere/other.vtt": "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nNot mine",
 }
+/** The HTML a block embed's placeholder holds, as the renderer opens it out. */
+const opened = (md: string) => {
+  const m = md.match(/^<span class="block-embed" data-html="([^"]*)"><\/span>$/)
+  expect(m).not.toBeNull()
+  return m![1].replace(/&#10;/g, "\n").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&")
+}
+
 const run = (src: string, lang = "en-US") =>
   preprocess(src, {
     lang,
@@ -66,7 +73,8 @@ describe("transcripts", () => {
   })
 
   test("a video gets the captions and transcript of its language's .vtt", () => {
-    const { md, assets } = run("![[talk.mp4]]")
+    const { md: placeholder, assets } = run("![[talk.mp4]]")
+    const md = opened(placeholder)
     expect(md).toStartWith('<figure class="media-transcript"><video src="/assets/talks/talk.mp4" controls preload="metadata" data-captions-label="Captions" data-captions-lang="en-US">')
     expect(md).toContain('<track kind="captions" src="/assets/talks/talk.en.vtt" srclang="en-US" label="Captions">')
     expect(md).toContain('<summary>Transcript</summary><ol class="cues"><li data-start="1" data-end="4"><button type="button" class="cue-time">0:01</button> <span class="cue-text">Ana: Hello garden &amp; friends</span></li>')
@@ -78,7 +86,8 @@ describe("transcripts", () => {
   })
 
   test("a SubRip transcript stays out of the site; audio gets no captions", () => {
-    const { md, assets } = run("![[song.mp3]]")
+    const { md: placeholder, assets } = run("![[song.mp3]]")
+    const md = opened(placeholder)
     expect(md).toContain('<audio src="/assets/talks/song.mp3" controls preload="metadata"')
     expect(md).not.toContain("<track")
     expect(md).not.toContain("data-captions-from-cues")
@@ -87,7 +96,7 @@ describe("transcripts", () => {
   })
 
   test("a video with a SubRip transcript builds its captions in the browser", () => {
-    expect(run("![[clip.mov]]").md).toContain('<video src="/assets/talks/clip.mov" controls preload="metadata" data-captions-from-cues ')
+    expect(opened(run("![[clip.mov]]").md)).toContain('<video src="/assets/talks/clip.mov" controls preload="metadata" data-captions-from-cues ')
   })
 
   test("a file of the same name in another folder is not the transcript", () => {

@@ -13,13 +13,20 @@ from a note, and the few extras it adds.
 All of this works the same as in the app:
 
 - `[[wikilinks]]`, `[[note#heading|alias]]` and `[[note#^block-id]]`.
-- `![[embeds]]` of whole notes, sections, blocks, images, audio, video and PDFs.
+- `![[embeds]]` of whole notes, sections, blocks, images, audio, video and
+  PDFs, which open at `#page=3` and take `#height=400`.
 - Callouts (`> [!tip]`), folded with `> [!tip]-`.
 - `==highlights==`, `%%comments%%`, `#tags` and `^block-ids`. A colour emoji
   right after the opening `==` colours the highlight, as in Obsidian 1.14:
-  `==🔴Important==`, with 🔴 🟠 🟡 🟢 🔵 🟣.
-- LaTeX (`$…$`, `$$…$$`) and Mermaid diagrams.
-- Standard markdown links to notes and files, with relative paths.
+  `==🔴Important==`, with 🔴 🟠 🟡 🟢 🔵 🟣. A `^block-id` on a line of its
+  own names the list, quote or table above it.
+- Tasks of any status, such as `- [?]` or `- [/]`, with the status in a
+  `data-task` attribute for themes to style.
+- LaTeX (`$…$`, `$$…$$`, which is display math even within a line) and
+  Mermaid diagrams. A dollar with a space after it, as in "$5 and $10",
+  stays a dollar.
+- Standard markdown links to notes and files, with relative paths; a target
+  with spaces may go in angle brackets: `[text](<My note.md>)`.
 
 A note named after its folder (`Books/Books.md`) becomes the introduction of
 that folder's page.
@@ -73,7 +80,7 @@ gets a copy button; neither ends up in what you copy.
 
 ## Footnotes and citations
 
-Footnotes (`[^1]`) move into the margin as sidenotes on wide screens, in
+Footnotes (`[^1]`, or inline as `^[text]`) move into the margin as sidenotes on wide screens, in
 reader mode or when both sidebars are hidden, each tied to its line by a
 dashed leader. Footnotes that hold lists or code
 stay at the end. Hovering a footnote number shows it in a popover.

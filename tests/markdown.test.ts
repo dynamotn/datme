@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { getVault } from "../src/lib/vault"
 import { renderNote, renderSecret, renderMarkdown } from "../src/lib/markdown"
+import { preprocess } from "../src/lib/obsidian"
 
 const vi = getVault().byKey["vi-VN"]
 const zk = await renderNote(vi.get("03_Atomic/Zettelkasten")!)
@@ -268,4 +269,58 @@ process.exit(0)`,
     fs.rmSync(dir, { recursive: true, force: true })
     expect(proc.stdout.toString().trim()).toBe("rendered")
   }, 40_000)
+})
+
+describe("obsidian flavoured rendering", () => {
+  const render = (md: string) => renderMarkdown(md, "vi-VN", "x")
+
+  test("a block id on a line of its own names the list, quote or table before it", async () => {
+    const html = await render('- a\n\n<span class="block-id" id="^l"></span>\n\n> q\n\n<span class="block-id" id="^q"></span>')
+    expect(html).toContain('<ul id="^l">')
+    expect(html).toContain('<blockquote id="^q">')
+    expect(html).not.toContain("block-id")
+  })
+
+  test("tasks of any status are tasks, their status kept for themes", async () => {
+    const html = await render("- [?] ask\n- [-] dropped\n- [ ] open")
+    expect(html).toContain('<li class="task-list-item" data-task="?"><input type="checkbox" checked disabled> ask</li>')
+    expect(html).toContain('<li class="task-list-item" data-task="-"><input type="checkbox" checked disabled> dropped</li>')
+    expect(html).toContain('<li class="task-list-item"><input type="checkbox" disabled> open</li>')
+  })
+
+  test("an embed among other lines of a paragraph leaves it, splitting it around itself", async () => {
+    const ph = '<span class="transclude-ph" data-key="06_Reference/Niklas Luhmann" data-fragment=""></span>'
+    const html = await render(`Before\n${ph}\nafter`)
+    expect(html).toMatch(/^<p>Before\n?<\/p><div class="transclude"[\s\S]*<\/div><p>\n?after<\/p>$/)
+  })
+
+  test("an image, a pdf or a player alone on its line does not swallow the line after it", async () => {
+    const ctx = { lang: "vi-VN", dir: "", resolveNote: () => undefined, resolveAsset: (t: string) => t }
+    for (const file of ["pic.png", "doc.pdf"]) {
+      const html = await render(preprocess(`Intro\n\n![[${file}]]\ntext **bold**`, ctx).md)
+      expect(html).toContain("<strong>bold</strong>")
+    }
+    const pdf = await render(preprocess("![[doc.pdf#page=2]]\nafter", ctx).md)
+    expect(pdf).toMatch(/^<iframe class="pdf" src="\/assets\/doc.pdf#page=2" loading="lazy"><\/iframe><p>\n?after<\/p>$/)
+  })
+
+  test("$$x$$ within a line is display math", async () => {
+    expect(await render("a $$y$$ b")).toContain('<span class="katex-display">')
+    expect(await render("a $y$ b")).not.toContain("katex-display")
+  })
+
+  test("ids inside embeds are their own, so a page never holds one twice", async () => {
+    const ph = '<span class="transclude-ph" data-key="03_Atomic/Zettelkasten" data-fragment=""></span>'
+    const html = await render(`## Definition\n\n${ph}\n\n${ph}`)
+    const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((m) => m[1])
+    expect(ids.length).toBeGreaterThan(2)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(html).toContain('<h2 id="embed-1-definition">')
+    expect(html).toContain('href="#embed-2-definition"')
+  })
+
+  test("two headings in a row stay two headings", async () => {
+    const html = await render("## One\n## Two")
+    expect(html.match(/<h2 /g)).toHaveLength(2)
+  })
 })

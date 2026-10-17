@@ -19,7 +19,7 @@ import rehypeStringify from "rehype-stringify"
 import { visit, SKIP } from "unist-util-visit"
 import { toString as hastToString } from "hast-util-to-string"
 import { fromHtml } from "hast-util-from-html"
-import type { Root as MdRoot, Blockquote, Paragraph, PhrasingContent, Code, InlineCode, Text } from "mdast"
+import type { Root as MdRoot, Blockquote, ListItem, Paragraph, PhrasingContent, Code, InlineCode, Text } from "mdast"
 import type { Root as HastRoot, Element, ElementContent } from "hast"
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
@@ -160,6 +160,53 @@ const remarkHardBreaks: Plugin<[{ enabled: boolean }], MdRoot> = ({ enabled }) =
     })
     ;(parent.children as PhrasingContent[]).splice(index, 1, ...out)
     return index + out.length
+  })
+}
+
+/**
+ * Tasks of any status, as Obsidian reads them: `- [?] …` or `- [/] …` is a
+ * checked task like `- [x]`, its status kept in `data-task` for themes to style.
+ */
+const remarkTaskStatuses: Plugin<[], MdRoot> = () => (tree) => {
+  visit(tree, "listItem", (item: ListItem) => {
+    if (item.checked != null) return
+    const head = item.children[0]
+    const text = head?.type === "paragraph" ? head.children[0] : undefined
+    const m = text?.type === "text" && text.value.match(/^\[([^\s\]\\])\](?:[^\S\n]+|$)/)
+    if (!m || !text) return
+    text.value = text.value.slice(m[0].length)
+    item.checked = true
+    item.data = { ...item.data, hProperties: { ...item.data?.hProperties, dataTask: m[1] } }
+  })
+}
+
+type InlineMath = Extract<PhrasingContent, { type: "inlineMath" }>
+
+/** `$$x$$` within a line is display math, as Obsidian shows it, not inline math. */
+const remarkInlineDisplayMath: Plugin<[], MdRoot> = () => (tree, file) => {
+  const src = String(file.value)
+  visit(tree, "inlineMath", (node: InlineMath) => {
+    const at = node.position?.start.offset
+    if (at == null || !src.startsWith("$$", at)) return
+    node.data = { ...node.data, hProperties: { ...node.data?.hProperties, className: ["language-math", "math-display"] } }
+  })
+}
+
+/**
+ * A block id on a line of its own names the block before it, a list, quote or
+ * table, the way Obsidian links and embeds it: the id moves onto that block.
+ */
+const rehypeBlockIds: Plugin<[], HastRoot> = () => (tree) => {
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (node.tagName !== "p" || !parent || index == null) return
+    const kids = node.children.filter((c) => c.type !== "text" || c.value.trim())
+    const span = kids[0]
+    if (kids.length !== 1 || span.type !== "element" || !(span.properties.className as string[] | undefined)?.includes("block-id")) return
+    const prev = parent.children.slice(0, index).findLast((c): c is Element => c.type === "element")
+    if (!prev || prev.properties.id) return
+    prev.properties.id = span.properties.id
+    parent.children.splice(index, 1)
+    return index
   })
 }
 
@@ -452,20 +499,80 @@ function extractFragment(root: HastRoot, fragment: string): ElementContent[] {
   return out
 }
 
+const hasClass = (c: ElementContent, names: string[]) =>
+  c.type === "element" && ((c.properties.className as string[] | undefined) ?? []).some((n) => names.includes(n))
+
+/** Elements of these classes leave their paragraph, splitting it around them, so no block lands inside a <p>. */
+function liftOut(tree: HastRoot, classes: string[]) {
+  const blank = (c: ElementContent) => (c.type === "text" && !c.value.trim()) || (c.type === "element" && c.tagName === "br")
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (node.tagName !== "p" || !parent || index == null || !node.children.some((c) => hasClass(c, classes))) return
+    const out: ElementContent[] = []
+    let run: ElementContent[] = []
+    const flush = () => {
+      if (run.some((c) => !blank(c))) out.push({ ...node, properties: { ...node.properties }, children: run })
+      run = []
+    }
+    for (const c of node.children) {
+      if (hasClass(c, classes)) {
+        flush()
+        out.push(c)
+      } else run.push(c)
+    }
+    flush()
+    parent.children.splice(index, 1, ...out)
+    return index + out.length
+  })
+}
+
+/** A PDF or a player with its transcript, held in a placeholder by the converter, opens out in place. */
+const rehypeBlockEmbeds: Plugin<[], HastRoot> = () => (tree) => {
+  liftOut(tree, ["block-embed"])
+  visit(tree, "element", (node: Element, index, parent) => {
+    if (!hasClass(node, ["block-embed"]) || !parent || index == null) return
+    const kids = fromHtml(String(node.properties.dataHtml ?? ""), { fragment: true }).children as ElementContent[]
+    parent.children.splice(index, 1, ...kids)
+    return index + kids.length
+  })
+}
+
+/**
+ * Ids inside an embed get a prefix of their own, and the links to them with
+ * it, so the page never holds an id twice: a heading or block embedded twice,
+ * or one of the page itself. A link to the rest of the source goes there.
+ */
+function scopeIds(nodes: ElementContent[], prefix: string, sourceUrl: string) {
+  const ids = new Set<string>()
+  const root: HastRoot = { type: "root", children: nodes }
+  // An SVG's ids are referenced by url(#…) inside it, and stay as they are.
+  visit(root, "element", (el: Element) => {
+    if (el.tagName === "svg") return SKIP
+    if (el.properties.id != null) {
+      ids.add(String(el.properties.id))
+      el.properties.id = prefix + String(el.properties.id)
+    }
+  })
+  visit(root, "element", (el: Element) => {
+    if (el.tagName === "svg") return SKIP
+    const described = el.properties.ariaDescribedBy
+    if (Array.isArray(described)) el.properties.ariaDescribedBy = described.map((d) => (ids.has(String(d)) ? prefix + d : d))
+    const href = el.properties.href
+    if (typeof href !== "string" || !href.startsWith("#") || href === "#") return
+    let id = href.slice(1)
+    try {
+      id = decodeURIComponent(id)
+    } catch {
+      // keep the raw fragment
+    }
+    el.properties.href = ids.has(id) ? `#${prefix}${id}` : sourceUrl + href
+  })
+}
+
 /** Replace ![[note]] placeholders with the rendered target note. */
 const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
   ({ lang, stack }) =>
   async (tree) => {
-    // A paragraph holding only an embed is replaced by the embed, so no <div> lands inside a <p>.
-    visit(tree, "element", (node: Element, index, parent) => {
-      if (node.tagName !== "p" || !parent || index == null) return
-      const kids = node.children.filter((c) => c.type !== "text" || c.value.trim())
-      const only = kids[0]
-      const embed = only?.type === "element" && (only.properties.className as string[] | undefined)?.some((c) => c === "transclude-ph" || c === "base-ph")
-      if (kids.length === 1 && embed) {
-        parent.children[index] = only
-      }
-    })
+    liftOut(tree, ["transclude-ph", "base-ph"])
     // ![[x.base#View]] renders that view of the base in place.
     visit(tree, "element", (node: Element, index, parent) => {
       if (!(node.properties.className as string[] | undefined)?.includes("base-ph") || !parent || index == null) return
@@ -480,18 +587,21 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
       return SKIP
     })
     const jobs: Promise<void>[] = []
+    let embeds = 0
     visit(tree, "element", (node: Element, index, parent) => {
       const cls = node.properties.className as string[] | undefined
       if (!cls?.includes("transclude-ph") || !parent || index == null) return
       const key = String(node.properties.dataKey)
       const fragment = String(node.properties.dataFragment ?? "")
       const target = getVault().byKey[lang].get(key)
+      const prefix = `embed-${++embeds}-`
       jobs.push(
         (async () => {
           let children: ElementContent[] = []
           if (target && !stack.includes(key) && stack.length < 4) {
             const r = await renderNote(target, [...stack, key])
             children = extractFragment(fromHtml(r.html, { fragment: true }), fragment)
+            scopeIds(children, prefix, target.url)
           }
           const href = target ? target.url + anchorOf(fragment) : "#"
           const embed: Element = {
@@ -592,8 +702,10 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
   return unified()
     .use(remarkParse)
     .use(remarkGfm)
+    .use(remarkTaskStatuses)
     .use(remarkHardBreaks, { enabled: hardBreaks })
     .use(remarkMath)
+    .use(remarkInlineDisplayMath)
     .use(remarkCallouts)
     .use(remarkUserCodeBlocks, { user, lang, key: stack[stack.length - 1] })
     .use(remarkDataview, { lang, key: stack[stack.length - 1] })
@@ -602,6 +714,8 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(user.remark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeBlockEmbeds)
+    .use(rehypeBlockIds)
     .use(rehypeKatex)
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, autolink)
