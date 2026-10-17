@@ -113,11 +113,12 @@ for poems · audio and video from a timestamp, with captions and transcripts.
 
 ### Made to be read
 
-Notebook or quiet serif blog look, per folder · folders of short notes read as
-a feed · light and dark themes · reading progress and time left · a word on
-notes that may be out of date · a reader menu for larger text, a legible font
-or high contrast · links to an exact passage · lightbox for images and
-drawings · print stylesheet · right-to-left languages.
+Notebook, quiet serif blog or garden look, per folder; the garden shows notes
+as plants sized by how grown they are · folders of short notes read as a feed ·
+light and dark themes · reading progress and time left · a word on notes that
+may be out of date · a reader menu for larger text, a legible font or high
+contrast · links to an exact passage · lightbox for images and drawings · print
+stylesheet · right-to-left languages.
 
 ### Made to be explored
 
