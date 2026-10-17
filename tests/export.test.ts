@@ -62,6 +62,7 @@ describe("export", () => {
       "05_Structure/First walk",
       "06_Reference/Niklas Luhmann",
       "07_Project/Blog post",
+      "07_Project/Deck",
       "07_Project/Poem",
       "07_Project/Talk",
       "08_Journal/2026-09-28",

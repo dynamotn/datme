@@ -4,6 +4,7 @@ import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
 import { hasMap, hasTimeline } from "./places"
 import { hasJournal } from "./journal"
+import { hasDecks } from "./decks"
 
 export interface NavLink {
   label: string
@@ -29,6 +30,8 @@ export function navLinks(lang: Lang): NavLink[] {
       if (hasMap(lang)) out.push({ label: t(lang).map, url: slugToUrl(langPrefix(lang) + "map") })
     } else if (item.kind === "calendar") {
       if (hasJournal(lang)) out.push({ label: t(lang).calendar, url: slugToUrl(langPrefix(lang) + "calendar") })
+    } else if (item.kind === "practice") {
+      if (hasDecks(lang)) out.push({ label: t(lang).practice, url: slugToUrl(langPrefix(lang) + "practice") })
     }
     else if (item.kind === "url") out.push({ label: item.label![lang], url: item.target! })
     else {

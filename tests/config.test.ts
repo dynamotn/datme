@@ -198,8 +198,9 @@ describe("menu and appearance", () => {
     expect(c.appearance.stream).toEqual(["Notes"])
   })
 
-  test("the archive is a built-in menu entry", () => {
+  test("the archive and the practice page are built-in menu entries", () => {
     expect(resolveConfig({ nav: ["archive"] }, "/v").nav).toEqual([{ kind: "archive" }])
+    expect(resolveConfig({ nav: ["practice"] }, "/v").nav).toEqual([{ kind: "practice" }])
   })
 
   test("URL entries need a label and styles are checked", () => {

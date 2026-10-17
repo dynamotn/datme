@@ -94,7 +94,7 @@ theme:
   d2: { light: 0, dark: 200 }                        # D2 theme ids, unless a diagram sets its own
 
 nav:                          # main menu in the header, in order
-  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats, calendar
+  - home                      # built-ins: home, tags, archive, recent, timeline, map, stats, calendar, practice
   - note: About me            # a note, found like a wikilink (aliases work)
     label: About
   - url: /cv.pdf

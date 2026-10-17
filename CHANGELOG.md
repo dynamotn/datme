@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the share of orphan and dead-end notes, notes tended in the last 30, 90
   and 365 days, and the most linked notes. `stats.hide` leaves any of them
   out.
+- `/practice` gathers the flashcards of every deck in one session, due
+  cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
+  a reader has practised, a 🧠 badge in the header counts the cards due.
 - `appearance.stream` lists folders of short notes whose page shows each
   note in full, newest first, like a feed, instead of as cards.
 - A note's stage can be set with a `stage` property naming a configured
@@ -47,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A flashcard keeps its id, and the reader's progress, whatever scripts
+  changed on its page (popovers, copy buttons, revealed clozes) and on any
+  device. Progress saved under the former ids carries over.
 - The interface speaks French, German, Spanish, Japanese and Chinese
   out of the box, besides English and Vietnamese. The built-in texts moved to
   one file per language in `src/i18n`, so adding a language is one file.

@@ -154,7 +154,7 @@ const schema = z
     nav: z
       .array(
         z.union([
-          z.enum(["home", "tags", "archive", "recent", "timeline", "map", "stats", "calendar"]),
+          z.enum(["home", "tags", "archive", "recent", "timeline", "map", "stats", "calendar", "practice"]),
           z.object({ note: z.string().min(1), label: localized.optional() }).strict(),
           z.object({ url: z.string().min(1), label: localized }).strict(),
         ]),
@@ -427,7 +427,7 @@ function localize(v: z.infer<typeof localized> | undefined, langs: Lang[], fallb
 }
 
 export interface NavItem {
-  kind: "home" | "tags" | "archive" | "recent" | "timeline" | "map" | "stats" | "calendar" | "note" | "url"
+  kind: "home" | "tags" | "archive" | "recent" | "timeline" | "map" | "stats" | "calendar" | "practice" | "note" | "url"
   /** Wikilink target for notes, href for URLs. */
   target?: string
   label?: Record<Lang, string>

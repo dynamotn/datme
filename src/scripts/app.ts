@@ -9,6 +9,7 @@ import { setupWebmentions } from "./webmentions"
 import { setupLightbox } from "./lightbox"
 import { setupSlides } from "./slides"
 import { setupPractice, setupClozes } from "./practice"
+import { setupDueBadge, setupGardenPractice } from "./garden-practice"
 import { setupShare } from "./share"
 import { setupPageMenu } from "./page-menu"
 import { setupOutdated } from "./outdated"
@@ -321,6 +322,8 @@ document.addEventListener("astro:page-load", () => {
   setupProgress()
   setupPrefs()
   setupPractice()
+  void setupGardenPractice()
+  void setupDueBadge()
   setupMedia()
   setupTrail()
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())

@@ -18,6 +18,7 @@ import DevProblems from "~/components/DevProblems.astro"
 import { serializeLd, type JsonLd } from "~/lib/jsonld"
 import datmeLogo from "~/assets/datme.svg?raw"
 import { userHead } from "~/lib/markdown"
+import { hasDecks } from "~/lib/decks"
 
 interface Props {
   lang: Lang
@@ -200,6 +201,13 @@ const pluginHead = await userHead()
         <kbd>Ctrl K</kbd>
       </button>
       <div class="header-spacer hide-sm"></div>
+      {
+        hasDecks(lang) && (
+          <a class="icon-btn due-badge" href={slugToUrl(langPrefix(lang) + "practice")} data-due-badge data-label={s.practiceDue} hidden>
+            🧠<span></span>
+          </a>
+        )
+      }
       <button class="icon-btn" type="button" data-random aria-label={s.randomNote} title={`${s.randomNote} (R)`}>
         <span aria-hidden="true">🎲</span>
       </button>

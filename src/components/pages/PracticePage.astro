@@ -1,0 +1,73 @@
+---
+import { site, type Lang } from "~/site.config"
+import { t, langPrefix } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import { decks, hasDecks } from "~/lib/decks"
+import Base from "~/layouts/Base.astro"
+
+interface Props {
+  lang: Lang
+}
+const { lang } = Astro.props
+const s = t(lang)
+const list = decks(lang)
+const tags = [...new Set(list.flatMap((n) => n.tags.filter((tag) => !tag.startsWith(site.conventions.typePrefix))))].sort()
+const alternates = Object.fromEntries(site.langs.filter(hasDecks).map((l) => [l, slugToUrl(langPrefix(l) + "practice")]))
+---
+
+<Base lang={lang} title={s.practice} alternates={alternates}>
+  <div class="note is-wide practice-page">
+    <header class="page-head">
+      <span class="chip type">🧠 {s.practice}</span>
+      <h1>{s.practice}</h1>
+      <p>{s.practiceLead}</p>
+    </header>
+    <div
+      class="garden-practice"
+      data-garden-practice
+      data-lang={lang}
+      data-counts={s.practiceCounts}
+      data-nothing={s.practiceNothing}
+      data-start={s.practiceStart}
+      data-show={s.practiceShow}
+      data-again={s.practiceAgain}
+      data-good={s.practiceGood}
+      data-done={s.practiceDone}
+      data-close={s.close}
+    >
+      <div class="filters">
+        <select data-practice-filter="deck" aria-label={s.allDecks}>
+          <option value="">{s.allDecks}</option>
+          {list.map((n) => <option value={n.url}>{n.title}</option>)}
+        </select>
+        {
+          tags.length > 0 && (
+            <select data-practice-filter="tag" aria-label={s.tags}>
+              <option value="">{s.allTagsFilter}</option>
+              {tags.map((tag) => (
+                <option value={tag}>#{tag}</option>
+              ))}
+            </select>
+          )
+        }
+      </div>
+      <p class="practice-counts" data-practice-counts aria-live="polite"></p>
+      <div class="practice-bar" data-practice-start hidden></div>
+    </div>
+    <!-- Each deck can also be practised on its own page, with or without scripts. -->
+    <ul class="note-list practice-decks">
+      {
+        list.map((n) => (
+          <li>
+            <a class="note-row internal" href={n.url}>
+              <span class="emoji">🧠</span>
+              <span>
+                <span class="title">{n.title}</span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>

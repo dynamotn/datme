@@ -582,6 +582,20 @@ describe("static build", () => {
     expect(read("en-US/stats/index.html")).toContain("<h2>Garden health</h2>")
   })
 
+  test("/practice gathers every deck, whose cards it finds in their HTML, and the header counts cards due", () => {
+    const page = read("practice/index.html")
+    expect(page).toContain('<h1>Ôn tập</h1>')
+    expect(page).toMatch(/<select data-practice-filter="deck" aria-label="Mọi bộ thẻ"><option value="">Mọi bộ thẻ<\/option><option value="\/07_Project\/Deck">Deck<\/option><\/select>/)
+    expect(page).toContain('<option value="learning">#learning</option>')
+    expect(page).toMatch(/<a class="icon-btn due-badge" href="\/practice" data-due-badge data-label="{n} thẻ đến hạn" hidden>/)
+    const cards = JSON.parse(read("static/cards.vi-VN.json"))
+    expect(cards.decks).toHaveLength(1)
+    expect(cards.decks[0]).toMatchObject({ u: "/07_Project/Deck", t: "Deck", g: ["flashcards", "learning"] })
+    expect(cards.decks[0].h).toContain('<details class="flashcard">')
+    expect(cards.decks[0].h).toContain('<span class="cloze" tabindex="0">Niklas Luhmann</span>')
+    expect(exists("en-US/practice/index.html")).toBe(true)
+  })
+
   test("llms-full.txt holds every public note in full, each with its source", () => {
     const full = read("llms-full.txt")
     expect(full).toStartWith("# Khu vườn thử nghiệm\n\n> A test notebook\n")

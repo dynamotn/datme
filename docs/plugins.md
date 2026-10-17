@@ -288,6 +288,11 @@ until clicked. A practice button runs the deck one card at a time, Leitner
 style (boxes of 0, 1, 3, 7 and 14 days), and keeps progress in the reader's
 browser.
 
+`/practice` gathers the cards of every deck in one session, the due ones
+first, filtered by deck or tag; add `practice` to `nav` to link it from the
+menu. Once a reader has practised, a 🧠 badge in the header counts the cards
+due. Progress is shared with each deck's own page.
+
 ## Diagrams: D2, Typst, sheet music and mind maps
 
 *Live example: [Diagrams](showcase/Diagrams.md).*

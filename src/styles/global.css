@@ -2864,6 +2864,32 @@ li > .flashcard {
 .practice-bar {
   margin: 0 0 20px;
 }
+.due-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  padding-inline: 6px;
+  text-decoration: none;
+}
+.due-badge[hidden] {
+  display: none;
+}
+.due-badge span {
+  font: 700 12px var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.garden-practice .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.practice-counts {
+  color: var(--muted);
+}.practice-decks {
+  margin-top: 24px;
+}
 .practice-start,
 .practice-actions button {
   padding: 8px 14px;
