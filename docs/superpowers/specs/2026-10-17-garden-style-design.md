@@ -27,6 +27,9 @@ Prior art named by the owner: **maggieappleton.com**, where notes sit
 - Readers can wander: filter the garden by stage and by tag without leaving
   the page.
 - Selectable per site (`appearance.style: garden`) and per folder.
+- Integrates with page layouts (branch `worktree-feat-note-layouts`): a note
+  with a `layout` gets that layout's own style and navigation frame by
+  default, and any note can override both.
 
 ## Anti-goals
 
@@ -42,6 +45,8 @@ Prior art named by the owner: **maggieappleton.com**, where notes sit
 - Free-form placement (notes at arbitrary positions, physics, drag). See the
   layout decision below.
 - Hand-drawn illustrations or per-note artwork.
+- New styles made just for one layout (a "résumé" or "darkroom" look): layouts
+  pick among the general styles.
 - Restyling bases (`base-render.ts` keeps emitting notebook card markup in
   every look today; that stays out of scope).
 
@@ -58,6 +63,13 @@ Owner:
 - The home leads with recently tended notes.
 - Feel modelled on maggieappleton.com; failure mode is "looks like a normal
   blog".
+- A note with a `layout` uses its own theme, and even its own navigation
+  frame. A `cv` page looks like a standalone profile page, without sidebars
+  or graph.
+- Both a layout default and a per-note override: the layout gives a default
+  style, the note can override it.
+- Approved (in chat) the property names, precedence and per-layout defaults
+  in "Page layouts" below, which Claude proposed.
 
 ### Configuration (Claude's call)
 
@@ -91,7 +103,8 @@ appearance:
 
 ### Which pages use which look (Claude's call)
 
-- Note pages: `lookOf(note)`, as today.
+- Note pages: `lookOf(note)`, which now applies the four-tier precedence of
+  "Page layouts" below.
 - **Folder pages now use the folder's look** (`lookOfDir(folder.dir)`):
   both the `data-look` passed to `Base` and the body markup (a three-way
   branch: `IndexCard` wall, `NoteRow` list, garden bed). Today they always use the site style, even for folders
@@ -201,6 +214,97 @@ filters. Tag pages keep following the site style, as today. Folder cards for sub
 New UI strings in `src/lib/i18n.ts`, Vietnamese and English (other languages
 fall back as usual): recently tended, tended {relative}, planted, last
 tended, paths from here, nearby, walk the whole garden, all stages.
+
+## Page layouts: style and chrome per note
+
+Builds on branch `worktree-feat-note-layouts` (commit `2141bfc`), which adds
+the `layout` property (`cv`, `gallery`, `projects`, `books`). Today a layout
+only reshapes the note body and drops backlinks/related notes; colours,
+header, sidebars, TOC and graph stay those of the site.
+
+### Properties (approved by the owner)
+
+- `style:` on a note: `notebook`, `classic` or `garden` (later `library`,
+  `vault`). Validated against the same `STYLES` list; an unknown value is a
+  build warning (through the existing problems/doctor channel) and is
+  ignored.
+- `chrome:` on a note: the frame around it.
+  - `full`: today's page: header with menu and search, explorer, TOC, graph.
+  - `minimal`: one thin bar with the site name (and logo) linking home, plus
+    the light/dark toggle. No main menu, no search trigger, no left or right
+    rail, no local graph. Footer kept, reduced to one line.
+  - Unknown values warn and fall back as if unset.
+
+### Precedence (approved by the owner)
+
+Style, highest first:
+
+1. the note's `style` property
+2. the default of its `layout`
+3. `appearance.folders` / `appearance.classic` (longest match)
+4. `appearance.style`
+
+Chrome: the note's `chrome`, else the layout default, else `full`.
+
+Implemented once, e.g. `src/lib/look.ts` exporting `lookOf(note)` and
+`chromeOf(note)` (moving `lookOf` out of `nav.ts`), so every page asks the
+same function.
+
+### Layout defaults (approved by the owner)
+
+| layout | style | chrome | scheme |
+|---|---|---|---|
+| `cv` | `classic` | `minimal` | site default |
+| `gallery` | `classic` | `minimal` | dark by default |
+| `projects` | site's resolved style (tier 3/4) | `full` without TOC and graph | site default |
+| `books` | site's resolved style; `library` once it exists | `full` without TOC and graph | site default |
+
+- "`full` without TOC and graph" is a third internal frame value
+  (`full-norail`, say), reachable only through a layout default; the
+  property only accepts `full` and `minimal`. **(Claude's call)**
+- Dark by default for `gallery` means: when the reader has no stored choice
+  and `theme.scheme` is `auto`, the page starts dark; a stored reader choice
+  still wins, and the toggle still works. Implemented as a per-page hint
+  (e.g. `data-scheme-default="dark"`) read by the inline theme script in
+  `Base.astro`. A site with `theme.scheme: light` still gets a dark gallery;
+  only the reader's own choice beats it. **(Claude's call)**
+- The defaults live in one table in code next to the layout list in
+  `note-layouts.ts`, so `library` replacing `books`' default is a one-line
+  change.
+
+### Folder pages with a layout
+
+A folder note with a `layout` already lays out its folder's page on that
+branch. The folder page then takes its look and chrome from that folder note
+(same precedence), not from `lookOfDir`. **(Claude's call)**
+
+### `Base.astro`
+
+- Gains a `chrome` prop next to `look`; the `rail` prop of note pages is
+  dropped when chrome is `minimal` or `full-norail`.
+- `data-chrome` on `<html>` so CSS can tune spacing; markup for left/right
+  rails, main nav and search trigger is not rendered at all under
+  `minimal` (not merely hidden), keeping the page light and printing clean.
+- Search, command palette and keyboard shortcuts that depend on the header
+  must not throw when it is absent.
+
+### Order of work (Claude's call, agreed in chat)
+
+1. Rebase `worktree-feat-note-layouts` onto `main` (it is one commit behind:
+   it predates `58eadf8`, so its diff currently reverts the stage presets
+   change; keep `main`'s stages when resolving).
+2. Build the garden style on top of it, with the style resolution in one
+   place and all four tiers.
+3. Add `chrome` and the per-layout defaults.
+
+### Tests for this part
+
+- look: each tier wins over the ones below it; unknown `style`/`chrome`
+  values warn and are ignored.
+- build (layouts fixture): `cv` renders `data-look="classic"`
+  `data-chrome="minimal"` and no explorer, TOC, graph or main nav; a `cv`
+  with `style: garden` renders `data-look="garden"`; `gallery` carries the
+  dark scheme hint; `projects` renders no TOC or graph but keeps the header.
 
 ## Constraints
 
