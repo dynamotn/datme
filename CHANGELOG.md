@@ -43,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The interface speaks French, German, Spanish, Japanese and Chinese
+  out of the box, besides English and Vietnamese. The built-in texts moved to
+  one file per language in `src/i18n`, so adding a language is one file.
 - Every section of the home note is shown on the home page: sections
   holding a plain table are no longer dropped.
 - The classic home page lists the top-level folders when no stages are

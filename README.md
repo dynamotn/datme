@@ -134,12 +134,12 @@ published note uses get copied.
 
 ### Ready for the open web
 
-Multilingual notes in one file · email subscriptions per folder or tag ·
-permalinks and redirects for old URLs · social cards · JSON-LD · sitemap ·
-`llms.txt` and `llms-full.txt` · a markdown menu that copies a note or hands it
-to ChatGPT or Claude · webmentions and comments · an installable offline app ·
-dead links pointed at the Internet Archive · one-file EPUB or printable export
-of any folder.
+Multilingual notes in one file, with the interface in seven languages · email
+subscriptions per folder or tag · permalinks and redirects for old URLs ·
+social cards · JSON-LD · sitemap · `llms.txt` and `llms-full.txt` · a markdown
+menu that copies a note or hands it to ChatGPT or Claude · webmentions and
+comments · an installable offline app · dead links pointed at the Internet
+Archive · one-file EPUB or printable export of any folder.
 
 ## Documentation
 
@@ -166,7 +166,8 @@ bun run test            # unit tests, end-to-end builds and accessibility checks
 
 Issues and merge requests are welcome on
 [GitLab](https://gitlab.com/dynamo-tools/datme). See [Extending](docs/extending.md#hacking-on-datme)
-for a map of the code.
+for a map of the code, and [CONTRIBUTING](CONTRIBUTING.md) to translate the
+interface into your language.
 
 ## License
 

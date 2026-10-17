@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { t, langPrefix, formatDate, langMeta } from "../src/lib/i18n"
+import { builtin, t, langPrefix, formatDate, langMeta, type StringKey } from "../src/lib/i18n"
 import { dayKey } from "../src/lib/calendar"
 
 describe("i18n", () => {
@@ -8,8 +8,22 @@ describe("i18n", () => {
     expect(langPrefix("en-US")).toBe("en-US/")
   })
 
-  test("Vietnamese and English ship the same keys", () => {
-    expect(Object.keys(t("vi-VN")).sort()).toEqual(Object.keys(t("en-US")).sort())
+  test("every built-in language has exactly the keys of English, with the same placeholders", () => {
+    const placeholders = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort()
+    for (const [lang, strings] of Object.entries(builtin)) {
+      expect({ lang, keys: Object.keys(strings).sort() }).toEqual({ lang, keys: Object.keys(builtin.en).sort() })
+      for (const [key, value] of Object.entries(strings)) {
+        expect({ lang, key, value: placeholders(value!) }).toEqual({ lang, key, value: placeholders(builtin.en[key as StringKey]!) })
+      }
+    }
+  })
+
+  test("French, German, Spanish, Japanese and Chinese are built in", () => {
+    expect(t("fr-FR").search).toBe("Rechercher")
+    expect(t("de-DE").notesCount(2)).toBe("2 Notizen")
+    expect(t("es-ES").backlinks).toBe("Enlaces entrantes")
+    expect(t("ja-JP").search).toBe("検索")
+    expect(t("zh-CN").readingTime(3)).toBe("阅读约 3 分钟")
   })
 
   test("counted strings fill in a localised number", () => {
@@ -23,8 +37,8 @@ describe("i18n", () => {
   })
 
   test("languages without built-in strings fall back to English", () => {
-    expect(t("fr-FR").search).toBe("Search")
-    expect(t("fr-FR").notesCount(2)).toBe("2 notes")
+    expect(t("fi-FI").search).toBe("Search")
+    expect(t("fi-FI").notesCount(2)).toBe("2 notes")
   })
 
   test("datme.yaml can override strings per language", () => {

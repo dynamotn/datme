@@ -14,7 +14,9 @@ title: "Extending"
   loaded after datme's own, so it can restyle anything.
 - `cssclasses` in a note's frontmatter adds classes to that note, as in
   Obsidian.
-- `strings` overrides any text of the interface, per language.
+- `strings` overrides any text of the interface, per language. The built-in
+  texts live in `src/i18n/<language>.json`; to add a language for everyone,
+  see [CONTRIBUTING](https://gitlab.com/dynamo-tools/datme/-/blob/main/CONTRIBUTING.md).
 
 ## Your own syntax: `datme.config.mjs`
 

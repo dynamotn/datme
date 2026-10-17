@@ -115,6 +115,8 @@ graph:
   depth: 1                    # links the local graph follows: 1, or 2 for links of links
   view: 2d                    # how the global graph opens: 2d, or 3d (turned by dragging)
 
+# The interface speaks English, Vietnamese, French, German, Spanish, Japanese and
+# Chinese out of the box; other languages fall back to English.
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }     # e.g. garden, gardenLead, recentLead for a home without the garden wording
 ```
