@@ -13,6 +13,7 @@ import { setupDueBadge, setupGardenPractice } from "./garden-practice"
 import { setupShare } from "./share"
 import { setupPageMenu } from "./page-menu"
 import { setupOutdated } from "./outdated"
+import { setupGardenBed } from "./garden-bed"
 import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
@@ -323,6 +324,7 @@ document.addEventListener("astro:page-load", () => {
   setupShare()
   setupPageMenu()
   setupOutdated()
+  setupGardenBed()
   setupProgress()
   setupPrefs()
   setupPractice()
