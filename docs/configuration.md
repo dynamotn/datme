@@ -77,8 +77,12 @@ archiveDeadLinks: true        # dead links found by `check --external` point to 
 
 ```yaml
 appearance:
-  style: notebook             # index cards on dotted paper; or `classic`
-  classic: [Writing]          # folders whose notes use the other style
+  style: notebook             # notebook: index cards on dotted paper; classic: a quiet serif blog;
+                              # garden: notes as plants in a bed, sized by how grown they are
+  folders:                    # a style per folder, subfolders included; the longest match wins
+    Writing: classic
+    Garden: garden
+  classic: [Writing]          # older spelling of `folders: { Writing: classic }`
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
 
 theme:
@@ -120,6 +124,14 @@ graph:
 strings:                      # override any UI text, per language
   en-US: { blog: Essays }     # e.g. garden, gardenLead, recentLead for a home without the garden wording
 ```
+
+The `garden` style opens the home on the notes tended most recently, then the
+maps of content as paths in, then every note as a tile in a bed: small and pale
+for the first of your `stages`, large and green for the last, so a glance tells
+seedlings from evergreens. Readers filter the bed by stage (by top folder when
+there are no stages) and by tag. Folder and tag pages are beds too, and a note
+says when it was planted and last tended. `theme.accent` and `theme.fonts`
+override its moss green, Fraunces headings and Literata text.
 
 ## Search, images and maps
 
