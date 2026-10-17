@@ -65,6 +65,9 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
 // A résumé and a gallery reshape the note's text; a page with a layout is a destination, not a note among others.
 const html = layoutHtml(note, r.html)
 const plain = !note.layout
+const look = lookOf(note)
+const garden = look === "garden"
+const stageIcon = (n: Note) => (n.stage ? site.stages[n.stage]?.icon : undefined)
 // A book, a film or a project of a collection shows its cover beside its title.
 const item = itemOf(note)
 // A now page says when it was last true, and warns once it is three months old.
@@ -72,7 +75,7 @@ const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefi
 const NOW_STALE_YEARS = 0.25
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={lookOf(note)} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} rail>
   <div class="stack-row" data-stack-row>
   <div class="stack-col" data-stack-col data-url={note.url} data-title={title}>
   <article
@@ -108,7 +111,7 @@ const NOW_STALE_YEARS = 0.25
       ) : item ? (
         <ItemHead note={note} item={item}>
           <header class="note-head">
-            <NoteMeta note={note} words={r.words}>
+            <NoteMeta note={note} words={r.words} look={look}>
               <h1 class="note-title">{title}</h1>
             </NoteMeta>
             <PageMenu note={note} />
@@ -116,7 +119,7 @@ const NOW_STALE_YEARS = 0.25
         </ItemHead>
       ) : (
         <header class="note-head">
-          <NoteMeta note={note} words={r.words}>
+          <NoteMeta note={note} words={r.words} look={look}>
             <h1 class="note-title">{title}</h1>
           </NoteMeta>
           <PageMenu note={note} />
@@ -196,12 +199,13 @@ const NOW_STALE_YEARS = 0.25
     }
   </article>
   {plain && <section class="backlinks">
-    <h2>{s.backlinks} <span class="count">{backlinks.length}</span></h2>
+    <h2>{garden ? s.pathsFromHere : s.backlinks} <span class="count">{backlinks.length}</span></h2>
     {
       backlinks.length ? (
         <div class="backlink-grid">
           {backlinks.map((b) => (
             <a class="backlink internal" href={b.note.url}>
+              {garden && stageIcon(b.note) && <span class="backlink-stage" aria-hidden="true">{stageIcon(b.note)}</span>}
               <strong>{b.note.title}</strong>
               {b.context && <p>{b.context}</p>}
             </a>
@@ -215,10 +219,11 @@ const NOW_STALE_YEARS = 0.25
   {
     plain && related.length > 0 && (
       <section class="backlinks related">
-        <h2>{s.related}</h2>
+        <h2>{garden ? s.nearby : s.related}</h2>
         <div class="backlink-grid">
           {related.map((r) => (
             <a class="backlink internal" href={r.note.url}>
+              {garden && stageIcon(r.note) && <span class="backlink-stage" aria-hidden="true">{stageIcon(r.note)}</span>}
               <strong>{r.note.title}</strong>
               <p>{[...r.tags.map((x) => "#" + x), r.links ? s.sharedLinks(r.links) : "", r.similarity ? s.similarIdea : ""].filter(Boolean).join(" · ")}</p>
             </a>

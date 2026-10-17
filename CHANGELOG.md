@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- In the garden style, a note says when it was planted and last tended, and
+  its backlinks and related notes read as "paths from here" and "nearby",
+  each marked with the stage of the note it leads to.
 - `appearance.style: garden` opens the home on the notes tended most
   recently, then the maps of content as paths in, then the whole garden.
 - In the garden style, notes are tiles scattered in a bed, larger and
