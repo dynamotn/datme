@@ -5,6 +5,7 @@ import { load as loadYaml } from "js-yaml"
 import { z } from "astro/zod"
 import { bundledThemes } from "shiki"
 import { folderDisplayName } from "./lib/slug"
+import { CONFIG_FILES } from "./lib/config-files"
 
 /** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
 export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
@@ -19,7 +20,7 @@ export interface StageDef {
 }
 
 /** Config file names looked up at the root of the vault, in order. */
-export const CONFIG_FILES = ["datme.yaml", "datme.yml", ".datme.yaml"]
+export { CONFIG_FILES }
 
 /** Folders never scanned for notes, on top of the ones listed in the config. */
 const DEFAULT_IGNORE = [".git", ".obsidian", ".trash", "node_modules", "private", "templates"]

@@ -12,9 +12,10 @@ first preview to every setting there is. If you're new, start at the top.
 4. [Privacy](privacy.md): what gets published and what never does, drafts, schedules, passwords and locked parts.
 5. [The reader's side](reading.md): search, graph, keyboard shortcuts, reading preferences, offline reading.
 6. [Configuration](configuration.md): every key of `datme.yaml`.
-7. [Command line](cli.md): `dev`, `build`, `preview`, `check`, `deploy`, `export`, `init`.
+7. [Command line](cli.md): `dev`, `build`, `preview`, `check`, `deploy`, `export`, `init`, `migrate`.
 8. [Deploying](deploying.md): GitHub, GitLab, Netlify, Cloudflare or any static host.
-9. [Extending](extending.md): your own stylesheet and markdown plugins, and a map of the code for contributors.
+9. [Coming from another publisher](migrating.md): Obsidian Publish, the Digital Garden plugin or Quartz, in one command.
+10. [Extending](extending.md): your own stylesheet and markdown plugins, and a map of the code for contributors.
 
 This documentation is itself a datme garden. The [Showcase](showcase/Showcase.md)
 shows what datme does with real notes: callouts, a slide deck, flashcards, a

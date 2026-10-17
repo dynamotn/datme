@@ -5,6 +5,7 @@ import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
 import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
+import { SOURCES, applyMigration, describePlan, planMigration, type Source } from "./lib/migrate.ts"
 
 /** Root of the datme package, where the Astro project lives. */
 export const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..")
@@ -42,6 +43,9 @@ Usage:
                                                  hosts: github, gitlab, netlify, cloudflare
   datme export  <folder> [vault] [--format epub|html] [--out file] [--lang xx]
                                                  a folder as an EPUB, or one page to print
+  datme migrate <from> [vault] [--write]         switch from another publisher; prints the
+                                                 changes, --write applies them
+                                                 from: publish, digital-garden, quartz
 
 The vault defaults to $DATME_VAULT, then the current directory.
 Options:
@@ -61,10 +65,11 @@ Options:
   --privacy      list what check would publish: notes, files, properties, links to
                  private notes and outside hosts
   --json         print the problems of check as JSON
+  --write        apply the changes of migrate instead of only listing them
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "doctor" | "deploy" | "export" | "url" | "related" | "help" | "version"
+export type Command = "dev" | "build" | "preview" | "check" | "init" | "doctor" | "deploy" | "export" | "url" | "related" | "migrate" | "help" | "version"
 
 export interface Args {
   command: Command
@@ -90,6 +95,10 @@ export interface Args {
   privacy?: boolean
   /** Vault-relative file of `datme url` and `datme related`. */
   note?: string
+  /** Publisher `datme migrate` switches from. */
+  from?: Source
+  /** `datme migrate --write`: apply the changes. */
+  write?: boolean
 }
 
 export class CliError extends Error {
@@ -112,6 +121,7 @@ export function parseArgs(argv: string[]): Args {
         drafts: { type: "boolean" },
         external: { type: "boolean" },
         json: { type: "boolean" },
+        write: { type: "boolean" },
         privacy: { type: "boolean" },
         branch: { type: "string", short: "b" },
         format: { type: "string", short: "f" },
@@ -128,7 +138,7 @@ export function parseArgs(argv: string[]): Args {
   if (values.help) return { command: "help" }
   if (values.version) return { command: "version" }
   const [command = "help", ...operands] = positionals
-  if (!["dev", "build", "preview", "check", "init", "doctor", "deploy", "export", "url", "related", "help"].includes(command)) {
+  if (!["dev", "build", "preview", "check", "init", "doctor", "deploy", "export", "url", "related", "migrate", "help"].includes(command)) {
     throw new CliError(`Unknown command "${command}". Run "datme --help".`)
   }
   let target: Target | undefined
@@ -147,6 +157,14 @@ export function parseArgs(argv: string[]): Args {
       throw new CliError(`Unknown format "${values.format}"; choose epub or html.`)
     }
   }
+  let from: Source | undefined
+  if (command === "migrate") {
+    const source = operands.shift()
+    if (!SOURCES.includes(source as Source)) {
+      throw new CliError(`${source ? `Unknown publisher "${source}"` : "Missing publisher"}; choose one of ${SOURCES.join(", ")}.`)
+    }
+    from = source as Source
+  }
   let note: string | undefined
   if (command === "url" || command === "related") {
     note = operands.shift()
@@ -164,6 +182,7 @@ export function parseArgs(argv: string[]): Args {
     ...(target ? { target, branch: values.branch } : {}),
     ...(folder ? { folder, format: (values.format ?? "epub") as "epub" | "html", lang: values.lang } : {}),
     ...(note ? { note, lang: values.lang } : {}),
+    ...(from ? { from, write: values.write ?? false } : {}),
     ...(values.json ? { json: true } : {}),
     ...(values.privacy && command === "check" ? { privacy: true } : {}),
     out: values.out,
@@ -350,6 +369,14 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   }
 
   if (args.command === "deploy") return deploy(args.target!, vault, args.branch)
+
+  if (args.command === "migrate") {
+    const plan = planMigration(vault, args.from!)
+    // Described before writing: once written, datme.yaml has the keys and they would read as already set.
+    const report = describePlan(vault, plan, !!args.write)
+    if (args.write) applyMigration(vault, plan)
+    return void console.log(report)
+  }
 
   // The Astro project reads the vault and its config from these at load time.
   env.DATME_VAULT = vault

@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/practice` gathers the flashcards of every deck in one session, due
   cards first, filtered by deck or tag, and `practice` can go in `nav`. Once
   a reader has practised, a 🧠 badge in the header counts the cards due.
+- `datme migrate publish|digital-garden|quartz` lists what switching from
+  Obsidian Publish, the Digital Garden plugin or Quartz changes: frontmatter
+  keys renamed in place, settings for `datme.yaml`. `--write` applies it.
 - With `history: true`, `/changes` shows each change to a note, grouped by
   week, with the paragraphs that grew and were cut, leaving typo fixes out.
   `/changes.xml` and a `changes.xml` per folder and tag announce them.

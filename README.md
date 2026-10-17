@@ -153,6 +153,7 @@ Archive · one-file EPUB or printable export of any folder.
 | [Configuration](docs/configuration.md) | Every key of `datme.yaml` |
 | [Command line](docs/cli.md) | `dev`, `build`, `check`, `deploy`, `export` and their flags |
 | [Deploying](docs/deploying.md) | GitHub, GitLab, Netlify, Cloudflare or any static host |
+| [Coming from another publisher](docs/migrating.md) | Obsidian Publish, Digital Garden or Quartz, in one command |
 | [Extending](docs/extending.md) | Your own CSS, remark/rehype plugins, and hacking on datme |
 
 ## Contributing
