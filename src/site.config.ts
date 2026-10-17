@@ -13,6 +13,10 @@ export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
 /** A BCP 47 language tag such as "en-US" or "vi-VN". */
 export type Lang = string
 
+/** Every site style; `appearance.style` and `appearance.folders` take one of these. */
+export const STYLES = ["notebook", "classic", "garden"] as const
+export type Style = (typeof STYLES)[number]
+
 export interface StageDef {
   icon: string
   label: Record<Lang, string>
@@ -409,15 +413,17 @@ const schema = z
       .default({ iterations: 600_000 }),
     appearance: z
       .object({
-        /** notebook: index cards on dotted paper; classic: the quiet serif blog look. */
-        style: z.enum(["notebook", "classic"]).default("notebook"),
+        /** notebook: index cards on dotted paper; classic: the quiet serif blog look; garden: tiles sized by maturity, recently tended first. */
+        style: z.enum(STYLES).default("notebook"),
         /** Folders whose notes use the other style, e.g. long-form writing. */
         classic: z.array(z.string()).default([]),
+        /** A style per folder, subfolders included, e.g. { Writing: classic }. */
+        folders: z.record(z.string(), z.enum(STYLES)).default({}),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
       })
       .strict()
-      .default({ style: "notebook", classic: [], stream: [] }),
+      .default({ style: "notebook", classic: [], folders: {}, stream: [] }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -571,6 +577,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     appearance: {
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
+      folders: Object.fromEntries(Object.entries(c.appearance.folders).map(([p, style]) => [p.replace(/^\/+|\/+$/g, ""), style])),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
     },
     strings: c.strings,
