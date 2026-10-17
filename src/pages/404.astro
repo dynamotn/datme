@@ -14,6 +14,24 @@ const others = site.langs.slice(1)
     <h1 class="note-title">{s.notFound}</h1>
     <p class="empty">{s.notFoundLead}</p>
     {others.map((l) => <p class="empty">{t(l).notFound} — {t(l).notFoundLead}</p>)}
-    <p><a class="chip stage" href="/">{s.backHome}</a></p>
+    <p class="chips" style="justify-content: center">
+      <button class="chip not-found-back" type="button" hidden>← {s.backPrevious}</button>
+      <a class="chip stage" href="/">{s.backHome}</a>
+    </p>
   </div>
+  <script is:inline>
+    ;(() => {
+      // Only when the reader came here from a page of this garden: a link typed or pasted
+      // from outside has nothing to go back to.
+      const back = document.querySelector(".not-found-back")
+      if (!back || history.length < 2) return
+      let from = null
+      try {
+        from = new URL(document.referrer)
+      } catch {}
+      if (!from || from.origin !== location.origin || from.href === location.href) return
+      back.hidden = false
+      back.addEventListener("click", () => history.back())
+    })()
+  </script>
 </Base>

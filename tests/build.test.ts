@@ -27,6 +27,14 @@ afterAll(() => {
 })
 
 describe("static build", () => {
+  test("the 404 page offers the way back to the page the reader came from, and home", () => {
+    const page = read("404.html")
+    expect(page).toContain('<button class="chip not-found-back" type="button" hidden>← Về trang vừa đọc</button>')
+    expect(page).toContain('<a class="chip stage" href="/">Về trang chủ</a>')
+    // The button shows only for a reader who came from this garden; the script runs inline, hashed for the CSP.
+    expect(page).toMatch(/<script>(?:(?!<\/script>)[\s\S])*from\.origin !== location\.origin[\s\S]*?history\.back\(\)[\s\S]*?<\/script>/)
+  })
+
   test("home pages exist in both languages", () => {
     expect(read("index.html")).toContain("Xin chào")
     expect(read("en-US/index.html")).toContain("Welcome")

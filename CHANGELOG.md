@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The 404 page offers a way back to the page the reader was on, next to
+  the home link. The button shows only when the reader arrived from a page of
+  the same garden, so a link typed or pasted from outside still sees just
+  the home link.
 - A gallery (`layout: gallery`, or `style: darkroom` on any note) now shows
   its pictures in rows of equal height across almost the whole page, uncropped,
   on near-black with only neutral greys around them; captions sit under each

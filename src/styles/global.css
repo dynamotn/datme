@@ -541,8 +541,16 @@ kbd {
   color: var(--ink-2);
   white-space: nowrap;
 }
+button.chip {
+  border: 0;
+  cursor: pointer;
+}
+button.chip[hidden] {
+  display: none;
+}
 @media (hover: hover) {
-  a.chip:hover {
+  a.chip:hover,
+  button.chip:hover {
     background: var(--surface-3);
     color: var(--ink);
   }
