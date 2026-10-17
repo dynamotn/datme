@@ -57,6 +57,17 @@ export function parseCanvas(src: string): CanvasData {
   return { nodes, edges }
 }
 
+/**
+ * Where a link card may lead: a web or mail address, or one written without a scheme, as the
+ * card shows it. Never javascript:, data: or another scheme a shared canvas could slip in; the
+ * scheme is read as browsers read it, ignoring the spaces and control characters they drop.
+ */
+export function linkHref(url: string | undefined): string | undefined {
+  if (!url) return undefined
+  const scheme = url.replace(/[\u0000- ]/g, "").match(/^([a-z][a-z\d+.-]*):/i)?.[1].toLowerCase()
+  return !scheme || scheme === "http" || scheme === "https" || scheme === "mailto" ? url : undefined
+}
+
 /** Obsidian's six preset colours, or any CSS colour given directly. */
 export function canvasColor(c: string | undefined): string | undefined {
   const presets: Record<string, string> = {

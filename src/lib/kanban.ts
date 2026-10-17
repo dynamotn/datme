@@ -8,7 +8,8 @@ export function isKanban(fm: Record<string, unknown>): boolean {
   return fm["kanban-plugin"] != null
 }
 
-export function kanban(md: string): string {
+/** `label` names the board, a scrolling region the keyboard can reach. */
+export function kanban(md: string, label = "Board"): string {
   // The plugin keeps its settings in a %% kanban:settings %% block and marks done lanes with **Complete**.
   const body = md
     .replace(/%%\s*kanban:settings[\s\S]*?%%/g, "")
@@ -27,5 +28,6 @@ export function kanban(md: string): string {
   const html = lanes
     .map((lane) => `<section class="kanban-lane">\n\n## ${lane.title}\n\n${lane.lines.join("\n").trim()}\n\n</section>`)
     .join("\n\n")
-  return `${before.join("\n").trim()}\n\n<div class="kanban">\n\n${html}\n\n</div>\n`
+  const name = label.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")
+  return `${before.join("\n").trim()}\n\n<div class="kanban" tabindex="0" role="region" aria-label="${name}">\n\n${html}\n\n</div>\n`
 }

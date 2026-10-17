@@ -1,8 +1,10 @@
-import { describe, expect, test } from "bun:test"
+import { beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { probeVault } from "./vault-probe"
 import {
+  parseFrontmatter,
   getVault,
   filterLanguage,
   listed,
@@ -330,4 +332,81 @@ process.exit(0)`,
     expect(out).not.toContain("URIError")
     expect(out).toContain("The 50% rule")
   }, 60_000)
+
+  test("names written in decomposed Unicode (NFD) link like their composed (NFC) spelling", () => {
+    const nfd = (s: string) => s.normalize("NFD")
+    const { result } = probeVault(
+      {
+        [nfd("Thư mục/Việt") + ".md"]: "---\npublish: true\n---\nBody.\n",
+        [nfd("ảnh") + ".png"]: "png",
+        [nfd("Riêng") + ".md"]: "Private.\n",
+        "Linker.md": "---\npublish: true\n---\nSee [[Việt]], [[Thư mục/Việt]] and ![[ảnh.png]], not [[Riêng]].\n",
+      },
+      `import { getVault } from "$src/lib/vault"
+const v = getVault()
+const lang = Object.keys(v.notes)[0]
+const linker = v.byKey[lang].get("Linker")
+const viet = v.notes[lang].find((n) => n.key !== "Linker")
+console.log(JSON.stringify({
+  links: linker.links.map((l) => l.key.normalize("NFC")),
+  assets: linker.assets.map((a) => a.normalize("NFC")),
+  url: viet.url,
+  problems: v.problems.filter((p) => p.level !== "info").map((p) => p.message),
+}))`,
+    )
+    expect(result.links).toEqual(["Thư mục/Việt", "Thư mục/Việt"])
+    expect(result.assets).toEqual(["ảnh.png"])
+    // The URL is the composed spelling, whatever form the file system keeps.
+    expect(result.url).toBe("/" + ["Thư mục", "Việt"].map((s) => encodeURIComponent(s.replace(/ /g, "-"))).join("/"))
+    expect(result.problems).toEqual([])
+  }, 60_000)
+})
+
+describe("frontmatter edge cases", () => {
+  test("a UTF-8 byte order mark does not hide the frontmatter", () => {
+    expect(parseFrontmatter("\uFEFF---\ntitle: BOM note\n---\nBody.\n")).toEqual({ fm: { title: "BOM note" }, body: "Body.\n", error: undefined })
+  })
+
+  test("an empty or comment-only frontmatter is no frontmatter, not invalid YAML", () => {
+    expect(parseFrontmatter("---\n\n---\nBody.\n")).toEqual({ fm: {}, body: "Body.\n", error: undefined })
+    expect(parseFrontmatter("---\n# todo\n---\nBody.\n")).toEqual({ fm: {}, body: "Body.\n", error: undefined })
+  })
+
+  let probe: { result: any; stderr: string }
+  beforeAll(() => {
+    probe = probeVault(
+      {
+        "Note.md": '---\npublish: true\ntitle: 2024\ntags: ["", "#", "real"]\n---\nBody.\n',
+        "Templates/Daily.md": "---\npublish: true\n---\nA template.\n",
+      },
+      `import { getVault } from "$src/lib/vault"
+import { routes } from "$src/lib/routes"
+const v = getVault()
+const lang = Object.keys(v.notes)[0]
+console.log(JSON.stringify({
+  sources: [...v.sources.keys()],
+  note: v.notes[lang].map((n) => ({ title: n.title, tags: n.tags })),
+  tagPages: [...v.tags[lang].keys()],
+  routes: [...routes().keys()].filter((k) => k.startsWith("tags")),
+}))`,
+    )
+  }, 60_000)
+
+  test("empty tags are left out, without a tag page of their own", () => {
+    expect(probe.result.note[0].tags).toEqual(["real"])
+    expect(probe.result.tagPages).toEqual(["real"])
+    expect(probe.result.routes.sort()).toEqual(["tags", "tags/real"])
+  })
+
+  test("a number as title is the title", () => {
+    expect(probe.result.note[0].title).toBe("2024")
+  })
+
+  test("the default templates folder is ignored whatever its case", () => {
+    expect(probe.result.sources).toEqual(["Note"])
+  })
+
+  test("a vault outside git reads its dates without git complaining on stderr", () => {
+    expect(probe.stderr).not.toContain("fatal")
+  })
 })

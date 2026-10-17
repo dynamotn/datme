@@ -158,6 +158,90 @@ describe("publishOutput", () => {
     );
     expect(() => publishOutput(staging, "/", vault)).toThrow("Refusing");
   });
+
+  test("keeps the previous build when the new one cannot be copied", () => {
+    const out = path.join(tmp, "kept");
+    publishOutput(staging, out, path.join(tmp, "v"));
+    expect(() =>
+      publishOutput(path.join(tmp, "no-staging"), out, path.join(tmp, "v")),
+    ).toThrow();
+    expect(fs.readFileSync(path.join(out, "index.html"), "utf8")).toBe(
+      "<p>new</p>",
+    );
+    // No half-copied directory is left next to it.
+    expect(fs.readdirSync(tmp).filter((f) => f.includes("kept"))).toEqual([
+      "kept",
+    ]);
+  });
+});
+
+describe("build", () => {
+  const vaultOf = (name: string) => {
+    const vault = path.join(tmp, name);
+    fs.mkdirSync(vault, { recursive: true });
+    fs.writeFileSync(
+      path.join(vault, `${name}.md`),
+      `---\npublish: true\n---\nThe ${name} note.\n`,
+    );
+    return vault;
+  };
+
+  test("refuses an --out it may not replace before building anything", async () => {
+    const precious = path.join(tmp, "precious-early");
+    fs.mkdirSync(precious);
+    fs.writeFileSync(path.join(precious, "thesis.md"), "keep me");
+    const started = Date.now();
+    const failed = await run(
+      { command: "build", out: precious },
+      { ...process.env, DATME_CACHE: "" },
+      tmp,
+    ).catch((e: Error) => e);
+    expect((failed as Error).message).toContain("not created by datme");
+    // A build takes far longer; the refusal comes first.
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(fs.readFileSync(path.join(precious, "thesis.md"), "utf8")).toBe(
+      "keep me",
+    );
+  }, 60_000);
+
+  test("two builds at once each publish their own site", async () => {
+    const build = (name: string) =>
+      Bun.spawn(
+        ["bun", "bin/datme.ts", "build", vaultOf(name), "--out", path.join(tmp, `${name}-site`)],
+        {
+          cwd: PACKAGE_ROOT,
+          env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: "" },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+    const procs = [build("alpha"), build("beta")];
+    const codes = await Promise.all(procs.map((p) => p.exited));
+    expect(codes).toEqual([0, 0]);
+    for (const [name, other] of [["alpha", "beta"], ["beta", "alpha"]]) {
+      const site = path.join(tmp, `${name}-site`);
+      expect(fs.existsSync(path.join(site, name, "index.html"))).toBe(true);
+      expect(fs.existsSync(path.join(site, other, "index.html"))).toBe(false);
+    }
+    // Each build cleans up the directory it staged in.
+    const staged = fs.existsSync(path.join(PACKAGE_ROOT, ".datme"))
+      ? fs.readdirSync(path.join(PACKAGE_ROOT, ".datme"))
+      : [];
+    for (const p of procs) expect(staged).not.toContain(`dist-${p.pid}`);
+  }, 120_000);
+});
+
+describe("export", () => {
+  test('"./" is named after the vault, not "."', async () => {
+    const dir = path.join(tmp, "export-cwd");
+    fs.mkdirSync(dir);
+    await run(
+      { command: "export", folder: "./", format: "html" },
+      { ...process.env },
+      dir,
+    );
+    expect(fs.readdirSync(dir)).toEqual(["vault.html"]);
+  }, 60_000);
 });
 
 describe("url and check --json", () => {

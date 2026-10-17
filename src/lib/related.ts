@@ -43,6 +43,81 @@ const words = (s: string) => s.toUpperCase().toLowerCase().replaceAll("ς", "σ"
 /** What a note is about, for its embedding: title, description and the start of its text. */
 export const aboutText = (n: Note) => [n.title, n.description ?? "", plain(n.md)].join("\n").slice(0, 2000)
 
+/** What ranking needs of a note. */
+export type RankedNote = Pick<Note, "key" | "title" | "tags">
+
+export type Ranked<N> = Omit<Related, "note"> & { note: N }
+
+/**
+ * The best suggestions for each note: shared tags (2 each, 0.5 for a type
+ * tag), shared link targets and linking notes (1 each) and, with semantic
+ * suggestions, closeness in meaning. `out` holds each note's link targets.
+ *
+ * Without semantic suggestions only notes sharing a tag or a link can score,
+ * so each note is compared with those alone, found through indexes, instead
+ * of with every other note. They are visited in the notes' order, so ties
+ * rank as they would comparing every pair.
+ */
+export function rankRelated<N extends RankedNote>(
+  notes: N[],
+  out: Map<string, Set<string>>,
+  opts: { lang: string; count: number; typePrefix: string; semantic?: { threshold: number; vectors: Map<string, number[]> } },
+): Map<string, Ranked<N>[]> {
+  const { lang, typePrefix, semantic } = opts
+  const inbound = new Map<string, Set<string>>()
+  for (const [from, targets] of out) for (const to of targets) inbound.set(to, (inbound.get(to) ?? new Set()).add(from))
+  const index = new Map(notes.map((n, i) => [n.key, i]))
+  const byTag = new Map<string, number[]>()
+  notes.forEach((n, i) => {
+    for (const t of new Set(n.tags)) {
+      const list = byTag.get(t)
+      if (list) list.push(i)
+      else byTag.set(t, [i])
+    }
+  })
+
+  /** The notes sharing a tag, a link target or a linking note with `a`, in the notes' order. */
+  function candidates(a: N): N[] {
+    const found = new Set<number>()
+    const add = (key: string) => {
+      const i = index.get(key)
+      if (i !== undefined) found.add(i)
+    }
+    for (const t of a.tags) for (const i of byTag.get(t) ?? []) found.add(i)
+    for (const k of out.get(a.key)!) for (const from of inbound.get(k) ?? []) add(from)
+    for (const k of inbound.get(a.key) ?? []) for (const to of out.get(k) ?? []) add(to)
+    return [...found].sort((x, y) => x - y).map((i) => notes[i])
+  }
+
+  const related = new Map<string, Ranked<N>[]>()
+  for (const a of notes) {
+    const scored: Ranked<N>[] = []
+    // Closeness in meaning can relate any two notes, so then every pair is compared.
+    for (const b of semantic ? notes : candidates(a)) {
+      if (a === b) continue
+      // Notes already linked to each other are not suggestions.
+      if (out.get(a.key)!.has(b.key) || out.get(b.key)!.has(a.key)) continue
+      const tags = a.tags.filter((t) => b.tags.includes(t))
+      const tagScore = tags.reduce((s, t) => s + (t.startsWith(typePrefix) ? 0.5 : 2), 0)
+      let links = 0
+      for (const k of out.get(a.key)!) if (out.get(b.key)!.has(k)) links++
+      for (const k of inbound.get(a.key) ?? []) if (inbound.get(b.key)?.has(k)) links++
+      // Closeness in meaning counts from the threshold up: 2 there, 6 for the same text.
+      const va = semantic?.vectors.get(a.key)
+      const vb = semantic?.vectors.get(b.key)
+      const sim = va && vb && semantic ? cosine(va, vb) : 0
+      const semScore = semantic && sim >= semantic.threshold ? 2 + (4 * (sim - semantic.threshold)) / (1 - semantic.threshold || 1) : 0
+      const score = tagScore + links + semScore
+      if (score >= 2) {
+        scored.push({ note: b, score, tags: tags.filter((t) => !t.startsWith(typePrefix)), links, ...(semScore ? { similarity: sim } : {}) })
+      }
+    }
+    scored.sort((x, y) => y.score - x.score || x.note.title.localeCompare(y.note.title, lang))
+    related.set(a.key, scored.slice(0, opts.count))
+  }
+  return related
+}
+
 /** Related notes and mentions of a language, computed afresh (data() caches them per build). */
 export async function computeRelated(lang: Lang) {
   const vault = getVault()
@@ -54,35 +129,12 @@ export async function computeRelated(lang: Lang) {
     : new Map<string, number[]>()
   const linksOf = (n: Note) => new Set(n.protected ? [] : n.links.map((l) => l.key))
   const out = new Map(notes.map((n) => [n.key, linksOf(n)]))
-  const inbound = new Map<string, Set<string>>()
-  for (const [from, targets] of out) for (const to of targets) inbound.set(to, (inbound.get(to) ?? new Set()).add(from))
-  const typePrefix = site.conventions.typePrefix
-
-  const related = new Map<string, Related[]>()
-  for (const a of notes) {
-    const scored: Related[] = []
-    for (const b of notes) {
-      if (a === b) continue
-      // Notes already linked to each other are not suggestions.
-      if (out.get(a.key)!.has(b.key) || out.get(b.key)!.has(a.key)) continue
-      const tags = a.tags.filter((t) => b.tags.includes(t))
-      const tagScore = tags.reduce((s, t) => s + (t.startsWith(typePrefix) ? 0.5 : 2), 0)
-      let links = 0
-      for (const k of out.get(a.key)!) if (out.get(b.key)!.has(k)) links++
-      for (const k of inbound.get(a.key) ?? []) if (inbound.get(b.key)?.has(k)) links++
-      // Closeness in meaning counts from the threshold up: 2 there, 6 for the same text.
-      const va = vectors.get(a.key)
-      const vb = vectors.get(b.key)
-      const sim = va && vb && semantic ? cosine(va, vb) : 0
-      const semScore = semantic && sim >= semantic.threshold ? 2 + (4 * (sim - semantic.threshold)) / (1 - semantic.threshold || 1) : 0
-      const score = tagScore + links + semScore
-      if (score >= 2) {
-        scored.push({ note: b, score, tags: tags.filter((t) => !t.startsWith(typePrefix)), links, ...(semScore ? { similarity: sim } : {}) })
-      }
-    }
-    scored.sort((x, y) => y.score - x.score || x.note.title.localeCompare(y.note.title, lang))
-    related.set(a.key, scored.slice(0, site.related.count))
-  }
+  const related = rankRelated(notes, out, {
+    lang,
+    count: site.related.count,
+    typePrefix: site.conventions.typePrefix,
+    ...(semantic ? { semantic: { threshold: semantic.threshold, vectors } } : {}),
+  })
 
   const mentions = new Map<string, Mention[]>()
   const texts = new Map(notes.filter((n) => !n.protected).map((n) => [n.key, plain(n.md)]))

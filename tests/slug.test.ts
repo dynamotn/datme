@@ -13,6 +13,15 @@ describe("sluggify", () => {
   test("ignores empty segments", () => {
     expect(sluggify("/a//b/")).toBe("a/b")
   })
+
+  test("drops . and .. segments, so a permalink or tag cannot climb out of the site", () => {
+    expect(sluggify("../../etc/passwd")).toBe("etc/passwd")
+    expect(sluggify("a/./b/..")).toBe("a/b")
+    expect(sluggifySegment("..")).toBe("")
+    expect(slugTag("../x/./y")).toBe("x/y")
+    expect(slugTag("..")).toBe("")
+    expect(sluggify("a/..b/c.")).toBe("a/..b/c.")
+  })
 })
 
 describe("slugTag", () => {

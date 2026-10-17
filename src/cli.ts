@@ -10,8 +10,11 @@ import { SOURCES, applyMigration, describePlan, planMigration, type Source } fro
 
 /** Root of the datme package, where the Astro project lives. */
 export const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..")
-/** Astro builds here first: it renames files out of .astro/, which fails across filesystems. */
-const STAGING = path.join(PACKAGE_ROOT, ".datme", "dist")
+/**
+ * Astro builds here first: it renames files out of .astro/, which fails across
+ * filesystems. One per process, so builds running at once never share it.
+ */
+const STAGING = path.join(PACKAGE_ROOT, ".datme", `dist-${process.pid}`)
 /** Marks a directory as datme output, so a rebuild may replace it. */
 const MARKER = ".datme-build"
 /** Rendered notes and social cards reused by the next build, unless DATME_CACHE says otherwise. */
@@ -105,7 +108,10 @@ export interface Args {
 }
 
 export class CliError extends Error {
-  override name = "CliError"
+  constructor(message?: string) {
+    super(message)
+    this.name = "CliError"
+  }
 }
 
 export function parseArgs(argv: string[]): Args {
@@ -213,10 +219,12 @@ export function resolveVault(arg: string | undefined, env: Record<string, string
 }
 
 /**
- * Replace `out` with the staged build. Refuses to delete a directory that a
- * previous build did not create, so a mistyped --out never wipes real files.
+ * Refuses an output directory a build may not replace: the vault, home, the
+ * filesystem root, or a directory that a previous build did not create, so a
+ * mistyped --out never wipes real files. Checked before building too, so the
+ * mistake shows at once.
  */
-export function publishOutput(staging: string, out: string, vault: string): void {
+export function checkOutput(out: string, vault: string): void {
   const resolved = path.resolve(out)
   const forbidden = [path.parse(resolved).root, os.homedir(), vault, PACKAGE_ROOT].map((p) => path.resolve(p))
   if (forbidden.includes(resolved)) throw new CliError(`Refusing to write the site into "${resolved}".`)
@@ -225,10 +233,42 @@ export function publishOutput(staging: string, out: string, vault: string): void
     if (entries.length && !entries.includes(MARKER)) {
       throw new CliError(`"${resolved}" is not empty and was not created by datme; choose another --out.`)
     }
-    fs.rmSync(resolved, { recursive: true, force: true })
   }
-  fs.cpSync(staging, resolved, { recursive: true })
-  fs.writeFileSync(path.join(resolved, MARKER), "This directory is replaced on every `datme build`.\n")
+}
+
+/**
+ * Replace `out` with the staged build. The new site is copied next to it
+ * first, then swapped in, so a failed copy leaves the previous site in place.
+ */
+export function publishOutput(staging: string, out: string, vault: string): void {
+  checkOutput(out, vault)
+  const resolved = path.resolve(out)
+  fs.mkdirSync(path.dirname(resolved), { recursive: true })
+  const next = fs.mkdtempSync(path.join(path.dirname(resolved), `.${path.basename(resolved)}-`))
+  try {
+    fs.cpSync(staging, next, { recursive: true })
+    fs.writeFileSync(path.join(next, MARKER), "This directory is replaced on every `datme build`.\n")
+  } catch (e) {
+    fs.rmSync(next, { recursive: true, force: true })
+    throw e
+  }
+  if (fs.existsSync(resolved)) {
+    const old = `${next}-old`
+    fs.renameSync(resolved, old)
+    fs.renameSync(next, resolved)
+    fs.rmSync(old, { recursive: true, force: true })
+  } else fs.renameSync(next, resolved)
+}
+
+/**
+ * Empty the cache for --fresh, keeping the marker that makes it datme's and,
+ * as pruning does, the lists of dead links and of neighbour gardens' notes:
+ * those are fetched, not rendered, and the neighbours were fetched by this very run.
+ */
+export function emptyCache(dir: string): void {
+  for (const e of fs.readdirSync(dir)) {
+    if (e !== CACHE_MARKER && e !== DEAD_LINKS_FILE && e !== NEIGHBOURS_FILE) fs.rmSync(path.join(dir, e), { recursive: true, force: true })
+  }
 }
 
 /**
@@ -245,10 +285,15 @@ export function pruneCache(root: string, since: number): void {
     }
     for (const e of entries) {
       const p = path.join(dir, e.name)
-      if (e.isDirectory()) {
-        walk(p)
-        if (!fs.readdirSync(p).length) fs.rmdirSync(p)
-      } else if (e.name !== DEAD_LINKS_FILE && e.name !== NEIGHBOURS_FILE && e.name !== CACHE_MARKER && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
+      try {
+        if (e.isDirectory()) {
+          walk(p)
+          if (!fs.readdirSync(p).length) fs.rmdirSync(p)
+        } else if (e.name !== DEAD_LINKS_FILE && e.name !== NEIGHBOURS_FILE && e.name !== CACHE_MARKER && fs.statSync(p).mtimeMs < since) fs.rmSync(p)
+      } catch (err) {
+        // Another build sharing the cache may have pruned this entry already.
+        if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err
+      }
     }
   }
   walk(root)
@@ -394,15 +439,18 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   if (args.drafts) env.DATME_DRAFTS = "1"
   const out = path.resolve(cwd, args.out ?? "dist")
   const rel = path.relative(vault, out)
-  // Output written inside the vault must not be scanned on the next build.
-  if (!rel.startsWith("..") && !path.isAbsolute(rel)) env.DATME_IGNORE = rel
+  // Output written inside the vault must not be scanned on the next build; the vault names paths with "/".
+  if (!rel.startsWith("..") && !path.isAbsolute(rel)) env.DATME_IGNORE = rel.split(path.sep).join("/")
+  // Before anything is built: a wrong --out should not cost a whole build to find out.
+  if (args.command === "build") checkOutput(out, vault)
 
   if (args.command === "export") {
     const { site } = await import("./site.config.ts")
     const lang = args.lang ?? site.defaultLang
     if (!site.langs.includes(lang)) throw new CliError(`Language "${lang}" is not one of ${site.langs.join(", ")}.`)
     const { exportEpub, exportHtml } = await import("./lib/export.ts")
-    const name = args.folder === "." ? path.basename(vault) : path.basename(args.folder!.replace(/\/+$/, ""))
+    // Named after the folder as resolved, so "./" or "notes/.." is named like the folder it is.
+    const name = path.basename(path.resolve(vault, args.folder!))
     const out = path.resolve(cwd, args.out ?? `${name}.${args.format}`)
     if (fs.existsSync(out) && fs.statSync(out).isDirectory()) throw new CliError(`"${out}" is a directory; give a file name with --out.`)
     try {
@@ -539,17 +587,23 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   const cacheDir = cacheDirOf(env, cwd)
   if (cacheDir) {
     claimCache(cacheDir)
-    // --fresh empties the cache, keeping the marker that makes it datme's.
-    if (args.fresh) for (const e of fs.readdirSync(cacheDir)) if (e !== CACHE_MARKER) fs.rmSync(path.join(cacheDir, e), { recursive: true, force: true })
+    if (args.fresh) emptyCache(cacheDir)
     env.DATME_CACHE = cacheDir
     env.DATME_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, "package.json"), "utf8")).version
   }
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000
-  await inPackage(() => astro.build({ root: PACKAGE_ROOT, outDir: STAGING }))
-  if (cacheDir) pruneCache(cacheDir, started)
+  // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends.
+  const dropStaging = () => fs.rmSync(STAGING, { recursive: true, force: true })
+  if (args.command === "preview") process.once("exit", dropStaging)
+  try {
+    await inPackage(() => astro.build({ root: PACKAGE_ROOT, outDir: STAGING }))
+    if (cacheDir) pruneCache(cacheDir, started)
+    if (args.command === "build") publishOutput(STAGING, out, vault)
+  } finally {
+    if (args.command === "build") dropStaging()
+  }
   if (args.command === "build") {
-    publishOutput(STAGING, out, vault)
     console.log(`Site written to ${out}`)
     if (args.verbose) {
       const { cacheStats, formatCacheStats } = await import("./lib/render-cache.ts")

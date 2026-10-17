@@ -2,7 +2,9 @@ import { afterAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { claimCache, pruneCache } from "../src/cli"
+import { claimCache, emptyCache, pruneCache } from "../src/cli"
+import { DEAD_LINKS_FILE } from "../src/lib/dead-links"
+import { NEIGHBOURS_FILE } from "../src/lib/neighbours"
 
 // Builds a copy of the fixture vault through the CLI with a cache of its own.
 const root = path.resolve(import.meta.dir, "..")
@@ -110,6 +112,17 @@ describe("claimCache", () => {
     fs.mkdirSync(other)
     fs.writeFileSync(path.join(other, "notes.txt"), "mine")
     expect(() => claimCache(other)).toThrow("was not created by datme")
+  })
+})
+
+describe("emptyCache", () => {
+  test("--fresh keeps the fetched lists of dead links and neighbour notes, and the marker", () => {
+    const dir = path.join(tmp, "empty")
+    fs.mkdirSync(path.join(dir, "notes/ab"), { recursive: true })
+    fs.writeFileSync(path.join(dir, "notes/ab/entry"), "")
+    for (const f of [".datme-cache", DEAD_LINKS_FILE, NEIGHBOURS_FILE]) fs.writeFileSync(path.join(dir, f), "{}")
+    emptyCache(dir)
+    expect(fs.readdirSync(dir).sort()).toEqual([".datme-cache", DEAD_LINKS_FILE, NEIGHBOURS_FILE].sort())
   })
 })
 

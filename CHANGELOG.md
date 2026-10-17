@@ -144,6 +144,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `datme deploy` pipelines run the datme version that wrote them
+  (`bunx @dynamotn/datme@<version>`) on a pinned Bun, so a new release never
+  changes a site unasked; on GitHub only the deploy job may write to Pages.
+- Unlisted notes are left out of Pagefind search and of Dataview and Bases
+  results, like every other list; a note still queries itself with `this`.
 - datme's links (the footer credit, the starter `datme.yaml`, the docs and
   the package) point to its new home, gitlab.com/dynamo-brain/datme.
 - A folder listed in `appearance.classic` now shows its own page in that style
@@ -177,9 +182,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wikilinks read as Obsidian shows them: `[[Note.md]]` as "Note",
   `[[Note#Part]]` as "Note > Part", and `[[Note|]]` as "Note" instead of an
   empty link.
+- Builds are faster, most of all for large vaults: code blocks load only
+  the grammars they use, social cards and pages render several at a time,
+  and related notes are found without comparing every pair of notes.
+- Pages are lighter: each carries only its part of the explorer (the top
+  level and the folders holding it, already opened and marked) and loads
+  the whole tree once the sidebar shows. Without JavaScript the part still
+  links everywhere.
+- Pages paint sooner: the monospace font no longer holds up the first
+  paint, the print stylesheet loads apart, KaTeX's stylesheet comes only
+  with math, and a page loads only its own style's stylesheet.
+- The global graph stays responsive with hundreds of notes, and the search
+  and graph libraries load only when first used.
+- Offline reading keeps a bounded number of scripts and images.
+- Note pages no longer download every note's text: the graph, walks and
+  random notes read a slim index of titles and links
+  (`/static/graph.<lang>.json`), and only search loads the full one. The
+  offline app no longer downloads the search index when it installs.
+- The global graph lays itself out in the background, so the page stays
+  responsive while a graph of a thousand notes settles.
+- With `history: true`, builds read the vault's git history in one pass
+  instead of once per note, so history pages and `/changes` cost far less.
 
 ### Fixed
 
+- A tag or `permalink` with a `.` or `..` segment no longer breaks the build.
+- With `headers: { csp: true }`, Giscus comments load their stylesheet.
 - In the notebook look, two headings in a row with no text between them
   stay on separate lines instead of running into one line.
 - Markdown links with the target in angle brackets, `[text](<My note.md>)`,
@@ -214,6 +242,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - an HTML comment keeps its place without its words, so `<!-- -->`
     still separates two lists, and `<!-->` counts as a whole comment.
 - The space before a footnote's ↩ link is kept.
+- Two pages whose URLs differ only in case, such as a note `Archive.md` and
+  the built-in archive, or `notes.md` next to a folder `Notes/`, no longer
+  overwrite each other on macOS, Windows or a static host: the first keeps
+  the URL and `datme check` warns about the page left out.
+- A note saved with a UTF-8 byte order mark, as some Windows editors do,
+  keeps its frontmatter.
+- `datme build --fresh` keeps the notes of neighbour gardens it has just
+  fetched and the list of dead links, so links to other gardens still work.
+- Links find notes, files and drawings whose names macOS stored in
+  decomposed Unicode, as with Vietnamese file names, and those pages get the
+  same URL as the name typed in composed form.
+- Several builds at once, such as two vaults built side by side, each
+  publish their own site instead of mixing their files.
+- Dates written without a time, such as `date: 2024-01-01`, count in their
+  own year and month on the archive, calendar, stats and timeline pages, also
+  west of UTC.
+- `datme build` refuses an `--out` it may not replace before building
+  instead of after, and a build that fails to copy leaves the previous site
+  in place.
+- Empty tags, such as `tags: ["", "#"]`, no longer link to the list of tags
+  or show as an empty category in the RSS feed.
+- `datme dev` notices a folder created at the top of the vault after it
+  started, on Windows too.
+- The search, graph and other pages reading the note index try again after
+  a failed load, such as when briefly offline, instead of staying empty.
+- Code blocks served over plain http, where browsers offer no clipboard,
+  show no copy button instead of one that fails.
+- Builds of a vault outside git no longer print "fatal: not a git
+  repository".
+- Ignored folders match whatever their case, so a `Templates` folder is
+  ignored like the default `templates`.
+- On Windows, output inside the vault is left out of the next build, and
+  dates come from git history.
+- `datme export ./` writes a file named after the vault instead of
+  `..epub`.
+- A number as title, such as `title: 2024`, is used as the title.
+- In the notebook look's dark scheme, the selected search result, its path
+  and snippet, and the home page's hero card are readable, and matched words
+  stand out in search results.
+- Text on accent-coloured buttons (unlock, subscribe, practice, calendar
+  days) switches to dark ink when `theme.accent` is a light colour, in each
+  colour scheme, instead of staying white.
+- The header fits a 320px phone with a language switch: its buttons no
+  longer shrink, and on the narrowest screens the random-note button moves
+  into the menu drawer.
+- The search placeholder stays on one line in a crowded desktop header.
+- On narrow phones the home hero title wraps inside its card, and the search
+  dialog keeps its field in view and shows a close button on touch screens
+  instead of keyboard hints.
+- Kanban and task checkboxes, the graph's time slider, series summaries and
+  gallery captions are big enough to tap.
+- Chip counts, panel titles, folder counts and copy buttons are at least
+  12px, and the classic look's muted text meets 4.5:1 contrast.
+- The home page's author photo for IndieWeb readers points inside a site
+  served under a path, such as `/datme/icon-512.png`.
+- Screen readers: search results form a proper list of options, task
+  checkboxes are named by their task, a gallery cover no longer adds an
+  unnamed link, wide kanban boards and contribution graphs can be scrolled
+  with the keyboard, the two sidebars and the two navigations have distinct
+  names, note cards under a page title use the next heading level, and chart
+  tables no longer have an empty header cell.
+- A base formula calling `round()` with digits outside 0–100 rounds to the
+  nearest allowed precision instead of crashing the build.
+- A new, empty or comment-only `.base` file shows one table of every note
+  instead of "invalid YAML".
+- A vault whose `datme.yaml` is empty or holds only comments builds with the
+  defaults instead of stopping with "Cannot parse", and `datme migrate`
+  works on it; an empty ```contributionGraph block shows the plugin's
+  default heatmap.
+- A note whose frontmatter is empty or holds only comments no longer gets a
+  "frontmatter is not valid YAML" warning, and an empty chart block says what
+  a chart needs.
+- A BibTeX entry without a key, such as `@misc{}`, is skipped instead of being
+  cited as `}`.
+- In a ```query block, a dash before parentheses negates the whole group, as
+  in Obsidian: `meeting -(work meetup)`.
+- On the timeline, a `start` or `end` with a month or day of 0, such as
+  `1927-00`, is no longer taken as a date.
+- `datme check` and the privacy report show the words of an embed of a
+  private note as written, without HTML entities.
+- Two builds sharing a cache no longer crash when both prune it at once.
+- In `datme dev`, a change in a sibling folder whose name starts like the
+  vault's (`Notes-archive` next to `Notes`) no longer reloads the page.
+- A map with no places and no `center` shows the world instead of failing to
+  draw.
+- Code no longer shifts the page when the monospace font arrives: until it
+  does, code shows in a local monospace sized to match it.
+- A note's banner image loads first, so the page shows sooner.
+- The graph's time slider shows its date on pages without a language set,
+  instead of failing.
+
+### Security
+
+- An Excalidraw drawing can no longer carry markup or scripts into the page
+  through its numbers or styles: every field is checked as it is read.
+- History pages and `/changes` show links to private notes as the page does,
+  and skip versions from before a note was moved out of an ignored or hidden
+  folder, or into the vault.
+- Link previews refuse addresses on the build machine or a private network,
+  and follow at most three redirects, each one checked.
+- Canvas link cards only open web and mail addresses.
+- `_headers` adds `Strict-Transport-Security` for HTTPS sites and serves the
+  vault's SVG, HTML and XML files sandboxed, so a script in one never runs on
+  the site's origin.
 
 ## [2.2.2] - 2026-10-16
 

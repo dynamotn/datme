@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseCanvas, edgePath, bounds, canvasColor } from "../src/lib/canvas"
+import { parseCanvas, edgePath, bounds, canvasColor, linkHref } from "../src/lib/canvas"
 import { getVault } from "../src/lib/vault"
 
 describe("canvas format", () => {
@@ -12,6 +12,14 @@ describe("canvas format", () => {
     )
     expect(c.nodes.map((n) => n.id)).toEqual(["a"])
     expect(c.edges).toEqual([])
+  })
+
+  test("link cards lead to web and mail addresses only, never a script", () => {
+    for (const url of ["https://example.com/a", "HTTP://x.example", "mailto:me@example.com", "notes.example.org/x"]) expect(linkHref(url)).toBe(url)
+    for (const url of ["javascript:alert(1)", " JavaScript:alert(1)", "java\tscript:alert(1)", "\x01javascript:x", "data:text/html,<script>", "vbscript:x"]) {
+      expect(linkHref(url)).toBeUndefined()
+    }
+    expect(linkHref(undefined)).toBeUndefined()
   })
 
   test("blanks card fields that are not text", () => {

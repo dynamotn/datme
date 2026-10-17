@@ -33,16 +33,27 @@ describe("what a version showed", () => {
 })
 
 describe("reading versions from git", () => {
-  test("happens once per note, not once per language", () => {
-    const notes = (["vi-VN", "en-US"] as const).map((lang) => getVault().byKey[lang].get("03_Atomic/Queries")!)
+  test("happens once per build, not once per note or per language", () => {
+    const g = globalThis as { __vaultVersion?: number }
+    const saved = g.__vaultVersion
+    // A vault version of its own, so nothing was read before.
+    g.__vaultVersion = 8_000_001
+    const vault = getVault()
     const spy = spyOn(childProcess, "execFileSync")
     try {
-      notes.forEach(noteVersions)
+      const all = (["vi-VN", "en-US"] as const).flatMap((lang) => vault.notes[lang])
+      const versions = all.map(noteVersions)
       const calls = (cmd: string) => spy.mock.calls.filter((c) => (c[1] as string[]).includes(cmd)).length
       expect(calls("log")).toBe(1)
-      expect(calls("show")).toBeGreaterThan(0)
+      expect(calls("cat-file")).toBe(1)
+      expect(calls("show")).toBe(0)
+      const queries = all.filter((n) => n.key === "03_Atomic/Queries").map(noteVersions)
+      expect(queries).toHaveLength(2)
+      expect(queries[0].length).toBeGreaterThan(0)
+      expect(versions.length).toBe(all.length)
     } finally {
       spy.mockRestore()
+      g.__vaultVersion = (saved ?? 0) + 8_000_002
     }
   })
 })
@@ -113,6 +124,19 @@ describe("history pages", () => {
     commit("Garden.md", "---\npublish: true\ntags: [plants]\n---\nRoses need sun.", "garden", "2026-05-04T10:00:00Z")
     commit("Garden.md", "---\npublish: true\ntags: [plants]\n---\nRoses need sunlight.", "typo", "2026-05-05T10:00:00Z")
     commit("Garden.md", "---\npublish: true\ntags: [plants]\n---\nRoses need sunlight.\n\nTulips want a cold winter first.", "tulips", "2026-05-12T10:00:00Z")
+    // A version linking a private note, and notes that once lived where nothing is published.
+    fs.mkdirSync(path.join(vault, "Vault Secrets"), { recursive: true })
+    commit("Vault Secrets/Hidden Plan.md", "---\npublish: false\n---\nNot for you.", "private", "2025-06-01T10:00:00Z")
+    commit("Linked.md", "---\npublish: true\n---\nSee [[Vault Secrets/Hidden Plan|the plan]].", "linked", "2025-06-01T10:00:00Z")
+    commit("Linked.md", "---\npublish: true\n---\nSee [[Vault Secrets/Hidden Plan|the plan]].\n\nMore.", "linked 2", "2025-06-02T10:00:00Z")
+    const long = "A long paragraph that stays the same, so git still sees the move as a rename of the note.\n\n".repeat(4)
+    for (const dir of [".trash", "templates"]) {
+      fs.mkdirSync(path.join(vault, dir), { recursive: true })
+      fs.writeFileSync(path.join(vault, "datme.yaml"), "history: true\nignore: [templates]\n")
+      commit(`${dir}/Moved ${dir}.md`, `---\npublish: true\n---\n${long}Old body from ${dir.toUpperCase()} FOLDER.`, "old", "2025-06-03T10:00:00Z")
+      git("mv", `${dir}/Moved ${dir}.md`, `Moved ${dir}.md`)
+      commit(`Moved ${dir}.md`, `---\npublish: true\n---\n${long}Now public.`, "moved", "2025-06-04T10:00:00Z")
+    }
     const build = Bun.spawnSync(["bun", "bin/datme.ts", "build", vault, "--out", out], {
       cwd: root,
       env: { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: "" },
@@ -137,7 +161,9 @@ describe("history pages", () => {
       const p = path.join(out, file)
       if (!fs.statSync(p).isFile() || !/\.(html|json|xml|md|txt)$/.test(file)) continue
       const text = fs.readFileSync(p, "utf8")
-      const leaked = ["secret draft", "private aside", "Locked leaf", "hunter2", "SECRET MESSAGE"].find((x) => text.includes(x))
+      const leaked = ["secret draft", "private aside", "Locked leaf", "hunter2", "SECRET MESSAGE", "Vault Secrets", "TRASH FOLDER", "TEMPLATES FOLDER"].find((x) =>
+        text.includes(x),
+      )
       expect(leaked ? `${file}: ${leaked}` : "").toBe("")
     }
   })
@@ -153,7 +179,8 @@ describe("history pages", () => {
     expect(lists).toContain("Idea")
     expect(lists).not.toContain("Quiet")
     const feed = fs.readFileSync(path.join(out, "changes.xml"), "utf8")
-    expect(feed.match(/<item>/g)!.length).toBe(4)
+    // Garden and Idea's four, and the planting of Linked and the two moved notes.
+    expect(feed.match(/<item>/g)!.length).toBe(7)
     expect(feed).toContain("<title>Garden (+1 −0 paragraphs)</title>")
     expect(feed).toContain('<guid isPermaLink="false">/Garden@2026-05-12T10:00:00.000Z</guid>')
     expect(fs.existsSync(path.join(out, "tags/plants/changes.xml"))).toBe(true)

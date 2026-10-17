@@ -18,7 +18,11 @@ import { site } from "../site.config"
 
 export const DIAGRAM_LANGS = ["d2", "typst", "abc", "markmap", "mindmap"]
 
-export class DiagramUnavailable extends Error {}
+export class DiagramUnavailable extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 const error = (kind: string, message: string) => `<p class="dataview dv-error">${kind}: ${escapeAttr(message)}</p>`
 
@@ -30,12 +34,24 @@ function unavailable(kind: string, pkg: string, source: string): string {
   )
 }
 
+// A variable keeps bundlers from resolving the optional package at build time.
+const importPackage = (name: string): Promise<unknown> => import(/* @vite-ignore */ name)
+let importer = importPackage
+
+/**
+ * Replace how optional packages are imported, e.g. in tests to act as if one
+ * were not installed; undefined restores it. The renderers loaded so far are forgotten.
+ */
+export function setOptionalImport(fn: ((name: string) => Promise<unknown>) | undefined): void {
+  importer = fn ?? importPackage
+  d2 = undefined
+  typst = undefined
+}
+
 /** An optional package, loaded only when a note needs it; undefined when it is not installed. */
 async function optional<T>(name: string): Promise<T | undefined> {
   try {
-    // A variable keeps bundlers from resolving the optional package at build time.
-    const pkg = name
-    return (await import(/* @vite-ignore */ pkg)) as T
+    return (await importer(name)) as T
   } catch {
     return undefined
   }

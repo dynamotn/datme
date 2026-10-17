@@ -46,7 +46,10 @@ describe("CSP", () => {
   test("off by default, and the whole file can be turned off", () => {
     expect(resolveConfig({}, "/v").headers).toEqual({ csp: false })
     expect(resolveConfig({ headers: false }, "/v").headers).toBe(false)
-    expect(headersFile(resolveConfig({}, "/v"))).not.toContain("Content-Security-Policy")
+    // Only the vault's SVG, HTML and XML files get one: a sandbox, not a page policy.
+    const file = headersFile(resolveConfig({}, "/v"))
+    expect(file.split("\n\n")[0]).not.toContain("Content-Security-Policy")
+    expect(file.match(/Content-Security-Policy: .*/g)!.every((h) => h.endsWith("; sandbox"))).toBe(true)
   })
 
   test("note cards may be framed by any site when oEmbed is on and the site has a URL", () => {

@@ -5,8 +5,28 @@ import { site } from "../site.config"
 import { redirectsFile } from "./routes"
 import { headersFile, inlineScriptHashes } from "./headers"
 import { ACTOR_PATH, OUTBOX_PATH, actor, outbox, webfinger } from "./activitypub"
-import { listed, byRecent } from "./vault"
+import { listed, byRecent, isIgnored } from "./vault"
 import { renderNote } from "./markdown"
+
+/**
+ * The path of a file relative to the vault, with "/" separators so Windows
+ * paths match too; undefined outside it, a sibling folder sharing its name included.
+ */
+function inVault(file: string): string | undefined {
+  const vault = site.vault.replace(/\\/g, "/").replace(/\/+$/, "")
+  const p = file.replace(/\\/g, "/")
+  return p.startsWith(vault + "/") ? p.slice(vault.length + 1) : undefined
+}
+
+/**
+ * Whether the dev watcher leaves a file out: one in a folder datme ignores, or
+ * a dotfile such as .git, inside the vault.
+ */
+export function ignoredInVault(file: string): boolean {
+  const rel = inVault(file)
+  if (rel === undefined) return false
+  return rel.split("/").some((segment) => segment.startsWith(".")) || isIgnored(rel)
+}
 
 /** Every HTML file under a directory, as text. */
 function htmlFiles(dir: string): string[] {
@@ -23,6 +43,8 @@ export default function vaultWatcher(): AstroIntegration {
   return {
     name: "datme",
     hooks: {
+      // Vite adds its own rules, such as node_modules, to these.
+      "astro:config:setup": ({ updateConfig }) => void updateConfig({ vite: { server: { watch: { ignored: [ignoredInVault] } } } }),
       "astro:build:done": async ({ dir }) => {
         if (site.cname && site.url) fs.writeFileSync(new URL("CNAME", dir), new URL(site.url).host + "\n")
         if (site.redirects) {
@@ -61,12 +83,10 @@ export default function vaultWatcher(): AstroIntegration {
         }
       },
       "astro:server:setup": ({ server }) => {
-        // Watch top-level entries one by one so .git and other ignored trees stay unwatched.
-        for (const entry of fs.readdirSync(site.vault)) {
-          if (!site.ignore.includes(entry)) server.watcher.add(path.join(site.vault, entry))
-        }
+        // The whole vault, so a folder made after start is seen too; ignoredInVault keeps .git and ignored trees out.
+        server.watcher.add(site.vault)
         const onChange = (file: string) => {
-          if (!file.startsWith(site.vault) || file.includes("/.git/")) return
+          if (inVault(file) === undefined || ignoredInVault(file)) return
           const g = globalThis as { __vaultVersion?: number }
           g.__vaultVersion = (g.__vaultVersion ?? 0) + 1
           server.hot.send({ type: "full-reload" })

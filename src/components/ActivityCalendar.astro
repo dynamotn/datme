@@ -31,7 +31,7 @@ const calendars = activeYears(notes).map((year) => {
           <summary>
             <b>{year}</b> <span>{s.activityCount(total)}</span>
           </summary>
-          <div class="activity-scroll">
+          <div class="activity-scroll" tabindex="0" role="region" aria-label={`${s.activity} ${year}`}>
             <div class="activity-months" style={`grid-template-columns: repeat(${weeks.length}, 1fr)`}>
               {months.map((m) => (
                 <span>{m}</span>

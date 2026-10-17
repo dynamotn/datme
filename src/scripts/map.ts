@@ -92,6 +92,8 @@ export function mountMap(el: HTMLElement): void {
   const center = el.dataset.center?.split(",").map(Number) as [number, number] | undefined
   const zoom = el.dataset.zoom ? Number(el.dataset.zoom) : undefined
   if (center) return void map.setView(center, zoom ?? 13)
+  // No places (an empty base view, say): Leaflet cannot fit a map to nothing, so show the world.
+  if (!places.length) return void map.setView([0, 0], zoom ?? 2)
   const bounds = L.latLngBounds(places.map((p) => [p.lat, p.lng]))
   if (places.length === 1) map.setView(bounds.getCenter(), zoom ?? 10)
   else map.fitBounds(bounds, { padding: [32, 32], ...(zoom != null ? { maxZoom: zoom } : {}) })
@@ -99,10 +101,8 @@ export function mountMap(el: HTMLElement): void {
 
 /** Swap the tiles of every map when the theme changes and the site has dark ones. */
 export function retileMaps(): void {
-  for (const [el, old] of layers) {
-    const map = maps.get(el)
-    if (!map) continue
-    for (const layer of old) layer.remove()
+  for (const [el, map] of maps) {
+    for (const layer of layers.get(el) ?? []) layer.remove()
     addTiles(el, map)
   }
 }

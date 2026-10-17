@@ -51,3 +51,26 @@ describe("darkroom look", () => {
     expectScoped("darkroom.css", "darkroom")
   })
 })
+
+describe("the monospace font", () => {
+  const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
+  test("falls back to local faces sized to Iosevka's metrics, right after it in both looks", () => {
+    const global = css("global.css")
+    const faces = [...global.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => m[1]).filter((f) => f.includes("Iosevka Dynamo Fallback"))
+    expect(faces).toHaveLength(2)
+    const pct = (face: string, d: string) => Number(face.match(new RegExp(`${d}:\\s*([\\d.]+)%`))![1]) / 100
+    expect(faces.every((f) => /src:\s*local\(/.test(f) && pct(f, "line-gap-override") === 0)).toBe(true)
+    // Half an em wide: each local face's advance (Consolas 1126, Menlo 1233 of 2048) times its adjustment.
+    const [consolas, menlo] = faces
+    expect(pct(consolas, "size-adjust") * (1126 / 2048)).toBeCloseTo(0.5, 3)
+    expect(pct(menlo, "size-adjust") * (1233 / 2048)).toBeCloseTo(0.5, 3)
+    // 0.965em above the baseline and 0.285em below, once adjusted.
+    for (const face of faces) {
+      expect(pct(face, "ascent-override") * pct(face, "size-adjust")).toBeCloseTo(0.965, 3)
+      expect(pct(face, "descent-override") * pct(face, "size-adjust")).toBeCloseTo(0.285, 3)
+    }
+    const stack = '"Iosevka Dynamo", "Iosevka Dynamo Fallback Consolas", "Iosevka Dynamo Fallback", ui-monospace, monospace'
+    expect(global).toContain(`--font-code: ${stack};`)
+    expect(css("notebook.css")).toContain(`--font-mono: ${stack};`)
+  })
+})

@@ -34,6 +34,7 @@ describe("the local graph", () => {
     expect(fetched).toEqual([])
     seen?.([{ isIntersecting: true }])
     await new Promise((r) => setTimeout(r, 10))
-    expect(fetched).toEqual(["/static/contentIndex.xx-XX.json"])
+    // The slim graph index: the notes' text stays with search.
+    expect(fetched).toEqual(["/static/graph.xx-XX.json"])
   })
 })

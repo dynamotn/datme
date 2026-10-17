@@ -70,6 +70,8 @@ describe("contribution graphs", () => {
     expect(html).toContain('<figcaption class="panel-title">Runs <span>2</span></figcaption>')
     expect(html).toMatch(/<span class="day l4" style="background:#ff0000" title="Oct 1, 2026: 2 · run-1, run-2"><\/span>/)
     expect(html).not.toContain("red;x")
+    // A wide graph scrolls, so the keyboard can reach it too.
+    expect(html).toContain('<div class="activity-scroll" tabindex="0" role="region" aria-label="Runs">')
     // 24 Sep to 7 Oct 2026 spans Monday 21 Sep to Sunday 11 Oct: three weeks.
     expect(html).toContain("grid-template-columns: repeat(3, 1fr)")
     expect(renderGraph("dataSource: [oops", "en-US", engine, today)).toContain("dv-error")

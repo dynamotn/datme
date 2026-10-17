@@ -1,7 +1,19 @@
 import { describe, expect, test } from "bun:test"
-import { formatWhen, parseLocation, parseWhen, places, timeline, whenKey } from "../src/lib/places"
+import { dayOf, formatWhen, parseLocation, parseWhen, places, timeline, whenKey } from "../src/lib/places"
 
 describe("dates of events", () => {
+  test("a date-only creation date keeps its written day, even west of UTC", () => {
+    const tz = process.env.TZ
+    process.env.TZ = "America/New_York"
+    try {
+      expect(dayOf(new Date("2024-01-01"))).toEqual({ year: 2024, month: 1, day: 1 })
+      expect(dayOf(new Date(2024, 0, 1, 23, 30))).toEqual({ year: 2024, month: 1, day: 1 })
+    } finally {
+      if (tz === undefined) delete process.env.TZ
+      else process.env.TZ = tz
+    }
+  })
+
   test("years, months, days, BCE and timestamps", () => {
     expect(parseWhen(1927)).toEqual({ year: 1927 })
     expect(parseWhen("1927-12")).toEqual({ year: 1927, month: 12 })

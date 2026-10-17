@@ -2,7 +2,7 @@ import type { Lang } from "../site.config"
 import { getVault, type Doc } from "./vault"
 import { t } from "./i18n"
 import { escapeAttr } from "./obsidian"
-import { engineFor, html } from "./dataview-render"
+import { currentPage, engineFor, html } from "./dataview-render"
 import { parseBase, runView, BaseError, type BaseFile, type BaseView } from "./bases"
 import { DataviewError } from "./dataview"
 import { renderMapView } from "./base-map"
@@ -67,7 +67,7 @@ function errorOf(e: unknown, name: string): string {
 function renderView(base: BaseFile, view: BaseView, lang: Lang, currentKey?: string, embedded = true): string {
   const s = t(lang)
   const all = engineFor(lang)
-  const engine = { ...all, current: currentKey ? all.pages.find((p) => p.key === currentKey) : undefined }
+  const engine = { ...all, current: currentPage(all, currentKey) }
   const res = runView(base, view, engine)
   const notes = getVault().byKey[lang]
   if (!res.rows.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`

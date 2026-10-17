@@ -7,6 +7,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { dump as dumpYaml, load as loadYaml } from "js-yaml"
+import { parseYaml } from "./yaml.ts"
 import { CONFIG_FILES } from "./config-files.ts"
 
 export const SOURCES = ["publish", "digital-garden", "quartz"] as const
@@ -185,7 +186,8 @@ function configFile(vault: string): string | undefined {
  */
 export function configAddition(vault: string, config: Record<string, unknown>): { add: Record<string, unknown>; skipped: string[] } {
   const file = configFile(vault)
-  const existing = file ? ((loadYaml(fs.readFileSync(file, "utf8")) as Record<string, unknown> | null) ?? {}) : {}
+  const text = file ? fs.readFileSync(file, "utf8") : ""
+  const existing = (parseYaml(text) as Record<string, unknown> | null) ?? {}
   const add: Record<string, unknown> = {}
   const skipped: string[] = []
   for (const [key, value] of Object.entries(config)) {

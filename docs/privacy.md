@@ -56,8 +56,8 @@ read it through before the first deploy:
 ## Unlisted notes
 
 `unlisted: true` publishes the note but leaves it out of the explorer, folder
-and tag pages, lists, related notes and the markdown copies. People who have the
-link can still read it.
+and tag pages, lists, related notes, the site's search, Dataview and Bases
+results, and the markdown copies. People who have the link can still read it.
 
 ## Drafts and scheduled notes
 
@@ -176,4 +176,11 @@ A built site is self-contained, apart from what you opt into:
 - Analytics, comments and webmentions, when configured.
 
 `headers: { csp: true }` adds a Content Security Policy derived from the
-features in use.
+features in use. It stays off by default: it would block iframes and scripts
+you write into notes by hand, and the fonts some Marp themes load.
+
+Whatever `csp` says, `_headers` asks browsers to keep to HTTPS when `site.url`
+is `https://`, and serves the SVG, HTML and XML files of the vault with a
+sandboxing policy, so a script in one of them never runs on the site's origin
+when the file is opened on its own. Pictures and frames that show them in a
+page are unaffected.

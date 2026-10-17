@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { activityWeeks, activeYears, dayKey } from "../src/lib/calendar"
+import { activityWeeks, activeYears, dayKey, monthOf, yearOf } from "../src/lib/calendar"
 
 const d = (s: string) => new Date(s + "T10:00")
 const notes = [
@@ -37,5 +37,29 @@ describe("activeYears", () => {
     expect(activeYears(notes)).toEqual([2025, 2024, 2023])
     expect(activeYears([{}])).toEqual([])
     expect(dayKey(d("2024-01-02"))).toBe("2024-01-02")
+  })
+})
+
+describe("date-only values west of UTC", () => {
+  // A date-only value is UTC midnight: in New York it is the evening of the day before.
+  const inNewYork = <T>(fn: () => T): T => {
+    const tz = process.env.TZ
+    process.env.TZ = "America/New_York"
+    try {
+      return fn()
+    } finally {
+      if (tz === undefined) delete process.env.TZ
+      else process.env.TZ = tz
+    }
+  }
+
+  test("yearOf and monthOf keep the written year and month", () => {
+    const [year, month] = inNewYork(() => [yearOf(new Date("2024-01-01")), monthOf(new Date("2024-03-01"))])
+    expect(year).toBe(2024)
+    expect(month).toBe(2)
+  })
+
+  test("a note dated on New Year's day counts in its own year", () => {
+    expect(inNewYork(() => activeYears([{ created: new Date("2024-01-01") }]))).toEqual([2024])
   })
 })

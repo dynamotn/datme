@@ -1,11 +1,13 @@
 ---
 import { ClientRouter } from "astro:transitions"
-import "~/styles/global.css"
-import "~/styles/notebook.css"
-import "~/styles/garden.css"
-import "~/styles/resume.css"
-import "~/styles/darkroom.css"
-import "~/styles/print.css"
+// Linked by hand rather than bundled, so a page loads only its own look's sheet, KaTeX's only with math, and print's off the critical path.
+import globalCss from "~/styles/global.css?url"
+import notebookCss from "~/styles/notebook.css?url"
+import gardenCss from "~/styles/garden.css?url"
+import resumeCss from "~/styles/resume.css?url"
+import darkroomCss from "~/styles/darkroom.css?url"
+import printCss from "~/styles/print.css?url"
+import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
 import { startsDark, type Frame } from "~/lib/look"
@@ -92,6 +94,12 @@ const pluginHead = await userHead()
 // A page that stands alone keeps only a bar with the site's name and the scheme toggle.
 const minimal = frame === "minimal"
 const withRail = rail && frame === "full"
+// The page is rendered first so its <head> knows whether it holds math.
+const main = await Astro.slots.render("default")
+const railHtml = withRail && Astro.slots.has("rail") ? await Astro.slots.render("rail") : ""
+const hasMath = /class="katex[\s"]/.test(main) || /class="katex[\s"]/.test(railHtml)
+const LOOK_CSS: Partial<Record<Style, string>> = { notebook: notebookCss, garden: gardenCss, resume: resumeCss, darkroom: darkroomCss }
+const lookCss = LOOK_CSS[look]
 ---
 
 <!doctype html>
@@ -105,7 +113,18 @@ const withRail = rail && frame === "full"
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href={MONO_FONT_ORIGIN} crossorigin />
-    <link rel="stylesheet" href={MONO_FONT_CSS} />
+    {/* The monospace face loads without holding up the first paint; code shows in a fallback until it arrives. */}
+    <link rel="preload" as="style" href={MONO_FONT_CSS} />
+    <link rel="stylesheet" href={MONO_FONT_CSS} media="print" data-async-style />
+    <noscript><link rel="stylesheet" href={MONO_FONT_CSS} /></noscript>
+    {/* An inline script rather than an onload attribute: the CSP allows inline scripts by hash, never handlers. */}
+    <script is:inline>
+      document.querySelectorAll("link[data-async-style]").forEach((l) => {
+        const on = () => (l.media = "all")
+        if (l.sheet) on()
+        else l.addEventListener("load", on, { once: true })
+      })
+    </script>
     {fontsHref() && <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />}
     {fontsHref() && <link rel="stylesheet" href={fontsHref()} />}
     {themeCss() && <style is:inline set:html={themeCss()} />}
@@ -197,6 +216,11 @@ const withRail = rail && frame === "full"
     <ClientRouter fallback="swap" />
     <Analytics />
     {pluginHead && <Fragment set:html={pluginHead} />}
+    {/* In cascade order, which src/scripts/styles.ts restores after a navigation adds one. */}
+    {hasMath && <link rel="stylesheet" href={katexCss} data-css="1" />}
+    <link rel="stylesheet" href={globalCss} data-css="2" />
+    {lookCss && <link rel="stylesheet" href={lookCss} data-css="3" />}
+    <link rel="stylesheet" href={printCss} media="print" data-css="4" />
   </head>
   <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage} data-highlight={s.highlight} data-highlights={s.highlights} data-highlight-note={s.highlightNote} data-highlight-save={s.highlightSave} data-highlight-remove={s.highlightRemove} data-highlight-lost={s.highlightLost} data-highlights-empty={s.highlightsEmpty} data-highlights-export={s.highlightsExport}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
@@ -217,7 +241,7 @@ const withRail = rail && frame === "full"
       {
         !minimal && (
           <>
-            <nav class="main-nav" aria-label={s.menu}>
+            <nav class="main-nav" aria-label={s.siteSections}>
               {nav.map((l) => <a href={l.url}>{l.label}</a>)}
             </nav>
             <div class="header-spacer"></div>
@@ -234,7 +258,7 @@ const withRail = rail && frame === "full"
                 </a>
               )
             }
-            <button class="icon-btn" type="button" data-random aria-label={s.randomNote} title={`${s.randomNote} (R)`}>
+            <button class="icon-btn header-random" type="button" data-random aria-label={s.randomNote} title={`${s.randomNote} (R)`}>
               <span aria-hidden="true">🎲</span>
             </button>
             <button class="icon-btn" type="button" data-open-graph aria-label={s.globalGraph} title={`${s.globalGraph} (Ctrl G)`}>
@@ -307,18 +331,22 @@ const withRail = rail && frame === "full"
     <div class:list={["shell", { "no-right": !withRail }]}>
       {
         !minimal && (
-          <aside class="sidebar sidebar-left" transition:persist={`explorer-${lang}`} data-sidebar>
+          <aside class="sidebar sidebar-left" transition:persist={`explorer-${lang}`} data-sidebar aria-label={s.explorer}>
             <Explorer lang={lang} />
+            {/* The header has no room for it on the narrowest phones; global.css shows it there instead. */}
+            <button class="drawer-random" type="button" data-random>
+              <span aria-hidden="true">🎲</span> {s.randomNote}
+            </button>
           </aside>
         )
       }
       <main class="main">
-        <slot />
+        <Fragment set:html={main} />
       </main>
       {
         withRail && (
-          <aside class="sidebar sidebar-right">
-            <slot name="rail" />
+          <aside class="sidebar sidebar-right" aria-label={s.pageRail}>
+            <Fragment set:html={railHtml} />
           </aside>
         )
       }
@@ -387,6 +415,9 @@ const withRail = rail && frame === "full"
                 )
               }
               <kbd>Esc</kbd>
+              <button class="icon-btn search-close" type="button" data-close-dialog aria-label={s.close}>
+                <Icon name="close" />
+              </button>
             </div>
             <Filters lang={lang} kinds={["folder", "type", "stage", "fresh"]} scope="search" />
             <ul id="search-results" class="search-results" role="listbox" data-empty={s.searchEmpty}></ul>
@@ -438,6 +469,7 @@ const withRail = rail && frame === "full"
 
     <script>
       import "~/scripts/app"
+      import "~/scripts/styles"
     </script>
   </body>
 </html>

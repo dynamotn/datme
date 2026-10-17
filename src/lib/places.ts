@@ -1,6 +1,7 @@
 import { site, type Lang } from "../site.config"
 import { listed, type Note } from "./vault"
 import { t } from "./i18n"
+import { isDateOnly, monthOf, yearOf } from "./calendar"
 
 // ---------- timeline ----------
 
@@ -20,7 +21,7 @@ export function parseWhen(v: unknown): When | undefined {
   const when: When = { year: Number(m[1]) }
   if (m[2]) when.month = Number(m[2])
   if (m[3]) when.day = Number(m[3])
-  if ((when.month && (when.month < 1 || when.month > 12)) || (when.day && (when.day < 1 || when.day > 31))) return undefined
+  if ((when.month !== undefined && (when.month < 1 || when.month > 12)) || (when.day !== undefined && (when.day < 1 || when.day > 31))) return undefined
   return when
 }
 
@@ -55,7 +56,12 @@ export function timeline(lang: Lang): Event[] {
   return events.sort((a, b) => whenKey(a.start) - whenKey(b.start) || a.note.title.localeCompare(b.note.title))
 }
 
-const dayOf = (d: Date): When => ({ year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() })
+/** The calendar day of a date: the written day of a date-only value, else the local day. */
+export const dayOf = (d: Date): When => ({
+  year: yearOf(d),
+  month: monthOf(d) + 1,
+  day: isDateOnly(d) ? d.getUTCDate() : d.getDate(),
+})
 
 // ---------- map ----------
 

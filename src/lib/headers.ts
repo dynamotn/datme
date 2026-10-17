@@ -55,8 +55,8 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
   }
   const c = site.comments
   if (c?.provider === "giscus") {
-    script.add("https://giscus.app")
-    frame.add("https://giscus.app")
+    // The widget script also adds Giscus's own stylesheet to the page.
+    for (const set of [script, frame, style]) set.add("https://giscus.app")
   } else if (c?.provider === "commento") {
     const host = origin(c.host)
     if (host) for (const set of [script, connect, frame, style]) set.add(host)
@@ -93,6 +93,11 @@ export function contentSecurityPolicy(site: SiteConfig, scriptHashes: string[]):
   ].join("; ")
 }
 
+/** Extensions of vault files that a browser opened on their own would run scripts in. */
+const INERT_FILES = ["svg", "html", "htm", "xml", "xhtml"]
+/** No scripts, no outside loads, a unique origin: what such a file gets when opened directly. */
+const INERT_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox"
+
 /** A _headers file (Netlify, Cloudflare Pages): safe defaults, and long caching for hashed assets. */
 export function headersFile(site: SiteConfig, scriptHashes: string[] = []): string {
   const all = [
@@ -100,12 +105,17 @@ export function headersFile(site: SiteConfig, scriptHashes: string[] = []): stri
     "Referrer-Policy: strict-origin-when-cross-origin",
     "Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()",
     "X-Frame-Options: SAMEORIGIN",
+    // A site served over HTTPS stays on it; a host that serves only HTTP ignores the header.
+    ...(site.url?.startsWith("https://") ? ["Strict-Transport-Security: max-age=31536000"] : []),
     ...(site.headers && site.headers.csp ? [`Content-Security-Policy: ${contentSecurityPolicy(site, scriptHashes)}`] : []),
   ]
   return [
     "/*",
     ...all.map((h) => `  ${h}`),
     "",
+    "# Vault files a browser would run as a page (an SVG or HTML with a script) open inert.",
+    "# Pages that show them as pictures or frames are not affected; PDFs and media are left alone.",
+    ...INERT_FILES.flatMap((ext) => [`/assets/*.${ext}`, `  Content-Security-Policy: ${INERT_CSP}`, ""]),
     "# File names under /_astro carry a hash of their content.",
     "/_astro/*",
     "  Cache-Control: public, max-age=31536000, immutable",

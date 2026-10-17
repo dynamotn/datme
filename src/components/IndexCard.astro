@@ -14,8 +14,11 @@ interface Props {
   featured?: boolean
   /** Show the banner image when the note has one. */
   media?: boolean
+  /** Level of the card title: one below the heading the cards sit under. */
+  level?: 2 | 3
 }
-const { note, date = "updated", featured = false, media = false } = Astro.props
+const { note, date = "updated", featured = false, media = false, level = 3 } = Astro.props
+const Heading = `h${level}` as const
 const r = await renderNote(note)
 const s = t(note.lang)
 const stage = note.stage ? site.stages[note.stage] : undefined
@@ -51,10 +54,10 @@ const initials = title
     {kindInfo && !featured && <span class="index-card-type">{kindInfo.icon} {kindInfo.label}</span>}
     {featured && <span>{s.readingTime(minutes)}</span>}
   </p>
-  <h3 class="index-card-title">
+  <Heading class="index-card-title">
     {kind === "person" && <span class="index-card-avatar" aria-hidden="true">{initials}</span>}
     <a class="internal" href={note.url}>{title}</a>
-  </h3>
+  </Heading>
   {r.description && <p class="index-card-excerpt">{r.description}</p>}
   {
     tags.length > 0 && (

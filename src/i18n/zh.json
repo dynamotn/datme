@@ -239,5 +239,8 @@
   "pathsIn": "入口小径",
   "pathsFromHere": "从这里出发的小径",
   "nearby": "附近",
-  "walkGarden": "漫游整个花园"
+  "walkGarden": "漫游整个花园",
+  "kanbanBoard": "看板",
+  "siteSections": "站点栏目",
+  "pageRail": "本页更多内容"
 }

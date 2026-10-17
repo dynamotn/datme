@@ -1,6 +1,7 @@
 import { freshness } from "./outdated"
 
-export interface IndexNote {
+/** A note in the graph index: what the graph, walks and random notes need. */
+export interface GraphNote {
   u: string
   t: string
   a: string[]
@@ -16,28 +17,43 @@ export interface IndexNote {
   /** Label of the note's topic, "" without one. */
   tp?: string
   f: string
-  d: string
-  c: string
   /** Day the note was created, in days since 1970; null when unknown. */
   k?: number | null
   /** Day the note was last tended, in days since 1970; null when unknown. */
   m?: number | null
 }
-export interface ContentIndex {
-  notes: IndexNote[]
+/** A note in the content index, for search: also its description and text. */
+export interface IndexNote extends GraphNote {
+  d: string
+  c: string
+}
+export interface GraphIndex<N extends GraphNote = GraphNote> {
+  notes: N[]
   links: [number, number][]
 }
+export type ContentIndex = GraphIndex<IndexNote>
 
-const cache = new Map<string, Promise<ContentIndex>>()
+const cache = new Map<string, Promise<GraphIndex<GraphNote>>>()
 
-export function loadIndex(lang: string): Promise<ContentIndex> {
-  let hit = cache.get(lang)
+function load<I>(url: string): Promise<I> {
+  let hit = cache.get(url)
   if (!hit) {
-    hit = fetch(`/static/contentIndex.${lang}.json`).then((r) => r.json())
-    cache.set(lang, hit)
+    hit = fetch(url).then((r) => {
+      if (!r.ok) throw new Error(`${r.status} ${url}`)
+      return r.json() as Promise<GraphIndex<GraphNote>>
+    })
+    // A failure, such as being offline, is not kept: the next call tries again.
+    hit.catch(() => cache.delete(url))
+    cache.set(url, hit)
   }
-  return hit
+  return hit as Promise<I>
 }
+
+/** Every note of a language with its text: only search needs it, as it is by far the larger file. */
+export const loadIndex = (lang: string) => load<ContentIndex>(`/static/contentIndex.${lang}.json`)
+
+/** Every note of a language and their links, without their text: for the graph, walks and random notes. */
+export const loadGraph = (lang: string) => load<GraphIndex>(`/static/graph.${lang}.json`)
 
 /** Compare URL paths regardless of percent-encoding and trailing slashes. */
 export function samePath(a: string, b: string): boolean {
@@ -63,7 +79,7 @@ export interface NoteFilter {
 }
 
 /** Whether a note passes every set filter; a tag also matches its nested tags. */
-export function matchesFilter(n: IndexNote, f: NoteFilter): boolean {
+export function matchesFilter(n: GraphNote, f: NoteFilter): boolean {
   if (f.folder && n.p !== f.folder) return false
   if (f.type && !n.y.includes(f.type)) return false
   if (f.tag && !n.g.some((g) => g === f.tag || g.startsWith(f.tag + "/"))) return false

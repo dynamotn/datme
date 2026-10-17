@@ -113,7 +113,7 @@ function assetUrl(rel: string): string {
 type LinkWords = (target: string, alias: string | undefined) => string
 
 /** Plain-text rendering of a markdown line, used as backlink context. */
-function plainLine(line: string, words: LinkWords = (t, a) => a ?? t): string {
+function plainLine(line: string, words: LinkWords): string {
   return line
     .replace(/!?\[\[([^\]|]+?)(?:\\?\|([^\]]+))?\]\]/g, (_, t: string, a?: string) => words(t.split("#")[0], a))
     .replace(/\[([^\]]*)\]\(([^)]*)\)/g, (_, text: string, href: string) => (/\.md(#|$)/i.test(href) ? words(href.replace(/#.*$/, ""), text) : text))
@@ -240,8 +240,9 @@ export function preprocess(
   }
   const contextOf = (line: string) => plainLine(line, (t, a) => privateWords(t, a) ?? a ?? t)
   /** A link to a private note as plain words, or nothing when it shows none. */
-  const privateSpan = (kind: LinkProblem["kind"], target: string, shown: string) =>
-    broken(kind, target, shown ? `<span class="broken-link" title="Not published">${shown}</span>` : "", shown)
+  /** `shown` as written goes to the problem; `html` is what the page shows of it. */
+  const privateSpan = (kind: LinkProblem["kind"], target: string, shown: string, html = shown) =>
+    broken(kind, target, shown ? `<span class="broken-link" title="Not published">${html}</span>` : "", shown)
   /** The line around `offset` of the text being rewritten, its masked code put back. */
   const lineOf = (text: string, offset: number) => {
     const end = text.indexOf("\n", offset)
@@ -388,7 +389,7 @@ export function preprocess(
       const asset = file ? ctx.resolveAsset(file, ctx.dir) : undefined
       if (asset) return embedAsset(asset, alias, fragment)
       const shown = privateWords(file, alias)
-      if (shown !== undefined) return privateSpan("embed", file, escapeAttr(shown))
+      if (shown !== undefined) return privateSpan("embed", file, shown, escapeAttr(shown))
       return broken("embed", file, `<span class="broken-link">${escapeAttr(alias ?? file)}</span>`)
     }
 

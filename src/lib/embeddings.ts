@@ -4,7 +4,7 @@
  * model; nothing is sent anywhere. Each note's vector is cached by its text,
  * so a build only embeds the notes that changed.
  */
-import crypto from "node:crypto"
+import { createHash } from "node:crypto"
 import { readCache, writeCache } from "./render-cache"
 
 /** Turns texts into unit-length vectors, one per text. */
@@ -16,7 +16,11 @@ export function setEmbedder(e: Embedder | undefined): void {
   override = e
 }
 
-export class EmbeddingsUnavailable extends Error {}
+export class EmbeddingsUnavailable extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 const pipelines = new Map<string, Promise<Embedder>>()
 
@@ -62,7 +66,7 @@ export async function embed(items: { id: string; text: string }[], model: string
   const out = new Map<string, number[]>()
   const todo: { id: string; text: string; key: string[] }[] = []
   for (const it of items) {
-    const key = [model, crypto.createHash("sha256").update(it.text).digest("hex")]
+    const key = [model, createHash("sha256").update(it.text).digest("hex")]
     const hit = override ? undefined : readCache("embeddings", import.meta.url, key)
     if (hit) out.set(it.id, JSON.parse(hit.toString("utf8")))
     else todo.push({ ...it, key })

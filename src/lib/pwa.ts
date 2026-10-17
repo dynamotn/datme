@@ -49,6 +49,8 @@ function offlinePage(): string {
 
 /** Pages kept for offline reading; the oldest ones are dropped beyond this. */
 const MAX_PAGES = 100
+/** Build assets kept, scripts and styles of the pages read and the media they show; the oldest go beyond this. */
+export const MAX_ASSETS = 300
 
 /**
  * The service worker. Pages are network-first, so readers always get the
@@ -57,7 +59,8 @@ const MAX_PAGES = 100
  * the caches of the previous one, except the pages.
  */
 export function serviceWorker(version: string): string {
-  const precache = [...site.langs.map((l) => slugToUrl(langPrefix(l) + "index")), ...site.langs.map((l) => `/static/contentIndex.${l}.json`)]
+  // Not the search index: every install would download every note's text. Indexes are cached once fetched.
+  const precache = site.langs.map((l) => slugToUrl(langPrefix(l) + "index"))
   return `// datme service worker, build ${version}
 const VERSION = ${JSON.stringify(version)}
 const CORE = "datme-core-" + VERSION
@@ -66,6 +69,7 @@ const PAGES = "datme-pages"
 const PRECACHE = ${JSON.stringify(precache)}
 const OFFLINE = ${JSON.stringify(offlinePage())}
 const MAX_PAGES = ${MAX_PAGES}
+const MAX_ASSETS = ${MAX_ASSETS}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -85,10 +89,10 @@ self.addEventListener("activate", (event) => {
   )
 })
 
-async function trim() {
-  const cache = await caches.open(PAGES)
+async function trim(name, max) {
+  const cache = await caches.open(name)
   const keys = await cache.keys()
-  await Promise.all(keys.slice(0, Math.max(0, keys.length - MAX_PAGES)).map((k) => cache.delete(k)))
+  await Promise.all(keys.slice(0, Math.max(0, keys.length - max)).map((k) => cache.delete(k)))
 }
 
 async function page(request) {
@@ -102,7 +106,7 @@ async function page(request) {
       const cache = await caches.open(PAGES)
       await cache.delete(key)
       await cache.put(key, response.clone())
-      trim()
+      trim(PAGES, MAX_PAGES)
     }
     return response
   } catch {
@@ -115,7 +119,14 @@ async function asset(request) {
   const cached = await caches.match(request)
   if (cached) return cached
   const response = await fetch(request)
-  if (response.ok && response.type === "basic") (await caches.open(ASSETS)).put(request, response.clone())
+  if (response.ok && response.type === "basic") {
+    const copy = response.clone()
+    caches
+      .open(ASSETS)
+      .then((cache) => cache.put(request, copy))
+      .then(() => trim(ASSETS, MAX_ASSETS))
+      .catch(() => {})
+  }
   return response
 }
 

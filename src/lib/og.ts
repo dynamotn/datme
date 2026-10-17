@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import { createRequire } from "node:module"
 import satori from "satori"
-import { Resvg } from "@resvg/resvg-js"
+import { renderAsync } from "@resvg/resvg-js"
 
 export interface OgCard {
   title: string
@@ -182,7 +182,9 @@ export async function renderOg(card: OgCard): Promise<Buffer> {
 async function toPng(tree: Node, width: number, height: number): Promise<Buffer> {
   const svg = await satori(tree as unknown as Parameters<typeof satori>[0], { width, height, fonts: loadFonts() })
   // Satori already turned text into paths; scanning system fonts would dominate the render time.
-  return new Resvg(svg, { fitTo: { mode: "width", value: width }, font: { loadSystemFonts: false } }).render().asPng()
+  // Rendered off the main thread, so pages built concurrently rasterize their cards in parallel.
+  const png = await renderAsync(svg, { fitTo: { mode: "width", value: width }, font: { loadSystemFonts: false } })
+  return png.asPng()
 }
 
 /**

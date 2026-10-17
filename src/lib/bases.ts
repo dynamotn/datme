@@ -2,10 +2,14 @@
  * Obsidian Bases (.base files): YAML views over notes with JavaScript-like
  * filter and formula expressions. Evaluated over published notes only.
  */
-import { load as loadYaml } from "js-yaml"
+import { parseYaml } from "./yaml"
 import { compare, memo, pageOf, type Engine, type Link, type Page, type Value } from "./dataview"
 
-export class BaseError extends Error {}
+export class BaseError extends Error {
+  constructor(message?: string) {
+    super(message)
+  }
+}
 
 type Filter = string | { and?: Filter[]; or?: Filter[]; not?: Filter[] }
 
@@ -64,7 +68,8 @@ function groupOf(v: unknown): BaseView["groupBy"] {
 export function parseBase(src: string): BaseFile {
   let raw: Record<string, unknown>
   try {
-    raw = (loadYaml(src) ?? {}) as Record<string, unknown>
+    // A new, blank base is one table of every note.
+    raw = (parseYaml(src) ?? {}) as Record<string, unknown>
   } catch (e) {
     throw new BaseError(`invalid YAML: ${(e as Error).message}`)
   }
@@ -340,26 +345,29 @@ function evaluate(e: Expr, ctx: Ctx): Value {
           return num ? a * b : null
         case "/":
           return num && b !== 0 ? a / b : null
-        case "%":
+        default:
+          // "%"
           return num && b !== 0 ? a % b : null
       }
-      return null
     }
-    case "call": {
-      // filter() and map() evaluate their argument once per item, with `value` and `index` bound to it.
-      if (e.callee.k === "member" && (e.callee.name === "filter" || e.callee.name === "map")) {
-        const list = evaluate(e.callee.obj, ctx)
-        if (!Array.isArray(list)) return null
-        const each = (value: Value, index: number) => evaluate(e.args[0] ?? { k: "lit", v: null }, { ...ctx, item: { value, index } })
-        return e.callee.name === "filter" ? list.filter((v, i) => truthy(each(v, i))) : list.map(each)
-      }
-      const args = e.args.map((x) => evaluate(x, ctx))
-      if (e.callee.k === "var") return globalFn(e.callee.name, args)
-      if (e.callee.k !== "member") throw new BaseError("only functions and methods can be called")
-      const self = evaluate(e.callee.obj, ctx)
-      return method(e.callee.name, self, args, ctx)
-    }
+    default:
+      return call(e, ctx)
   }
+}
+
+function call(e: Extract<Expr, { k: "call" }>, ctx: Ctx): Value {
+  // filter() and map() evaluate their argument once per item, with `value` and `index` bound to it.
+  if (e.callee.k === "member" && (e.callee.name === "filter" || e.callee.name === "map")) {
+    const list = evaluate(e.callee.obj, ctx)
+    if (!Array.isArray(list)) return null
+    const each = (value: Value, index: number) => evaluate(e.args[0] ?? { k: "lit", v: null }, { ...ctx, item: { value, index } })
+    return e.callee.name === "filter" ? list.filter((v, i) => truthy(each(v, i))) : list.map(each)
+  }
+  const args = e.args.map((x) => evaluate(x, ctx))
+  if (e.callee.k === "var") return globalFn(e.callee.name, args)
+  if (e.callee.k !== "member") throw new BaseError("only functions and methods can be called")
+  const self = evaluate(e.callee.obj, ctx)
+  return method(e.callee.name, self, args, ctx)
 }
 
 function globalFn(name: string, args: Value[]): Value {
@@ -455,7 +463,7 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
     case "year":
       return self instanceof Date ? self.getFullYear() : null
     case "round":
-      return typeof self === "number" ? Number(self.toFixed(typeof a === "number" ? a : 0)) : null
+      return typeof self === "number" ? Number(self.toFixed(typeof a === "number" ? Math.min(100, Math.max(0, Math.trunc(a) || 0)) : 0)) : null
   }
   throw new BaseError(`unknown method .${name}()`)
 }

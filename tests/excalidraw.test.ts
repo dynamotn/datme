@@ -215,3 +215,41 @@ describe("in the vault", () => {
     expect(zettel).toContain('<img class="drawing-light" src="/assets/_assets/draw/Flow.excalidraw.light.svg"')
   })
 })
+
+describe("untrusted drawings", () => {
+  const evil = '20"><foreignObject><img xmlns="http://www.w3.org/1999/xhtml" src="x" onerror="alert(1)"/></foreignObject><text a="'
+  const draw = (elements: unknown[], files: Record<string, unknown> = {}) => renderScene(parseDrawing(JSON.stringify({ type: "excalidraw", elements, files })))
+
+  test("numbers in the scene cannot carry markup into the SVG", () => {
+    const base = { x: 0, y: 0, width: 100, height: 20 }
+    const svgs = [
+      draw([{ id: "t", type: "text", ...base, text: "hi", fontSize: evil, lineHeight: evil, textAlign: evil }]),
+      draw([{ id: "r", type: "rectangle", x: evil, y: evil, width: evil, height: evil, angle: evil, opacity: evil, strokeWidth: evil, roundness: { type: 3, value: evil } }]),
+      draw([
+        { id: "f", type: "frame", x: evil, y: 0, width: 10, height: 10, name: "F" },
+        { id: "e", type: "ellipse", ...base, frameId: "f", strokeStyle: evil, fillStyle: evil, backgroundColor: "#fff" },
+      ]),
+      draw([{ id: "a", type: "arrow", ...base, points: [[0, evil], [evil, 10], "x"], endArrowhead: "arrow" }]),
+      draw([{ id: "i", type: "image", ...base, fileId: "f1", scale: [evil, 1], crop: { x: evil, y: 0, width: 5, height: 5, naturalWidth: evil, naturalHeight: 5 }, roundness: { type: 3 } }], {
+        f1: { dataURL: "data:image/png;base64,AA==" },
+      }),
+    ]
+    for (const svg of svgs) {
+      expect(svg).not.toContain("onerror")
+      expect(svg).not.toContain("<foreignObject")
+    }
+  })
+
+  test("unknown element types are dropped, numbers fall back to defaults", () => {
+    const s = parseDrawing(
+      JSON.stringify({
+        elements: [
+          { id: "x", type: "<script>", x: 0, y: 0, width: 1, height: 1 },
+          { id: "t", type: "text", x: "1", y: null, width: 5, height: 5, text: "a", fontSize: "12" },
+        ],
+      }),
+    )
+    expect(s.elements.map((e) => e.id)).toEqual(["t"])
+    expect(s.elements[0]).toMatchObject({ x: 0, y: 0, fontSize: undefined })
+  })
+})

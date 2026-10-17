@@ -15,8 +15,11 @@ bunx @dynamotn/datme deploy cloudflare ~/MyVault # Cloudflare Pages, through Git
 ```
 
 `deploy` writes a pipeline at the root of the vault's git repository. The
-pipeline runs the published package with `bunx @dynamotn/datme` on every push;
-on GitHub, GitLab and Cloudflare it also keeps the build cache between runs.
+pipeline runs the published package with `bunx @dynamotn/datme@<version>` on
+every push, pinned to the version of datme that wrote it, and pins Bun too, so
+a new release never changes your site unasked: bump both versions in the file
+to upgrade. On GitHub, GitLab and Cloudflare it also keeps the build cache
+between runs, and on GitHub only the deploy job may write to Pages.
 `deploy` never overwrites a file, and
 `--branch` picks the branch to publish from (by default, the current one).
 

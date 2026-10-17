@@ -239,5 +239,8 @@
   "pathsIn": "Chemins d'entrée",
   "pathsFromHere": "Chemins d'ici",
   "nearby": "À proximité",
-  "walkGarden": "Parcourir tout le jardin"
+  "walkGarden": "Parcourir tout le jardin",
+  "kanbanBoard": "Tableau",
+  "siteSections": "Sections du site",
+  "pageRail": "Plus sur cette page"
 }

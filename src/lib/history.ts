@@ -14,12 +14,14 @@ import {
   fallbackOf,
   filterLanguage,
   getVault,
+  isIgnored,
   isPublished,
   parseFrontmatter,
   sourceLangOf,
   type Note,
 } from "./vault"
 import { withoutLocked } from "./locked"
+import { withoutPrivateLinks } from "./llms"
 
 export interface Version {
   date: Date
@@ -31,53 +33,165 @@ export type Change = { kind: "same" | "add" | "del"; text: string }
 
 const git = (args: string[]) => execFileSync("git", ["-C", site.vault, "-c", "core.quotepath=off", ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
 
-/** What a reader saw of a version of a note in a language, or undefined if it was not public by `until`. */
-export function publicText(raw: string, lang: Lang, until = new Date()): string | undefined {
+/**
+ * What a reader saw of a version of a note in a language, or undefined if it was not public by `until`.
+ * Given the note, links to notes that are private today show as the page shows them.
+ */
+export function publicText(raw: string, lang: Lang, until = new Date(), note?: Note): string | undefined {
   const { fm, body } = parseFrontmatter(raw)
   if (!isPublished(fm, site.publish, until) || (fm.password != null && fm.password !== "")) return undefined
   // Each version falls back the way the note does today.
   const shown = contentLanguage(body, lang, fallbackOf(fm, sourceLangOf(fm)))
-  return withoutLocked(filterLanguage(body, shown))
+  const text = withoutLocked(filterLanguage(body, shown))
+  return (note ? withoutPrivateLinks(text, note) : text)
     .replace(/%%[\s\S]*?%%/g, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim()
 }
 
-/** Commits of a file, oldest first, following renames: their time and the path it had. */
-function commitsOf(rel: string): { hash: string; time: number; path: string }[] {
-  // `git show` wants the paths log prints: relative to the repository, which may hold the vault in a folder.
-  const log = git(["log", "--follow", "--format=%x00%H %ct", "--name-only", "--", rel])
-  const out: { hash: string; time: number; path: string }[] = []
-  for (const block of log.split("\0").filter(Boolean)) {
-    const [head, ...files] = block.split("\n").filter(Boolean)
-    const [hash, time] = head.split(" ")
-    if (files[0]) out.push({ hash, time: Number(time) * 1000, path: files[0] })
-  }
-  return out.reverse()
+/** A commit that changed a file: when, the path the file had, and its text then as a blob. */
+export interface FileCommit {
+  time: number
+  path: string
+  blob: string
 }
 
-const raws = new Map<string, { time: number; raw: string }[]>()
-
-/** Every committed text of a file, oldest first: read once, shared by the languages of a note. */
-function rawVersions(rel: string): { time: number; raw: string }[] {
-  const id = `${getVault().version}:${rel}`
-  const hit = raws.get(id)
-  if (hit) return hit
-  const out: { time: number; raw: string }[] = []
-  try {
-    for (const c of commitsOf(rel)) {
-      try {
-        out.push({ time: c.time, raw: git(["show", `${c.hash}:${c.path}`]) })
-      } catch {
+/**
+ * Every file's commits, newest first, keyed by the path it has today (relative to the repository),
+ * from one `git log --raw -z` of the markdown files: each file follows its renames, as
+ * `git log --follow` would, so a moved note keeps the versions it had under its old name.
+ */
+export function parseFileLog(log: string): Map<string, FileCommit[]> {
+  const chains = new Map<string, FileCommit[]>()
+  // The files whose history goes on at a path, older commits being seen later.
+  const following = new Map<string, Set<string>>()
+  const followers = (p: string) => {
+    let set = following.get(p)
+    if (!set) following.set(p, (set = new Set([p])))
+    return set
+  }
+  const record = (p: string, c: FileCommit) => {
+    for (const key of followers(p)) {
+      let chain = chains.get(key)
+      if (!chain) chains.set(key, (chain = []))
+      chain.push(c)
+    }
+  }
+  for (const block of log.split("\x01")) {
+    const head = block.indexOf("\0")
+    if (head < 0) continue
+    const [, time] = block.slice(0, head).split(" ")
+    const fields = block.slice(head + 1).replace(/^\n/, "").split("\0")
+    for (let i = 0; i < fields.length; i++) {
+      if (!fields[i].startsWith(":")) continue
+      const meta = fields[i].split(" ")
+      const blob = meta[3]
+      const status = meta[4]
+      if (status.startsWith("R")) {
+        const [from, to] = [fields[++i], fields[++i]]
+        record(to, { time: Number(time) * 1000, path: to, blob })
+        // Older commits knew the file by its former name.
+        const moved = followers(to)
+        following.set(to, new Set())
+        for (const key of moved) followers(from).add(key)
         continue
       }
+      const p = fields[++i]
+      // A deleted file has no text to show at that commit.
+      if (status !== "D") record(p, { time: Number(time) * 1000, path: p, blob })
     }
+  }
+  return chains
+}
+
+/** The texts of blobs, from one `git cat-file --batch` output; a missing object has none. */
+export function parseBlobs(out: Buffer): Map<string, string> {
+  const blobs = new Map<string, string>()
+  let at = 0
+  while (at < out.length) {
+    const eol = out.indexOf(10, at)
+    if (eol < 0) break
+    const [sha, type, size] = out.subarray(at, eol).toString("utf8").split(" ")
+    at = eol + 1
+    if (type === "missing" || size == null) continue
+    const end = at + Number(size)
+    if (type === "blob") blobs.set(sha, out.subarray(at, end).toString("utf8"))
+    at = end + 1
+  }
+  return blobs
+}
+
+interface GitHistory {
+  key: string
+  /** Where the vault sits in the repository, "" at its root. */
+  prefix: string
+  chains: Map<string, FileCommit[]>
+  /** Texts by blob, null for one git could not read. */
+  blobs: Map<string, string | null>
+}
+
+let walked: GitHistory | undefined
+
+/** The vault's git history, read once per build (and again when the vault changes in dev). */
+function gitHistory(): GitHistory {
+  const key = `${getVault().version}:${site.vault}`
+  if (walked?.key === key) return walked
+  let prefix = ""
+  let chains = new Map<string, FileCommit[]>()
+  try {
+    // Paths as log prints them: relative to the repository, which may hold the vault in a folder.
+    prefix = git(["rev-parse", "--show-prefix"]).trim()
+    chains = parseFileLog(git(["log", "-M", "--format=%x01%H %ct", "--raw", "--no-abbrev", "-z", "--", ":(top)*.md"]))
   } catch {
     // not in git
   }
-  raws.set(id, out)
-  return out
+  walked = { key, prefix, chains, blobs: new Map() }
+  // The texts of every note's publishable versions, in one read.
+  const vault = getVault()
+  const rels = new Set(site.langs.flatMap((lang) => vault.notes[lang].map((n) => n.key + ".md")))
+  readBlobs(walked, [...rels].flatMap((rel) => commitsOf(walked!, rel)))
+  return walked
+}
+
+/** Commits of a file, oldest first, at a path that could have been published. */
+function commitsOf(h: GitHistory, rel: string): FileCommit[] {
+  return (h.chains.get(h.prefix + rel) ?? []).filter((c) => publishable(h.prefix, c.path)).reverse()
+}
+
+/** Reads the texts of commits not read yet, with a single git process. */
+function readBlobs(h: GitHistory, commits: FileCommit[]): void {
+  const wanted = [...new Set(commits.map((c) => c.blob))].filter((b) => !h.blobs.has(b))
+  if (!wanted.length) return
+  try {
+    const out = execFileSync("git", ["-C", site.vault, "cat-file", "--batch"], { input: wanted.join("\n") + "\n", maxBuffer: 1024 * 1024 * 1024 })
+    for (const [sha, text] of parseBlobs(out)) h.blobs.set(sha, text)
+  } catch {
+    // unreadable: those versions are skipped
+  }
+  for (const sha of wanted) if (!h.blobs.has(sha)) h.blobs.set(sha, null)
+}
+
+/**
+ * Whether a version at a path git prints could have been published: not outside the vault,
+ * in an ignored folder or in a hidden one like `.trash`, where a note may have been before.
+ */
+function publishable(prefix: string, repoPath: string): boolean {
+  if (!repoPath.startsWith(prefix)) return false
+  const rel = repoPath.slice(prefix.length)
+  return !!rel && !isIgnored(rel) && !rel.split("/").some((part) => part.startsWith("."))
+}
+
+/** Every committed text of a file, oldest first, shared by the languages of a note. */
+function rawVersions(rel: string): { time: number; raw: string }[] {
+  const h = gitHistory()
+  const commits = commitsOf(h, rel)
+  // A file the build did not read up front, such as a note found later in dev.
+  readBlobs(h, commits)
+  return commits.flatMap((c) => {
+    const raw = h.blobs.get(c.blob)
+    return raw == null ? [] : [{ time: c.time, raw }]
+  })
 }
 
 const cache = new Map<string, Version[]>()
@@ -91,7 +205,7 @@ export function noteVersions(note: Note): Version[] {
   const all = rawVersions(note.key + ".md")
   for (const [i, v] of all.entries()) {
     // A version scheduled for later was only seen if its day came before the next commit replaced it.
-    const text = publicText(v.raw, note.lang, new Date(all[i + 1]?.time ?? Date.now()))
+    const text = publicText(v.raw, note.lang, new Date(all[i + 1]?.time ?? Date.now()), note)
     if (text == null || text === versions.at(-1)?.text) continue
     versions.push({ date: new Date(v.time), text })
   }

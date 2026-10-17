@@ -1,3 +1,8 @@
+// The attribute lets Node load it too, as the CLI runs on both.
+import pkg from "../../package.json" with { type: "json" }
+
+const { version } = pkg
+
 /** Hosts `datme deploy` writes a CI configuration for. */
 export const TARGETS = ["github", "gitlab", "netlify", "cloudflare"] as const
 export type Target = (typeof TARGETS)[number]
@@ -20,8 +25,14 @@ export interface DeployOpts {
 /** Shell-safe argument, quoted only when needed. */
 const arg = (s: string) => (/^[\w./-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`)
 
+/**
+ * Bun for pipelines that install it themselves. Pipelines pin it and datme's own version, so a
+ * build runs what `deploy` was run with, not whatever was published since; bump both to upgrade.
+ */
+export const BUN_VERSION = "1.4.2"
+
 /** The build command, with the cache kept where CI can save it between runs. */
-const build = (o: DeployOpts, out: string) => `bunx @dynamotn/datme build ${arg(o.vault)} --out ${out}`
+const build = (o: DeployOpts, out: string) => `bunx @dynamotn/datme@${version} build ${arg(o.vault)} --out ${out}`
 
 const githubCache = `      # Rendered notes and social cards from the previous run make the build incremental.
       - uses: actions/cache@v4
@@ -48,8 +59,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -68,6 +77,8 @@ jobs:
         with:
           fetch-depth: 0 # the full history gives notes their created and updated dates
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${BUN_VERSION}
 ${githubCache}
       - run: ${build(o, "_site")}
       - uses: actions/upload-pages-artifact@v3
@@ -77,6 +88,10 @@ ${githubCache}
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Only the job that publishes may write to Pages.
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: \${{ steps.deployment.outputs.page_url }}
@@ -94,7 +109,7 @@ function gitlab(o: DeployOpts): DeployFile[] {
       path: ".gitlab-ci.yml",
       content: `# Publishes the vault with datme to GitLab Pages on every push to ${o.branch}.
 pages:
-  image: oven/bun:1
+  image: oven/bun:${BUN_VERSION}
   variables:
     ASTRO_TELEMETRY_DISABLED: "1"
     GIT_DEPTH: 0 # the full history gives notes their created and updated dates
@@ -128,7 +143,7 @@ function netlify(o: DeployOpts): DeployFile[] {
 
 [build]
   # Netlify's image has no Bun, so the build installs it first.
-  command = "curl -fsSL https://bun.sh/install | bash && ~/.bun/bin/${build(o, "dist").replace(/"/g, '\\"')}"
+  command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ~/.bun/bin/${build(o, "dist").replace(/"/g, '\\"')}"
   publish = "dist"
 `,
     },
@@ -170,6 +185,8 @@ jobs:
         with:
           fetch-depth: 0 # the full history gives notes their created and updated dates
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${BUN_VERSION}
 ${githubCache}
       - run: ${build(o, "dist")}
       - uses: cloudflare/wrangler-action@v3

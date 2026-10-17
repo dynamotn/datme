@@ -59,7 +59,7 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
   <div class="h-card" hidden>
     <a class="p-name u-url" href={site.url ? site.url + "/" : "/"}>{site.author || site.title[lang]}</a>
     {site.tagline[lang] && <p class="p-note">{site.tagline[lang]}</p>}
-    {site.url && <img class="u-photo" src={new URL("/icon-512.png", site.url + "/").href} alt="" />}
+    {site.url && <img class="u-photo" src={new URL("icon-512.png", site.url + "/").href} alt="" />}
   </div>
   <aside class="continue-reading" data-continue hidden>
     <a class="internal" href="#">

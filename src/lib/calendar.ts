@@ -5,6 +5,15 @@ export const isDateOnly = (d: Date) => d.getTime() % 86_400_000 === 0
 export const dayKey = (d: Date) =>
   isDateOnly(d) ? d.toISOString().slice(0, 10) : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
+/** Year of a date: the written year of a date-only value, else the local year. */
+export const yearOf = (d: Date) => (isDateOnly(d) ? d.getUTCFullYear() : d.getFullYear())
+
+/** Month of a date, 0 for January: the written month of a date-only value, else the local month. */
+export const monthOf = (d: Date) => (isDateOnly(d) ? d.getUTCMonth() : d.getMonth())
+
+/** Month of a date as YYYY-MM, by the same rule. */
+export const monthKey = (d: Date) => dayKey(d).slice(0, 7)
+
 export interface CalendarDay {
   key: string
   date: Date
@@ -50,8 +59,8 @@ export function activityWeeks(notes: { title: string; created?: Date; updated?: 
 export function activeYears(notes: { created?: Date; updated?: Date }[]): number[] {
   const years = new Set<number>()
   for (const n of notes) {
-    if (n.created) years.add(n.created.getFullYear())
-    if (n.updated) years.add(n.updated.getFullYear())
+    if (n.created) years.add(yearOf(n.created))
+    if (n.updated) years.add(yearOf(n.updated))
   }
   return [...years].sort((a, b) => b - a)
 }

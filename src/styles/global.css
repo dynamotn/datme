@@ -1,7 +1,31 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/newsreader/opsz.css";
 @import "@fontsource-variable/newsreader/opsz-italic.css";
-@import "katex/dist/katex.min.css";
+/* KaTeX's stylesheet is linked only by pages with math (src/layouts/Base.astro). */
+
+/*
+ * Iosevka Dynamo arrives late and never blocks the page, so until it does,
+ * code shows in a local monospace stretched to its metrics: half an em
+ * wide, 0.965em above the baseline and 0.285em below. Code then keeps its
+ * size and lines when the font swaps in, and the page does not shift.
+ * Consolas is narrower than Menlo, DejaVu Sans Mono or Courier New.
+ */
+@font-face {
+  font-family: "Iosevka Dynamo Fallback Consolas";
+  src: local("Consolas");
+  size-adjust: 90.94%;
+  ascent-override: 106.11%;
+  descent-override: 31.34%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Iosevka Dynamo Fallback";
+  src: local("Menlo Regular"), local("Menlo-Regular"), local("DejaVu Sans Mono"), local("Liberation Mono"), local("Courier New");
+  size-adjust: 83.05%;
+  ascent-override: 116.19%;
+  descent-override: 34.32%;
+  line-gap-override: 0%;
+}
 
 /* ---------- tokens ---------- */
 :root {
@@ -12,12 +36,14 @@
   --surface-3: #e6e0d3;
   --ink: #1d1b17;
   --ink-2: #48443c;
-  --muted: #7d776b;
+  --muted: #6b665b;
   --line: #e2dccf;
   --line-strong: #cfc7b6;
   --accent: #2d6a4f;
   --accent-2: #3f8a68;
   --accent-soft: rgb(45 106 79 / 0.1);
+  /* Text on the accent; theme.ts swaps it for a configured accent by its lightness. */
+  --on-accent: #fff;
   --clay: #b5532c;
   --clay-soft: rgb(181 83 44 / 0.1);
   --mark: rgb(234 179 8 / 0.32);
@@ -33,7 +59,7 @@
 
   --font-ui: "Inter Variable", system-ui, sans-serif;
   --font-read: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
-  --font-code: "Iosevka Dynamo", ui-monospace, monospace;
+  --font-code: "Iosevka Dynamo", "Iosevka Dynamo Fallback Consolas", "Iosevka Dynamo Fallback", ui-monospace, monospace;
 
   --radius: 14px;
   --radius-sm: 8px;
@@ -57,6 +83,7 @@
   --accent: #82c7a0;
   --accent-2: #a1d8b8;
   --accent-soft: rgb(130 199 160 / 0.12);
+  --on-accent: #0b0b0a;
   --clay: #e69168;
   --clay-soft: rgb(230 145 104 / 0.12);
   --mark: rgb(234 179 8 / 0.25);
@@ -130,7 +157,7 @@ button {
 }
 kbd {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 5px;
@@ -163,6 +190,9 @@ kbd {
   font-weight: 650;
   letter-spacing: -0.01em;
   min-width: 0;
+  /* The site name keeps its room before the search placeholder does, up to a limit. */
+  flex-shrink: 0;
+  max-width: 30vw;
 }
 .brand-mark {
   width: 32px;
@@ -214,6 +244,7 @@ kbd {
   align-items: center;
   gap: 10px;
   width: min(420px, 40vw);
+  min-width: 38px;
   height: 38px;
   padding: 0 10px 0 12px;
   border-radius: 11px;
@@ -229,13 +260,47 @@ kbd {
     box-shadow: var(--shadow);
   }
 }
+/* The placeholder stays on one line, cut short when the header is crowded. */
 .search-trigger span {
   flex: 1;
+  min-width: 0;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-trigger > :not(span) {
+  flex: none;
+}
+/* A squeezed search button drops its key hint, then its placeholder. */
+.search-trigger {
+  container-type: inline-size;
+}
+@container (max-width: 200px) {
+  .search-trigger kbd {
+    display: none;
+  }
+}
+@container (max-width: 110px) {
+  .search-trigger span {
+    display: none;
+  }
+}
+/* Between the phone layout and a wide screen, the nav needs the room: only the mark shows, the name stays for screen readers. */
+@media (min-width: 901px) and (max-width: 1300px) {
+  .brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
 }
 .icon-btn {
   display: inline-grid;
   place-items: center;
+  /* Buttons keep their size: a crowded header must not squeeze them. */
+  flex: none;
   width: 38px;
   height: 38px;
   border-radius: 10px;
@@ -257,6 +322,7 @@ kbd {
 }
 .lang-switch {
   display: inline-flex;
+  flex: none;
   padding: 3px;
   border-radius: 10px;
   background: var(--surface-2);
@@ -307,6 +373,23 @@ kbd {
 .sidebar-left {
   padding: 20px 12px 40px 16px;
   border-right: 1px solid var(--line);
+}
+/* Shown only where the header has no room for its button (max-width: 360px). */
+.drawer-random {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 16px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
 }
 .sidebar-right {
   padding: 28px 20px 40px 8px;
@@ -359,7 +442,7 @@ kbd {
   align-items: center;
   justify-content: space-between;
   margin: 0 0 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -427,7 +510,7 @@ kbd {
   top: 0;
   right: 6px;
   line-height: 29px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -932,6 +1015,13 @@ kbd {
   margin-right: 0.4em;
   vertical-align: -0.1em;
 }
+/* A finger needs a bigger box than a pointer. */
+@media (pointer: coarse) {
+  .prose .task-list-item input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+  }
+}
 .prose blockquote {
   margin-left: 0;
   padding: 0.1em 0 0.1em 1.1em;
@@ -1020,7 +1110,7 @@ kbd {
   right: 8px;
   padding: 4px 8px;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -1261,7 +1351,7 @@ details.callout[open] > summary::after {
 }
 .graph-depth button[aria-pressed="true"] {
   background: var(--accent);
-  color: var(--surface);
+  color: var(--on-accent);
 }
 
 /* ---------- backlinks ---------- */
@@ -1690,7 +1780,9 @@ details.callout[open] > summary::after {
   font-size: 13px;
   padding: 0 12px;
 }
-.tag-cloud .chip small {
+/* A count in a chip: never below 12px, as <small> would make it. */
+.chip small {
+  font-size: 12px;
   color: var(--muted);
   font-weight: 500;
 }
@@ -1735,6 +1827,7 @@ dialog.modal[open] {
 }
 .search-input-row input {
   flex: 1;
+  min-width: 0;
   height: 56px;
   border: none;
   outline: none;
@@ -1742,6 +1835,27 @@ dialog.modal[open] {
   color: var(--ink);
   font: inherit;
   font-size: 17px;
+}
+/* Touch has no Esc key to hint at, nor arrow keys: a close button instead. */
+.search-close {
+  display: none;
+}
+@media (hover: none), (max-width: 520px) {
+  .search-close {
+    display: inline-grid;
+  }
+  /* One cross only: the close button, not also the field's own clear button. */
+  .search-input-row input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+@media (hover: none) {
+  .search-input-row > kbd,
+  .search-trigger kbd,
+  dialog .modal-foot {
+    display: none;
+  }
 }
 .search-results {
   list-style: none;
@@ -2026,6 +2140,7 @@ dialog.graph-modal {
   .search-trigger {
     width: 38px;
     padding: 0;
+    flex: none;
     justify-content: center;
     border-color: transparent;
     background: transparent;
@@ -2062,12 +2177,22 @@ dialog.graph-modal {
   .search-trigger {
     width: 34px;
     height: 34px;
+    min-width: 34px;
   }
   .lang-switch a[aria-current="true"] {
     display: none;
   }
   .stage-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 360px) {
+  /* The narrowest phones: the random note moves from the header into the menu drawer. */
+  .header-random {
+    display: none;
+  }
+  .sidebar .drawer-random {
+    display: flex;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2115,7 +2240,7 @@ dialog.graph-modal {
   border: none;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 650;
   cursor: pointer;
 }
@@ -2574,6 +2699,8 @@ dialog.graph-modal {
 }
 .series-box summary {
   cursor: pointer;
+  /* Tall enough to tap. */
+  padding-block: 3px;
 }
 .series-label {
   color: var(--muted);
@@ -2830,6 +2957,7 @@ li > .flashcard {
 }
 .graph-time input {
   width: min(16rem, 40vw);
+  height: 24px;
   accent-color: var(--accent);
 }
 .graph-legend {
@@ -3139,7 +3267,7 @@ mark.reader-highlight[title]:not([title=""]) {
 .practice-actions .practice-show {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .practice-close {
   float: right;
@@ -3447,7 +3575,7 @@ a.drawing-link tspan {
 .graph-space[aria-pressed="true"] {
   border-color: var(--accent);
   background: var(--accent);
-  color: var(--surface);
+  color: var(--on-accent);
 }
 .filters select,
 .modal-head select[data-graph-color] {
@@ -4234,7 +4362,7 @@ summary.ntn-col-head {
   border: none;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 650;
   cursor: pointer;
 }
@@ -4290,7 +4418,7 @@ summary.ntn-col-head {
 @media (hover: hover) {
   .calendar-month td.has-note a:hover {
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
   }
 }
 .day-nav {
@@ -4728,6 +4856,10 @@ summary.ntn-col-head {
   font-family: var(--font-ui);
   font-size: 13px;
   color: var(--muted);
+}
+.gallery-item figcaption a {
+  display: inline-block;
+  padding-block: 4px;
 }
 
 .collection {

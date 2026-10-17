@@ -380,6 +380,8 @@ describe("static build", () => {
 
   test("notes with a banner keep it, other pages share the home card", () => {
     expect(read("07_Project/Blog-post/index.html")).toContain('content="https://notes.dynamotn.dev/assets/_assets/images/diagram.png"')
+    // The banner is the page's largest paint: fetched first, decoded off the main thread.
+    expect(read("07_Project/Blog-post/index.html")).toMatch(/<figure class="banner"[^>]*>\s*<img src="[^"]+" alt="" style="[^"]*" fetchpriority="high" decoding="async"/)
     expect(exists("og/07_Project/Blog-post.png")).toBe(false)
     expect(read("tags/index.html")).toContain('content="https://notes.dynamotn.dev/og/index.png"')
     expect(exists("og/en-US/index.png")).toBe(true)

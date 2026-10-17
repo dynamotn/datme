@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -26,7 +24,10 @@ jobs:
           # Full history gives notes without created/updated frontmatter their real dates.
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      - run: bunx @dynamotn/datme build "$GITHUB_WORKSPACE" --out "$RUNNER_TEMP/site"
+        with:
+          bun-version: 1.4.2
+      # Pin datme, so a build runs the version you chose; bump it to upgrade.
+      - run: bunx @dynamotn/datme@2.2.2 build "$GITHUB_WORKSPACE" --out "$RUNNER_TEMP/site"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ runner.temp }}/site
@@ -34,6 +35,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Only the job that publishes may write to Pages.
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
