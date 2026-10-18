@@ -292,6 +292,18 @@ const schema = z
       })
       .strict()
       .default({ count: 5, mentions: true, semantic: false }),
+    /** Read notes aloud in the author's voice at build time, one model per language. */
+    tts: z
+      .object({
+        /** Language (or its base, as vi for vi-VN) to the model that speaks it. */
+        models: z.record(z.string(), z.literal("vieneu")),
+        /** Vault folders whose notes get audio. */
+        folders: z.array(z.string()).default([]),
+        /** Frontmatter values that give a note audio. */
+        frontmatter: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).default({}),
+      })
+      .strict()
+      .optional(),
     /**
      * Group notes into topics from the embeddings of related.semantic, for the graph and /stats:
      * true picks how many from the number of notes, a number sets it, false turns topics off.
@@ -433,6 +445,8 @@ const schema = z
   })
   .strict()
 
+export type TtsConfig = { models: Record<string, "vieneu">; folders: string[]; frontmatter: Record<string, string | number | boolean> }
+
 export type RawConfig = z.input<typeof schema>
 
 function expandHome(p: string): string {
@@ -502,6 +516,16 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   }
   if (c.search.meaning && !c.related.semantic) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - search.meaning: needs related.semantic, whose model it uses`)
+  }
+  if (c.tts) {
+    for (const key of Object.keys(c.tts.models)) {
+      if (!langs.some((l) => l === key || l.split("-")[0] === key)) {
+        throw new ConfigError(`Invalid datme config in ${vault}:\n  - tts.models.${key}: matches none of the languages ${langs.join(", ")}`)
+      }
+    }
+    if (!c.tts.folders.length && !Object.keys(c.tts.frontmatter).length) {
+      throw new ConfigError(`Invalid datme config in ${vault}:\n  - tts: selects no notes, set tts.folders or tts.frontmatter`)
+    }
   }
   for (const [folder, def] of Object.entries(c.stages)) {
     // A string naming no preset is the stage's label; without one, the folder's name is.
@@ -576,6 +600,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     topics: c.topics,
     graph: c.graph,
     related: c.related,
+    tts: c.tts satisfies TtsConfig | undefined,
     theme: { ...c.theme, css: c.theme.css.replace(/^\/+/, "") },
     lineBreaks: { ...c.lineBreaks, folders: c.lineBreaks.folders.map((p) => p.replace(/^\/+|\/+$/g, "")) },
     properties: c.properties,

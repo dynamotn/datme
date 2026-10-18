@@ -148,6 +148,14 @@ uses is never published as a file of its own. It travels inside the ciphertext,
 as a data URI, and appears once the reader unlocks. A file that a public note
 also uses stays an ordinary file, since it is public anyway.
 
+## Audio in your voice
+
+The recording that `DATME_TTS_VOICE` points to stays outside the vault and is
+never published or committed. Protected notes get no audio, and locked parts
+are never spoken (the unlocked parts of the same note are). Audio is published
+like the note itself: a note that is public has public audio, so only select
+notes you are happy to have heard.
+
 ## Note history
 
 `history: true` gives each note that changed a page showing how it grew: every

@@ -35,15 +35,18 @@ function saltOf(source: string): string {
   return salt
 }
 
-function fileOf(kind: string, source: string, parts: string[]): string {
-  const key = crypto.createHash("sha256").update(saltOf(source)).update(JSON.stringify(parts)).digest("hex")
-  return path.join(dir!, kind, key.slice(0, 2), key.slice(2))
+function fileOf(kind: string, key: crypto.Hash): string {
+  const hex = key.digest("hex")
+  return path.join(dir!, kind, hex.slice(0, 2), hex.slice(2))
 }
 
-/** A cached value, marked as used by this build; undefined on a miss or when caching is off. */
-export function readCache(kind: string, source: string, parts: string[]): Buffer | undefined {
-  if (!dir) return undefined
-  const file = fileOf(kind, source, parts)
+const saltedFile = (kind: string, source: string, parts: string[]) =>
+  fileOf(kind, crypto.createHash("sha256").update(saltOf(source)).update(JSON.stringify(parts)))
+
+/** Keyed by the kind and parts alone: no version, config or code, for values costly to make that those never change. */
+const stableFile = (kind: string, parts: string[]) => fileOf(kind, crypto.createHash("sha256").update(kind).update(JSON.stringify(parts)))
+
+function read(file: string): Buffer | undefined {
   try {
     const data = fs.readFileSync(file)
     const now = new Date()
@@ -54,9 +57,7 @@ export function readCache(kind: string, source: string, parts: string[]): Buffer
   }
 }
 
-export function writeCache(kind: string, source: string, parts: string[], data: string | Uint8Array): void {
-  if (!dir) return
-  const file = fileOf(kind, source, parts)
+function write(file: string, data: string | Uint8Array): void {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true })
     // Written aside then renamed, so a build killed midway never leaves half a file.
@@ -66,6 +67,23 @@ export function writeCache(kind: string, source: string, parts: string[], data: 
   } catch {
     // a read-only or full disk only makes the next build slower
   }
+}
+
+/** A cached value, marked as used by this build; undefined on a miss or when caching is off. */
+export function readCache(kind: string, source: string, parts: string[]): Buffer | undefined {
+  return dir ? read(saltedFile(kind, source, parts)) : undefined
+}
+
+export function writeCache(kind: string, source: string, parts: string[], data: string | Uint8Array): void {
+  if (dir) write(saltedFile(kind, source, parts), data)
+}
+
+export function readStableCache(kind: string, parts: string[]): Buffer | undefined {
+  return dir ? read(stableFile(kind, parts)) : undefined
+}
+
+export function writeStableCache(kind: string, parts: string[], data: Buffer): void {
+  if (dir) write(stableFile(kind, parts), data)
 }
 
 /** How many notes a build reused from the cache and rendered, for `datme build --verbose`. */

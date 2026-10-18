@@ -340,3 +340,48 @@ describe("theme", () => {
     expect(resolveConfig({ theme: { accent: "oklch(0.6 0.2 260)" } }, "/v").theme.accent).toBe("oklch(0.6 0.2 260)")
   })
 })
+
+describe("tts", () => {
+  const vault = "/home/me/My Notes"
+  const msg = (raw: unknown) => {
+    try {
+      resolveConfig(raw, vault)
+    } catch (e) {
+      expect(e).toBeInstanceOf(ConfigError)
+      return (e as Error).message
+    }
+    throw new Error("expected resolveConfig to throw")
+  }
+
+  test("is off unless configured", () => {
+    expect(resolveConfig({}, vault).tts).toBeUndefined()
+  })
+
+  test("fills the selection defaults", () => {
+    const raw = { languages: ["vi-VN"], tts: { models: { vi: "vieneu" }, folders: ["Podcast"] } }
+    expect(resolveConfig(raw, vault).tts).toEqual({ models: { vi: "vieneu" }, folders: ["Podcast"], frontmatter: {} })
+  })
+
+  test("accepts a model key equal to a language or to its base language", () => {
+    const tts = { models: { "vi-VN": "vieneu" }, frontmatter: { audio: true } }
+    expect(resolveConfig({ languages: ["vi-VN"], tts }, vault).tts?.models).toEqual({ "vi-VN": "vieneu" })
+  })
+
+  test("rejects a model other than vieneu", () => {
+    expect(msg({ languages: ["vi-VN"], tts: { models: { vi: "xtts" }, folders: ["a"] } })).toContain("tts.models.vi")
+  })
+
+  test("rejects a model key matching no language", () => {
+    const raw = { languages: ["vi-VN"], tts: { models: { fr: "vieneu" }, folders: ["a"] } }
+    expect(msg(raw)).toContain("tts.models.fr")
+  })
+
+  test("rejects a config that selects no notes", () => {
+    const raw = { languages: ["vi-VN"], tts: { models: { vi: "vieneu" } } }
+    expect(msg(raw)).toContain("tts: selects no notes")
+  })
+
+  test("rejects an unknown key such as voice", () => {
+    expect(() => resolveConfig({ languages: ["vi-VN"], tts: { models: { vi: "vieneu" }, folders: ["a"], voice: "x.wav" } }, vault)).toThrow()
+  })
+})

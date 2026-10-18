@@ -165,6 +165,22 @@ map:                          # tiles of /map (OpenStreetMap by default)
   darkTiles: https://…/{z}/{x}/{y}.png   # for the dark theme; else the light tiles are darkened
 ```
 
+## Audio in your voice
+
+```yaml
+tts:
+  models:
+    vi: vieneu                # one model per language; a language without one gets no audio
+  folders: [Podcast]          # notes in these folders are read aloud at build time
+  frontmatter:
+    audio: true               # so are notes whose frontmatter has these values
+```
+
+Each key of `models` is one of your `languages`, or its base (`vi` for `vi-VN`),
+and `vieneu` is the only model so far. At least one of `folders` and
+`frontmatter` is needed. The voice sample is never part of the config: point
+`DATME_TTS_VOICE` at the audio file to clone. See [Privacy](privacy.md).
+
 ## Readers and the social web
 
 ```yaml

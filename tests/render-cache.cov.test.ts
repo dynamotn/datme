@@ -3,6 +3,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { site } from "../src/site.config"
 
 /**
  * The cache directory is read when the module loads, so this file loads its
@@ -67,6 +68,51 @@ describe("render cache", () => {
     fs.writeFileSync(path.join(cacheDir, "blocked"), "not a directory")
     expect(() => cache.writeCache("blocked", source, ["a"], "value")).not.toThrow()
     expect(cache.readCache("blocked", source, ["a"])).toBeUndefined()
+  })
+})
+
+describe("stable cache", () => {
+  test("is keyed by kind and parts alone, so a config edit keeps its entries", () => {
+    expect(cache.readStableCache("tts", ["a"])).toBeUndefined()
+    cache.writeStableCache("tts", ["a"], Buffer.from("audio"))
+    const title = site.title
+    const unstable = () => cache.readCache("tts-salted", source, ["a"])
+    cache.writeCache("tts-salted", source, ["a"], "salted")
+    expect(unstable()?.toString()).toBe("salted")
+    site.title = { ...title, en: "edited" }
+    try {
+      expect(cache.readStableCache("tts", ["a"])?.toString()).toBe("audio")
+      expect(cache.readStableCache("tts", ["b"])).toBeUndefined()
+      expect(cache.readStableCache("other", ["a"])).toBeUndefined()
+    } finally {
+      site.title = title
+    }
+  })
+
+  test("a read marks the entry as used, and a cache that cannot be written only goes without", () => {
+    cache.writeStableCache("touch", ["a"], Buffer.from("x"))
+    const file = fs.readdirSync(path.join(cacheDir, "touch"), { recursive: true, withFileTypes: true }).find((f) => f.isFile())!
+    const old = new Date("2001-01-01")
+    fs.utimesSync(path.join(file.parentPath, file.name), old, old)
+    cache.readStableCache("touch", ["a"])
+    expect(fs.statSync(path.join(file.parentPath, file.name)).mtime.getFullYear()).toBe(new Date().getFullYear())
+    fs.writeFileSync(path.join(cacheDir, "blocked-stable"), "not a directory")
+    expect(() => cache.writeStableCache("blocked-stable", ["a"], Buffer.from("x"))).not.toThrow()
+    expect(cache.readStableCache("blocked-stable", ["a"])).toBeUndefined()
+  })
+
+  test("is off when DATME_CACHE is empty", async () => {
+    const before = process.env.DATME_CACHE
+    process.env.DATME_CACHE = ""
+    let off: CacheModule
+    try {
+      off = (await import(`${MODULE}?cache-off`)) as CacheModule
+    } finally {
+      if (before === undefined) delete process.env.DATME_CACHE
+      else process.env.DATME_CACHE = before
+    }
+    off.writeStableCache("tts", ["a"], Buffer.from("audio"))
+    expect(off.readStableCache("tts", ["a"])).toBeUndefined()
   })
 })
 
