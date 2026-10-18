@@ -9,12 +9,19 @@ console.log(JSON.stringify({ ready: true }))
 
 for await (const line of createInterface({ input: process.stdin })) {
   const { id, chunks } = JSON.parse(line) as { id: number; chunks: string[] }
-  if (chunks.some((c) => c.includes("CRASH"))) process.exit(0)
-  const reply = chunks.some((c) => c.includes("FAIL"))
+  const has = (word: string) => chunks.some((c) => c.includes(word))
+  if (has("CRASH")) process.exit(0)
+  const reply = has("FAIL")
     ? { id, error: "boom" }
-    : { id, mp3: Buffer.from("MP3:" + chunks.join("|")).toString("base64") }
+    : has("BADID")
+      ? { id: id + 1000, mp3: Buffer.from("stray").toString("base64") }
+      : has("EMPTY")
+        ? { id, mp3: "" }
+        : has("NOMP3")
+          ? { id }
+          : { id, mp3: Buffer.from("MP3:" + chunks.join("|")).toString("base64") }
   if (noisy) console.log("{not json")
-  if (chunks.some((c) => c.includes("LAST"))) {
+  if (has("LAST")) {
     writeSync(1, JSON.stringify(reply) + "\n")
     process.exit(0)
   }

@@ -47,7 +47,8 @@ describe("the Listen button", () => {
     button.click()
     expect(FakeAudio.all[0].paused).toBe(true)
     expect(button.getAttribute("aria-label")).toBe("Listen")
-    expect(button.getAttribute("aria-pressed")).toBe("false")
+    // The label already says what a click does; a pressed state would contradict it.
+    expect(button.hasAttribute("aria-pressed")).toBe(false)
     button.click()
     expect(FakeAudio.all).toHaveLength(1)
     expect(FakeAudio.all[0].paused).toBe(false)
@@ -87,6 +88,6 @@ describe("the Listen button", () => {
     button.click()
     await Promise.resolve()
     FakeAudio.prototype.play = refuse
-    expect(button.getAttribute("aria-pressed")).toBe("false")
+    expect(button.getAttribute("aria-label")).toBe("Listen")
   })
 })

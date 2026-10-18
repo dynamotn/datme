@@ -55,6 +55,82 @@ describe("deployFiles", () => {
     expect(gh.jobs.deploy.permissions).toEqual({ pages: "write", "id-token": "write" })
   })
 
+  test("tts: false leaves every pipeline exactly as it was", () => {
+    for (const target of TARGETS) {
+      expect(deployFiles(target, { ...opts, tts: false })[0].content).toBe(deployFiles(target, opts)[0].content)
+      expect(deployFiles(target, opts)[0].content).not.toMatch(/UV_CACHE_DIR|HF_HOME|astral\.sh|DATME_TTS_VOICE/)
+    }
+  })
+
+  test("tts: true installs uv and keeps its downloads in .datme-tts, which the cache saves and never prunes", () => {
+    const gitlab = deployFiles("gitlab", { ...opts, tts: true })[0].content
+    const parsed = loadYaml(gitlab) as { pages: { variables: Record<string, string>; before_script: string[]; script: string[]; cache: { paths: string[] } } }
+    expect(parsed.pages.variables).toMatchObject({ UV_CACHE_DIR: ".datme-tts/uv", HF_HOME: ".datme-tts/hf" })
+    expect(parsed.pages.cache.paths).toEqual([".datme-cache", ".datme-tts"])
+    expect(parsed.pages.before_script.join("\n")).toContain("https://astral.sh/uv/install.sh")
+    expect(parsed.pages.before_script.join("\n")).toContain("curl")
+
+    for (const target of ["github", "cloudflare"] as const) {
+      const wf = loadYaml(deployFiles(target, { ...opts, tts: true })[0].content) as {
+        jobs: Record<string, { env: Record<string, string>; steps: { run?: string; uses?: string; with?: { path?: string } }[] }>
+      }
+      const job = Object.values(wf.jobs)[0]
+      expect(job.env).toMatchObject({ UV_CACHE_DIR: ".datme-tts/uv", HF_HOME: ".datme-tts/hf" })
+      expect(job.steps.find((s) => s.uses === "actions/cache@v4")?.with?.path?.trim().split("\n")).toEqual([".datme-cache", ".datme-tts"])
+      expect(job.steps.some((s) => s.run?.includes("https://astral.sh/uv/install.sh"))).toBe(true)
+    }
+  })
+
+  test("tts: true decodes the GitHub and Cloudflare voice clip from DATME_TTS_VOICE_B64 outside the workspace, refusing an empty one", () => {
+    const github = deployFiles("github", { ...opts, tts: true })[0].content
+    expect(github).toContain("secrets.DATME_TTS_VOICE_B64")
+    expect(github).not.toMatch(/DATME_TTS_VOICE_B64: [^$\s]/)
+    expect(github).toContain('base64 -d > "$RUNNER_TEMP/voice.ogg"')
+    expect(github).toContain('echo "DATME_TTS_VOICE=$RUNNER_TEMP/voice.ogg" >> "$GITHUB_ENV"')
+
+    for (const target of ["github", "cloudflare"] as const) {
+      const content = deployFiles(target, { ...opts, tts: true })[0].content
+      const guard = content.indexOf('test -s "$RUNNER_TEMP/voice.ogg" || { echo "DATME_TTS_VOICE_B64 is empty or missing" >&2; exit 1; }')
+      expect(guard).toBeGreaterThan(content.indexOf("base64 -d"))
+      expect(content.indexOf('chmod 600 "$RUNNER_TEMP/voice.ogg"')).toBeGreaterThan(guard)
+    }
+  })
+
+  test("tts: true fetches the GitLab voice clip from a Secure File, outside the workspace and never as an artifact", () => {
+    const content = deployFiles("gitlab", { ...opts, tts: true })[0].content
+    const gitlab = loadYaml(content) as { pages: { variables: Record<string, string>; script: string[]; artifacts: { paths: string[] } } }
+    const script = gitlab.pages.script.map((l) => l.trim())
+    const at = (needle: string) => script.findIndex((l) => l.includes(needle))
+
+    expect(gitlab.pages.variables.DATME_TTS_VOICE_FILE).toBe("voice.wav")
+    expect(content).not.toContain("DATME_TTS_VOICE_B64")
+    expect(content).not.toContain("base64")
+    expect(script[at("VOICE_LIST=$(")]).toContain('--header "JOB-TOKEN: $CI_JOB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/secure_files"')
+    expect(script[at("/download")]).toContain('curl -sSf --header "JOB-TOKEN: $CI_JOB_TOKEN"')
+    expect(script[at("/download")]).toContain('-o "/tmp/datme-voice/$DATME_TTS_VOICE_FILE"')
+    expect(script[at("/download")]).toContain("secure_files/$VOICE_ID/download")
+    expect(script[at("bun -e")]).toContain("x.name === n")
+    expect(script[at("bun -e")]).toContain("not found")
+    expect(script[at("bun -e")]).toContain("process.exit(1)")
+
+    expect(script[at("VOICE_LIST=$(")]).toContain('|| { echo "Could not list Secure Files')
+    expect(script[at("VOICE_LIST=$(")]).toContain("exit 1; }")
+    expect(script[at("/download")]).toContain('|| { echo "Could not download Secure File')
+    expect(script[at("/download")]).toContain("exit 1; }")
+    expect(at("mkdir -p -m 700 /tmp/datme-voice")).toBeGreaterThanOrEqual(0)
+    expect(at("mkdir -p -m 700 /tmp/datme-voice")).toBeLessThan(at("/download"))
+    expect(at("VOICE_LIST=$(")).toBeLessThan(at("bun -e"))
+    expect(at("bun -e")).toBeLessThan(at("/download"))
+    expect(at("VOICE_ID=")).toBeLessThan(at("/download"))
+    const guard = at('test -s "/tmp/datme-voice/$DATME_TTS_VOICE_FILE" ||')
+    expect(guard).toBeGreaterThan(at("/download"))
+    expect(at('chmod 600 "/tmp/datme-voice/$DATME_TTS_VOICE_FILE"')).toBeGreaterThan(guard)
+    expect(at('export DATME_TTS_VOICE="/tmp/datme-voice/$DATME_TTS_VOICE_FILE"')).toBeGreaterThan(guard)
+    expect(at("export DATME_TTS_VOICE=")).toBeLessThan(at(" build "))
+    expect(gitlab.pages.artifacts.paths).toEqual(["public"])
+    expect(content).not.toContain("set -x")
+  })
+
   test("project names are what Cloudflare accepts", () => {
     expect(projectName("Khu Vườn của Tôi!")).toBe("khu-vuon-cua-toi")
     expect(projectName("***")).toBe("garden")

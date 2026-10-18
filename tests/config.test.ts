@@ -381,6 +381,17 @@ describe("tts", () => {
     expect(msg(raw)).toContain("tts: selects no notes")
   })
 
+  test("strips the slashes around folders, as Obsidian paths have none", () => {
+    const raw = { languages: ["vi-VN"], tts: { models: { vi: "vieneu" }, folders: ["Podcast/", "/Books/Audio/"] } }
+    expect(resolveConfig(raw, vault).tts?.folders).toEqual(["Podcast", "Books/Audio"])
+  })
+
+  test("rejects an empty folder", () => {
+    for (const folder of ["", "/"]) {
+      expect(msg({ languages: ["vi-VN"], tts: { models: { vi: "vieneu" }, folders: ["Podcast", folder] } })).toContain("tts.folders")
+    }
+  })
+
   test("rejects an unknown key such as voice", () => {
     expect(() => resolveConfig({ languages: ["vi-VN"], tts: { models: { vi: "vieneu" }, folders: ["a"], voice: "x.wav" } }, vault)).toThrow()
   })

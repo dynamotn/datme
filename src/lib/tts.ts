@@ -37,6 +37,9 @@ const stableCache: AudioCache = {
   write: (parts, data) => writeStableCache("tts", parts, data),
 }
 
+/** Bump when the encoding of the MP3s changes, so cached audio is made again. */
+export const TTS_FORMAT_VERSION = "1"
+
 const sha256 = (data: string | Buffer) => crypto.createHash("sha256").update(data).digest("hex")
 
 /**
@@ -52,12 +55,14 @@ export async function buildAudioIndex(
   cache: AudioCache = stableCache,
 ): Promise<Map<string, Buffer>> {
   if (!voice) throw new TtsUnavailable("DATME_TTS_VOICE is not set")
-  let voiceHash: string
+  let sample: Buffer
   try {
-    voiceHash = sha256(fs.readFileSync(voice))
+    sample = fs.readFileSync(voice)
   } catch (e) {
     throw new TtsUnavailable(`cannot read DATME_TTS_VOICE (${(e as Error).message})`)
   }
+  if (!sample.length) throw new TtsUnavailable(`DATME_TTS_VOICE ${voice} is empty`)
+  const voiceHash = sha256(sample)
   const index = new Map<string, Buffer>()
   let engine: Promise<TtsEngine> | undefined
   try {
@@ -67,10 +72,12 @@ export async function buildAudioIndex(
       for (const n of notes[lang]) {
         // A page showing another language's text is not read by this language's model.
         if (n.isHome || n.contentLang !== lang || !ttsSelected(n, tts)) continue
+        // These layouts have no Listen button.
+        if (n.layout === "cv" || n.layout === "links") continue
         const chunks = noteChunks(n)
         // The first chunk is the title: a note with nothing else has nothing to read.
         if (chunks.length < 2) continue
-        const key = [model, VIENEU_VERSION, voiceHash, sha256(JSON.stringify(chunks))]
+        const key = [model, VIENEU_VERSION, TTS_FORMAT_VERSION, voiceHash, sha256(JSON.stringify(chunks))]
         let mp3 = cache.read(key)
         if (!mp3) {
           const running = await (engine ??= startEngine())

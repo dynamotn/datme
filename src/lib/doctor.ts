@@ -20,6 +20,8 @@ export interface Machine {
   engines: { node?: string; bun?: string }
   /** Whether a package can be imported from datme. */
   resolves(pkg: string): boolean
+  /** Whether a program is on the PATH. */
+  which(cmd: string): boolean
   /** The version of git, or undefined when it is not installed. */
   git(): string | undefined
   /** The top of the git repository holding the vault, or undefined. */
@@ -69,6 +71,18 @@ export function diagnose(m: Machine): Finding[] {
   for (const [pkg, why] of needs) {
     if (m.resolves(pkg)) ok(`${pkg} is installed, for ${why}`)
     else fail(`${pkg} is not installed, and ${why} need it`, `bun add ${pkg}   (next to datme)`)
+  }
+
+  if (site.tts) {
+    if (m.which("uv")) ok("uv is installed, for tts")
+    else fail("uv is not installed, and tts runs its models through it", "install it from https://docs.astral.sh/uv/   (curl -LsSf https://astral.sh/uv/install.sh | sh)")
+    if (m.env.DATME_TTS_VOICE) ok("DATME_TTS_VOICE is set, for tts")
+    else {
+      fail(
+        "DATME_TTS_VOICE is not set: tts clones the voice of a clip, and the build fails without it",
+        "export DATME_TTS_VOICE=…   (the path of a 3-8 s clip of your voice, kept outside the vault)",
+      )
+    }
   }
 
   const git = m.git()

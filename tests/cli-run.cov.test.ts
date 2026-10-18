@@ -177,6 +177,40 @@ describe("deploy", () => {
     const workflow = fs.readdirSync(path.join(repo, ".github/workflows")).map((f) => fs.readFileSync(path.join(repo, ".github/workflows", f), "utf8")).join("")
     expect(workflow).toContain("trunk")
     expect(workflow).toContain("notes")
+    expect(workflow).not.toContain("UV_CACHE_DIR")
+  })
+
+  test("a vault that configures tts gets the TTS toolchain in its pipeline", async () => {
+    const vault = dir("deploy-tts")
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "languages: [vi-VN]\ntts:\n  models: { vi: vieneu }\n  folders: [Voice]\n")
+    await run({ command: "deploy", target: "gitlab", vault }, {}, tmp)
+    expect(fs.readFileSync(path.join(vault, ".gitlab-ci.yml"), "utf8")).toContain("UV_CACHE_DIR: .datme-tts/uv")
+  })
+
+  test("netlify with tts warns that its builds make no audio, and writes the usual file", async () => {
+    const plain = dir("deploy-netlify-plain")
+    await run({ command: "deploy", target: "netlify", vault: plain }, {}, tmp)
+    const vault = dir("deploy-netlify-tts")
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "languages: [vi-VN]\ntts:\n  models: { vi: vieneu }\n  folders: [Voice]\n")
+    await run({ command: "deploy", target: "netlify", vault }, {}, tmp)
+    expect(warned()).toContain("[datme] Netlify builds cannot generate audio")
+    expect(warned()).toContain("use GitLab or GitHub")
+    expect(fs.readFileSync(path.join(vault, "netlify.toml"), "utf8")).toBe(fs.readFileSync(path.join(plain, "netlify.toml"), "utf8"))
+  })
+
+  test("a config that is invalid still deploys, with tts when the key is there; one that does not parse deploys without", async () => {
+    const invalid = dir("deploy-bad-schema")
+    fs.writeFileSync(path.join(invalid, "datme.yaml"), "tts:\n  models: { xx: nope }\n")
+    await run({ command: "deploy", target: "gitlab", vault: invalid }, {}, tmp)
+    expect(fs.readFileSync(path.join(invalid, ".gitlab-ci.yml"), "utf8")).toContain("UV_CACHE_DIR")
+    const broken = dir("deploy-bad-yaml")
+    fs.writeFileSync(path.join(broken, "datme.yaml"), "tts: [unclosed\n")
+    await run({ command: "deploy", target: "gitlab", vault: broken }, {}, tmp)
+    expect(fs.readFileSync(path.join(broken, ".gitlab-ci.yml"), "utf8")).not.toContain("UV_CACHE_DIR")
+    const empty = dir("deploy-empty-yaml")
+    fs.writeFileSync(path.join(empty, "datme.yaml"), "")
+    await run({ command: "deploy", target: "gitlab", vault: empty }, {}, tmp)
+    expect(fs.readFileSync(path.join(empty, ".gitlab-ci.yml"), "utf8")).not.toContain("UV_CACHE_DIR")
   })
 })
 
@@ -268,14 +302,18 @@ describe("run, commands that need no build", () => {
 
   test("doctor with nothing to fix succeeds; a package that is not there does not resolve", async () => {
     let resolves: ((name: string) => boolean) | undefined
-    const diagnose = spyOn(doctor, "diagnose").mockImplementation(((opts: { resolves(name: string): boolean }) => {
+    let which: ((cmd: string) => boolean) | undefined
+    const diagnose = spyOn(doctor, "diagnose").mockImplementation(((opts: { resolves(name: string): boolean; which(cmd: string): boolean }) => {
       resolves = opts.resolves
+      which = opts.which
       return []
     }) as unknown as typeof doctor.diagnose)
     try {
       expect(await failure(run({ command: "doctor", vault: fixture }, {}, tmp))).toBeUndefined()
       expect(resolves!("astro")).toBe(true)
       expect(resolves!("datme-no-such-package")).toBe(false)
+      expect(which!("sh")).toBe(true)
+      expect(which!("datme-no-such-program")).toBe(false)
     } finally {
       diagnose.mockRestore()
     }
@@ -441,10 +479,12 @@ describe("run, Astro commands", () => {
     expect(build).toHaveBeenCalledTimes(2)
   }, 60_000)
 
-  test("a relative or ~ DATME_TTS_VOICE is resolved against the caller's directory, before Astro runs from the package", async () => {
-    const env: Record<string, string> = { DATME_CACHE: "", DATME_TTS_VOICE: "voices/me.wav" }
+  test("a relative or ~ DATME_TTS_VOICE, UV_CACHE_DIR or HF_HOME is resolved against the caller's directory, before Astro runs from the package", async () => {
+    const env: Record<string, string> = { DATME_CACHE: "", DATME_TTS_VOICE: "voices/me.wav", UV_CACHE_DIR: ".datme-tts/uv", HF_HOME: "~/hf" }
     await run({ command: "build", vault: fixture, out: path.join(tmp, "site-voice") }, env, tmp)
     expect(env.DATME_TTS_VOICE).toBe(path.join(tmp, "voices/me.wav"))
+    expect(env.UV_CACHE_DIR).toBe(path.join(tmp, ".datme-tts/uv"))
+    expect(env.HF_HOME).toBe(path.join(os.homedir(), "hf"))
     const home: Record<string, string> = { DATME_CACHE: "", DATME_TTS_VOICE: "~/me.wav" }
     const listeners = process.listeners("exit")
     await run({ command: "preview", vault: fixture }, home, tmp)

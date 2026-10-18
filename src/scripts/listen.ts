@@ -7,7 +7,6 @@ function show(button: HTMLButtonElement, playing: boolean) {
   const text = (playing ? button.dataset.pause : button.dataset.label) ?? ""
   button.textContent = `${playing ? "⏸" : "▶"} ${text}`
   button.setAttribute("aria-label", text)
-  button.setAttribute("aria-pressed", String(playing))
 }
 
 const play = (audio: HTMLAudioElement) => audio.play().catch(() => {})

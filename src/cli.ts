@@ -4,6 +4,8 @@ import path from "node:path"
 import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
 import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
+import { CONFIG_FILES } from "./lib/config-files.ts"
+import { parseYaml } from "./lib/yaml.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
 import { PACKAGE_ROOT } from "./lib/package-root.ts"
 import { NEIGHBOURS_FILE } from "./lib/neighbours.ts"
@@ -321,8 +323,23 @@ function git(cwd: string, ...args: string[]): string | undefined {
   }
 }
 
+/** Whether the vault's config has a `tts` block; deploy needs no more, so a config that is missing or broken counts as none. */
+function hasTts(vault: string): boolean {
+  for (const name of CONFIG_FILES) {
+    const file = path.join(vault, name)
+    if (!fs.existsSync(file)) continue
+    try {
+      const raw = parseYaml(fs.readFileSync(file, "utf8"))
+      return typeof raw === "object" && raw !== null && "tts" in raw && raw.tts != null
+    } catch {
+      return false
+    }
+  }
+  return false
+}
+
 /** Write the CI configuration for a host at the root of the vault's repository. */
-export function deploy(target: Target, dir: string, branch?: string): void {
+export function deploy(target: Target, dir: string, branch?: string, tts = false): void {
   // git answers with resolved paths, so the vault must be resolved too to get its place in the repository.
   const vault = fs.realpathSync(dir)
   const root = git(vault, "rev-parse", "--show-toplevel") ?? vault
@@ -333,7 +350,11 @@ export function deploy(target: Target, dir: string, branch?: string): void {
     vault: path.relative(root, vault) || ".",
     branch: branch ?? git(vault, "symbolic-ref", "--short", "HEAD") ?? "main",
     project: projectName(path.basename(root)),
+    tts,
   })
+  if (tts && target === "netlify") {
+    console.warn("[datme] Netlify builds cannot generate audio: use GitLab or GitHub, or generate the audio elsewhere.")
+  }
   for (const f of files) {
     const file = path.join(root, f.path)
     if (fs.existsSync(file)) throw new CliError(`${file} already exists; remove it first to regenerate it.`)
@@ -440,7 +461,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return void console.log(`Wrote ${file}`)
   }
 
-  if (args.command === "deploy") return deploy(args.target!, vault, args.branch)
+  if (args.command === "deploy") return deploy(args.target!, vault, args.branch, hasTts(vault))
 
   if (args.command === "migrate") {
     const plan = planMigration(vault, args.from!)
@@ -505,6 +526,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
           return false
         }
       },
+      which: (cmd) => (process.env.PATH ?? "").split(path.delimiter).some((dir) => dir && fs.existsSync(path.join(dir, cmd))),
       git: () => {
         try {
           return execFileSync("git", ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
@@ -602,8 +624,10 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     env.DATME_CACHE = cacheDir
     env.DATME_VERSION = packageJson().version
   }
-  // Astro runs from the package root, so the voice sample is pinned to the caller's directory first.
-  if (env.DATME_TTS_VOICE) env.DATME_TTS_VOICE = path.resolve(cwd, expandHome(env.DATME_TTS_VOICE))
+  // Astro runs from the package root, so the voice sample and the TTS caches are pinned to the caller's directory first.
+  for (const key of ["DATME_TTS_VOICE", "UV_CACHE_DIR", "HF_HOME"]) {
+    if (env[key]) env[key] = path.resolve(cwd, expandHome(env[key]))
+  }
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000
   // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends.

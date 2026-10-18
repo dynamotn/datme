@@ -8,6 +8,7 @@ import path from "node:path"
 import { PACKAGE_ROOT } from "./package-root"
 
 export const VIENEU_VERSION = "3.7.1"
+const LAMEENC_VERSION = "1.8.4"
 
 export class TtsUnavailable extends Error {
   constructor(reason: string) {
@@ -25,13 +26,15 @@ export interface TtsEngine {
 }
 
 interface Pending {
+  id: number
   resolve(mp3: Buffer): void
   reject(error: Error): void
 }
 
 export function defaultCommand(): string[] {
-  const script = path.join(PACKAGE_ROOT, "src", "lib", "tts", "vieneu.py")
-  return ["uv", "run", "--quiet", "--with", `vieneu==${VIENEU_VERSION}`, "--with", "lameenc", "python", script]
+  const script = path.join(PACKAGE_ROOT, "src", "lib", "tts", "vieneu_helper.py")
+  // --no-project: the vault or datme's own pyproject, if any, never joins the helper's environment.
+  return ["uv", "run", "--quiet", "--no-project", "--with", `vieneu==${VIENEU_VERSION}`, "--with", `lameenc==${LAMEENC_VERSION}`, "python", script]
 }
 
 export function startEngine(): Promise<TtsEngine> {
@@ -42,10 +45,11 @@ export function startEngine(): Promise<TtsEngine> {
   let ready = false
   let dead: string | undefined
   let nextId = 0
+  let die: (reason: string) => void
 
   return new Promise<TtsEngine>((resolve, reject) => {
     const exited = new Promise<void>((done) => {
-      const die = (reason: string) => {
+      die = (reason: string) => {
         if (dead) return
         dead = reason
         if (!ready) reject(new TtsUnavailable(reason))
@@ -62,8 +66,9 @@ export function startEngine(): Promise<TtsEngine> {
       synthesize(model, voice, chunks) {
         if (dead) return Promise.reject(new Error(`TTS engine exited: ${dead}`))
         return new Promise<Buffer>((res, rej) => {
-          pending.push({ resolve: res, reject: rej })
-          child.stdin.write(JSON.stringify({ id: ++nextId, model, voice, chunks }) + "\n")
+          const id = ++nextId
+          pending.push({ id, resolve: res, reject: rej })
+          child.stdin.write(JSON.stringify({ id, model, voice, chunks }) + "\n")
         })
       },
       async close() {
@@ -73,7 +78,7 @@ export function startEngine(): Promise<TtsEngine> {
     }
 
     createInterface({ input: child.stdout }).on("line", (line) => {
-      let msg: { ready?: boolean; mp3?: string; error?: string }
+      let msg: { ready?: boolean; id?: number; mp3?: string; error?: string }
       try {
         msg = JSON.parse(line)
       } catch {
@@ -83,9 +88,16 @@ export function startEngine(): Promise<TtsEngine> {
         ready = true
         return resolve(engine)
       }
-      const p = pending.shift()
-      if (msg.error !== undefined) p?.reject(new Error(msg.error))
-      else p?.resolve(Buffer.from(msg.mp3 ?? "", "base64"))
+      // Answers come in order, so one for another request means audio could land on the wrong note.
+      if (msg.id !== pending[0]?.id) {
+        die(`protocol error: reply ${msg.id} does not answer request ${pending[0]?.id}`)
+        child.kill()
+        return
+      }
+      const p = pending.shift()!
+      if (msg.error !== undefined) p.reject(new Error(msg.error))
+      else if (!msg.mp3) p.reject(new Error("the helper returned no audio"))
+      else p.resolve(Buffer.from(msg.mp3, "base64"))
     })
   })
 }

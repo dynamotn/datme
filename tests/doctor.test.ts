@@ -8,6 +8,7 @@ const machine = (over: Partial<Machine> = {}): Machine => ({
   runtime: { bun: "1.4.2", node: "24.3.0" },
   engines: { node: ">=23.6", bun: ">=1.2" },
   resolves: () => true,
+  which: () => true,
   git: () => "git version 2.50.0",
   gitTop: () => "/repo",
   ...over,
@@ -54,6 +55,25 @@ describe("datme doctor", () => {
       expect(missing).toMatchObject({ level: "fail", fix: "bun add @huggingface/transformers   (next to datme)" })
     } finally {
       site.related.semantic = before
+    }
+  })
+
+  test("tts needs uv and a voice clip, each with its fix; without tts there is nothing to check", () => {
+    const before = site.tts
+    try {
+      site.tts = undefined
+      expect(diagnose(machine({ which: () => false })).some((f) => /uv|DATME_TTS_VOICE/.test(f.message))).toBe(false)
+      site.tts = { models: { vi: "vieneu" }, folders: ["a"], frontmatter: {} }
+      const good = diagnose(machine({ env: { DATME_LOCK_TESTERS: "x", DATME_LOCK_NOBODY: "y", DATME_TTS_VOICE: "/clip.wav" } }))
+      expect(good.filter((f) => /uv|DATME_TTS_VOICE/.test(f.message)).map((f) => f.level)).toEqual(["ok", "ok"])
+      const bad = diagnose(machine({ which: () => false }))
+      expect(bad.find((f) => f.message.startsWith("uv is not installed"))).toMatchObject({ level: "fail", fix: expect.stringContaining("astral.sh/uv") })
+      const voice = bad.find((f) => f.message.startsWith("DATME_TTS_VOICE is not set"))!
+      expect(voice.level).toBe("fail")
+      expect(voice.fix).toContain("3-8 s")
+      expect(voice.fix).toContain("outside the vault")
+    } finally {
+      site.tts = before
     }
   })
 

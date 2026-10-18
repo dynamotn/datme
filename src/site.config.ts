@@ -523,6 +523,10 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
         throw new ConfigError(`Invalid datme config in ${vault}:\n  - tts.models.${key}: matches none of the languages ${langs.join(", ")}`)
       }
     }
+    c.tts.folders = c.tts.folders.map((p) => p.replace(/^\/+|\/+$/g, ""))
+    if (c.tts.folders.includes("")) {
+      throw new ConfigError(`Invalid datme config in ${vault}:\n  - tts.folders: an empty folder names no folder of the vault`)
+    }
     if (!c.tts.folders.length && !Object.keys(c.tts.frontmatter).length) {
       throw new ConfigError(`Invalid datme config in ${vault}:\n  - tts: selects no notes, set tts.folders or tts.frontmatter`)
     }

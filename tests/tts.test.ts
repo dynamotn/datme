@@ -1,8 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from "bun:test"
 import { createHash } from "node:crypto"
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
-import { audioIndex, audioPath, buildAudioIndex, hasAudio, ttsModel, ttsSelected } from "../src/lib/tts"
+import { audioIndex, audioPath, buildAudioIndex, hasAudio, TTS_FORMAT_VERSION, ttsModel, ttsSelected } from "../src/lib/tts"
 import { TtsUnavailable, VIENEU_VERSION } from "../src/lib/tts-engine"
 import { noteChunks } from "../src/lib/tts-text"
 import { getVault, type Note } from "../src/lib/vault"
@@ -104,6 +105,9 @@ describe("audio index", () => {
       // Nothing to read beyond the title: only locked text, or only code.
       expect(index.has("/Podcast/Locked")).toBe(false)
       expect(index.has("/Podcast/Code")).toBe(false)
+      // These layouts show no Listen button, so their audio would never be played.
+      expect(index.has("/Podcast/Cv")).toBe(false)
+      expect(index.has("/Podcast/Links")).toBe(false)
       // Drafts are only in the vault of a --drafts build.
       expect(index.has("/Podcast/Draft")).toBe(false)
       expect(index.has("/Podcast/Broken")).toBe(false)
@@ -129,6 +133,7 @@ describe("audio index", () => {
       expect(JSON.parse([...cache.store.keys()][0])).toEqual([
         "vieneu",
         VIENEU_VERSION,
+        TTS_FORMAT_VERSION,
         sha(fs.readFileSync(VOICE)),
         sha(JSON.stringify(noteChunks(episode))),
       ])
@@ -146,6 +151,14 @@ describe("audio index", () => {
   test("a missing or unreadable voice sample fails the build", async () => {
     await expect(build({ voice: null })).rejects.toThrow(/DATME_TTS_VOICE is not set/)
     await expect(build({ voice: "/nonexistent/voice.wav" })).rejects.toBeInstanceOf(TtsUnavailable)
+    // An empty secret decodes to an empty file: it fails rather than publishing a site without audio.
+    const empty = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "datme-voice-")), "voice.ogg")
+    fs.writeFileSync(empty, "")
+    try {
+      await expect(build({ voice: empty })).rejects.toThrow(/DATME_TTS_VOICE .* is empty/)
+    } finally {
+      fs.rmSync(path.dirname(empty), { recursive: true, force: true })
+    }
   })
 
   test("audioIndex is built once per process, from DATME_TTS_VOICE", async () => {

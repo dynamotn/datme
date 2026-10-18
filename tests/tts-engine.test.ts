@@ -26,16 +26,22 @@ describe("tts engine", () => {
 
   test("the default command runs the pinned helper through uv", () => {
     const cmd = defaultCommand()
-    expect(cmd.slice(0, 6)).toEqual(["uv", "run", "--quiet", "--with", `vieneu==${VIENEU_VERSION}`, "--with"])
-    expect(cmd.at(-1)).toMatch(/tts[\\/]vieneu\.py$/)
+    expect(cmd.slice(0, 8)).toEqual(["uv", "run", "--quiet", "--no-project", "--with", `vieneu==${VIENEU_VERSION}`, "--with", "lameenc==1.8.4"])
+    expect(cmd.at(-1)).toMatch(/tts[\\/]vieneu_helper\.py$/)
     expect(existsSync(cmd.at(-1)!)).toBe(true)
+  })
+
+  test("the helper's name cannot shadow the vieneu SDK", () => {
+    const script = defaultCommand().at(-1)!
+    expect(path.basename(script)).toBe("vieneu_helper.py")
+    expect(existsSync(script)).toBe(true)
   })
 
   test("the default script is the package's, whatever the cwd", () => {
     const cwd = process.cwd()
     const tmp = mkdtempSync(path.join(tmpdir(), "datme-decoy-"))
     mkdirSync(path.join(tmp, "src/lib/tts"), { recursive: true })
-    writeFileSync(path.join(tmp, "src/lib/tts/vieneu.py"), "")
+    writeFileSync(path.join(tmp, "src/lib/tts/vieneu_helper.py"), "")
     try {
       process.chdir(tmp)
       const script = defaultCommand().at(-1)!
@@ -65,6 +71,20 @@ describe("tts engine", () => {
     await expect(engine.synthesize("vieneu", "/v.wav", ["FAIL"])).rejects.toThrow("boom")
     expect((await engine.synthesize("vieneu", "/v.wav", ["ok"])).toString()).toBe("MP3:ok")
   })
+
+  test("a reply with an empty or missing mp3 and no error rejects that call only", async () => {
+    engine = await startEngine()
+    await expect(engine.synthesize("vieneu", "/v.wav", ["EMPTY"])).rejects.toThrow("no audio")
+    await expect(engine.synthesize("vieneu", "/v.wav", ["NOMP3"])).rejects.toThrow("no audio")
+    expect((await engine.synthesize("vieneu", "/v.wav", ["ok"])).toString()).toBe("MP3:ok")
+  })
+
+  test("a reply for another request stops the helper and rejects every pending call", async () => {
+    engine = await startEngine()
+    const calls = await Promise.allSettled([engine.synthesize("vieneu", "/v.wav", ["BADID"]), engine.synthesize("vieneu", "/v.wav", ["next"])])
+    for (const c of calls) expect(c.status === "rejected" && String(c.reason)).toContain("protocol error")
+    await expect(engine.synthesize("vieneu", "/v.wav", ["a"])).rejects.toThrow("protocol error")
+  }, 5000)
 
   test("a helper that exits before ready is unavailable", async () => {
     process.env.FAKE_TTS_NO_START = "1"
