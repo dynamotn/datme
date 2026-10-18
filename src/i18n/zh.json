@@ -212,6 +212,8 @@
   "walkNone": "从这里没有链接能通往那里。",
   "walkShare": "复制这条路线的链接",
   "walkEnd": "路线终点",
+  "listen": "收听",
+  "pauseListening": "暂停",
   "statusActive": "进行中",
   "statusPlanned": "计划中",
   "statusPaused": "已暂停",

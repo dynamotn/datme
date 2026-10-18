@@ -212,6 +212,8 @@
   "walkNone": "Kein Weg aus Links führt von hier dorthin.",
   "walkShare": "Link zu diesem Spaziergang kopieren",
   "walkEnd": "Ende des Spaziergangs",
+  "listen": "Anhören",
+  "pauseListening": "Pause",
   "statusActive": "In Arbeit",
   "statusPlanned": "Geplant",
   "statusPaused": "Pausiert",

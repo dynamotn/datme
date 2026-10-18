@@ -441,6 +441,17 @@ describe("run, Astro commands", () => {
     expect(build).toHaveBeenCalledTimes(2)
   }, 60_000)
 
+  test("a relative or ~ DATME_TTS_VOICE is resolved against the caller's directory, before Astro runs from the package", async () => {
+    const env: Record<string, string> = { DATME_CACHE: "", DATME_TTS_VOICE: "voices/me.wav" }
+    await run({ command: "build", vault: fixture, out: path.join(tmp, "site-voice") }, env, tmp)
+    expect(env.DATME_TTS_VOICE).toBe(path.join(tmp, "voices/me.wav"))
+    const home: Record<string, string> = { DATME_CACHE: "", DATME_TTS_VOICE: "~/me.wav" }
+    const listeners = process.listeners("exit")
+    await run({ command: "preview", vault: fixture }, home, tmp)
+    for (const l of process.listeners("exit").filter((x) => !listeners.includes(x))) process.removeListener("exit", l)
+    expect(home.DATME_TTS_VOICE).toBe(path.join(os.homedir(), "me.wav"))
+  }, 60_000)
+
   test("dev serves the vault live, preview builds then serves until the process ends", async () => {
     const env: Record<string, string> = { DATME_CACHE: "" }
     await run({ command: "dev", vault: fixture, port: 4400, host: true }, env, tmp)

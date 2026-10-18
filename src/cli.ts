@@ -5,11 +5,11 @@ import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
 import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
+import { PACKAGE_ROOT } from "./lib/package-root.ts"
 import { NEIGHBOURS_FILE } from "./lib/neighbours.ts"
 import { SOURCES, applyMigration, describePlan, planMigration, type Source } from "./lib/migrate.ts"
 
-/** Root of the datme package, where the Astro project lives. */
-export const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..")
+export { PACKAGE_ROOT }
 /**
  * Astro builds here first: it renames files out of .astro/, which fails across
  * filesystems. One per process, so builds running at once never share it.
@@ -602,6 +602,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     env.DATME_CACHE = cacheDir
     env.DATME_VERSION = packageJson().version
   }
+  // Astro runs from the package root, so the voice sample is pinned to the caller's directory first.
+  if (env.DATME_TTS_VOICE) env.DATME_TTS_VOICE = path.resolve(cwd, expandHome(env.DATME_TTS_VOICE))
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000
   // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends.

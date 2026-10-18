@@ -212,6 +212,8 @@
   "walkNone": "ここからそこへ続くリンクの道はありません。",
   "walkShare": "この散歩道へのリンクをコピー",
   "walkEnd": "散歩道の終わり",
+  "listen": "聞く",
+  "pauseListening": "一時停止",
   "statusActive": "進行中",
   "statusPlanned": "予定",
   "statusPaused": "一時停止",

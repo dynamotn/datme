@@ -199,6 +199,13 @@ subscribe:
 With `headers: { csp: true }`, the Content Security Policy lets forms post to
 that service only.
 
+## Listening
+
+A note chosen for audio (see `tts` in the configuration) shows a ▶ Listen
+button at the top. It plays the note's MP3 in place, a second click pauses it,
+and moving to another page stops it. Notes without audio, protected notes, and
+every site built with `datme dev` show no button.
+
 ## Taking it along
 
 - **Offline:** the site installs as an app, and pages a reader has opened stay

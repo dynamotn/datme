@@ -1,6 +1,7 @@
 ---
 import type { Note } from "~/lib/vault"
 import { t } from "~/lib/i18n"
+import { hasAudio, audioPath } from "~/lib/tts"
 import PageMenu from "./PageMenu.astro"
 
 interface Props {
@@ -8,10 +9,18 @@ interface Props {
 }
 const { note } = Astro.props
 const s = t(note.lang)
+const audio = await hasAudio(note)
 ---
 
 <div class="note-tools">
   <PageMenu note={note} />
+  {
+    audio && (
+      <button type="button" class="listen" data-audio={audioPath(note)} data-label={s.listen} data-pause={s.pauseListening}>
+        ▶ {s.listen}
+      </button>
+    )
+  }
   {
     !note.unlisted && !note.isHome && (
       <button

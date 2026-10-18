@@ -1,0 +1,9 @@
+# Audio coverage: one Vietnamese model, a folder of selected notes.
+site:
+  title: TTS test
+  author: Tester
+publish: all
+languages: [vi-VN, en-US]
+tts:
+  models: { vi: vieneu }
+  folders: [Podcast]

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Notes chosen by folder or frontmatter can be read aloud in the author's own voice, with one TTS model per language (VieNeu for Vietnamese) and a ▶ Listen button at the top of the note.
+
 ## [3.0.0] - 2026-10-18
 
 ### Added

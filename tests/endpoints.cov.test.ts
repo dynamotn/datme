@@ -5,6 +5,7 @@ import type { APIContext, APIRoute } from "astro"
 import { site, type SiteConfig } from "../src/site.config"
 import { getVault } from "../src/lib/vault"
 import { setEmbedder } from "../src/lib/embeddings"
+import * as audio from "../src/pages/[...audio].mp3"
 import * as md from "../src/pages/[...md].md"
 import * as oembed from "../src/pages/[...path].oembed.json"
 import * as changes from "../src/pages/[...path]/changes.xml"
@@ -50,6 +51,27 @@ describe("markdown copies", () => {
     setSite({ llms: false })
     expect(md.getStaticPaths()).toEqual([])
   }, 60_000)
+})
+
+describe("audio", () => {
+  test("one MP3 per note in the audio index, next to its page", async () => {
+    const g = globalThis as { __datmeAudioIndex?: Promise<Map<string, Buffer>> }
+    const before = g.__datmeAudioIndex
+    try {
+      delete g.__datmeAudioIndex
+      // The fixture vault has no tts block.
+      expect(await audio.getStaticPaths()).toEqual([])
+      g.__datmeAudioIndex = Promise.resolve(new Map([["/T%E1%BA%ADp/M%E1%BB%99t", Buffer.from("ID3 audio")]]))
+      const [only, ...rest] = await audio.getStaticPaths()
+      expect(rest).toEqual([])
+      expect(only.params.audio).toBe("Tập/Một")
+      const r = await call(audio.GET, only.params, only.props)
+      expect(type(r)).toBe("audio/mpeg")
+      expect(Buffer.from(await r.arrayBuffer()).toString()).toBe("ID3 audio")
+    } finally {
+      g.__datmeAudioIndex = before
+    }
+  })
 })
 
 describe("oEmbed JSON", () => {

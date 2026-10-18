@@ -19,6 +19,7 @@ import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
 import { revealHash } from "./tabs"
+import { setupListen } from "./listen"
 import { setupMedia } from "./media"
 import { setupTrail, trailStep } from "./trail"
 import { setupWalk } from "./walk"
@@ -343,6 +344,7 @@ document.addEventListener("astro:page-load", () => {
   void setupGardenPractice()
   void setupDueBadge()
   setupMedia()
+  setupListen()
   setupTrail()
   void setupWalk()
   setupFootprints()

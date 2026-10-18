@@ -212,6 +212,8 @@
   "walkNone": "No path of links leads there from here.",
   "walkShare": "Copy link to this walk",
   "walkEnd": "End of the walk",
+  "listen": "Listen",
+  "pauseListening": "Pause",
   "statusActive": "In progress",
   "statusPlanned": "Planned",
   "statusPaused": "Paused",

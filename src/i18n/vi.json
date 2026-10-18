@@ -212,6 +212,8 @@
   "walkNone": "Không có lối liên kết nào từ đây tới đó.",
   "walkShare": "Chép link lối đi này",
   "walkEnd": "Hết lối đi",
+  "listen": "Nghe",
+  "pauseListening": "Tạm dừng",
   "statusActive": "Đang làm",
   "statusPlanned": "Dự định",
   "statusPaused": "Tạm dừng",

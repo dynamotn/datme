@@ -101,18 +101,13 @@ describe("stable cache", () => {
     expect(cache.readStableCache("blocked-stable", ["a"])).toBeUndefined()
   })
 
-  test("is off when DATME_CACHE is empty", async () => {
-    const before = process.env.DATME_CACHE
-    process.env.DATME_CACHE = ""
-    let off: CacheModule
-    try {
-      off = (await import(`${MODULE}?cache-off`)) as CacheModule
-    } finally {
-      if (before === undefined) delete process.env.DATME_CACHE
-      else process.env.DATME_CACHE = before
-    }
-    off.writeStableCache("tts", ["a"], Buffer.from("audio"))
-    expect(off.readStableCache("tts", ["a"])).toBeUndefined()
+  test("is off when DATME_CACHE is empty", () => {
+    // A subprocess, so a second copy of the module does not show up in the coverage report.
+    const script = `const c = await import(${JSON.stringify(MODULE)}); c.writeStableCache("tts", ["a"], Buffer.from("audio")); console.log(String(c.readStableCache("tts", ["a"])))`
+    const proc = Bun.spawnSync(["bun", "-e", script], { cwd: dir, env: { ...process.env, DATME_CACHE: "" }, stdout: "pipe", stderr: "pipe" })
+    expect(proc.stderr.toString()).toBe("")
+    expect(proc.stdout.toString().trim()).toBe("undefined")
+    expect(fs.readdirSync(dir)).toEqual(["cache"])
   })
 })
 
