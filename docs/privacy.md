@@ -156,6 +156,10 @@ are never spoken (the unlocked parts of the same note are). Audio is published
 like the note itself: a note that is public has public audio, so only select
 notes you are happy to have heard.
 
+The voice is cloned on the machine that builds: the clip is never uploaded.
+The build downloads the VieNeu model and its audio codec (about 640 MB) from
+Hugging Face, each pinned to a commit, and the Python packages that run them
+from PyPI, pinned to their versions as of a fixed date.
 ## Note history
 
 `history: true` gives each note that changed a page showing how it grew: every

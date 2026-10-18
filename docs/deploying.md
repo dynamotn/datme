@@ -39,7 +39,7 @@ it installs [uv](https://docs.astral.sh/uv/), and keeps uv's downloads
 CI cache saves next to `.datme-cache`. They stay out of `.datme-cache` because
 each build deletes what it did not touch there, and a cache hit leaves these
 files untouched. GitHub and Cloudflare get the same on their workflow. uv is
-installed at a pinned version, like Bun.
+installed at a pinned version, like Bun, and the model files at pinned commits.
 
 The cache is saved even when the build fails, is cancelled or times out (GitLab
 `cache: when: always`; on GitHub and Cloudflare a separate save step that always

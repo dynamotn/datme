@@ -11,10 +11,48 @@ sys.stdout = sys.stderr
 
 import lameenc
 import numpy as np
+from huggingface_hub import constants as hf_constants, snapshot_download
 from vieneu import Vieneu
+from vieneu._v3_turbo_engine.onnx_runtime_lite import OnnxV3LiteEngine
 
-# The official Apache-2.0 weights, named rather than left to the SDK default.
+# The official Apache-2.0 weights and codec, each pinned to a commit, so a push upstream never changes the voice.
 MODEL_REPO = "pnnbao-ump/VieNeu-TTS-v3-Turbo"
+MODEL_REVISION = "61b85e3d937fbbacb387714180e8182823512523"
+CODEC_REPO = "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX"
+CODEC_REVISION = "ceff0d0749bfb3fa2d61149794ec6feef0d1e1ae"
+# What the ONNX/CPU engine reads, and nothing else: the fp32 graphs and the cloning models at the root.
+ONNX_DIR = "onnx_update"
+MODEL_FILES = ["config.json", "denoiser.onnx", "speaker_encoder.onnx"] + [
+    f"{ONNX_DIR}/{f}"
+    for f in [
+        "config.json",
+        "tokenizer.json",
+        "vieneu_prefill.onnx",
+        "vieneu_decode_step.onnx",
+        "vieneu_acoustic_cached.onnx",
+        "vieneu_backbone_shared.data",
+        "vieneu_v3_heads.npz",
+    ]
+]
+CODEC_FILES = [
+    "codec_browser_onnx_meta.json",
+    "moss_audio_tokenizer_decode_full.onnx",
+    "moss_audio_tokenizer_decode_shared.data",
+    "moss_audio_tokenizer_decode_step.onnx",
+    "moss_audio_tokenizer_encode.onnx",
+    "moss_audio_tokenizer_encode.data",
+]
+
+
+def fetch(repo, revision, files):
+    """
+    The files of a repo at a commit, in a folder of their own under HF_HOME: real files, not
+    the cache's links into its blobs, which ONNX Runtime refuses for a graph's external data.
+    """
+    local = os.path.join(hf_constants.HF_HOME, "datme", repo.replace("/", "--"), revision)
+    if not all(os.path.isfile(os.path.join(local, f)) for f in files):
+        snapshot_download(repo, revision=revision, allow_patterns=files, local_dir=local)
+    return local
 
 
 def encoder(rate):
@@ -28,11 +66,18 @@ def encoder(rate):
 
 
 def load():
-    tts = Vieneu(mode="v3turbo", backbone_repo=MODEL_REPO)
-    repo = getattr(tts, "backbone_repo", None)
+    model = fetch(MODEL_REPO, MODEL_REVISION, MODEL_FILES)
+    codec = fetch(CODEC_REPO, CODEC_REVISION, CODEC_FILES)
+    # Everything is local now: a download the SDK would make on its own, of whatever is newest, fails instead.
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    hf_constants.HF_HUB_OFFLINE = True
+    # The SDK takes no codec directory, so its engine is handed the pinned one (vieneu is pinned too).
+    init = OnnxV3LiteEngine.__init__
+    OnnxV3LiteEngine.__init__ = lambda self, *a, **k: init(self, *a, **{**k, "codec_dir": codec})
+    tts = Vieneu(mode="v3turbo", backbone_repo=model, onnx_dir=os.path.join(model, ONNX_DIR), backend="onnx")
     rate = getattr(tts, "sample_rate", None)
-    if repo != MODEL_REPO:
-        sys.exit(f"datme: expected VieNeu-TTS v3 Turbo from {MODEL_REPO}, the SDK loaded {repo!r}")
+    if getattr(tts, "backend", None) != "onnx" or getattr(tts.engine, "checkpoint_path", None) != model:
+        sys.exit(f"datme: expected VieNeu-TTS v3 Turbo on ONNX from {MODEL_REPO}@{MODEL_REVISION}")
     if not isinstance(rate, int) or rate <= 0:
         sys.exit(f"datme: the VieNeu SDK reports no usable sample rate ({rate!r})")
     return tts, rate
