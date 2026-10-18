@@ -28,7 +28,7 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - **Footprints:** the browser remembers which notes the reader opened and
   how far they read the last one. The home page offers to continue reading
   there, and the graph can colour the notes visited, the rest staying in the
-  fog. Nothing leaves the browser; "Forget where I've been" in the "Aa" menu
+  fog. Nothing leaves the browser; "Forget where I've been" in the View menu
   clears it.
 - **Walks:** "🥾 Walk from here to…" under a note's title asks for another
   note and finds the shortest chain of links between them, followed either
@@ -78,8 +78,8 @@ type never leaves the page. Nothing loads until they press the button. It needs
 
 - **Previews:** hover an internal link to read the note in a popover. Hover a
   footnote number or a citation to see it in place.
-- **Stacked pages:** the header button opens linked notes side by side, like a
-  trail of index cards.
+- **Stacked pages:** "Stacked pages" in the View menu opens linked notes side
+  by side, like a trail of index cards.
 - **Reading progress:** notes of 300 words or more show a progress bar and the
   minutes left.
 - **Old notes:** with `outdated: { after: 2 }`, a note not updated for two
@@ -90,10 +90,15 @@ type never leaves the page. Nothing loads until they press the button. It needs
 - **Short notes:** a folder listed in `appearance.stream` shows its notes in
   full on its page, newest first, like a feed of passing thoughts, instead of
   as cards.
-- **Reading preferences:** the "Aa" menu enlarges the text, switches to a
-  legible font (Atkinson Hyperlegible) or high contrast. The choice stays in
-  the reader's browser.
-- **Sidebars:** each one folds away on its own. Reader mode hides both.
+- **The View menu:** the sliders button in the header gathers how the page is
+  laid out and read: each sidebar folds away on its own, reader mode hides
+  both, and the reading preferences enlarge the text, switch to a legible font
+  (Atkinson Hyperlegible) or high contrast. Every choice stays in the reader's
+  browser.
+- **Graphs:** the wheel zooms a graph around the pointer, and the + and −
+  buttons in its corner zoom it for readers without one.
+- **Languages:** with several languages, the header shows the current one;
+  the menu under it switches to the same page in another.
 - **Theme:** light and dark follow the system, or `theme.scheme` in
   `datme.yaml`, with a toggle that remembers the reader's choice.
 - **Images:** images and drawings open large in a lightbox; arrows move
@@ -112,7 +117,7 @@ before. See [Privacy](privacy.md#note-history) before turning it on.
 - Select text in a note to copy a link to that exact passage (`#:~:text=`). The
   link opens the page scrolled to the passage, highlighted.
 - Or press 🖍 Highlight to keep the passage, with words of your own: click a
-  highlight to write them. "My highlights" in the "Aa" menu lists every one,
+  highlight to write them. "My highlights" in the View menu lists every one,
   page by page, and exports them as Markdown for your own vault: each passage
   quoted, your words under it, a link back to the exact place. Highlights stay
   in your browser. When the author rewrites a passage, its highlight finds the

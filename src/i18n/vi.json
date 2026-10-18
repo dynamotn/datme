@@ -245,5 +245,11 @@
   "walkGarden": "Đi hết khu vườn",
   "kanbanBoard": "Bảng",
   "siteSections": "Các mục của trang",
-  "pageRail": "Thêm về trang này"
+  "pageRail": "Thêm về trang này",
+  "zoom": "Thu phóng",
+  "zoomIn": "Phóng to",
+  "zoomOut": "Thu nhỏ",
+  "view": "Hiển thị",
+  "layout": "Bố cục",
+  "shortcuts": "Lối tắt"
 }

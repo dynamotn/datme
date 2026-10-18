@@ -391,17 +391,22 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     hover = undefined
     draw()
   }
-  canvas.onwheel = (e) => {
-    e.preventDefault()
+  /** Zoom by a factor around a point of the canvas: what lies under it stays there. */
+  const zoom = (factor: number, p: { x: number; y: number }) => {
     autoFit = false
-    // Zoom around the pointer: what lies under it stays there.
-    const p = at(e)
-    const k = Math.min(4, Math.max(0.2, view.k * Math.exp(-e.deltaY * 0.0015)))
+    const k = Math.min(4, Math.max(0.2, view.k * factor))
     view.x = p.x - width / 2 - ((p.x - width / 2 - view.x) * k) / view.k
     view.y = p.y - height / 2 - ((p.y - height / 2 - view.y) * k) / view.k
     view.k = k
     draw()
   }
+  canvas.onwheel = (e) => {
+    e.preventDefault()
+    zoom(Math.exp(-e.deltaY * 0.0015), at(e))
+  }
+  // The + and − buttons next to the canvas (src/scripts/app.ts) zoom around its middle.
+  const onZoom = (e: Event) => zoom((e as CustomEvent<number>).detail > 0 ? 1.4 : 1 / 1.4, { x: width / 2, y: height / 2 })
+  canvas.addEventListener("graphzoom", onZoom)
 
   const ro = new ResizeObserver(resize)
   ro.observe(canvas)
@@ -417,6 +422,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
     pending = 0
     ro.disconnect()
     canvas.removeEventListener("redraw", draw)
+    canvas.removeEventListener("graphzoom", onZoom)
     document.removeEventListener("themechange", onTheme)
     live.delete(stop)
   }

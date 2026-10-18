@@ -264,43 +264,50 @@ const lookCss = LOOK_CSS[look]
             <button class="icon-btn" type="button" data-open-graph aria-label={s.globalGraph} title={`${s.globalGraph} (Ctrl G)`}>
               <Icon name="graph" />
             </button>
-            <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="left" aria-label={s.toggleLeft} title={s.toggleLeft} aria-pressed="false">
-              <Icon name="panelLeft" />
-            </button>
-            {
-              withRail && (
-                <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle="right" aria-label={s.toggleRight} title={s.toggleRight} aria-pressed="false">
-                  <Icon name="panelRight" />
-                </button>
-              )
-            }
-            {
-              site.stackedPages && withRail && (
-                <button class="icon-btn stack-toggle" type="button" data-stack-toggle aria-label={s.stackMode} title={s.stackMode} aria-pressed="false">
-                  <Icon name="layers" />
-                </button>
-              )
-            }
+            {/* One menu for how the page is laid out and read; the buttons keep the data attributes src/scripts/app.ts binds to. */}
             <div class="prefs">
-              <button class="icon-btn prefs-toggle" type="button" data-prefs-toggle aria-label={s.prefs} title={s.prefs} aria-expanded="false">
-                <span aria-hidden="true">Aa</span>
+              <button class="icon-btn prefs-toggle" type="button" data-prefs-toggle aria-label={s.view} title={s.view} aria-expanded="false">
+                <Icon name="sliders" />
               </button>
-              <div class="prefs-panel" data-prefs-panel role="group" aria-label={s.prefs} hidden>
-                <div class="prefs-size">
-                  <span>{s.prefsSize}</span>
-                  <button type="button" data-pref-size="-1" aria-label={`${s.prefsSize} −`}>A−</button>
-                  <output data-pref-size-out>100%</output>
-                  <button type="button" data-pref-size="1" aria-label={`${s.prefsSize} +`}>A+</button>
+              <div class="prefs-panel" data-prefs-panel role="group" aria-label={s.view} hidden>
+                <div class="prefs-group" role="group" aria-label={s.layout}>
+                  <span class="prefs-label">{s.layout}</span>
+                  <button class="prefs-item sidebar-toggle" type="button" data-sidebar-toggle="left" aria-pressed="false">
+                    <Icon name="panelLeft" /> {s.toggleLeft}
+                  </button>
+                  {
+                    withRail && (
+                      <button class="prefs-item sidebar-toggle" type="button" data-sidebar-toggle="right" aria-pressed="false">
+                        <Icon name="panelRight" /> {s.toggleRight}
+                      </button>
+                    )
+                  }
+                  {
+                    site.stackedPages && withRail && (
+                      <button class="prefs-item stack-toggle" type="button" data-stack-toggle aria-pressed="false">
+                        <Icon name="layers" /> {s.stackMode}
+                      </button>
+                    )
+                  }
+                  <button class="prefs-item" type="button" data-reader-toggle aria-pressed="false">
+                    <Icon name="book" /> {s.readerMode}
+                  </button>
                 </div>
-                <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
-                <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
+                <div class="prefs-group" role="group" aria-label={s.prefs}>
+                  <span class="prefs-label">{s.prefs}</span>
+                  <div class="prefs-size">
+                    <span>{s.prefsSize}</span>
+                    <button type="button" data-pref-size="-1" aria-label={`${s.prefsSize} −`}>A−</button>
+                    <output data-pref-size-out>100%</output>
+                    <button type="button" data-pref-size="1" aria-label={`${s.prefsSize} +`}>A+</button>
+                  </div>
+                  <label><input type="checkbox" data-pref="legible" /> {s.prefsLegible}</label>
+                  <label><input type="checkbox" data-pref="contrast" /> {s.prefsContrast}</label>
+                </div>
                 <button type="button" class="prefs-forget" data-open-highlights>🖍 {s.highlights}</button>
                 <button type="button" class="prefs-forget" data-forget-footprints data-done={s.forgotten}>{s.forgetFootprints}</button>
               </div>
             </div>
-            <button class="icon-btn" type="button" data-reader-toggle aria-label={s.readerMode} title={s.readerMode} aria-pressed="false">
-              <Icon name="book" />
-            </button>
           </>
         )
       }
@@ -310,20 +317,23 @@ const lookCss = LOOK_CSS[look]
       </button>
       {
         !minimal && site.langs.length > 1 && (
-          <nav class="lang-switch" aria-label={s.language}>
-            {
-              site.langs.map((l) => (
-                <a
-                  href={alternates[l] ?? slugToUrl(langPrefix(l) + "index")}
-                  hreflang={langMeta(l).html}
-                  aria-current={l === lang ? "true" : undefined}
-                  title={langMeta(l).name}
-                >
-                  {langMeta(l).short}
-                </a>
-              ))
-            }
-          </nav>
+          <details class="lang-switch" data-menu>
+            <summary aria-label={s.language} title={`${s.language}: ${langMeta(lang).name}`}>
+              <span>{langMeta(lang).short}</span>
+              <Icon name="chevron" class="lang-caret" />
+            </summary>
+            <ul>
+              {
+                site.langs.map((l) => (
+                  <li>
+                    <a href={alternates[l] ?? slugToUrl(langPrefix(l) + "index")} hreflang={langMeta(l).html} aria-current={l === lang ? "true" : undefined} lang={langMeta(l).html}>
+                      {langMeta(l).name}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </details>
         )
       }
     </header>
@@ -453,6 +463,10 @@ const lookCss = LOOK_CSS[look]
             </div>
             <div class="graph-full">
               <canvas data-graph="global" data-lang={lang}></canvas>
+              <div class="graph-zoom" role="group" aria-label={s.zoom}>
+                <button type="button" data-graph-zoom="1" aria-label={s.zoomIn} title={s.zoomIn}>+</button>
+                <button type="button" data-graph-zoom="-1" aria-label={s.zoomOut} title={s.zoomOut}>−</button>
+              </div>
             </div>
             <div class="graph-foot">
               <label class="graph-time">

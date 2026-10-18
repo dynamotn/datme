@@ -216,6 +216,17 @@ describe("menu and appearance", () => {
     expect(c.appearance.stream).toEqual(["Notes"])
   })
 
+  test("sidebar shortcuts take the same entries as the menu, and there are none by default", () => {
+    expect(resolveConfig({}, "/v").sidebar).toEqual([])
+    const c = resolveConfig({ sidebar: ["tags", { note: "Now" }, { url: "https://example.com", label: "Example" }] }, "/v")
+    expect(c.sidebar).toEqual([
+      { kind: "tags" },
+      { kind: "note", target: "Now", label: undefined },
+      { kind: "url", target: "https://example.com", label: { "en-US": "Example" } },
+    ])
+    expect(() => resolveConfig({ sidebar: [{ url: "/x" }] }, "/v")).toThrow(ConfigError)
+  })
+
   test("the archive and the practice page are built-in menu entries", () => {
     expect(resolveConfig({ nav: ["archive"] }, "/v").nav).toEqual([{ kind: "archive" }])
     expect(resolveConfig({ nav: ["practice"] }, "/v").nav).toEqual([{ kind: "practice" }])

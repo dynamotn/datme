@@ -339,6 +339,24 @@ describe("static build", () => {
     expect(read("tags/index.html")).not.toContain('data-sidebar-toggle="right"')
   })
 
+  test("the left sidebar opens with the configured shortcuts, in the page's language", () => {
+    const vi = read("tags/index.html").match(/<nav class="side-links"[\s\S]*?<\/nav>/)![0]
+    expect(vi).toContain('aria-label="Lối tắt"')
+    // A note without a label shows its title in that language.
+    expect(vi).toContain('<a href="/06_Reference/Niklas-Luhmann">Niklas Luhmann</a>')
+    expect(vi).toContain('<a href="https://example.com/garden">Vườn bạn</a>')
+    expect(read("en-US/tags/index.html")).toContain('<a href="https://example.com/garden">A friend&#39;s garden</a>')
+  })
+
+  test("graphs offer zoom buttons and the header a language menu", () => {
+    const note = read("03_Atomic/Zettelkasten/index.html")
+    expect(note.match(/data-graph-zoom="1"/g)).toHaveLength(2)
+    expect(note).toContain('<details class="lang-switch" data-menu>')
+    const menu = note.match(/<details class="lang-switch"[\s\S]*?<\/details>/)![0]
+    expect(menu).toContain('aria-current="true"')
+    expect(menu).toContain('href="/en-US/03_Atomic/Zettelkasten-method"')
+  })
+
   test("note pages are one stack column and offer the stacked mode", () => {
     const html = read("03_Atomic/Zettelkasten/index.html")
     expect(html).toMatch(/<div class="stack-row" data-stack-row><div class="stack-col" data-stack-col data-url="\/03_Atomic\/Zettelkasten"/)

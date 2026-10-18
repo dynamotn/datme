@@ -245,5 +245,11 @@
   "walkGarden": "漫游整个花园",
   "kanbanBoard": "看板",
   "siteSections": "站点栏目",
-  "pageRail": "本页更多内容"
+  "pageRail": "本页更多内容",
+  "zoom": "缩放",
+  "zoomIn": "放大",
+  "zoomOut": "缩小",
+  "view": "显示",
+  "layout": "布局",
+  "shortcuts": "快捷链接"
 }

@@ -41,7 +41,7 @@ export function gardenShape(lang: Lang): GardenShape {
   const backlinks = vault.backlinks[lang]
   // Notes the menu leads to are found without a link.
   const inNav = new Set(
-    site.nav.flatMap((item) => (item.kind === "note" ? [vault.resolveNote(item.target!, "")?.key] : [])).filter((k): k is string => !!k),
+    [...site.nav, ...site.sidebar].flatMap((item) => (item.kind === "note" ? [vault.resolveNote(item.target!, "")?.key] : [])).filter((k): k is string => !!k),
   )
   // Daily notes are reached by the calendar and from day to day, and folder notes from the explorer.
   const days = new Set(journal(lang).map((d) => d.note.key))
@@ -83,10 +83,12 @@ export function structureProblems(): Problem[] {
 export function checkVault(): Problem[] {
   const vault = getVault()
   const problems = [...vault.problems, ...routeProblems(), ...(site.check.structure ? structureProblems() : [])]
-  for (const item of site.nav) {
-    if (item.kind !== "note") continue
-    const source = vault.resolveNote(item.target!, "")
-    if (!source) problems.push({ level: "warning", file: "datme.yaml", message: `nav: no published note matches "${item.target}"` })
+  for (const [list, items] of [["nav", site.nav], ["sidebar", site.sidebar]] as const) {
+    for (const item of items) {
+      if (item.kind !== "note") continue
+      const source = vault.resolveNote(item.target!, "")
+      if (!source) problems.push({ level: "warning", file: "datme.yaml", message: `${list}: no published note matches "${item.target}"` })
+    }
   }
   return sortProblems(problems)
 }

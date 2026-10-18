@@ -22,5 +22,9 @@ const s = t(lang)
     <button class="icon-btn graph-expand" type="button" data-open-graph aria-label={s.globalGraph}>
       <Icon name="expand" />
     </button>
+    <div class="graph-zoom" role="group" aria-label={s.zoom}>
+      <button type="button" data-graph-zoom="1" aria-label={s.zoomIn} title={s.zoomIn}>+</button>
+      <button type="button" data-graph-zoom="-1" aria-label={s.zoomOut} title={s.zoomOut}>−</button>
+    </div>
   </div>
 </section>

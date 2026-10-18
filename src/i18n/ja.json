@@ -245,5 +245,11 @@
   "walkGarden": "庭をすべて歩く",
   "kanbanBoard": "ボード",
   "siteSections": "サイトのセクション",
-  "pageRail": "このページの関連情報"
+  "pageRail": "このページの関連情報",
+  "zoom": "ズーム",
+  "zoomIn": "拡大",
+  "zoomOut": "縮小",
+  "view": "表示",
+  "layout": "レイアウト",
+  "shortcuts": "ショートカット"
 }

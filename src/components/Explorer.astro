@@ -2,7 +2,7 @@
 import type { Lang } from "~/site.config"
 import { getVault } from "~/lib/vault"
 import { t } from "~/lib/i18n"
-import { navLinks } from "~/lib/nav"
+import { navLinks, sidebarLinks } from "~/lib/nav"
 import { explorerTree, trail } from "~/lib/explorer"
 
 interface Props {
@@ -12,6 +12,7 @@ const { lang } = Astro.props
 const tree = getVault().trees[lang]
 const s = t(lang)
 const nav = navLinks(lang)
+const shortcuts = sidebarLinks(lang)
 // The top level and the folders holding this page; the browser loads the rest (src/scripts/explorer.ts, via wander.ts).
 const html = explorerTree(tree, { open: trail(tree, Astro.url.pathname), current: Astro.url.pathname })
 ---
@@ -19,5 +20,15 @@ const html = explorerTree(tree, { open: trail(tree, Astro.url.pathname), current
 <nav class="side-nav" aria-label={s.menu}>
   {nav.map((l) => <a href={l.url} data-nav>{l.label}</a>)}
 </nav>
+{
+  shortcuts.length > 0 && (
+    <nav class="side-links" aria-label={s.shortcuts}>
+      <p class="panel-title">{s.shortcuts}</p>
+      {shortcuts.map((l) => (
+        <a href={l.url}>{l.label}</a>
+      ))}
+    </nav>
+  )
+}
 <p class="panel-title">{s.explorer}</p>
 <div class="explorer" data-explorer={lang} data-explorer-partial set:html={html} />

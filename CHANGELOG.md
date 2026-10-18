@@ -9,8 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A `sidebar` list in `datme.yaml` puts shortcuts at the top of the left sidebar: notes, built-in pages or URLs, written like `nav` entries, with the current one marked.
+- Graphs have + and − buttons in their corner, in the sidebar and in the global graph, for readers without a wheel to zoom with.
 - Notes chosen by folder or frontmatter can be read aloud in the author's own voice, with one TTS model per language (VieNeu for Vietnamese) and a ▶ Listen button at the top of the note.
 - `datme doctor` checks that `uv` and `DATME_TTS_VOICE` are in place when `tts` is configured, and `datme deploy` writes the TTS toolchain into the GitHub, GitLab and Cloudflare pipelines: uv and the model files are kept between runs in a `.datme-tts` cache that builds never prune, and the voice clip comes from a GitLab Secure File (named by `DATME_TTS_VOICE_FILE`, `voice.wav` by default) or, on GitHub and Cloudflare, from the base64 `DATME_TTS_VOICE_B64` secret, compressed to Ogg Opus so it fits GitHub's 48 KB limit. A missing or empty clip stops the build, `datme deploy netlify` sets `DATME_TTS=off` so Netlify builds publish without audio and warns about it, and the pipelines pin uv and save the cache even when a long first run fails or times out. `DATME_TTS=off` builds any site without audio.
+
+### Changed
+
+- The header is shorter: the sidebar, stacked-pages and reader-mode toggles join the text-size and font choices in one View menu behind a sliders button, and with several languages the header shows only the current one, the others in a menu under it.
+
+### Fixed
+
+- The copy button of a code block stays in its corner when a long line scrolls the block sideways.
+- The search box can be closed on any device: its close button always shows, and a tap on the dimmed page around a dialog closes it.
 
 ## [3.0.0] - 2026-10-18
 

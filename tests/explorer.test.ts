@@ -241,6 +241,13 @@ describe("the page script", () => {
     expect(search.open).toBe(true)
     search.querySelector("span")!.click()
     expect(search.open).toBe(false)
+    // A click on the dialog itself, outside its content, is a tap on the backdrop.
+    search.classList.add("modal")
+    document.querySelector<HTMLButtonElement>("[data-open-search]")!.click()
+    search.querySelector("input")!.click()
+    expect(search.open).toBe(true)
+    search.click()
+    expect(search.open).toBe(false)
     document.querySelector<HTMLButtonElement>("[data-open-graph]")!.click()
     expect(graph.open).toBe(true)
     graph.querySelector<HTMLButtonElement>("[data-close-dialog]")!.click()
@@ -349,6 +356,27 @@ describe("the page script", () => {
     btn("[data-reader-toggle]").click()
     expect(localStorage.getItem("reader")).toBe("0")
     root.className = ""
+  })
+
+  test("the zoom buttons of a graph tell its canvas which way to zoom", () => {
+    document.body.innerHTML = `<div class="graph-box"><canvas></canvas><button data-graph-zoom="1">+</button><button data-graph-zoom="-1">−</button></div>
+      <div class="graph-modal"><div><canvas></canvas></div><button data-graph-zoom="1">+</button></div><button data-graph-zoom="1" id="lone">+</button>`
+    const zooms: number[] = []
+    document.querySelectorAll("canvas").forEach((c) => c.addEventListener("graphzoom", (e) => zooms.push((e as CustomEvent<number>).detail)))
+    document.querySelectorAll<HTMLButtonElement>("[data-graph-zoom]").forEach((b) => b.click())
+    expect(zooms).toEqual([1, -1, 1])
+  })
+
+  test("a header menu closes on a click outside it and on Escape", () => {
+    document.body.innerHTML = `<details data-menu open><summary>vi</summary><a id="in">en</a></details><p id="out">out</p>`
+    const menu = document.querySelector<HTMLDetailsElement>("details")!
+    document.getElementById("in")!.click()
+    expect(menu.open).toBe(true)
+    document.getElementById("out")!.click()
+    expect(menu.open).toBe(false)
+    menu.open = true
+    key("Escape")
+    expect(menu.open).toBe(false)
   })
 
   test("the nav opens from its button and closes on a click outside the sidebar", () => {
@@ -476,13 +504,17 @@ describe("the page script", () => {
       pageLoad()
       pageLoad()
       expect(document.querySelectorAll(".copy-btn")).toHaveLength(2)
-      const btn = document.querySelector<HTMLButtonElement>("#a .copy-btn")!
+      // Each block is wrapped once, with the button beside the <pre> rather than inside it.
+      expect(document.querySelectorAll(".code-block")).toHaveLength(2)
+      expect(document.querySelector("#a")!.parentElement!.className).toBe("code-block")
+      expect(document.querySelector("pre.mermaid")!.parentElement!.className).toBe("prose")
+      const btn = document.querySelector<HTMLButtonElement>("#a + .copy-btn")!
       expect(btn.textContent).toBe("Copy code")
       btn.click()
       await settle()
       expect(copied).toEqual(["let x = 1"])
       expect(btn.textContent).toBe("Copied")
-      document.querySelector<HTMLButtonElement>("#b .copy-btn")!.click()
+      document.querySelector<HTMLButtonElement>("#b + .copy-btn")!.click()
       await settle()
       expect(copied[1]).toContain("plain text")
       await settle(1450)

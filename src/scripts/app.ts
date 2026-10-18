@@ -46,11 +46,20 @@ function read(key: string): string | null {
 // ---- global shortcuts and header buttons (bound once; header nodes are swapped, so delegate) ----
 document.addEventListener("click", (e) => {
   const target = e.target as HTMLElement
+  // A <details> menu in the header (the language switch) closes on a click anywhere else.
+  document.querySelectorAll<HTMLDetailsElement>("details[data-menu][open]").forEach((d) => d.contains(target) || (d.open = false))
   if (target.closest("[data-open-search]")) openSearch()
   else if (target.closest("[data-open-graph]")) openGraph()
   else if (target.closest("[data-random]")) void openRandom()
   else if (target.closest("[data-close-dialog]")) target.closest("dialog")?.close()
+  // A tap on the backdrop closes a dialog: the click lands on the <dialog> itself, outside its content.
+  else if (target instanceof HTMLDialogElement && target.open && target.classList.contains("modal")) target.close()
   else if (target.closest("[data-print]")) window.print()
+  else if (target.closest("[data-graph-zoom]")) {
+    const btn = target.closest<HTMLElement>("[data-graph-zoom]")!
+    const canvas = btn.closest(".graph-box, .graph-modal")?.querySelector("canvas")
+    canvas?.dispatchEvent(new CustomEvent("graphzoom", { detail: Number(btn.dataset.graphZoom) }))
+  }
   else if (target.closest("[data-theme-toggle]")) {
     const next = root.dataset.theme === "dark" ? "light" : "dark"
     root.dataset.theme = next
@@ -89,6 +98,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   const typing = (e.target as HTMLElement).closest("input, textarea, [contenteditable]")
   const mod = e.metaKey || e.ctrlKey
+  if (e.key === "Escape") document.querySelectorAll<HTMLDetailsElement>("details[data-menu][open]").forEach((d) => (d.open = false))
   // Minimal pages have no search or graph dialog, so the browser's own shortcut stays.
   const hasSearch = !!document.querySelector("[data-search-dialog]")
   const hasGraph = !!document.querySelector("[data-graph-dialog]")
@@ -145,7 +155,7 @@ function setupExplorer() {
     })
   }
   let active: HTMLElement | undefined
-  document.querySelectorAll<HTMLAnchorElement>(".explorer a, .side-nav a, .main-nav a").forEach((a) => {
+  document.querySelectorAll<HTMLAnchorElement>(".explorer a, .side-nav a, .side-links a, .main-nav a").forEach((a) => {
     const on = samePath(new URL(a.href).pathname, location.pathname)
     if (on) a.setAttribute("aria-current", "page")
     else a.removeAttribute("aria-current")
@@ -188,7 +198,7 @@ function setupCode() {
   // Browsers offer the clipboard on secure origins only: no copy button on plain http.
   if (!navigator.clipboard) return
   document.querySelectorAll<HTMLPreElement>(".prose pre:not(.mermaid)").forEach((pre) => {
-    if (pre.querySelector(".copy-btn")) return
+    if (pre.parentElement?.classList.contains("code-block")) return
     const btn = document.createElement("button")
     btn.className = "copy-btn"
     btn.type = "button"
@@ -199,7 +209,12 @@ function setupCode() {
       btn.textContent = document.body.dataset.copied ?? "Copied"
       setTimeout(() => (btn.textContent = label), 1400)
     })
-    pre.append(btn)
+    // The button sits next to the <pre>, not inside it: a long line scrolls the block
+    // sideways, and anything inside would scroll out of view with it.
+    const block = document.createElement("div")
+    block.className = "code-block"
+    pre.replaceWith(block)
+    block.append(pre, btn)
   })
 }
 

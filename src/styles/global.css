@@ -320,24 +320,71 @@ kbd {
   color: var(--accent);
   background: var(--accent-soft);
 }
+/* The language menu: the current language's code, the others in a list under it. */
 .lang-switch {
-  display: inline-flex;
+  position: relative;
   flex: none;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--surface-2);
   font-size: 12px;
   font-weight: 650;
 }
+.lang-switch summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 38px;
+  padding: 0 6px 0 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+}
+.lang-switch summary::-webkit-details-marker {
+  display: none;
+}
+.lang-switch summary .lang-caret {
+  width: 14px;
+  height: 14px;
+  rotate: 90deg;
+  transition: rotate 0.15s;
+}
+.lang-switch[open] summary .lang-caret {
+  rotate: -90deg;
+}
+.lang-switch ul {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 70;
+  min-width: 10rem;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
 .lang-switch a {
-  padding: 5px 9px;
+  display: block;
+  padding: 7px 10px;
   border-radius: 7px;
-  color: var(--muted);
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .lang-switch a:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
 }
 .lang-switch a[aria-current="true"] {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .menu-btn {
   display: none;
@@ -565,6 +612,30 @@ kbd {
   background: var(--surface);
   color: var(--ink);
   box-shadow: var(--shadow);
+}
+/* Shortcuts the site sets (`sidebar` in datme.yaml), above the explorer. */
+.side-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 20px;
+}
+.side-links a {
+  padding: 5px 10px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 550;
+}
+@media (hover: hover) {
+  .side-links a:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+.side-links a[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 /* ---------- note header ---------- */
@@ -1114,6 +1185,10 @@ button.chip[hidden] {
 :root[data-theme="dark"] .shiki span {
   color: var(--shiki-dark);
 }
+/* Wraps a <pre> at load (src/scripts/app.ts): the button is anchored to the wrapper, so a block scrolled sideways keeps it in place. */
+.code-block {
+  position: relative;
+}
 .copy-btn {
   position: absolute;
   top: 8px;
@@ -1130,7 +1205,7 @@ button.chip[hidden] {
   opacity: 0;
   transition: opacity 0.15s;
 }
-.prose pre:hover .copy-btn,
+.code-block:hover .copy-btn,
 .copy-btn:focus-visible {
   opacity: 1;
 }
@@ -1362,6 +1437,42 @@ details.callout[open] > summary::after {
 .graph-depth button[aria-pressed="true"] {
   background: var(--accent);
   color: var(--on-accent);
+}
+/* + and − in the corner of a graph, for readers without a wheel to zoom with. */
+.graph-zoom {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.graph-zoom button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: 600 16px var(--font-ui);
+  line-height: 1;
+  cursor: pointer;
+}
+.graph-zoom button + button {
+  border-top: 1px solid var(--line);
+}
+@media (hover: hover) {
+  .graph-zoom button:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+.graph-modal .graph-zoom {
+  right: 14px;
+  bottom: 14px;
 }
 
 /* ---------- backlinks ---------- */
@@ -1846,18 +1957,18 @@ dialog.modal[open] {
   font: inherit;
   font-size: 17px;
 }
-/* Touch has no Esc key to hint at, nor arrow keys: a close button instead. */
+/* The close button always shows: touch has no Esc key, and a detected pointer is no proof of a keyboard. */
 .search-close {
-  display: none;
+  display: inline-grid;
+}
+/* One cross only: the close button, not also the field's own clear button. */
+.search-input-row input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 @media (hover: none), (max-width: 520px) {
-  .search-close {
-    display: inline-grid;
-  }
-  /* One cross only: the close button, not also the field's own clear button. */
-  .search-input-row input::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-    appearance: none;
+  .search-input-row > kbd {
+    display: none;
   }
 }
 @media (hover: none) {
@@ -2128,7 +2239,10 @@ dialog.graph-modal {
   .menu-btn {
     display: inline-grid;
   }
-  .sidebar-toggle {
+  /* The left sidebar is a drawer here, and pages do not stack: those entries leave the View menu. */
+  .sidebar-toggle,
+  .prefs-panel .sidebar-toggle,
+  .prefs-panel .stack-toggle {
     display: none;
   }
   /* Choices made on a wide screen do not apply to the drawer and the stacked rail. */
@@ -2189,8 +2303,9 @@ dialog.graph-modal {
     height: 34px;
     min-width: 34px;
   }
-  .lang-switch a[aria-current="true"] {
-    display: none;
+  .lang-switch summary {
+    height: 34px;
+    padding: 0 4px 0 8px;
   }
   .stage-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -2833,9 +2948,6 @@ li > .flashcard {
 .prefs {
   position: relative;
 }
-.prefs-toggle span {
-  font: 700 14px var(--font-ui);
-}
 .prefs-panel {
   position: absolute;
   right: 0;
@@ -2843,7 +2955,10 @@ li > .flashcard {
   z-index: 70;
   display: grid;
   gap: 10px;
-  min-width: 15rem;
+  min-width: 16rem;
+  max-height: calc(100vh - var(--header-h) - 16px);
+  max-height: calc(100dvh - var(--header-h) - 16px);
+  overflow-y: auto;
   padding: 12px 14px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
@@ -2891,6 +3006,52 @@ li > .flashcard {
 }
 .prefs-panel[hidden] {
   display: none;
+}
+/* The menu's sections: how the page is laid out, then how its text reads. */
+.prefs-group {
+  display: grid;
+  gap: 4px;
+}
+.prefs-group + .prefs-group {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.prefs-label {
+  margin-bottom: 2px;
+  font: 700 11px var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prefs-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.prefs-item .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-2);
+}
+@media (hover: hover) {
+  .prefs-item:hover {
+    background: var(--surface-2);
+  }
+}
+.prefs-item[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.prefs-item[aria-pressed="true"] .icon {
+  color: inherit;
 }
 .prefs-size {
   display: flex;

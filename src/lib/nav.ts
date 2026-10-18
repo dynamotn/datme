@@ -1,4 +1,4 @@
-import { site, type Lang } from "../site.config"
+import { site, type Lang, type NavItem } from "../site.config"
 import { getVault } from "./vault"
 import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
@@ -17,9 +17,18 @@ const warned = new Set<string>()
 
 /** The main menu of a language, with note targets resolved like wikilinks. */
 export function navLinks(lang: Lang): NavLink[] {
+  return resolveLinks(lang, site.nav, "nav")
+}
+
+/** The shortcuts at the top of the left sidebar, resolved like the main menu. */
+export function sidebarLinks(lang: Lang): NavLink[] {
+  return resolveLinks(lang, site.sidebar, "sidebar")
+}
+
+function resolveLinks(lang: Lang, items: NavItem[], list: "nav" | "sidebar"): NavLink[] {
   const vault = getVault()
   const out: NavLink[] = []
-  for (const item of site.nav) {
+  for (const item of items) {
     if (item.kind === "home") out.push({ label: t(lang).home, url: slugToUrl(langPrefix(lang) + "index") })
     else if (item.kind === "tags") out.push({ label: t(lang).tags, url: slugToUrl(langPrefix(lang) + "tags") })
     else if (item.kind === "archive") out.push({ label: t(lang).archive, url: slugToUrl(langPrefix(lang) + "archive") })
@@ -42,7 +51,7 @@ export function navLinks(lang: Lang): NavLink[] {
       const source = vault.resolveNote(item.target!, "")
       const note = source && vault.byKey[lang].get(source.key)
       if (!note) {
-        if (!warned.has(item.target!)) console.warn(`[datme] nav: no published note matches "${item.target}"`)
+        if (!warned.has(item.target!)) console.warn(`[datme] ${list}: no published note matches "${item.target}"`)
         warned.add(item.target!)
         continue
       }

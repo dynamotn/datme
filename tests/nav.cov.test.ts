@@ -1,14 +1,30 @@
 import { afterEach, describe, expect, spyOn, test } from "bun:test"
 import { site, type NavItem } from "../src/site.config"
-import { isStream, navLinks } from "../src/lib/nav"
+import { isStream, navLinks, sidebarLinks } from "../src/lib/nav"
 import { hasMap, hasTimeline } from "../src/lib/places"
 import { hasJournal } from "../src/lib/journal"
 import { hasDecks } from "../src/lib/decks"
 import { hasChanges } from "../src/lib/changes"
 
 const nav = site.nav
+const sidebar = site.sidebar
 afterEach(() => {
   site.nav = nav
+  site.sidebar = sidebar
+})
+
+describe("sidebarLinks", () => {
+  test("resolves the sidebar's entries like the menu's", () => {
+    // The fixture vault's own shortcuts: a note, a URL, and a note that does not exist.
+    expect(sidebarLinks("en-US").map((l) => l.label)).toEqual(["Niklas Luhmann (sociologist)", "A friend's garden"])
+    site.sidebar = []
+    expect(sidebarLinks("en-US")).toEqual([])
+    site.sidebar = [{ kind: "tags" }, { kind: "url", target: "https://example.com", label: { "vi-VN": "Ví dụ", "en-US": "Example" } }]
+    expect(sidebarLinks("en-US")).toEqual([
+      { label: "Tags", url: "/en-US/tags" },
+      { label: "Example", url: "https://example.com" },
+    ])
+  })
 })
 
 describe("navLinks of every kind", () => {

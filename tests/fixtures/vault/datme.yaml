@@ -35,6 +35,13 @@ nav:
       en-US: About Luhmann
   - tags
   - note: Missing note
+sidebar:
+  - note: Niklas Luhmann
+  - url: https://example.com/garden
+    label:
+      vi-VN: Vườn bạn
+      en-US: A friend's garden
+  - note: Missing shortcut
 appearance:
   classic: [07_Project]
   folders:

@@ -245,5 +245,11 @@
   "walkGarden": "Den ganzen Garten durchwandern",
   "kanbanBoard": "Board",
   "siteSections": "Bereiche der Website",
-  "pageRail": "Mehr zu dieser Seite"
+  "pageRail": "Mehr zu dieser Seite",
+  "zoom": "Zoom",
+  "zoomIn": "Vergrößern",
+  "zoomOut": "Verkleinern",
+  "view": "Ansicht",
+  "layout": "Layout",
+  "shortcuts": "Schnellzugriff"
 }

@@ -112,6 +112,9 @@ nav:                          # main menu in the header, in order
     label: About
   - url: /cv.pdf
     label: CV
+sidebar:                      # shortcuts at the top of the left sidebar, same entries as nav
+  - note: Now
+  - tags
 
 footer:
   GitHub: https://github.com/me

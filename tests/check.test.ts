@@ -21,8 +21,11 @@ describe("datme check", () => {
     expect(p).toStartWith("warning: frontmatter is not valid YAML")
   })
 
-  test("menu entries pointing at missing notes are reported against datme.yaml", () => {
-    expect(messages("datme.yaml")).toEqual(['warning: nav: no published note matches "Missing note"'])
+  test("menu and sidebar entries pointing at missing notes are reported against datme.yaml", () => {
+    expect(messages("datme.yaml")).toEqual([
+      'warning: nav: no published note matches "Missing note"',
+      'warning: sidebar: no published note matches "Missing shortcut"',
+    ])
   })
 
   test("resolved links, embeds and exported drawings are not problems", () => {

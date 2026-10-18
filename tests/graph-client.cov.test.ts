@@ -395,6 +395,23 @@ describe("the graph in the browser", () => {
     expect(frame(canvas).circles[0].r).toBeCloseTo(small.r)
   })
 
+  test("the zoom buttons zoom around the middle, and a stopped graph ignores them", async () => {
+    const canvas = makeCanvas("cov-graph")
+    const stop = (await graph.mountGraph(canvas, "local"))!
+    resize(canvas)
+    const r0 = frame(canvas).circles[0].r
+    const zoom = (by: number) => canvas.dispatchEvent(new dom.window.CustomEvent("graphzoom", { detail: by }))
+    zoom(1)
+    const grown = frame(canvas).circles[0].r
+    expect(grown).toBeGreaterThan(r0)
+    zoom(-1)
+    expect(frame(canvas).circles[0].r).toBeCloseTo(r0)
+    stop()
+    const frames = frame(canvas).count
+    zoom(1)
+    expect(frame(canvas).count).toBe(frames)
+  })
+
   test("the global graph colours notes by the chosen group and hides notes planted later", async () => {
     const groups = async (colorBy: string, extra: Record<string, string> = {}) => {
       const canvas = makeCanvas("cov-graph", { colorBy, ...extra })

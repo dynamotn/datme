@@ -57,6 +57,16 @@ const themePair = <T extends z.ZodType<string | number>>(name: T) =>
   z
     .union([name, z.object({ light: name, dark: name }).strict()])
     .transform((v) => (typeof v === "object" ? v : { light: v, dark: v }) as { light: z.output<T>; dark: z.output<T> })
+/** Entries of a menu: built-in pages, notes (by wikilink target) or plain URLs. */
+const menuEntries = z.array(
+  z.union([
+    z.enum(["home", "tags", "archive", "recent", "timeline", "map", "stats", "calendar", "practice", "changes"]),
+    z.object({ note: z.string().min(1), label: localized.optional() }).strict(),
+    z.object({ url: z.string().min(1), label: localized }).strict(),
+  ]),
+)
+type MenuEntry = z.infer<typeof menuEntries>[number]
+
 const shikiTheme = z.string().refine((n) => n in bundledThemes, { message: "expected a Shiki theme, see https://shiki.style/themes" })
 // giscus takes its own theme names, or the URL of a stylesheet.
 const giscusTheme = z.string().regex(/^([\w-]+|https:\/\/\S+)$/, "expected a giscus theme name or an https:// URL")
@@ -160,15 +170,9 @@ const schema = z
     /** A small "grown with datme" line, with its sprout, at the end of the footer. */
     poweredBy: z.boolean().default(true),
     /** Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs. */
-    nav: z
-      .array(
-        z.union([
-          z.enum(["home", "tags", "archive", "recent", "timeline", "map", "stats", "calendar", "practice", "changes"]),
-          z.object({ note: z.string().min(1), label: localized.optional() }).strict(),
-          z.object({ url: z.string().min(1), label: localized }).strict(),
-        ]),
-      )
-      .default(["home", "tags"]),
+    nav: menuEntries.default(["home", "tags"]),
+    /** Shortcuts at the top of the left sidebar, with the same kinds of entry as `nav`. */
+    sidebar: menuEntries.default([]),
     analytics: z
       .discriminatedUnion("provider", [
         z.object({ provider: z.literal("google"), id: z.string().min(1) }).strict(),
@@ -490,6 +494,12 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   }
   const c = parsed.data
   const langs = [...new Set(c.languages)]
+  const navItem = (item: MenuEntry): NavItem =>
+    typeof item === "string"
+      ? { kind: item }
+      : "note" in item
+        ? { kind: "note", target: item.note, label: item.label ? localize(item.label, langs, item.note) : undefined }
+        : { kind: "url", target: item.url, label: localize(item.label, langs, item.url) }
   const name = path.basename(vault) || "Notes"
   let order = 0
   const stages: Record<string, StageDef> = {}
@@ -567,13 +577,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     conventions: c.conventions,
     footerLinks: c.footer,
     poweredBy: c.poweredBy,
-    nav: c.nav.map((item): NavItem =>
-      typeof item === "string"
-        ? { kind: item }
-        : "note" in item
-          ? { kind: "note", target: item.note, label: item.label ? localize(item.label, langs, item.note) : undefined }
-          : { kind: "url", target: item.url, label: localize(item.label, langs, item.url) },
-    ),
+    nav: c.nav.map(navItem),
+    sidebar: c.sidebar.map(navItem),
     encryption: c.encryption,
     analytics: c.analytics,
     comments: c.comments,
