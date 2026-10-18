@@ -51,6 +51,6 @@ describe("audio in a build", () => {
   test("an engine that cannot start fails the build", () => {
     const proc = build(path.join(tmp, "broken"), [], { FAKE_TTS_NO_START: "1" })
     expect(proc.exitCode).not.toBe(0)
-    expect(proc.stdout.toString() + proc.stderr.toString()).toContain("TtsUnavailable: Text-to-speech engine unavailable")
+    expect(Bun.stripANSI(proc.stdout.toString() + proc.stderr.toString())).toContain("TtsUnavailable: Text-to-speech engine unavailable")
   }, 180_000)
 })

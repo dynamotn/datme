@@ -57,15 +57,17 @@ function read(file: string): Buffer | undefined {
   }
 }
 
-function write(file: string, data: string | Uint8Array): void {
+function write(file: string, data: string | Uint8Array): boolean {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true })
     // Written aside then renamed, so a build killed midway never leaves half a file.
     const tmp = `${file}.${process.pid}.tmp`
     fs.writeFileSync(tmp, data)
     fs.renameSync(tmp, file)
+    return true
   } catch {
     // a read-only or full disk only makes the next build slower
+    return false
   }
 }
 
@@ -78,12 +80,24 @@ export function writeCache(kind: string, source: string, parts: string[], data: 
   if (dir) write(saltedFile(kind, source, parts), data)
 }
 
-export function readStableCache(kind: string, parts: string[]): Buffer | undefined {
-  return dir ? read(stableFile(kind, parts)) : undefined
+/** The file of a stable entry, marked as used by this build; undefined on a miss or when caching is off. */
+export function stableCacheFile(kind: string, parts: string[]): string | undefined {
+  if (!dir) return undefined
+  const file = stableFile(kind, parts)
+  try {
+    const now = new Date()
+    fs.utimesSync(file, now, now)
+    return file
+  } catch {
+    return undefined
+  }
 }
 
-export function writeStableCache(kind: string, parts: string[], data: Buffer): void {
-  if (dir) write(stableFile(kind, parts), data)
+/** Stores a stable entry; its file, or undefined when caching is off or the write failed. */
+export function writeStableCache(kind: string, parts: string[], data: Buffer): string | undefined {
+  if (!dir) return undefined
+  const file = stableFile(kind, parts)
+  return write(file, data) ? file : undefined
 }
 
 /** How many notes a build reused from the cache and rendered, for `datme build --verbose`. */

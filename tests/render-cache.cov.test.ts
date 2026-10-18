@@ -73,17 +73,18 @@ describe("render cache", () => {
 
 describe("stable cache", () => {
   test("is keyed by kind and parts alone, so a config edit keeps its entries", () => {
-    expect(cache.readStableCache("tts", ["a"])).toBeUndefined()
-    cache.writeStableCache("tts", ["a"], Buffer.from("audio"))
+    expect(cache.stableCacheFile("tts", ["a"])).toBeUndefined()
+    const written = cache.writeStableCache("tts", ["a"], Buffer.from("audio"))!
+    expect(fs.readFileSync(written, "utf8")).toBe("audio")
     const title = site.title
     const unstable = () => cache.readCache("tts-salted", source, ["a"])
     cache.writeCache("tts-salted", source, ["a"], "salted")
     expect(unstable()?.toString()).toBe("salted")
     site.title = { ...title, en: "edited" }
     try {
-      expect(cache.readStableCache("tts", ["a"])?.toString()).toBe("audio")
-      expect(cache.readStableCache("tts", ["b"])).toBeUndefined()
-      expect(cache.readStableCache("other", ["a"])).toBeUndefined()
+      expect(cache.stableCacheFile("tts", ["a"])).toBe(written)
+      expect(cache.stableCacheFile("tts", ["b"])).toBeUndefined()
+      expect(cache.stableCacheFile("other", ["a"])).toBeUndefined()
     } finally {
       site.title = title
     }
@@ -94,19 +95,19 @@ describe("stable cache", () => {
     const file = fs.readdirSync(path.join(cacheDir, "touch"), { recursive: true, withFileTypes: true }).find((f) => f.isFile())!
     const old = new Date("2001-01-01")
     fs.utimesSync(path.join(file.parentPath, file.name), old, old)
-    cache.readStableCache("touch", ["a"])
+    cache.stableCacheFile("touch", ["a"])
     expect(fs.statSync(path.join(file.parentPath, file.name)).mtime.getFullYear()).toBe(new Date().getFullYear())
     fs.writeFileSync(path.join(cacheDir, "blocked-stable"), "not a directory")
-    expect(() => cache.writeStableCache("blocked-stable", ["a"], Buffer.from("x"))).not.toThrow()
-    expect(cache.readStableCache("blocked-stable", ["a"])).toBeUndefined()
+    expect(cache.writeStableCache("blocked-stable", ["a"], Buffer.from("x"))).toBeUndefined()
+    expect(cache.stableCacheFile("blocked-stable", ["a"])).toBeUndefined()
   })
 
   test("is off when DATME_CACHE is empty", () => {
     // A subprocess, so a second copy of the module does not show up in the coverage report.
-    const script = `const c = await import(${JSON.stringify(MODULE)}); c.writeStableCache("tts", ["a"], Buffer.from("audio")); console.log(String(c.readStableCache("tts", ["a"])))`
+    const script = `const c = await import(${JSON.stringify(MODULE)}); console.log(String(c.writeStableCache("tts", ["a"], Buffer.from("audio"))), String(c.stableCacheFile("tts", ["a"])))`
     const proc = Bun.spawnSync(["bun", "-e", script], { cwd: dir, env: { ...process.env, DATME_CACHE: "" }, stdout: "pipe", stderr: "pipe" })
     expect(proc.stderr.toString()).toBe("")
-    expect(proc.stdout.toString().trim()).toBe("undefined")
+    expect(proc.stdout.toString().trim()).toBe("undefined undefined")
     expect(fs.readdirSync(dir)).toEqual(["cache"])
   })
 })

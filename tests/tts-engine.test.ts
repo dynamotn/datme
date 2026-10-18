@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { defaultCommand, startEngine, TtsUnavailable, VIENEU_VERSION, type TtsEngine } from "../src/lib/tts-engine"
+import { defaultCommand, engineId, startEngine, TtsUnavailable, VIENEU_VERSION, type TtsEngine } from "../src/lib/tts-engine"
+import { findRoot } from "../src/lib/package-root"
 
 const FAKE = JSON.stringify(["bun", "tests/fixtures/tts/fake-engine.ts"])
 let engine: TtsEngine | undefined
@@ -27,6 +28,8 @@ describe("tts engine", () => {
   test("the default command runs the pinned helper through uv", () => {
     const cmd = defaultCommand()
     expect(cmd.slice(0, 8)).toEqual(["uv", "run", "--quiet", "--no-project", "--with", `vieneu==${VIENEU_VERSION}`, "--with", "lameenc==1.8.4"])
+    // Packages released after the pin date never join the helper's environment.
+    expect(cmd.slice(8, 10)).toEqual(["--exclude-newer", "2026-10-18"])
     expect(cmd.at(-1)).toMatch(/tts[\\/]vieneu_helper\.py$/)
     expect(existsSync(cmd.at(-1)!)).toBe(true)
   })
@@ -96,7 +99,42 @@ describe("tts engine", () => {
     await expect(startEngine()).rejects.toBeInstanceOf(TtsUnavailable)
   })
 
-  test("non-JSON stdout lines are ignored", async () => {
+  test("a reply when nothing is pending stops the helper", async () => {
+    engine = await startEngine()
+    expect((await engine.synthesize("vieneu", "/v.wav", ["TWICE"])).toString()).toBe("MP3:TWICE")
+    await Bun.sleep(200)
+    expect(engine.alive).toBe(false)
+    await expect(engine.synthesize("vieneu", "/v.wav", ["a"])).rejects.toThrow("protocol error")
+  }, 5000)
+
+  test("a DATME_TTS_CMD that is not a JSON array of strings is unavailable", async () => {
+    for (const bad of ["not json", JSON.stringify("python x.py"), "[]", JSON.stringify(["ok", 1])]) {
+      process.env.DATME_TTS_CMD = bad
+      await expect(startEngine()).rejects.toThrow("DATME_TTS_CMD is not a JSON array of strings")
+    }
+  })
+
+  test("the voice sample is handed to the helper, which can refuse it at start", async () => {
+    await expect(startEngine("/voices/unusable.wav")).rejects.toBeInstanceOf(TtsUnavailable)
+    engine = await startEngine("/voices/fine.wav")
+    expect(engine.alive).toBe(true)
+  })
+
+  test("the engine id changes with the command that makes the audio", () => {
+    const fake = engineId()
+    process.env.DATME_TTS_CMD = JSON.stringify(["other"])
+    expect(engineId()).not.toBe(fake)
+    delete process.env.DATME_TTS_CMD
+    const real = engineId()
+    expect(real).not.toBe(fake)
+    expect(engineId()).toBe(real)
+  })
+
+  test("the package root search stops at the filesystem root", () => {
+    expect(() => findRoot(path.parse(process.cwd()).root)).toThrow("no package.json above")
+  })
+
+  test("non-JSON and non-object stdout lines are ignored", async () => {
     process.env.FAKE_TTS_NOISE = "1"
     engine = await startEngine()
     expect((await engine.synthesize("vieneu", "/v.wav", ["a"])).toString()).toBe("MP3:a")
@@ -111,8 +149,10 @@ describe("tts engine", () => {
 
   test("a crash rejects pending and later calls without hanging", async () => {
     engine = await startEngine()
+    expect(engine.alive).toBe(true)
     const pending = engine.synthesize("vieneu", "/v.wav", ["CRASH"])
     await expect(pending).rejects.toThrow("exited")
+    expect(engine.alive).toBe(false)
     await expect(engine.synthesize("vieneu", "/v.wav", ["a"])).rejects.toThrow("exited")
   }, 5000)
 

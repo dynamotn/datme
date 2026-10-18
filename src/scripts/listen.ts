@@ -18,8 +18,8 @@ function stop() {
   active = undefined
 }
 
-export function setupListen() {
-  stop()
+/** Binds the Listen buttons not bound yet, as in a column opened beside the page, leaving what plays alone. */
+export function bindListen() {
   document.querySelectorAll<HTMLButtonElement>("button.listen[data-audio]:not([data-bound])").forEach((button) => {
     button.dataset.bound = ""
     show(button, false)
@@ -38,4 +38,10 @@ export function setupListen() {
       void play(player)
     })
   })
+}
+
+/** A new page: what played stops, and its buttons are bound. */
+export function setupListen() {
+  stop()
+  bindListen()
 }

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { installDom, type Dom } from "./client-dom"
-import { setupListen } from "../src/scripts/listen"
+import { bindListen, setupListen } from "../src/scripts/listen"
 
 const Native = Event
 
@@ -79,6 +79,20 @@ describe("the Listen button", () => {
     setupListen()
     expect(audio.paused).toBe(true)
     expect(button.isConnected).toBe(false)
+  })
+
+  test("a column opened beside the page binds its button and leaves the playback alone", () => {
+    FakeAudio.all.length = 0
+    const button = page()
+    button.click()
+    document.body.insertAdjacentHTML("beforeend", `<button type="button" class="listen" data-audio="/Other.mp3" data-label="Listen" data-pause="Pause">▶ Listen</button>`)
+    bindListen()
+    expect(FakeAudio.all[0].paused).toBe(false)
+    document.querySelectorAll<HTMLButtonElement>("button.listen")[1].click()
+    expect(FakeAudio.all.map((a) => [a.src, a.paused])).toEqual([
+      ["/Podcast/Episode.mp3", true],
+      ["/Other.mp3", false],
+    ])
   })
 
   test("a refused play() is ignored", async () => {

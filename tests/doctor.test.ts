@@ -72,6 +72,9 @@ describe("datme doctor", () => {
       expect(voice.level).toBe("fail")
       expect(voice.fix).toContain("3-8 s")
       expect(voice.fix).toContain("outside the vault")
+      // DATME_TTS=off builds without audio: neither uv nor the clip is needed.
+      const off = diagnose(machine({ which: () => false, env: { DATME_LOCK_TESTERS: "x", DATME_LOCK_NOBODY: "y", DATME_TTS: "off" } }))
+      expect(off.filter((f) => /uv|DATME_TTS/.test(f.message)).map((f) => [f.level, f.message])).toEqual([["ok", "tts is off (DATME_TTS=off): builds publish no audio"]])
     } finally {
       site.tts = before
     }

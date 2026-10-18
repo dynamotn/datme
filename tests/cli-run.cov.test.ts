@@ -187,15 +187,16 @@ describe("deploy", () => {
     expect(fs.readFileSync(path.join(vault, ".gitlab-ci.yml"), "utf8")).toContain("UV_CACHE_DIR: .datme-tts/uv")
   })
 
-  test("netlify with tts warns that its builds make no audio, and writes the usual file", async () => {
+  test("netlify with tts warns that its builds make no audio, and writes the file with DATME_TTS off", async () => {
     const plain = dir("deploy-netlify-plain")
     await run({ command: "deploy", target: "netlify", vault: plain }, {}, tmp)
     const vault = dir("deploy-netlify-tts")
     fs.writeFileSync(path.join(vault, "datme.yaml"), "languages: [vi-VN]\ntts:\n  models: { vi: vieneu }\n  folders: [Voice]\n")
     await run({ command: "deploy", target: "netlify", vault }, {}, tmp)
-    expect(warned()).toContain("[datme] Netlify builds cannot generate audio")
+    expect(warned()).toContain("[datme] Netlify builds publish without audio (DATME_TTS=off)")
     expect(warned()).toContain("use GitLab or GitHub")
-    expect(fs.readFileSync(path.join(vault, "netlify.toml"), "utf8")).toBe(fs.readFileSync(path.join(plain, "netlify.toml"), "utf8"))
+    expect(fs.readFileSync(path.join(vault, "netlify.toml"), "utf8")).toContain('DATME_TTS = "off"')
+    expect(fs.readFileSync(path.join(plain, "netlify.toml"), "utf8")).not.toContain("DATME_TTS")
   })
 
   test("a config that is invalid still deploys, with tts when the key is there; one that does not parse deploys without", async () => {
@@ -309,11 +310,14 @@ describe("run, commands that need no build", () => {
       return []
     }) as unknown as typeof doctor.diagnose)
     try {
-      expect(await failure(run({ command: "doctor", vault: fixture }, {}, tmp))).toBeUndefined()
+      expect(await failure(run({ command: "doctor", vault: fixture }, { PATH: process.env.PATH }, tmp))).toBeUndefined()
       expect(resolves!("astro")).toBe(true)
       expect(resolves!("datme-no-such-package")).toBe(false)
       expect(which!("sh")).toBe(true)
       expect(which!("datme-no-such-program")).toBe(false)
+      // The PATH searched is the one run was given.
+      expect(await failure(run({ command: "doctor", vault: fixture }, {}, tmp))).toBeUndefined()
+      expect(which!("sh")).toBe(false)
     } finally {
       diagnose.mockRestore()
     }

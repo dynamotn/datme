@@ -353,7 +353,7 @@ export function deploy(target: Target, dir: string, branch?: string, tts = false
     tts,
   })
   if (tts && target === "netlify") {
-    console.warn("[datme] Netlify builds cannot generate audio: use GitLab or GitHub, or generate the audio elsewhere.")
+    console.warn("[datme] Netlify builds publish without audio (DATME_TTS=off); use GitLab or GitHub for audio.")
   }
   for (const f of files) {
     const file = path.join(root, f.path)
@@ -526,7 +526,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
           return false
         }
       },
-      which: (cmd) => (process.env.PATH ?? "").split(path.delimiter).some((dir) => dir && fs.existsSync(path.join(dir, cmd))),
+      which: (cmd) =>
+        (env.PATH ?? "").split(path.delimiter).some((dir) => dir && [cmd, `${cmd}.exe`].some((name) => fs.existsSync(path.join(dir, name)))),
       git: () => {
         try {
           return execFileSync("git", ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()

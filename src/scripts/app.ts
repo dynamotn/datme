@@ -19,7 +19,7 @@ import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
 import { openRandom, step } from "./wander"
 import { revealHash } from "./tabs"
-import { setupListen } from "./listen"
+import { bindListen, setupListen } from "./listen"
 import { setupMedia } from "./media"
 import { setupTrail, trailStep } from "./trail"
 import { setupWalk } from "./walk"
@@ -320,6 +320,7 @@ document.addEventListener("astro:page-load", () => {
   setupCanvas()
   setupStack(() => {
     setupCode()
+    bindListen()
     setupPopovers()
     setupSlides()
     renderDiagrams()

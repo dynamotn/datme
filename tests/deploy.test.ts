@@ -67,7 +67,7 @@ describe("deployFiles", () => {
     const parsed = loadYaml(gitlab) as { pages: { variables: Record<string, string>; before_script: string[]; script: string[]; cache: { paths: string[] } } }
     expect(parsed.pages.variables).toMatchObject({ UV_CACHE_DIR: ".datme-tts/uv", HF_HOME: ".datme-tts/hf" })
     expect(parsed.pages.cache.paths).toEqual([".datme-cache", ".datme-tts"])
-    expect(parsed.pages.before_script.join("\n")).toContain("https://astral.sh/uv/install.sh")
+    expect(parsed.pages.before_script.join("\n")).toContain("https://astral.sh/uv/0.10.6/install.sh")
     expect(parsed.pages.before_script.join("\n")).toContain("curl")
 
     for (const target of ["github", "cloudflare"] as const) {
@@ -76,8 +76,8 @@ describe("deployFiles", () => {
       }
       const job = Object.values(wf.jobs)[0]
       expect(job.env).toMatchObject({ UV_CACHE_DIR: ".datme-tts/uv", HF_HOME: ".datme-tts/hf" })
-      expect(job.steps.find((s) => s.uses === "actions/cache@v4")?.with?.path?.trim().split("\n")).toEqual([".datme-cache", ".datme-tts"])
-      expect(job.steps.some((s) => s.run?.includes("https://astral.sh/uv/install.sh"))).toBe(true)
+      expect(job.steps.some((s) => s.run?.includes("https://astral.sh/uv/0.10.6/install.sh"))).toBe(true)
+      expect(job.steps.some((s) => s.run?.includes("uv/install.sh"))).toBe(false)
     }
   })
 
@@ -105,9 +105,9 @@ describe("deployFiles", () => {
     expect(gitlab.pages.variables.DATME_TTS_VOICE_FILE).toBe("voice.wav")
     expect(content).not.toContain("DATME_TTS_VOICE_B64")
     expect(content).not.toContain("base64")
-    expect(script[at("VOICE_LIST=$(")]).toContain('--header "JOB-TOKEN: $CI_JOB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/secure_files"')
+    expect(script[at("VOICE_LIST=$(")]).toContain('--header "JOB-TOKEN: $CI_JOB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/secure_files?per_page=100"')
     expect(script[at("/download")]).toContain('curl -sSf --header "JOB-TOKEN: $CI_JOB_TOKEN"')
-    expect(script[at("/download")]).toContain('-o "/tmp/datme-voice/$DATME_TTS_VOICE_FILE"')
+    expect(script[at("/download")]).toContain('-o "$VOICE_DIR/$DATME_TTS_VOICE_FILE"')
     expect(script[at("/download")]).toContain("secure_files/$VOICE_ID/download")
     expect(script[at("bun -e")]).toContain("x.name === n")
     expect(script[at("bun -e")]).toContain("not found")
@@ -117,18 +117,51 @@ describe("deployFiles", () => {
     expect(script[at("VOICE_LIST=$(")]).toContain("exit 1; }")
     expect(script[at("/download")]).toContain('|| { echo "Could not download Secure File')
     expect(script[at("/download")]).toContain("exit 1; }")
-    expect(at("mkdir -p -m 700 /tmp/datme-voice")).toBeGreaterThanOrEqual(0)
-    expect(at("mkdir -p -m 700 /tmp/datme-voice")).toBeLessThan(at("/download"))
+    expect(script[at("VOICE_DIR=$(mktemp -d)")]).toContain('chmod 700 "$VOICE_DIR"')
+    expect(content).not.toContain("/tmp/datme-voice")
+    expect(content).not.toContain("CI_PROJECT_DIR")
+    expect(script[at("VOICE_LIST=$(")]).toContain("secure_files?per_page=100")
+    expect(at("VOICE_DIR=$(mktemp -d)")).toBeGreaterThanOrEqual(0)
+    expect(at("VOICE_DIR=$(mktemp -d)")).toBeLessThan(at("/download"))
     expect(at("VOICE_LIST=$(")).toBeLessThan(at("bun -e"))
     expect(at("bun -e")).toBeLessThan(at("/download"))
     expect(at("VOICE_ID=")).toBeLessThan(at("/download"))
-    const guard = at('test -s "/tmp/datme-voice/$DATME_TTS_VOICE_FILE" ||')
+    const guard = at('test -s "$VOICE_DIR/$DATME_TTS_VOICE_FILE" ||')
     expect(guard).toBeGreaterThan(at("/download"))
-    expect(at('chmod 600 "/tmp/datme-voice/$DATME_TTS_VOICE_FILE"')).toBeGreaterThan(guard)
-    expect(at('export DATME_TTS_VOICE="/tmp/datme-voice/$DATME_TTS_VOICE_FILE"')).toBeGreaterThan(guard)
+    expect(at('chmod 600 "$VOICE_DIR/$DATME_TTS_VOICE_FILE"')).toBeGreaterThan(guard)
+    expect(at('export DATME_TTS_VOICE="$VOICE_DIR/$DATME_TTS_VOICE_FILE"')).toBeGreaterThan(guard)
     expect(at("export DATME_TTS_VOICE=")).toBeLessThan(at(" build "))
     expect(gitlab.pages.artifacts.paths).toEqual(["public"])
     expect(content).not.toContain("set -x")
+  })
+
+  test("tts: true saves the cache even when the build fails, so a long first run continues where it stopped", () => {
+    const gitlab = loadYaml(deployFiles("gitlab", { ...opts, tts: true })[0].content) as { pages: { cache: { when: string } } }
+    expect(gitlab.pages.cache.when).toBe("always")
+    expect(deployFiles("gitlab", opts)[0].content).not.toContain("when: always")
+
+    for (const target of ["github", "cloudflare"] as const) {
+      type Step = { run?: string; uses?: string; if?: string; with?: { path: string; key: string } }
+      const wf = loadYaml(deployFiles(target, { ...opts, tts: true })[0].content) as { jobs: Record<string, { steps: Step[] }> }
+      const steps = Object.values(wf.jobs)[0].steps
+      const restore = steps.findIndex((s) => s.uses === "actions/cache/restore@v4")
+      const save = steps.findIndex((s) => s.uses === "actions/cache/save@v4")
+      const built = steps.findIndex((s) => s.run?.includes(" build "))
+      expect(restore).toBeGreaterThanOrEqual(0)
+      expect(restore).toBeLessThan(built)
+      expect(save).toBeGreaterThan(built)
+      expect(steps[save].if).toBe("always()")
+      expect(steps[save].with?.key).toBe(steps[restore].with?.key)
+      expect(steps[save].with?.path.trim().split("\n")).toEqual([".datme-cache", ".datme-tts"])
+      expect(steps.some((s) => s.uses === "actions/cache@v4")).toBe(false)
+    }
+  })
+
+  test("netlify with tts turns audio off in the build environment", () => {
+    const toml = deployFiles("netlify", { ...opts, tts: true })[0].content
+    expect(toml).toMatch(/\[build\.environment\]\n {2}ASTRO_TELEMETRY_DISABLED = "1"\n {2}DATME_TTS = "off"/)
+    expect(toml.match(/\[build\.environment\]/g)).toHaveLength(1)
+    expect(deployFiles("netlify", opts)[0].content).not.toContain("DATME_TTS")
   })
 
   test("project names are what Cloudflare accepts", () => {

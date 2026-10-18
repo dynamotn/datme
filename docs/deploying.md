@@ -38,9 +38,19 @@ it installs [uv](https://docs.astral.sh/uv/), and keeps uv's downloads
 (`UV_CACHE_DIR`) and the model files (`HF_HOME`) under `.datme-tts`, which the
 CI cache saves next to `.datme-cache`. They stay out of `.datme-cache` because
 each build deletes what it did not touch there, and a cache hit leaves these
-files untouched. GitHub and Cloudflare get the same on their workflow.
-Netlify builds cannot generate audio: `deploy netlify` warns and writes its
-usual file, so use GitLab or GitHub, or generate the audio elsewhere.
+files untouched. GitHub and Cloudflare get the same on their workflow. uv is
+installed at a pinned version, like Bun.
+
+The cache is saved even when the build fails, is cancelled or times out (GitLab
+`cache: when: always`; on GitHub and Cloudflare a separate save step that always
+runs), so the next run continues where the last one stopped. A first run on a
+big vault synthesises every note and can take long: raise the job timeout if it
+hits the limit (GitLab: Settings → CI/CD → General pipelines → Timeout).
+
+Netlify builds publish without audio: `deploy netlify` warns and sets
+`DATME_TTS = "off"` in `netlify.toml`, so use GitLab or GitHub for audio. The
+same variable builds any site without audio, for example locally without uv:
+`DATME_TTS=off datme build`.
 
 The build needs a 3-8 s clip of your voice in `DATME_TTS_VOICE`, and the clip
 must never enter the repository or the site.
@@ -49,8 +59,8 @@ must never enter the repository or the site.
   Settings → CI/CD → Secure Files, named `voice.wav` or whatever the
   `DATME_TTS_VOICE_FILE` CI variable says. No base64 and no compression.
   The job finds the file through the Secure Files API with its job token and
-  downloads it to `/tmp/datme-voice/`, outside the workspace and the published
-  site, readable only by the build. A missing or empty file stops the build.
+  downloads it to a fresh temporary directory (`mktemp -d`, readable only by the
+  build), outside the workspace and the published site. A missing or empty file stops the build.
 - **GitHub** (and Cloudflare): CI keeps the clip as a secret, encoded in
   base64, named `DATME_TTS_VOICE_B64` (Settings → Secrets and variables →
   Actions → New repository secret). GitHub secrets hold at most 48 KB, so

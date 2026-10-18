@@ -73,7 +73,8 @@ export function diagnose(m: Machine): Finding[] {
     else fail(`${pkg} is not installed, and ${why} need it`, `bun add ${pkg}   (next to datme)`)
   }
 
-  if (site.tts) {
+  if (site.tts && m.env.DATME_TTS === "off") ok("tts is off (DATME_TTS=off): builds publish no audio")
+  else if (site.tts) {
     if (m.which("uv")) ok("uv is installed, for tts")
     else fail("uv is not installed, and tts runs its models through it", "install it from https://docs.astral.sh/uv/   (curl -LsSf https://astral.sh/uv/install.sh | sh)")
     if (m.env.DATME_TTS_VOICE) ok("DATME_TTS_VOICE is set, for tts")

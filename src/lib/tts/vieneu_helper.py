@@ -38,6 +38,12 @@ def load():
     return tts, rate
 
 
+def enrol(tts, path):
+    name = "datme-" + hashlib.sha256(path.encode()).hexdigest()[:16]
+    tts.add_voice(name, path)
+    return name
+
+
 def main():
     tts, rate = load()
     gap = np.zeros(int(rate * 0.3), dtype=np.float32)
@@ -47,14 +53,20 @@ def main():
         out.write(json.dumps(msg) + "\n")
         out.flush()
 
+    # The sample is enrolled before ready, so one the SDK cannot use fails the start rather than every note.
+    voice = os.environ.get("DATME_TTS_VOICE")
+    if voice:
+        try:
+            voices[voice] = enrol(tts, voice)
+        except Exception as e:
+            sys.exit(f"datme: cannot use the voice sample {voice}: {e}")
     send({"ready": True})
     for line in sys.stdin:
         req = json.loads(line)
         try:
             path = req["voice"]
             if path not in voices:
-                voices[path] = "datme-" + hashlib.sha256(path.encode()).hexdigest()[:16]
-                tts.add_voice(voices[path], path)
+                voices[path] = enrol(tts, path)
             parts = []
             for chunk in req["chunks"]:
                 if parts:

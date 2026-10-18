@@ -1,9 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
 
-function findRoot(from: string): string {
+export function findRoot(from: string): string {
   for (let dir = from; ; dir = path.dirname(dir)) {
     if (fs.existsSync(path.join(dir, "package.json"))) return dir
+    if (path.dirname(dir) === dir) throw new Error(`no package.json above ${from}`)
   }
 }
 

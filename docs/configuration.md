@@ -181,6 +181,11 @@ and `vieneu` is the only model so far. At least one of `folders` and
 `frontmatter` is needed. The voice sample is never part of the config: point
 `DATME_TTS_VOICE` at the audio file to clone. See [Privacy](privacy.md).
 
+A note whose audio fails alone is published without it, with a warning; an
+engine that cannot start, refuses the voice sample or stops midway fails the
+build. `DATME_TTS=off` builds without audio or Listen buttons, for a machine
+without uv or the sample.
+
 ## Readers and the social web
 
 ```yaml

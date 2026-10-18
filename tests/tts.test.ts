@@ -3,8 +3,8 @@ import { createHash } from "node:crypto"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { audioIndex, audioPath, buildAudioIndex, hasAudio, TTS_FORMAT_VERSION, ttsModel, ttsSelected } from "../src/lib/tts"
-import { TtsUnavailable, VIENEU_VERSION } from "../src/lib/tts-engine"
+import { audioBytes, audioIndex, audioPath, buildAudioIndex, type Audio, type AudioCache, hasAudio, ttsModel, ttsSelected } from "../src/lib/tts"
+import { engineId, TtsUnavailable } from "../src/lib/tts-engine"
 import { noteChunks } from "../src/lib/tts-text"
 import { getVault, type Note } from "../src/lib/vault"
 import { loadConfig, site, type SiteConfig, type TtsConfig } from "../src/site.config"
@@ -83,18 +83,30 @@ describe("audio index", () => {
     else process.env.DATME_TTS_CMD = env.DATME_TTS_CMD
   })
 
+  // Cached MP3s as files, the way the stable cache keeps them.
   const memory = () => {
-    const store = new Map<string, Buffer>()
-    return { store, read: (k: string[]) => store.get(JSON.stringify(k)), write: (k: string[], d: Buffer) => void store.set(JSON.stringify(k), d) }
+    const store = new Map<string, string>()
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-audio-"))
+    return {
+      store,
+      file: (k: string[]) => store.get(JSON.stringify(k)),
+      write: (k: string[], d: Buffer) => {
+        const file = path.join(dir, String(store.size))
+        fs.writeFileSync(file, d)
+        store.set(JSON.stringify(k), file)
+        return file
+      },
+    }
   }
-  const build = (o: { cache?: ReturnType<typeof memory>; voice?: string | null; notes?: Record<string, Note[]> } = {}) =>
+  const bytes = (a: Audio | undefined) => (a === undefined ? undefined : audioBytes(a).toString())
+  const build = (o: { cache?: AudioCache; voice?: string | null; notes?: Record<string, Note[]> } = {}) =>
     buildAudioIndex(o.notes ?? getVault().notes, site.langs, site.tts!, o.voice === null ? undefined : (o.voice ?? VOICE), o.cache ?? memory())
 
   test("selected notes in a language with a model get audio, without their locked parts", async () => {
     const warn = spyOn(console, "warn").mockImplementation(() => {})
     try {
       const index = await build()
-      const mp3 = index.get("/Podcast/Episode")?.toString()
+      const mp3 = bytes(index.get("/Podcast/Episode"))
       expect(mp3).toContain("Xin chào, đây là tập một.")
       expect(mp3).toContain("Hết tập.")
       expect(mp3).not.toContain("Kho báu")
@@ -128,21 +140,50 @@ describe("audio index", () => {
       const first = await build({ cache, notes })
       expect(first.size).toBe(1)
       expect(cache.store.size).toBe(1)
+      // The index points at the cached file rather than holding the MP3.
+      expect(first.get("/Podcast/Episode")).toBe([...cache.store.values()][0])
       const episode = getVault().byKey["vi-VN"].get("Podcast/Episode")!
       const sha = (d: string | Buffer) => createHash("sha256").update(d).digest("hex")
       expect(JSON.parse([...cache.store.keys()][0])).toEqual([
         "vieneu",
-        VIENEU_VERSION,
-        TTS_FORMAT_VERSION,
+        engineId(),
         sha(fs.readFileSync(VOICE)),
         sha(JSON.stringify(noteChunks(episode))),
       ])
       process.env.FAKE_TTS_NO_START = "1"
       expect(await build({ cache, notes })).toEqual(first)
       await expect(build({ notes })).rejects.toBeInstanceOf(TtsUnavailable)
+      // Audio another command made is not this one's: a different engine misses the cache.
       process.env.DATME_TTS_CMD = JSON.stringify(["datme-no-such-command"])
-      expect(await build({ cache, notes })).toEqual(first)
-      await expect(build({ notes })).rejects.toBeInstanceOf(TtsUnavailable)
+      await expect(build({ cache, notes })).rejects.toBeInstanceOf(TtsUnavailable)
+    } finally {
+      warn.mockRestore()
+    }
+  }, 30_000)
+
+  test("an engine that dies midway, or refuses the voice, fails the build rather than skip every note", async () => {
+    process.env.FAKE_TTS_CRASH = "1"
+    try {
+      await expect(build()).rejects.toThrow(/engine stopped at \/Podcast\//)
+    } finally {
+      delete process.env.FAKE_TTS_CRASH
+    }
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-voice-"))
+    const unusable = path.join(dir, "unusable.wav")
+    fs.writeFileSync(unusable, "not audio")
+    try {
+      await expect(build({ voice: unusable })).rejects.toBeInstanceOf(TtsUnavailable)
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true })
+    }
+  }, 30_000)
+
+  test("without a cache to keep them, the MP3s stay in memory", async () => {
+    const warn = spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      const index = await build({ cache: { file: () => undefined, write: () => undefined } })
+      expect(Buffer.isBuffer(index.get("/Podcast/Episode"))).toBe(true)
+      expect(bytes(index.get("/Podcast/Episode"))).toContain("Xin chào")
     } finally {
       warn.mockRestore()
     }
@@ -187,6 +228,10 @@ describe("audio index", () => {
     expect((await audioIndex()).size).toBe(0)
     delete g.__datmeAudioIndex
     delete process.env.DATME_DEV
+    process.env.DATME_TTS = "off"
+    expect((await audioIndex()).size).toBe(0)
+    delete g.__datmeAudioIndex
+    delete process.env.DATME_TTS
     const tts = site.tts
     site.tts = undefined
     try {

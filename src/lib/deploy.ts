@@ -36,20 +36,44 @@ export const BUN_VERSION = "1.4.2"
 /** The build command, with the cache kept where CI can save it between runs. */
 const build = (o: DeployOpts, out: string) => `bunx @dynamotn/datme@${version} build ${arg(o.vault)} --out ${out}`
 
-const githubCache = (o: DeployOpts) => `      # Rendered notes and social cards from the previous run make the build incremental.
+const githubCache = (o: DeployOpts) =>
+  o.tts
+    ? `      # Rendered notes, social cards and the TTS downloads from the previous run make the build incremental.
+      # Saved in a separate step that always runs, so a first run that fails or times out keeps its progress.
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${CACHE_PATHS}
+          key: ${CACHE_KEY}
+          restore-keys: datme-`
+    : `      # Rendered notes and social cards from the previous run make the build incremental.
       - uses: actions/cache@v4
         with:
-          path: ${o.tts ? `|\n            .datme-cache\n            ${TTS_DIR}` : ".datme-cache"}
+          path: .datme-cache
           key: datme-\${{ github.sha }}
           restore-keys: datme-`
 
-const UV_INSTALL = "curl -LsSf https://astral.sh/uv/install.sh | sh"
+/** Saves the cache after the build even when it failed or was cancelled; only with TTS, whose first run is long. */
+const githubCacheSave = (o: DeployOpts) =>
+  o.tts
+    ? `      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${CACHE_PATHS}
+          key: ${CACHE_KEY}
+`
+    : ""
+
+/** uv for the TTS toolchain, pinned like Bun so a build does not change with a new release. */
+export const UV_VERSION = "0.10.6"
+const UV_INSTALL = `curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | sh`
 
 /**
  * uv and the model downloads, cached by CI between runs. Not in .datme-cache: a cache hit
  * leaves their files untouched, so the build's pruning would delete them.
  */
 const TTS_DIR = ".datme-tts"
+const CACHE_PATHS = `|\n            .datme-cache\n            ${TTS_DIR}`
+const CACHE_KEY = "datme-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}"
 const ttsEnv = (o: DeployOpts, indent: string) => (o.tts ? `${indent}UV_CACHE_DIR: ${TTS_DIR}/uv\n${indent}HF_HOME: ${TTS_DIR}/hf\n` : "")
 
 /** Decodes the voice clip to a file outside the workspace and the published site, refusing an empty secret. */
@@ -114,7 +138,7 @@ ${ttsEnv(o, "      ")}      # Group passwords (<!--lock:@friends-->) come from r
           bun-version: ${BUN_VERSION}
 ${githubCache(o)}
 ${githubTts(o)}      - run: ${build(o, "_site")}
-      - uses: actions/upload-pages-artifact@v3
+${githubCacheSave(o)}      - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
@@ -143,12 +167,13 @@ const gitlabTts = `  # Audio: DATME_TTS_VOICE_FILE names the voice clip uploaded
     - export PATH="$HOME/.local/bin:$PATH"
 `
 const SECURE_FILES = '"$CI_API_V4_URL/projects/$CI_PROJECT_ID/secure_files"'
-const VOICE = '"/tmp/datme-voice/$DATME_TTS_VOICE_FILE"'
+const SECURE_FILES_LIST = '"$CI_API_V4_URL/projects/$CI_PROJECT_ID/secure_files?per_page=100"'
+const VOICE = '"$VOICE_DIR/$DATME_TTS_VOICE_FILE"'
 const PICK_VOICE = String.raw`bun -e 'const n = process.env.DATME_TTS_VOICE_FILE; const f = (await Bun.stdin.json()).find((x) => x.name === n); if (!f) { console.error("Secure File \"" + n + "\" not found"); process.exit(1) } console.log(f.id)'`
-/** Downloads the voice clip from the project's Secure Files to a path outside the workspace and the published site. Block scalars, because the header holds a colon and a space. */
+/** Downloads the voice clip from the project's Secure Files (first 100) to a fresh temporary directory outside the workspace and the published site. Block scalars, because the header holds a colon and a space. */
 const gitlabVoice = [
-  "mkdir -p -m 700 /tmp/datme-voice",
-  `VOICE_LIST=$(curl -sSf --header "JOB-TOKEN: $CI_JOB_TOKEN" ${SECURE_FILES}) || { echo "Could not list Secure Files (check that Secure Files are enabled and the job token can read them)" >&2; exit 1; }`,
+  `VOICE_DIR=$(mktemp -d) && chmod 700 "$VOICE_DIR"`,
+  `VOICE_LIST=$(curl -sSf --header "JOB-TOKEN: $CI_JOB_TOKEN" ${SECURE_FILES_LIST}) || { echo "Could not list Secure Files (check that Secure Files are enabled and the job token can read them)" >&2; exit 1; }`,
   `VOICE_ID=$(printf '%s' "$VOICE_LIST" | ${PICK_VOICE})`,
   `curl -sSf --header "JOB-TOKEN: $CI_JOB_TOKEN" -o ${VOICE} "${SECURE_FILES.slice(1, -1)}/$VOICE_ID/download" || { echo "Could not download Secure File \\"$DATME_TTS_VOICE_FILE\\"" >&2; exit 1; }`,
   `test -s ${VOICE} || { echo "Secure File $DATME_TTS_VOICE_FILE is empty" >&2; exit 1; }`,
@@ -171,7 +196,7 @@ pages:
     DATME_CACHE: .datme-cache
 ${o.tts ? "    DATME_TTS_VOICE_FILE: voice.wav\n" : ""}${ttsEnv(o, "    ")}  cache:
     key: datme
-    paths:
+${o.tts ? "    when: always # keep the progress of a first run that fails or times out\n" : ""}    paths:
       - .datme-cache
 ${o.tts ? `      - ${TTS_DIR}\n${gitlabTts}` : ""}  script:
 ${o.tts ? gitlabVoice : ""}    - ${build(o, "public")}
@@ -195,7 +220,7 @@ function netlify(o: DeployOpts): DeployFile[] {
 # For notes with a publish_date, call a build hook daily (Site configuration → Build hooks).
 [build.environment]
   ASTRO_TELEMETRY_DISABLED = "1"
-
+${o.tts ? '  DATME_TTS = "off" # Netlify builds publish without audio\n' : ""}
 [build]
   # Netlify's image has no Bun, so the build installs it first.
   command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ~/.bun/bin/${build(o, "dist").replace(/"/g, '\\"')}"
@@ -244,7 +269,7 @@ ${ttsEnv(o, "      ")}      # Group passwords (<!--lock:@friends-->) come from r
           bun-version: ${BUN_VERSION}
 ${githubCache(o)}
 ${githubTts(o)}      - run: ${build(o, "dist")}
-      - uses: cloudflare/wrangler-action@v3
+${githubCacheSave(o)}      - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
