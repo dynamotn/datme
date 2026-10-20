@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-10-20
+
 ### Added
 
 - `footer` in `datme.yaml` takes columns of links: a heading over a list of entries written like `nav` (built-in pages, notes or URLs, with labels per language). The older `label: URL` pairs still work and share a first column without a heading.
