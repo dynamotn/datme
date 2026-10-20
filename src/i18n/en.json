@@ -97,6 +97,8 @@
   "email": "Email",
   "emailPlaceholder": "you@example.com",
   "poweredBy": "Grown with {datme}",
+  "siteLinks": "Site links",
+  "elsewhere": "Elsewhere",
   "slides": "Deck of {n} slides",
   "showAnswer": "Click to show the answer",
   "practiceStart": "🧠 Practice {n} cards",

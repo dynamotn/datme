@@ -97,6 +97,8 @@
   "email": "Correo",
   "emailPlaceholder": "tu@ejemplo.es",
   "poweredBy": "Cultivado con {datme}",
+  "siteLinks": "Enlaces del sitio",
+  "elsewhere": "En otros sitios",
   "slides": "Presentación de {n} diapositivas",
   "showAnswer": "Haz clic para ver la respuesta",
   "practiceStart": "🧠 Practicar {n} tarjetas",

@@ -166,7 +166,11 @@ const schema = z
         timelineTags: ["timeline", "type/event"],
         ratingScale: 5,
       }),
-    footer: z.record(z.string(), z.string()).default({}),
+    /**
+     * Columns of links in the footer: a heading to a list of entries written like `nav`.
+     * A heading to a URL is a single link instead; such links share one column without a heading.
+     */
+    footer: z.record(z.string(), z.union([z.string().min(1), menuEntries])).default({}),
     /** A small "grown with datme" line, with its sprout, at the end of the footer. */
     poweredBy: z.boolean().default(true),
     /** Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs. */
@@ -471,11 +475,28 @@ function localize(v: z.infer<typeof localized> | undefined, langs: Lang[], fallb
   return out
 }
 
+/** Footer columns in the order written; single links gather in a first column without a heading. */
+function footerGroups(footer: Record<string, string | MenuEntry[]>, navItem: (item: MenuEntry) => NavItem, langs: Lang[]): FooterGroup[] {
+  const loose: NavItem[] = []
+  const groups: FooterGroup[] = []
+  for (const [key, value] of Object.entries(footer)) {
+    if (typeof value === "string") loose.push({ kind: "url", target: value, label: localize(key, langs, key) })
+    else if (value.length) groups.push({ title: key, items: value.map(navItem) })
+  }
+  return loose.length ? [{ items: loose }, ...groups] : groups
+}
+
 export interface NavItem {
   kind: "home" | "tags" | "archive" | "recent" | "timeline" | "map" | "stats" | "calendar" | "practice" | "changes" | "note" | "url"
   /** Wikilink target for notes, href for URLs. */
   target?: string
   label?: Record<Lang, string>
+}
+
+/** A column of footer links, under its heading when it has one. */
+export interface FooterGroup {
+  title?: string
+  items: NavItem[]
 }
 
 export class ConfigError extends Error {
@@ -575,7 +596,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     privateLinks: c.privateLinks,
     home: c.home.replace(/^\/+/, ""),
     conventions: c.conventions,
-    footerLinks: c.footer,
+    footer: footerGroups(c.footer, navItem, langs),
     poweredBy: c.poweredBy,
     nav: c.nav.map(navItem),
     sidebar: c.sidebar.map(navItem),

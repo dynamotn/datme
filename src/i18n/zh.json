@@ -97,6 +97,8 @@
   "email": "邮箱",
   "emailPlaceholder": "you@example.cn",
   "poweredBy": "用 {datme} 培育",
+  "siteLinks": "站点链接",
+  "elsewhere": "其他地方",
   "slides": "共 {n} 张幻灯片",
   "showAnswer": "点击查看答案",
   "practiceStart": "🧠 练习 {n} 张卡片",

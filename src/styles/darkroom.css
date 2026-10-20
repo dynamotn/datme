@@ -55,7 +55,7 @@
   max-width: 1800px;
 }
 [data-look="darkroom"] .site-footer {
-  margin-inline: clamp(8px, 2.5vw, 32px);
+  padding-inline: clamp(8px, 2.5vw, 32px);
 }
 [data-look="darkroom"] .note-head,
 [data-look="darkroom"] .prose > :not(.gallery-grid) {

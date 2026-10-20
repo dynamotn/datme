@@ -17,7 +17,8 @@ import { slugToUrl } from "~/lib/slug"
 import { absUrl, withBase } from "~/lib/base"
 import Icon from "~/components/Icon.astro"
 import Explorer from "~/components/Explorer.astro"
-import { navLinks } from "~/lib/nav"
+import { footerColumns, navLinks } from "~/lib/nav"
+import { brandParts, profileOf } from "~/lib/footer"
 import { ogPath } from "~/lib/og-url"
 import { MONO_FONT_CSS, MONO_FONT_ORIGIN } from "~/lib/fonts"
 import { customCssFile, fontsHref, themeCss } from "~/lib/theme"
@@ -102,6 +103,10 @@ const datmeMark = datmeLogo
   .replace(/>\s+</g, "><")
   .trim().replace(/role="img" aria-label="datme"/, 'class="datme-mark" aria-hidden="true" focusable="false"')
 const credit = s.poweredBy.split("{datme}")
+// The footer: the site's profiles as logos, its name as a mark, and its columns of links.
+const profiles = site.me.map((href) => profileOf(href, site.fediverse))
+const mark = brandParts(siteTitle)
+const columns = footerColumns(lang)
 // Tags the vault's datme.config.mjs adds to every page.
 const pluginHead = await userHead()
 // A page that stands alone keeps only a bar with the site's name and the scheme toggle.
@@ -375,32 +380,66 @@ const lookCss = LOOK_CSS[look]
       }
       {/* After the rail, which a narrow screen stacks under the note: the footer stays last. */}
       <footer class="site-footer">
-        <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
         {
           !minimal && (
-            <>
-              <nav>
-                {
-                  Object.entries(site.footerLinks).map(([label, href]) => (
-                    <a href={withBase(href)} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener">
-                      {label}
-                    </a>
-                  ))
-                }
-              </nav>
-              {
-                site.poweredBy && (
-                  <p class="datme-credit">
-                    <Fragment set:html={datmeMark} />
-                    {credit[0]}
-                    <a href="https://gitlab.com/dynamo-brain/datme" rel="noopener">datme</a>
-                    {credit[1]}
-                  </p>
-                )
-              }
-            </>
+            <div class="footer-top">
+              <div class="footer-brand">
+                {profiles.length > 0 && (
+                  <ul class="footer-profiles" aria-label={s.elsewhere}>
+                    {profiles.map((p) => (
+                      <li>
+                        <a href={p.href} rel="me noopener" target="_blank" aria-label={p.title} title={p.title}>
+                          {p.path ? (
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <path fill="currentColor" d={p.path} />
+                            </svg>
+                          ) : (
+                            <Icon name="link" />
+                          )}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <a class="footer-name" href={home}>
+                  {mark[0]}
+                  {mark[1] && <span>{mark[1]}</span>}
+                </a>
+              </div>
+              {columns.length > 0 && (
+                <nav class="footer-columns" aria-label={s.siteLinks}>
+                  {columns.map((c) => (
+                    <div class:list={["footer-column", { untitled: !c.title }]}>
+                      {c.title && <h2>{c.title}</h2>}
+                      <ul>
+                        {c.links.map((l) => (
+                          <li>
+                            <a href={l.url} target={/^https?:/.test(l.url) ? "_blank" : undefined} rel="noopener">
+                              {l.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </nav>
+              )}
+            </div>
           )
         }
+        <div class="footer-bottom">
+          <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
+          {
+            !minimal && site.poweredBy && (
+              <p class="datme-credit">
+                <Fragment set:html={datmeMark} />
+                {credit[0]}
+                <a href="https://gitlab.com/dynamo-brain/datme" rel="noopener">datme</a>
+                {credit[1]}
+              </p>
+            )
+          }
+        </div>
       </footer>
     </div>
 

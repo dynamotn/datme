@@ -25,7 +25,14 @@ export function sidebarLinks(lang: Lang): NavLink[] {
   return resolveLinks(lang, site.sidebar, "sidebar")
 }
 
-function resolveLinks(lang: Lang, items: NavItem[], list: "nav" | "sidebar"): NavLink[] {
+/** The footer's columns of links, resolved like the main menu; a column left empty is dropped. */
+export function footerColumns(lang: Lang): { title?: string; links: NavLink[] }[] {
+  return site.footer
+    .map((g) => ({ title: g.title, links: resolveLinks(lang, g.items, "footer") }))
+    .filter((g) => g.links.length)
+}
+
+function resolveLinks(lang: Lang, items: NavItem[], list: "nav" | "sidebar" | "footer"): NavLink[] {
   const vault = getVault()
   const out: NavLink[] = []
   for (const item of items) {

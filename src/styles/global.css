@@ -480,10 +480,6 @@ kbd {
 :root.hide-left:not(.hide-right) .shell.no-right {
   grid-template-columns: minmax(0, 1fr);
 }
-:root.hide-left .site-footer,
-:root.reader .site-footer {
-  grid-column: 1;
-}
 .panel-title {
   display: flex;
   align-items: center;
@@ -2152,24 +2148,100 @@ dialog.graph-modal {
 }
 
 /* ---------- footer ---------- */
-/* Under the note, in its column: the middle one, or the first when the left one is folded away. */
+/* A band across the whole window under every column. The border image paints its tone and
+   top rule out to the window's edges; ink outside the box never makes the page scroll sideways. */
 .site-footer {
-  grid-column: 2;
+  --footer-rule: var(--line);
+  --footer-rule-w: 1px;
+  grid-column: 1 / -1;
   min-width: 0;
-  margin: 0 clamp(16px, 4vw, 56px) 80px;
-  border-top: 1px solid var(--line);
-  padding: 28px 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
+  margin-top: 48px;
+  padding: 52px clamp(16px, 4vw, 56px) 36px;
+  border-image: linear-gradient(var(--footer-rule) 0 var(--footer-rule-w), var(--surface-2) 0) fill 0 // 0 100vmax;
   font-size: 13px;
   color: var(--muted);
 }
-.site-footer nav {
+.footer-top,
+.footer-bottom {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+.footer-top {
   display: flex;
-  gap: 16px;
   flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 40px 64px;
+  padding-bottom: 40px;
+}
+.footer-brand {
+  max-width: 300px;
+}
+.footer-profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.footer-profiles a {
+  display: inline-flex;
+  color: var(--muted);
+}
+.footer-profiles svg {
+  width: 15px;
+  height: 15px;
+}
+.footer-name {
+  font: 600 22px/1.2 var(--font-ui);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.footer-name span {
+  color: var(--accent);
+}
+.footer-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px 56px;
+}
+.footer-column h2 {
+  margin: 0 0 13px;
+  font: 500 11px/1.4 var(--font-code);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.footer-column ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Single links have no heading: their list starts level with the others' under theirs. */
+.footer-column.untitled ul {
+  padding-top: calc(11px * 1.4 + 13px);
+}
+.footer-column a {
+  display: block;
+  padding: 4px 0;
+  font-size: 14px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 24px;
+}
+.footer-top + .footer-bottom {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.footer-bottom .datme-credit {
+  flex-basis: auto;
 }
 @media (hover: hover) {
   .site-footer a:hover {
@@ -2182,7 +2254,9 @@ dialog.graph-modal {
   grid-template-columns: minmax(0, 1fr);
 }
 :root[data-chrome="minimal"] .site-footer {
-  grid-column: 1;
+  padding-block: 24px;
+}
+:root[data-chrome="minimal"] .footer-bottom {
   justify-content: center;
 }
 
@@ -2207,11 +2281,6 @@ dialog.graph-modal {
   }
   :root.hide-left .sidebar-right {
     grid-column: 1;
-  }
-  /* The rail now stacks under the note, so the note's column is the last one. */
-  .site-footer,
-  :root.hide-left .site-footer {
-    grid-column: -2;
   }
 }
 @media (max-width: 900px) {

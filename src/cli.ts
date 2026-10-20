@@ -410,8 +410,11 @@ appearance:
   folders: {}
 #    Writing: classic
 
+# Columns of links in the footer, each a heading and entries written like nav.
 footer: {}
-#  GitHub: https://github.com/you
+#  Elsewhere:
+#    - url: https://github.com/you
+#      label: GitHub
 # poweredBy: false            # hide the "grown with datme" line
 `
 }

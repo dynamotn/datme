@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, spyOn, test } from "bun:test"
 import { site, type NavItem } from "../src/site.config"
-import { isStream, navLinks, sidebarLinks } from "../src/lib/nav"
+import { footerColumns, isStream, navLinks, sidebarLinks } from "../src/lib/nav"
 import { hasMap, hasTimeline } from "../src/lib/places"
 import { hasJournal } from "../src/lib/journal"
 import { hasDecks } from "../src/lib/decks"
@@ -8,9 +8,11 @@ import { hasChanges } from "../src/lib/changes"
 
 const nav = site.nav
 const sidebar = site.sidebar
+const footer = site.footer
 afterEach(() => {
   site.nav = nav
   site.sidebar = sidebar
+  site.footer = footer
 })
 
 describe("sidebarLinks", () => {
@@ -24,6 +26,21 @@ describe("sidebarLinks", () => {
       { label: "Tags", url: "/en-US/tags" },
       { label: "Example", url: "https://example.com" },
     ])
+  })
+})
+
+describe("footerColumns", () => {
+  test("resolves each column like the menu, and drops a column left with no link", () => {
+    site.footer = [
+      { items: [{ kind: "url", target: "https://example.com", label: { "vi-VN": "Ví dụ", "en-US": "Example" } }] },
+      { title: "Explore", items: [{ kind: "tags" }, { kind: "note", target: "Niklas Luhmann" }] },
+      { title: "Gone", items: [{ kind: "note", target: "No such note" }] },
+    ]
+    expect(footerColumns("en-US")).toEqual([
+      { title: undefined, links: [{ label: "Example", url: "https://example.com" }] },
+      { title: "Explore", links: [{ label: "Tags", url: "/en-US/tags" }, expect.objectContaining({ label: "Niklas Luhmann (sociologist)" })] },
+    ])
+    expect(footerColumns("vi-VN")[0].links[0].label).toBe("Ví dụ")
   })
 })
 

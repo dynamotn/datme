@@ -227,6 +227,25 @@ describe("menu and appearance", () => {
     expect(() => resolveConfig({ sidebar: [{ url: "/x" }] }, "/v")).toThrow(ConfigError)
   })
 
+  test("footer columns: headings to menu entries, and single links in a first column without one", () => {
+    expect(resolveConfig({}, "/v").footer).toEqual([])
+    // The older flat form still works: one column, no heading.
+    expect(resolveConfig({ footer: { GitHub: "https://github.com/me" } }, "/v").footer).toEqual([
+      { items: [{ kind: "url", target: "https://github.com/me", label: { "en-US": "GitHub" } }] },
+    ])
+    const c = resolveConfig(
+      { footer: { Explore: ["home", { note: "About me", label: "About" }], npm: "https://npmjs.com/x", Empty: [], Elsewhere: [{ url: "/index.xml", label: "RSS" }] } },
+      "/v",
+    )
+    expect(c.footer).toEqual([
+      { items: [{ kind: "url", target: "https://npmjs.com/x", label: { "en-US": "npm" } }] },
+      { title: "Explore", items: [{ kind: "home" }, { kind: "note", target: "About me", label: { "en-US": "About" } }] },
+      { title: "Elsewhere", items: [{ kind: "url", target: "/index.xml", label: { "en-US": "RSS" } }] },
+    ])
+    expect(() => resolveConfig({ footer: { Explore: [{ url: "/x" }] } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ footer: { GitHub: "" } }, "/v")).toThrow(ConfigError)
+  })
+
   test("the archive and the practice page are built-in menu entries", () => {
     expect(resolveConfig({ nav: ["archive"] }, "/v").nav).toEqual([{ kind: "archive" }])
     expect(resolveConfig({ nav: ["practice"] }, "/v").nav).toEqual([{ kind: "practice" }])

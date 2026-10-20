@@ -18,7 +18,8 @@ site:
   url: https://notes.example.com   # enables the sitemap, absolute links and JSON-LD
   author: Me
   logo: 🌿                     # defaults to the first letter of the title
-  me: [https://mastodon.social/@me]   # rel="me" links, e.g. to verify the site on Mastodon
+  me: [https://mastodon.social/@me]   # rel="me" links, e.g. to verify the site on Mastodon; the footer
+                                      # shows them as logos (GitHub, X, LinkedIn, Mastodon, Bluesky…)
   fediverse: "@me@mastodon.social"    # credited when a note is shared on Mastodon
 
 languages: [en-US]            # the first is served at /, others under /<lang>/
@@ -116,8 +117,18 @@ sidebar:                      # shortcuts at the top of the left sidebar, same e
   - note: Now
   - tags
 
-footer:
-  GitHub: https://github.com/me
+footer:                       # columns of links in the footer: a heading, then entries like nav
+  Explore:
+    - home
+    - tags
+    - note: About me
+      label: About
+  Elsewhere:
+    - url: https://github.com/me
+      label: GitHub
+    - url: /index.xml
+      label: RSS
+  npm: https://www.npmjs.com/~me   # a heading with a URL is a single link; these share a first column
 poweredBy: true               # the "grown with datme" line under the footer; false hides it
 
 history: false                # a page per note showing how it grew, from git (see Privacy),

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `footer` in `datme.yaml` takes columns of links: a heading over a list of entries written like `nav` (built-in pages, notes or URLs, with labels per language). The older `label: URL` pairs still work and share a first column without a heading.
+
 - Under `datme dev`, a 🎨 bar on every page names the rule that chose its style and frame (the note's `style:` or `chrome:`, its layout, `appearance.folders` or `appearance.style`), previews the page in notebook, classic, garden, resume or darkroom and in full or minimal chrome without editing a file, and shows the frontmatter or `datme.yaml` lines that would keep the preview. Built sites never show it.
 - A `sidebar` list in `datme.yaml` puts shortcuts at the top of the left sidebar: notes, built-in pages or URLs, written like `nav` entries, with the current one marked.
 - Graphs have + and − buttons in their corner, in the sidebar and in the global graph, for readers without a wheel to zoom with.
@@ -17,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The footer is a band across the whole page, a shade darker than it: the profiles of `site.me` as logos (GitHub, X, LinkedIn, Mastodon, Bluesky and two dozen more) above the site's name, whose ending gets the accent when it is written like a domain, the `footer` columns beside them under small mono headings, and the copyright, RSS and datme lines along its foot. Pages with the minimal frame keep a single line.
 - The header is shorter: the sidebar, stacked-pages and reader-mode toggles join the text-size and font choices in one View menu behind a sliders button, and with several languages the header shows only the current one, the others in a menu under it.
 
 ### Fixed

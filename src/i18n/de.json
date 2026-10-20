@@ -97,6 +97,8 @@
   "email": "E-Mail",
   "emailPlaceholder": "du@beispiel.de",
   "poweredBy": "Gewachsen mit {datme}",
+  "siteLinks": "Links der Seite",
+  "elsewhere": "Anderswo",
   "slides": "Foliensatz mit {n} Folien",
   "showAnswer": "Klicken, um die Antwort zu sehen",
   "practiceStart": "🧠 {n} Karten üben",
