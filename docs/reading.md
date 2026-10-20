@@ -53,8 +53,14 @@ an optional dependency to install next to datme:
 
 ```bash
 bun add @huggingface/transformers          # in a project that depends on datme
-bunx --package @dynamotn/datme --package @huggingface/transformers datme build ~/MyVault
+
+# or both in one global install, as in CI
+bun add --global @dynamotn/datme @huggingface/transformers
+datme build ~/MyVault
 ```
+
+`bunx` cannot do this: it installs each `--package` in a directory of its own,
+so datme never finds transformers.js there.
 
 `threshold` (0.55 by default) sets how close two notes must be; `model` picks
 another feature-extraction model from Hugging Face.
