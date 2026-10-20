@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The copy button of a code block stays in its corner when a long line scrolls the block sideways.
 - The search box can be closed on any device: its close button always shows, and a tap on the dimmed page around a dialog closes it.
-- The docs install transformers.js for `related.semantic` with a global `bun add` of datme and transformers.js together, instead of a `bunx --package` command that never let datme find it.
+- A vault with `related.semantic` builds in CI: the pipeline `datme deploy` writes installs transformers.js together with datme, and the docs no longer suggest a `bunx --package` command that never let datme find it.
 
 ## [3.0.0] - 2026-10-18
 

@@ -20,6 +20,9 @@ every push, pinned to the version of datme that wrote it, and pins Bun too, so
 a new release never changes your site unasked: bump both versions in the file
 to upgrade. On GitHub, GitLab and Cloudflare it also keeps the build cache
 between runs, and on GitHub only the deploy job may write to Pages.
+When the vault turns on `related.semantic`, the pipeline installs datme and
+transformers.js (pinned too) in one global `bun add` and runs that datme, since
+`bunx` keeps each package apart.
 `deploy` never overwrites a file, and
 `--branch` picks the branch to publish from (by default, the current one).
 

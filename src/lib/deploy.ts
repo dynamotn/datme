@@ -22,6 +22,8 @@ export interface DeployOpts {
   project: string
   /** Whether the site speaks notes aloud, so the pipeline needs the TTS toolchain. */
   tts?: boolean
+  /** Whether related.semantic is on, so the pipeline installs transformers.js next to datme. */
+  semantic?: boolean
 }
 
 /** Shell-safe argument, quoted only when needed. */
@@ -33,8 +35,18 @@ const arg = (s: string) => (/^[\w./-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\'
  */
 export const BUN_VERSION = "1.4.2"
 
-/** The build command, with the cache kept where CI can save it between runs. */
-const build = (o: DeployOpts, out: string) => `bunx @dynamotn/datme@${version} build ${arg(o.vault)} --out ${out}`
+/** transformers.js for related.semantic, pinned like datme: the version the search page loads too. */
+export const TRANSFORMERS_VERSION = "4.3.1"
+
+/**
+ * The build command, with the cache kept where CI can save it between runs; `bun` is the path of
+ * Bun where it is not on the PATH. With related.semantic, datme and transformers.js go in one global
+ * install: bunx would put each package in a directory of its own, where datme cannot find the other.
+ */
+const build = (o: DeployOpts, out: string, bun = "") =>
+  o.semantic
+    ? `${bun}bun add --global @dynamotn/datme@${version} @huggingface/transformers@${TRANSFORMERS_VERSION} && "$(${bun}bun pm bin -g)/datme" build ${arg(o.vault)} --out ${out}`
+    : `${bun}bunx @dynamotn/datme@${version} build ${arg(o.vault)} --out ${out}`
 
 const githubCache = (o: DeployOpts) =>
   o.tts
@@ -223,7 +235,7 @@ function netlify(o: DeployOpts): DeployFile[] {
 ${o.tts ? '  DATME_TTS = "off" # Netlify builds publish without audio\n' : ""}
 [build]
   # Netlify's image has no Bun, so the build installs it first.
-  command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ~/.bun/bin/${build(o, "dist").replace(/"/g, '\\"')}"
+  command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ${build(o, "dist", "~/.bun/bin/").replace(/"/g, '\\"')}"
   publish = "dist"
 `,
     },

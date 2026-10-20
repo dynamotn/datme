@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import * as childProcess from "node:child_process"
 import * as astro from "astro"
-import { parseArgs, run, pruneCache, claimCache, deploy, PACKAGE_ROOT, CliError, type Args } from "../src/cli"
+import { parseArgs, run, pruneCache, claimCache, deploy, pipelineNeeds, PACKAGE_ROOT, CliError, type Args } from "../src/cli"
 import { site, type SiteConfig } from "../src/site.config"
 import * as mcp from "../src/lib/mcp"
 import * as doctor from "../src/lib/doctor"
@@ -185,6 +185,20 @@ describe("deploy", () => {
     fs.writeFileSync(path.join(vault, "datme.yaml"), "languages: [vi-VN]\ntts:\n  models: { vi: vieneu }\n  folders: [Voice]\n")
     await run({ command: "deploy", target: "gitlab", vault }, {}, tmp)
     expect(fs.readFileSync(path.join(vault, ".gitlab-ci.yml"), "utf8")).toContain("UV_CACHE_DIR: .datme-tts/uv")
+  })
+
+  test("a vault with related.semantic gets transformers.js installed next to datme", async () => {
+    const vault = dir("deploy-semantic")
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "related:\n  semantic: { threshold: 0.6 }\n")
+    await run({ command: "deploy", target: "gitlab", vault }, {}, tmp)
+    expect(fs.readFileSync(path.join(vault, ".gitlab-ci.yml"), "utf8")).toContain("@huggingface/transformers@")
+    expect(pipelineNeeds(vault)).toEqual({ tts: false, semantic: true })
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "related:\n  semantic: false\ntts:\n  models: { vi: vieneu }\n")
+    expect(pipelineNeeds(vault)).toEqual({ tts: true, semantic: false })
+    // A config that does not parse, or none, needs nothing.
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "related: [unclosed\n")
+    expect(pipelineNeeds(vault)).toEqual({ tts: false, semantic: false })
+    expect(pipelineNeeds(dir("deploy-no-config"))).toEqual({ tts: false, semantic: false })
   })
 
   test("netlify with tts warns that its builds make no audio, and writes the file with DATME_TTS off", async () => {

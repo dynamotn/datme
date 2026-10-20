@@ -323,23 +323,26 @@ function git(cwd: string, ...args: string[]): string | undefined {
   }
 }
 
-/** Whether the vault's config has a `tts` block; deploy needs no more, so a config that is missing or broken counts as none. */
-function hasTts(vault: string): boolean {
+/**
+ * What the vault's pipeline must install: the TTS toolchain for a `tts` block, transformers.js for
+ * `related.semantic`. Read from the raw config, as deploy needs no more; one missing or broken needs neither.
+ */
+export function pipelineNeeds(vault: string): { tts: boolean; semantic: boolean } {
   for (const name of CONFIG_FILES) {
     const file = path.join(vault, name)
     if (!fs.existsSync(file)) continue
     try {
-      const raw = parseYaml(fs.readFileSync(file, "utf8"))
-      return typeof raw === "object" && raw !== null && "tts" in raw && raw.tts != null
+      const raw = parseYaml(fs.readFileSync(file, "utf8")) as { tts?: unknown; related?: { semantic?: unknown } } | null
+      return { tts: raw?.tts != null, semantic: !!raw?.related?.semantic }
     } catch {
-      return false
+      break
     }
   }
-  return false
+  return { tts: false, semantic: false }
 }
 
 /** Write the CI configuration for a host at the root of the vault's repository. */
-export function deploy(target: Target, dir: string, branch?: string, tts = false): void {
+export function deploy(target: Target, dir: string, branch?: string, needs = { tts: false, semantic: false }): void {
   // git answers with resolved paths, so the vault must be resolved too to get its place in the repository.
   const vault = fs.realpathSync(dir)
   const root = git(vault, "rev-parse", "--show-toplevel") ?? vault
@@ -350,9 +353,9 @@ export function deploy(target: Target, dir: string, branch?: string, tts = false
     vault: path.relative(root, vault) || ".",
     branch: branch ?? git(vault, "symbolic-ref", "--short", "HEAD") ?? "main",
     project: projectName(path.basename(root)),
-    tts,
+    ...needs,
   })
-  if (tts && target === "netlify") {
+  if (needs.tts && target === "netlify") {
     console.warn("[datme] Netlify builds publish without audio (DATME_TTS=off); use GitLab or GitHub for audio.")
   }
   for (const f of files) {
@@ -461,7 +464,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return void console.log(`Wrote ${file}`)
   }
 
-  if (args.command === "deploy") return deploy(args.target!, vault, args.branch, hasTts(vault))
+  if (args.command === "deploy") return deploy(args.target!, vault, args.branch, pipelineNeeds(vault))
 
   if (args.command === "migrate") {
     const plan = planMigration(vault, args.from!)

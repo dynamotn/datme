@@ -3,7 +3,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { load as loadYaml } from "js-yaml"
-import { deployFiles, projectName, TARGETS } from "../src/lib/deploy"
+import { deployFiles, projectName, TARGETS, TRANSFORMERS_VERSION } from "../src/lib/deploy"
 import { parseArgs, run, CliError } from "../src/cli"
 import pkg from "../package.json"
 
@@ -53,6 +53,24 @@ describe("deployFiles", () => {
     expect(gh.permissions).toEqual({ contents: "read" })
     expect(gh.jobs.build.permissions).toBeUndefined()
     expect(gh.jobs.deploy.permissions).toEqual({ pages: "write", "id-token": "write" })
+  })
+
+  test("semantic: true installs datme and transformers.js together, and runs that datme", () => {
+    const install = `bun add --global @dynamotn/datme@${pkg.version} @huggingface/transformers@${TRANSFORMERS_VERSION} && `
+    for (const target of TARGETS) {
+      const [file] = deployFiles(target, { ...opts, semantic: true })
+      const bun = target === "netlify" ? "~/.bun/bin/" : ""
+      const command = `${bun}${install}"\$(${bun}bun pm bin -g)/datme" build 'notes/My Vault' --out`
+      if (file.path.endsWith(".yml")) {
+        expect(file.content).toContain(command)
+        expect(() => loadYaml(file.content)).not.toThrow()
+      } else {
+        // TOML escapes the quotes of the command.
+        expect(Bun.TOML.parse(file.content)).toMatchObject({ build: { command: expect.stringContaining(command) } })
+      }
+      expect(file.content).not.toContain("bunx")
+    }
+    for (const target of TARGETS) expect(deployFiles(target, { ...opts, semantic: false })[0].content).toBe(deployFiles(target, opts)[0].content)
   })
 
   test("tts: false leaves every pipeline exactly as it was", () => {
