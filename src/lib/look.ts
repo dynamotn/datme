@@ -17,8 +17,23 @@ export function pickOption<T extends string>(value: unknown, options: readonly T
 
 type Rules = Pick<SiteConfig["appearance"], "style" | "classic" | "folders">
 
-/** Style of a folder: the deepest rule among `classic` and `folders` that covers it, else the site style. */
-export function resolveLook(dir: string, appearance: Rules): Style {
+/** The rule that gave a page its style, for `datme dev` to name. */
+export type LookRule =
+  | { kind: "note" }
+  | { kind: "layout"; layout: Layout }
+  | { kind: "folders" | "classic"; folder: string }
+  | { kind: "site" }
+
+/** The rule that gave a page its frame. */
+export type FrameRule = { kind: "note" } | { kind: "layout"; layout: Layout } | { kind: "default" }
+
+export interface Explained<T, R> {
+  value: T
+  rule: R
+}
+
+/** Style of a folder and its rule: the deepest of `classic` and `folders` that covers it, else the site style. */
+export function explainDir(dir: string, appearance: Rules): Explained<Style, LookRule> {
   const { style, classic, folders } = appearance
   const flipped: Style = style === "notebook" ? "classic" : style === "classic" ? "notebook" : "classic"
   const rules: [string, Style, boolean][] = [
@@ -31,12 +46,13 @@ export function resolveLook(dir: string, appearance: Rules): Style {
     if (dir !== f && !dir.startsWith(f + "/")) continue
     if (!best || f.length > best[0].length || (f.length === best[0].length && fromFolders && !best[2])) best = rule
   }
-  return best ? best[1] : style
+  if (!best) return { value: style, rule: { kind: "site" } }
+  return { value: best[1], rule: { kind: best[2] ? "folders" : "classic", folder: best[0] } }
 }
 
-/** Style of a folder's pages. */
-export function lookOfDir(dir: string): Style {
-  return resolveLook(dir, site.appearance)
+/** Style of a folder: the deepest rule among `classic` and `folders` that covers it, else the site style. */
+export function resolveLook(dir: string, appearance: Rules): Style {
+  return explainDir(dir, appearance).value
 }
 
 /** What a layout asks for by default: a style (none: the site's own) and a frame. */
@@ -64,15 +80,31 @@ export const LAYOUT_LOOKS: Partial<Record<Layout, LayoutLook>> = {
   movies: { frame: "full-norail" },
 }
 
+/** Page style of a note and the rule that chose it: its own `style`, else its layout's, else that of its folder. */
+export function explainLook(note: Pick<Note, "dir" | "style" | "layout"> | undefined): Explained<Style, LookRule> {
+  if (!note) return { value: site.appearance.style, rule: { kind: "site" } }
+  if (note.style) return { value: note.style, rule: { kind: "note" } }
+  const fromLayout = note.layout && LAYOUT_LOOKS[note.layout]?.style
+  if (note.layout && fromLayout) return { value: fromLayout, rule: { kind: "layout", layout: note.layout } }
+  return explainDir(note.dir, site.appearance)
+}
+
 /** Page style of a note: its own `style`, else its layout's, else that of its folder; the site style when there is no note. */
 export function lookOf(note: Pick<Note, "dir" | "style" | "layout"> | undefined): Style {
-  if (!note) return site.appearance.style
-  return note.style ?? (note.layout && LAYOUT_LOOKS[note.layout]?.style) ?? lookOfDir(note.dir)
+  return explainLook(note).value
+}
+
+/** Frame of a note's page and the rule that chose it: its own `chrome`, else its layout's, else full. */
+export function explainFrame(note: Pick<Note, "chrome" | "layout"> | undefined): Explained<Frame, FrameRule> {
+  if (note?.chrome) return { value: note.chrome, rule: { kind: "note" } }
+  const fromLayout = note?.layout && LAYOUT_LOOKS[note.layout]?.frame
+  if (note?.layout && fromLayout) return { value: fromLayout, rule: { kind: "layout", layout: note.layout } }
+  return { value: "full", rule: { kind: "default" } }
 }
 
 /** Frame of a note's page: its own `chrome`, else its layout's, else full. */
 export function frameOf(note: Pick<Note, "chrome" | "layout"> | undefined): Frame {
-  return note?.chrome ?? (note?.layout && LAYOUT_LOOKS[note.layout]?.frame) ?? "full"
+  return explainFrame(note).value
 }
 
 /** Whether a style opens dark when the reader has not chosen a scheme. */

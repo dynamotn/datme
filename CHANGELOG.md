@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Under `datme dev`, a 🎨 bar on every page names the rule that chose its style and frame (the note's `style:` or `chrome:`, its layout, `appearance.folders` or `appearance.style`), previews the page in notebook, classic, garden, resume or darkroom and in full or minimal chrome without editing a file, and shows the frontmatter or `datme.yaml` lines that would keep the preview. Built sites never show it.
 - A `sidebar` list in `datme.yaml` puts shortcuts at the top of the left sidebar: notes, built-in pages or URLs, written like `nav` entries, with the current one marked.
 - Graphs have + and − buttons in their corner, in the sidebar and in the global graph, for readers without a wheel to zoom with.
 - Notes chosen by folder or frontmatter can be read aloud in the author's own voice, with one TTS model per language (VieNeu for Vietnamese), its weights pinned to a fixed commit so the voice never changes under cached audio, and a ▶ Listen button at the top of the note.

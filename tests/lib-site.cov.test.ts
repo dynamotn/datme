@@ -347,7 +347,7 @@ describe("the Astro integration", () => {
   test("in dev, a file of a sibling folder with the same prefix reloads nothing", () => {
     const handlers: Record<string, (file: string) => void> = {}
     const sent: unknown[] = []
-    const server = { watcher: { add: () => {}, on: (ev: string, fn: (file: string) => void) => void (handlers[ev] = fn) }, hot: { send: (m: unknown) => void sent.push(m) } }
+    const server = { watcher: { add: () => {}, on: (ev: string, fn: (file: string) => void) => void (handlers[ev] = fn) }, hot: { send: (m: unknown) => void sent.push(m) }, middlewares: { use: () => {} } }
     hooks["astro:server:setup"]!({ server } as unknown as Parameters<ServerSetup>[0])
     const g = globalThis as { __vaultVersion?: number }
     const before = g.__vaultVersion
@@ -433,6 +433,7 @@ describe("the Astro integration", () => {
     const server = {
       watcher: { add: (p: string) => void watched.push(p), on: (ev: string, fn: (file: string) => void) => void (handlers[ev] = fn) },
       hot: { send: (msg: unknown) => void sent.push(msg) },
+      middlewares: { use: () => {} },
     }
     setSite({ ignore: [...site.ignore, "07_Project"] })
     hooks["astro:server:setup"]!({ server } as unknown as Parameters<ServerSetup>[0])

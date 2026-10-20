@@ -5,7 +5,8 @@ import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { t, formatDate } from "~/lib/i18n"
 import { isStream } from "~/lib/nav"
-import { frameOf, lookOf, lookOfDir } from "~/lib/look"
+import { explainDir, explainFrame, explainLook } from "~/lib/look"
+import { previewOf } from "~/lib/dev-look"
 import { feedPath } from "~/lib/feed"
 import { withBase } from "~/lib/base"
 import Subscribe from "../Subscribe.astro"
@@ -29,8 +30,14 @@ const vault = getVault()
 const intro = folder.folderNote ? await renderNote(folder.folderNote) : undefined
 // Any unprotected folder note gives its folder its look and frame: its own style/chrome or its layout's defaults.
 const owner = folder.folderNote && !folder.folderNote.protected ? folder.folderNote : undefined
-const look = owner ? lookOf(owner) : lookOfDir(folder.dir)
-const frame = owner ? frameOf(owner) : "full"
+const explained = {
+  look: owner ? explainLook(owner) : explainDir(folder.dir, site.appearance),
+  frame: owner ? explainFrame(owner) : explainFrame(undefined),
+  target: { kind: "folder", dir: folder.dir, file: owner && owner.source.key + ".md" } as const,
+}
+const preview = previewOf(Astro.url)
+const look = preview.style ?? explained.look.value
+const frame = preview.chrome ?? explained.frame.value
 const stage = site.stages[folder.segment]
 // A folder note with a layout lays out its folder too: a collection replaces the list of notes.
 const layout = owner?.layout
@@ -46,7 +53,7 @@ const stream = isStream(folder.dir)
   : undefined
 ---
 
-<Base lang={lang} look={look} title={folder.name} description={intro?.description} alternates={alternates} feed={feed} frame={frame}>
+<Base lang={lang} look={look} explained={explained} title={folder.name} description={intro?.description} alternates={alternates} feed={feed} frame={frame}>
   <div class="note is-wide">
     {frame !== "minimal" && <Breadcrumbs lang={lang} dir={parent} />}
     <header class="page-head">

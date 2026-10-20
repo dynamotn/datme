@@ -10,7 +10,8 @@ import printCss from "~/styles/print.css?url"
 import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
-import { startsDark, type Frame } from "~/lib/look"
+import { startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
+import { previewOf, type LookTarget } from "~/lib/dev-look"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import { absUrl, withBase } from "~/lib/base"
@@ -23,6 +24,7 @@ import { customCssFile, fontsHref, themeCss } from "~/lib/theme"
 import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
 import DevProblems from "~/components/DevProblems.astro"
+import DevLook from "~/components/DevLook.astro"
 import { serializeLd, type JsonLd } from "~/lib/jsonld"
 import datmeLogo from "~/assets/datme.svg?raw"
 import { userHead } from "~/lib/markdown"
@@ -55,6 +57,8 @@ interface Props {
   oembed?: string
   /** Keep the page out of search engines, e.g. a draft built for preview. */
   noindex?: boolean
+  /** The page's own style and frame with the rules that chose them, for the style switcher of `datme dev`. */
+  explained?: { look: Explained<Style, LookRule>; frame: Explained<Frame, FrameRule>; target: LookTarget }
 }
 const {
   lang,
@@ -65,14 +69,23 @@ const {
   translatedIn,
   canonicalUrl,
   rail = false,
-  look = site.appearance.style,
-  frame = "full",
+  look: ownLook = site.appearance.style,
+  frame: ownFrame = "full",
   jsonLd = [],
   feed,
   mdAlternate,
   oembed,
   noindex = false,
+  explained = {
+    look: { value: ownLook, rule: { kind: "site" } },
+    frame: { value: ownFrame, rule: { kind: "default" } },
+    target: { kind: "site" },
+  },
 } = Astro.props
+// Under `datme dev` the address can preview another style or chrome; a build always draws the page's own.
+const preview = previewOf(Astro.url)
+const look = preview.style ?? ownLook
+const frame = preview.chrome ?? ownFrame
 const nav = navLinks(lang)
 // Pages without their own image share the generated card of the home page.
 const ogUrl = image ?? ogPath(langPrefix(lang) + "index")
@@ -480,6 +493,8 @@ const lookCss = LOOK_CSS[look]
         </>
       )
     }
+
+    <DevLook {...explained} />
 
     <script>
       import "~/scripts/app"

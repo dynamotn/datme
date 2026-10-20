@@ -7,6 +7,7 @@ import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import { absUrl, withBase } from "~/lib/base"
 import { websiteLd } from "~/lib/jsonld"
+import { previewOf } from "~/lib/dev-look"
 import Base from "~/layouts/Base.astro"
 import NoteCard from "../NoteCard.astro"
 import NoteRow from "../NoteRow.astro"
@@ -51,7 +52,8 @@ const shelvesOfFolders = stages.length
 const blogUrl = blog.length
   ? slugToUrl(langPrefix(lang) + "tags/" + (blog[0].tags.find((x) => site.conventions.blogTags.includes(x)) ?? ""))
   : ""
-const look = site.appearance.style
+// `datme dev` can preview the home in another style from its address.
+const look = previewOf(Astro.url).style ?? site.appearance.style
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
 ---
 

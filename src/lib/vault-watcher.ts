@@ -7,6 +7,7 @@ import { headersFile, inlineScriptHashes } from "./headers"
 import { ACTOR_PATH, OUTBOX_PATH, actor, outbox, webfinger } from "./activitypub"
 import { listed, byRecent, isIgnored } from "./vault"
 import { renderNote } from "./markdown"
+import { keepRequestUrl } from "./dev-look"
 
 /**
  * The path of a file relative to the vault, with "/" separators so Windows
@@ -83,6 +84,8 @@ export default function vaultWatcher(): AstroIntegration {
         }
       },
       "astro:server:setup": ({ server }) => {
+        // The style switcher reads its preview from the query, which Astro hides from prerendered pages.
+        server.middlewares.use(keepRequestUrl)
         // The whole vault, so a folder made after start is seen too; ignoredInVault keeps .git and ignored trees out.
         server.watcher.add(site.vault)
         const onChange = (file: string) => {

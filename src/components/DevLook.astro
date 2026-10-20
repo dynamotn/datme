@@ -1,0 +1,74 @@
+---
+import { STYLES, type Style } from "~/site.config"
+import { CHROMES, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
+import { configLines, describeFrameRule, describeLookRule, pageUrl, previewOf, previewUrl, type LookTarget } from "~/lib/dev-look"
+
+interface Props {
+  /** The page's own style and frame, before any preview, with the rules that chose them. */
+  look: Explained<Style, LookRule>
+  frame: Explained<Frame, FrameRule>
+  target: LookTarget
+}
+const { look, frame, target } = Astro.props
+// Only `datme dev` shows the switcher: it helps the writer choose, the reader never sees it.
+const dev = Boolean(process.env.DATME_DEV)
+const preview = previewOf(Astro.url, dev)
+const shown = { style: preview.style ?? look.value, chrome: preview.chrome ?? frame.value }
+// A preview of what the page already has changes nothing, so there is nothing to copy for it.
+const changed = {
+  style: preview.style !== look.value ? preview.style : undefined,
+  chrome: preview.chrome !== frame.value ? preview.chrome : undefined,
+}
+const previewing = Boolean(changed.style || changed.chrome)
+const lines = configLines(target, changed)
+const chromeKept = !changed.chrome || lines.some((l) => l.code.includes("chrome:"))
+const url = pageUrl(Astro.url)
+---
+
+{
+  dev && (
+    <details class="dev-look" open={previewing} data-previewing={previewing ? "" : undefined}>
+      <summary>
+        <span aria-hidden="true">🎨</span> {shown.style} · {shown.chrome}
+        {previewing && <em>preview</em>}
+      </summary>
+      <div class="dev-look-body">
+        <p>
+          Style <strong>{look.value}</strong> from <code>{describeLookRule(look.rule, target)}</code>
+        </p>
+        <nav aria-label="Preview a style">
+          {STYLES.map((st) => (
+            <a href={previewUrl(url, "style", st === look.value ? undefined : st)} aria-current={st === shown.style ? "true" : undefined} data-astro-reload>
+              {st}
+            </a>
+          ))}
+        </nav>
+        <p>
+          Chrome <strong>{frame.value}</strong> from <code>{describeFrameRule(frame.rule, target)}</code>
+        </p>
+        <nav aria-label="Preview a chrome">
+          {CHROMES.map((c) => (
+            <a href={previewUrl(url, "chrome", c === frame.value ? undefined : c)} aria-current={c === shown.chrome ? "true" : undefined} data-astro-reload>
+              {c}
+            </a>
+          ))}
+        </nav>
+        {previewing && (
+          <>
+            <p>To keep it, copy one of these:</p>
+            {lines.map((l) => (
+              <figure>
+                <figcaption>{l.where}</figcaption>
+                <pre><code>{l.code}</code></pre>
+              </figure>
+            ))}
+            {!chromeKept && <p>This page takes its chrome from no setting; only notes and folder notes choose one.</p>}
+            <a class="dev-look-reset" href={previewUrl(new URL(previewUrl(url, "style", undefined), url), "chrome", undefined)} data-astro-reload>
+              Back to the page's own look
+            </a>
+          </>
+        )}
+      </div>
+    </details>
+  )
+}

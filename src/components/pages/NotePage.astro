@@ -5,7 +5,8 @@ import { renderNote, renderSecret } from "~/lib/markdown"
 import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
-import { frameOf, lookOf } from "~/lib/look"
+import { explainFrame, explainLook } from "~/lib/look"
+import { previewOf } from "~/lib/dev-look"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
@@ -67,8 +68,14 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
 // A résumé and a gallery reshape the note's text; a page with a layout is a destination, not a note among others.
 const html = layoutHtml(note, r.html)
 const plain = !note.layout
-const look = lookOf(note)
-const frame = frameOf(note)
+const explained = {
+  look: explainLook(note),
+  frame: explainFrame(note),
+  target: { kind: "note", file: note.source.key + ".md", dir: note.dir } as const,
+}
+const preview = previewOf(Astro.url)
+const look = preview.style ?? explained.look.value
+const frame = preview.chrome ?? explained.frame.value
 const stacks = frame === "full"
 const garden = look === "garden"
 const stageIcon = (n: Note) => (n.stage ? site.stages[n.stage]?.icon : undefined)
@@ -79,7 +86,7 @@ const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefi
 const NOW_STALE_YEARS = 0.25
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
   {/* Stacked pages belong to the full frame, the only one with their toggle. */}
   <div class="stack-row" data-stack-row={stacks ? "" : undefined}>
   <div class="stack-col" data-stack-col={stacks ? "" : undefined} data-url={stacks ? note.url : undefined} data-title={title}>

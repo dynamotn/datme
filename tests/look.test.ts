@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, LAYOUT_LOOKS } from "../src/lib/look"
+import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, LAYOUT_LOOKS, explainDir, explainLook, explainFrame } from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 
@@ -76,6 +76,26 @@ describe("frameOf", () => {
       if (row.style) expect(STYLES).toContain(row.style)
       expect([...CHROMES, "full-norail"]).toContain(row.frame)
     }
+  })
+})
+
+describe("explainDir, explainLook and explainFrame", () => {
+  test("name the folder rule that won, or the site style", () => {
+    expect(explainDir("Notes", base)).toEqual({ value: "notebook", rule: { kind: "site" } })
+    const a = { ...base, classic: ["A/B"], folders: { A: "garden" as const } }
+    expect(explainDir("A/C", a)).toEqual({ value: "garden", rule: { kind: "folders", folder: "A" } })
+    expect(explainDir("A/B/D", a)).toEqual({ value: "classic", rule: { kind: "classic", folder: "A/B" } })
+  })
+  test("name the note, its layout or its folder, in that order", () => {
+    expect(explainLook({ dir: "03_Atomic", style: "garden", layout: "cv" }).rule).toEqual({ kind: "note" })
+    expect(explainLook({ dir: "03_Atomic", layout: "cv" })).toEqual({ value: "resume", rule: { kind: "layout", layout: "cv" } })
+    expect(explainLook({ dir: "07_Project", layout: "projects" }).rule).toEqual({ kind: "classic", folder: "07_Project" })
+    expect(explainLook(undefined)).toEqual({ value: "notebook", rule: { kind: "site" } })
+  })
+  test("name the note's chrome, its layout's or the default", () => {
+    expect(explainFrame({ chrome: "full", layout: "cv" })).toEqual({ value: "full", rule: { kind: "note" } })
+    expect(explainFrame({ layout: "cv" })).toEqual({ value: "minimal", rule: { kind: "layout", layout: "cv" } })
+    expect(explainFrame(undefined)).toEqual({ value: "full", rule: { kind: "default" } })
   })
 })
 

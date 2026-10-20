@@ -2900,6 +2900,93 @@ dialog.graph-modal {
   color: var(--clay);
 }
 
+/* ---------- datme dev: style switcher ---------- */
+.dev-look {
+  position: fixed;
+  inset-inline-start: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  max-width: min(360px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  border: 2px dashed var(--clay);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+  font: 13px/1.5 var(--font-ui);
+}
+.dev-look summary {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.dev-look summary em {
+  margin-inline-start: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--clay-soft);
+  color: var(--clay);
+  font-style: normal;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.dev-look-body {
+  padding: 0 12px 10px;
+}
+.dev-look-body p {
+  margin: 8px 0 4px;
+}
+.dev-look nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dev-look nav a {
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.dev-look nav a[aria-current] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.dev-look figure {
+  margin: 6px 0;
+}
+.dev-look figcaption {
+  color: var(--muted);
+  font-size: 12px;
+}
+.dev-look pre {
+  margin: 2px 0 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow-x: auto;
+  user-select: all;
+}
+.dev-look-reset {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--clay);
+}
+/* On phones, Astro's own dev toolbar takes the bottom centre. */
+@media (max-width: 640px) {
+  .dev-look {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100vh - 88px);
+  }
+}
+@media print {
+  .dev-look {
+    display: none;
+  }
+}
+
 /* ---------- flashcards ---------- */
 .prose details.flashcard {
   margin: 0 0 1em;

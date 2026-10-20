@@ -202,6 +202,15 @@ build time and ignored. Any folder note (not protected) lends its style and fram
 to the folder page, whether from its own `style:` and `chrome:` or from its
 layout's defaults.
 
+Under `datme dev`, a 🎨 bar in the bottom corner of every page names the rule
+that chose its style and frame, and previews the page in any style and either
+chrome without touching a file. The preview lives in the address
+(`?style=garden&chrome=minimal`), so it can be reloaded or opened beside the
+original. While one is on, the bar shows the lines that would keep it: the
+note's (or folder note's) frontmatter, or `appearance.folders` /
+`appearance.style` in `datme.yaml`. Built sites never show the bar and ignore
+the address.
+
 ### Layouts of a note's own text
 
 - **`cv`**: a résumé. The title is your name, and `role`, `location`,
