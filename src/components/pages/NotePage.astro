@@ -5,7 +5,7 @@ import { renderNote, renderSecret } from "~/lib/markdown"
 import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
-import { explainFrame, explainLook, isGarden } from "~/lib/look"
+import { explainFrame, explainLook, isGarden, baseStyle } from "~/lib/look"
 import { stageOf } from "~/lib/garden"
 import { previewOf } from "~/lib/dev-look"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
@@ -87,9 +87,9 @@ const look = preview.style ?? explained.look.value
 const frame = preview.chrome ?? explained.frame.value
 const stacks = frame === "full"
 // A broadsheet names the section a story runs in, its top folder, above the headline.
-const section = look === "broadsheet" && note.dir ? vault.folders[note.lang].get(note.dir.split("/")[0]) : undefined
+const section = baseStyle(look) === "broadsheet" && note.dir ? vault.folders[note.lang].get(note.dir.split("/")[0]) : undefined
 // A wiki page boxes the note's properties beside its text, with its contents above it.
-const wiki = look === "wiki"
+const wiki = baseStyle(look) === "wiki"
 // The herbarium is the garden pressed: the same stages and wording, and a label card on each sheet.
 const garden = isGarden(look)
 const stageIcon = (n: Note) => stageOf(n)?.icon
@@ -183,7 +183,7 @@ const feed = note.protected
     }
     <Outdated note={note} />
     <TrailBar note={note} at="head" />
-    <SeriesBox note={note} at="head" open={look === "manuscript"} />
+    <SeriesBox note={note} at="head" open={baseStyle(look) === "manuscript"} />
     {
       note.deck && !note.protected && (
         <div
@@ -239,7 +239,7 @@ const feed = note.protected
     <TrailBar note={note} at="foot" />
     <SeriesBox note={note} at="foot" />
     <DayNav note={note} />
-    {look === "herbarium" && plain && <SpecimenLabel note={note} title={title} near={backlinks[0]?.note} />}
+    {baseStyle(look) === "herbarium" && plain && <SpecimenLabel note={note} title={title} near={backlinks[0]?.note} />}
     {/* Microformats, for the fediverse bridges and IndieWeb readers: the note's address and author. */}
     {site.url && <data class="u-url" value={absUrl(note.url)} hidden />}
     <a class="p-author h-card" href={absUrl(withBase("/"))} hidden>{site.author || site.title[note.lang]}</a>

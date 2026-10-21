@@ -6,7 +6,7 @@ import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import { feedPath } from "~/lib/feed"
 import { withBase } from "~/lib/base"
-import { isGarden } from "~/lib/look"
+import { baseStyle, isGarden } from "~/lib/look"
 import Subscribe from "../Subscribe.astro"
 import Base from "~/layouts/Base.astro"
 import NoteRow from "../NoteRow.astro"
@@ -67,7 +67,7 @@ const showCards = notes.length > 0 && notes.every((n) => n.isBlog)
           )}
           {isGarden(site.appearance.style) ? (
             <GardenBed notes={notes} lang={lang} />
-          ) : site.appearance.style === "notebook" ? (
+          ) : baseStyle(site.appearance.style) === "notebook" ? (
             <div class="card-wall">
               {notes.map((n) => (
                 <IndexCard note={n} date="created" media={showCards} level={2} />

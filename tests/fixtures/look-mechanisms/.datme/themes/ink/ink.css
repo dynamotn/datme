@@ -1,0 +1,9 @@
+/* The pack's own face: published with it, never fetched from Google Fonts. */
+@font-face {
+  font-family: "Ink Serif";
+  src: url("fonts/ink.woff2") format("woff2");
+  font-display: swap;
+}
+.prose a {
+  text-underline-offset: 0.18em;
+}

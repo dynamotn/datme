@@ -1,0 +1,16 @@
+# A datme theme pack: blue-black ink on cream paper.
+# Use it with `theme: { preset: ink }` in datme.yaml, once this folder is in
+# .datme/themes/ink of the vault or installed as the datme-theme-ink package.
+name: Ink
+style: ink                    # the site style, unless datme.yaml sets appearance.style
+accent: { light: "#1f3a93", dark: "#9db4ff" }
+fonts:                        # Google Fonts families; a family the CSS declares with @font-face is the pack's own
+  heading: Fraunces
+  body: Literata
+code: { light: github-light, dark: github-dark-dimmed }
+mermaid: neutral
+css: ink.css                  # loaded on every page
+styles:
+  ink:                        # a new style: the pages of classic, on the paper below
+    base: classic
+    css: paper.css

@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks"
-import { STYLES, type Style } from "../site.config"
+import { site, type StyleName } from "../site.config"
 import { CHROMES, pickOption, type Chrome, type FrameRule, type LookRule } from "./look"
 
 /** Query keys of the style switcher of `datme dev`, named like the note properties they stand in for. */
@@ -7,7 +7,7 @@ export const PREVIEW_KEYS = { style: "style", chrome: "chrome" } as const
 
 /** A style and a chrome asked for in the page's address, to try them without editing files. */
 export interface Preview {
-  style?: Style
+  style?: StyleName
   chrome?: Chrome
 }
 
@@ -35,7 +35,7 @@ export function previewOf(url: URL, dev = Boolean(process.env.DATME_DEV)): Previ
   if (!dev) return {}
   url = pageUrl(url)
   const pick = <T extends string>(key: string, options: readonly T[]) => pickOption(url.searchParams.get(key) ?? undefined, options).value
-  return { style: pick(PREVIEW_KEYS.style, STYLES), chrome: pick(PREVIEW_KEYS.chrome, CHROMES) }
+  return { style: pick(PREVIEW_KEYS.style, site.styles), chrome: pick(PREVIEW_KEYS.chrome, CHROMES) }
 }
 
 /** The address of this page previewed with `key` set to `value`, or back to its own when `value` is undefined. */

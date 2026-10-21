@@ -1,11 +1,11 @@
 ---
-import { STYLES, type Style } from "~/site.config"
+import { site, type StyleName } from "~/site.config"
 import { CHROMES, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
 import { configLines, describeFrameRule, describeLookRule, pageUrl, previewOf, previewUrl, type LookTarget } from "~/lib/dev-look"
 
 interface Props {
   /** The page's own style and frame, before any preview, with the rules that chose them. */
-  look: Explained<Style, LookRule>
+  look: Explained<StyleName, LookRule>
   frame: Explained<Frame, FrameRule>
   target: LookTarget
 }
@@ -37,7 +37,7 @@ const url = pageUrl(Astro.url)
           Style <strong>{look.value}</strong> from <code>{describeLookRule(look.rule, target)}</code>
         </p>
         <nav aria-label="Preview a style">
-          {STYLES.map((st) => (
+          {site.styles.map((st) => (
             <a href={previewUrl(url, "style", st === look.value ? undefined : st)} aria-current={st === shown.style ? "true" : undefined} data-astro-reload>
               {st}
             </a>

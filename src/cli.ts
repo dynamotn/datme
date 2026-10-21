@@ -419,6 +419,10 @@ appearance:
 #    poem: classic
   readerSwitch: false         # true: readers pick a style in the View menu
 
+# A theme pack: .datme/themes/<name> in the vault, or the datme-theme-<name> package.
+# theme:
+#   preset: ink
+
 # Columns of links in the footer, each a heading and entries written like nav.
 footer: {}
 #  Elsewhere:

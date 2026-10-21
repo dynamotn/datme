@@ -1,7 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
-import { site } from "../site.config"
+import { site, type StyleName } from "../site.config"
 import { onAccent } from "./contrast"
+import { withBase } from "./base"
 
 /** The custom stylesheet of the vault, when there is one. */
 export function customCssFile(): string | undefined {
@@ -9,9 +10,23 @@ export function customCssFile(): string | undefined {
   return site.theme.css && fs.existsSync(file) && fs.statSync(file).isFile() ? file : undefined
 }
 
-/** Google Fonts stylesheet for the configured families, if any. */
+/** Address of a file of the theme pack, as /theme/ publishes it. */
+export const packUrl = (rel: string) => withBase(`/theme/${rel}`)
+
+/** Stylesheets of the theme pack for every page. */
+export function packSheets(): string[] {
+  return (site.pack?.css ?? []).map(packUrl)
+}
+
+/** Stylesheets of the theme pack for the pages of one of its styles; none for a built-in style. */
+export function packStyleSheets(style: StyleName): string[] {
+  return (site.pack?.styles[style]?.css ?? []).map(packUrl)
+}
+
+/** Google Fonts stylesheet for the configured families, if any; the theme pack's own fonts are not fetched. */
 export function fontsHref(): string | undefined {
-  const families = [...new Set(Object.values(site.theme.fonts).filter((f): f is string => !!f))]
+  const own = site.pack?.fonts ?? []
+  const families = [...new Set(Object.values(site.theme.fonts).filter((f): f is string => !!f && !own.includes(f)))]
   if (!families.length) return undefined
   const q = families.map((f) => `family=${encodeURIComponent(f).replace(/%20/g, "+")}:wght@400;600;700;800`).join("&")
   return `https://fonts.googleapis.com/css2?${q}&display=swap`

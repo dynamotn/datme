@@ -15,10 +15,10 @@ import manuscriptCss from "~/styles/manuscript.css?url"
 import lacquerCss from "~/styles/lacquer.css?url"
 import printCss from "~/styles/print.css?url"
 import katexCss from "katex/dist/katex.min.css?url"
-import { site, type Lang, type Style } from "~/site.config"
+import { site, type Lang, type Style, type StyleName } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
 import { seasonOf } from "~/lib/garden"
-import { startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
+import { baseStyle, startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
 import { previewOf, type LookTarget } from "~/lib/dev-look"
 import { LOOK_SCRIPT, readerLooks } from "~/lib/look-switch"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
@@ -30,7 +30,7 @@ import { footerColumns, navLinks } from "~/lib/nav"
 import { brandParts, profileOf } from "~/lib/footer"
 import { ogPath } from "~/lib/og-url"
 import { MONO_FONT_CSS, MONO_FONT_ORIGIN } from "~/lib/fonts"
-import { customCssFile, fontsHref, themeCss } from "~/lib/theme"
+import { customCssFile, fontsHref, packSheets, packStyleSheets, themeCss } from "~/lib/theme"
 import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
 import DevProblems from "~/components/DevProblems.astro"
@@ -54,7 +54,7 @@ interface Props {
   /** Whether the right rail slot is used. */
   rail?: boolean
   /** Visual style of the page; defaults to the configured one. */
-  look?: Style
+  look?: StyleName
   /** Navigation around the page: all of it, all but the rail, or a thin bar of its own. */
   frame?: Frame
   /** schema.org structured data describing the page. */
@@ -68,7 +68,7 @@ interface Props {
   /** Keep the page out of search engines, e.g. a draft built for preview. */
   noindex?: boolean
   /** The page's own style and frame with the rules that chose them, for the style switcher of `datme dev`. */
-  explained?: { look: Explained<Style, LookRule>; frame: Explained<Frame, FrameRule>; target: LookTarget }
+  explained?: { look: Explained<StyleName, LookRule>; frame: Explained<Frame, FrameRule>; target: LookTarget }
 }
 const {
   lang,
@@ -138,15 +138,20 @@ const LOOK_CSS: Partial<Record<Style, string>> = {
   manuscript: manuscriptCss,
   lacquer: lacquerCss,
 }
-const lookCss = LOOK_CSS[look]
+// A style draws as its built-in base, with the stylesheets a theme pack adds for it after that one's.
+const draw = (style: StyleName) => {
+  const builtIn = baseStyle(style)
+  return [builtIn, ...[LOOK_CSS[builtIn]].filter((c): c is string => !!c), ...packStyleSheets(style)]
+}
+const [base, ...lookCss] = draw(look)
 // A seasonal garden takes the colours of the build's season; the inline script below turns them to the reader's day.
-const seasons = look === "garden" ? site.appearance.seasons : false
+const seasons = baseStyle(look) === "garden" ? site.appearance.seasons : false
 // The styles readers may pick instead; a preview of `datme dev` shows what was asked for, never the reader's choice.
-const looks = preview.style ? undefined : readerLooks(look, LOOK_CSS)
+const looks = preview.style ? undefined : readerLooks(look, draw)
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme} data-scheme-default={startsDark(look) ? "dark" : undefined} data-chrome={frame} data-season={seasons ? seasonOf(new Date(), seasons.hemisphere) : undefined} data-hemisphere={seasons ? seasons.hemisphere : undefined} data-reader-looks={looks && JSON.stringify(looks)} data-look-own={looks && look}>
+<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={base} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme} data-scheme-default={startsDark(look) ? "dark" : undefined} data-chrome={frame} data-season={seasons ? seasonOf(new Date(), seasons.hemisphere) : undefined} data-hemisphere={seasons ? seasons.hemisphere : undefined} data-reader-looks={looks && JSON.stringify(looks)} data-look-own={looks && look}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -215,11 +220,11 @@ const looks = preview.style ? undefined : readerLooks(look, LOOK_CSS)
     {
       site.theme.scheme === "auto" ? (
         <>
-          <meta name="theme-color" content={THEME_COLOR[look].light} media="(prefers-color-scheme: light)" />
-          <meta name="theme-color" content={THEME_COLOR[look].dark} media="(prefers-color-scheme: dark)" />
+          <meta name="theme-color" content={THEME_COLOR[base as Style].light} media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content={THEME_COLOR[base as Style].dark} media="(prefers-color-scheme: dark)" />
         </>
       ) : (
-        <meta name="theme-color" content={THEME_COLOR[look][site.theme.scheme]} />
+        <meta name="theme-color" content={THEME_COLOR[base as Style][site.theme.scheme]} />
       )
     }
     <script is:inline>
@@ -269,13 +274,14 @@ const looks = preview.style ? undefined : readerLooks(look, LOOK_CSS)
     {/* In cascade order, which src/scripts/styles.ts restores after a navigation adds one. */}
     {hasMath && <link rel="stylesheet" href={katexCss} data-css="1" />}
     <link rel="stylesheet" href={globalCss} data-css="2" />
-    {lookCss && <link rel="stylesheet" href={lookCss} data-css="3" data-look-css />}
+    {lookCss.map((href) => <link rel="stylesheet" href={href} data-css="3" data-look-css />)}
     <link rel="stylesheet" href={printCss} media="print" data-css="4" />
     {/* The style the reader picked in the View menu, before the first paint. */}
     {looks && <script is:inline set:html={LOOK_SCRIPT} />}
   </head>
   <body data-copy={s.copy} data-copied={s.copied} data-close={s.close} data-prev={s.previous} data-next={s.next} data-share-passage={s.sharePassage} data-highlight={s.highlight} data-highlights={s.highlights} data-highlight-note={s.highlightNote} data-highlight-save={s.highlightSave} data-highlight-remove={s.highlightRemove} data-highlight-lost={s.highlightLost} data-highlights-empty={s.highlightsEmpty} data-highlights-export={s.highlightsExport}>
     {/* In <body> so it comes after Astro's own stylesheets, which go at the end of <head>. */}
+    {packSheets().map((href) => <link rel="stylesheet" href={href} />)}
     {customCssFile() && <link rel="stylesheet" href={withBase("/custom.css")} />}
     <header class:list={["site-header", { "site-bar": minimal }]}>
       {

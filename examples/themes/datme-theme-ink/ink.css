@@ -1,0 +1,8 @@
+/* On every page of a site using the Ink theme: inked links and selections. */
+.prose a {
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}

@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { Window } from "happy-dom"
 
-// A site readers can restyle, with a style per tag: built once, then read and checked with axe.
+// A site readers can restyle, with a style per tag and a theme pack: built once, then read and checked with axe.
 const root = path.resolve(import.meta.dir, "..")
 const vault = path.join(root, "tests/fixtures/look-mechanisms")
 let out = ""
@@ -35,6 +35,37 @@ async function violations(page: string): Promise<string[]> {
   return res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.help}`)
 }
 
+describe("a theme pack", () => {
+  test("a style of the pack draws as its base, with its own stylesheet after the base's", () => {
+    const page = read("Ink/Letter/index.html")
+    expect(page).toContain('data-look="classic"')
+    expect(page).toMatch(/<link rel="stylesheet" href="\/theme\/paper.css" data-css="3" data-look-css>/)
+    expect(read("Notes/Plain/index.html")).not.toMatch(/<link[^>]*paper.css/)
+  })
+  test("its stylesheets for every page come before the vault's own", () => {
+    const page = read("Notes/Plain/index.html")
+    expect(page).toContain('<link rel="stylesheet" href="/theme/ink.css">')
+    expect(page).not.toContain("stray.css")
+  })
+  test("only its stylesheets, fonts and pictures are published, from its own folder", () => {
+    expect(read("theme/ink.css")).toContain("Ink Serif")
+    expect(read("theme/paper.css")).toContain("--bg")
+    expect(read("theme/fonts/ink.woff2")).toBe("wOF2-fixture")
+    for (const kept of ["theme/theme.js", "theme/mark.svg", "theme/theme.yaml", "theme/.hidden/a.css", "stray.css"]) {
+      expect(fs.existsSync(path.join(out, kept))).toBe(false)
+    }
+  })
+  test("datme.yaml beats the pack; its own font is never fetched; a bad value keeps datme's", () => {
+    const page = read("Notes/Plain/index.html")
+    expect(page).toContain("--accent:#2d6a4f")
+    expect(page).not.toContain("#1f3a93")
+    const fonts = page.match(/href="(https:\/\/fonts.googleapis.com\/css2[^"]*)"/)![1]
+    expect(fonts).toContain("Fraunces")
+    expect(fonts).not.toContain("Ink")
+    expect(page).toContain('data-mermaid="neutral dark"')
+  })
+})
+
 describe("a style per tag", () => {
   test("a note takes the style of its tag, a nested one its parent's", () => {
     expect(read("Notes/Haiku/index.html")).toContain('data-look="garden"')
@@ -50,12 +81,13 @@ describe("the reader's style", () => {
     const page = read("Notes/Plain/index.html")
     expect(page).toMatch(/data-look-own="classic"/)
     const looks = JSON.parse(page.match(/data-reader-looks="([^"]*)"/)![1].replaceAll("&quot;", '"')) as Record<string, string[]>
-    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden"])
+    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "ink"])
+    expect(looks.ink).toEqual(["classic", "/theme/paper.css"])
     expect(looks.classic).toEqual(["classic"])
     expect(looks.garden[0]).toBe("garden")
     expect(looks.garden[1]).toMatch(/\.css$/)
     const menu = page.split("data-look-switch")[1].split("</div>")[0]
-    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden"])
+    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "ink"])
     // The script that applies the choice before the first paint, and only the page's own sheet linked.
     expect(page).toContain('localStorage.getItem("look")')
     expect(page.match(/<link[^>]*data-look-css/g)).toBeNull()
@@ -64,7 +96,7 @@ describe("the reader's style", () => {
     expect(read("Notes/Sonnet/index.html").match(/<link[^>]*data-look-css[^>]*>/g)).toHaveLength(1)
   })
 
-  for (const page of ["index.html", "Notes/Plain/index.html", "Notes/Haiku/index.html"]) {
+  for (const page of ["index.html", "Notes/Plain/index.html", "Notes/Haiku/index.html", "Ink/Letter/index.html"]) {
     test(`${page} has no serious or critical axe violations`, async () => {
       expect(await violations(page)).toEqual([])
     }, 30_000)

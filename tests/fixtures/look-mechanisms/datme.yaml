@@ -1,4 +1,5 @@
-# A site in the classic style that readers can restyle, with a style per tag.
+# A site in the classic style that readers can restyle, with a style per tag
+# and the Ink theme pack of .datme/themes, whose style the Ink folder uses.
 site:
   title: Looks test
 languages: [en-US]
@@ -7,5 +8,10 @@ appearance:
   style: classic
   tags:
     poem: garden
+  folders:
+    Ink: ink
   readerSwitch: true
   stream: [Thoughts]
+theme:
+  preset: ink
+  accent: "#2d6a4f"           # beats the pack's

@@ -7,6 +7,7 @@ import { bundledThemes } from "shiki"
 import { folderDisplayName, slugTag } from "./lib/slug"
 import { CONFIG_FILES } from "./lib/config-files"
 import { basePath, useSite } from "./lib/base"
+import { loadPack, PACK_STYLE_NAME, PACK_THEME_KEYS, type PackStyle } from "./lib/theme-pack"
 
 /** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
 export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
@@ -30,6 +31,8 @@ export const STYLES = [
   "lacquer",
 ] as const
 export type Style = (typeof STYLES)[number]
+/** A built-in style, or one a theme pack adds on top of one. */
+export type StyleName = string
 /** Styles made for a single page (a résumé, a gallery) rather than a whole site. */
 export const PAGE_STYLES: readonly Style[] = ["resume", "darkroom"]
 
@@ -119,7 +122,29 @@ const DEFAULT_TYPES: Record<string, string> = {
   video: "🎬",
 }
 
-const schema = z
+/** The `theme:` values a theme pack can set too, checked alike. */
+const themeFields = {
+  /** Colour scheme before the reader picks one with the toggle; auto follows their system. */
+  scheme: z.enum(["auto", "light", "dark"]).default("auto"),
+  /** Accent colour of links and highlights; one value, or one per colour scheme. */
+  accent: z.union([cssColor, z.object({ light: cssColor, dark: cssColor }).strict()]).optional(),
+  /** Font families for headings and UI, reading text and code: from Google Fonts, unless a theme pack ships them. */
+  fonts: z
+    .object({ heading: fontFamily.optional(), body: fontFamily.optional(), code: fontFamily.optional() })
+    .strict()
+    .default({}),
+  /** Shiki themes of code blocks. */
+  code: themePair(shikiTheme).default(TOOL_THEMES.code),
+  /** giscus themes of the comments. */
+  comments: themePair(giscusTheme).default(TOOL_THEMES.comments),
+  /** Mermaid themes of ```mermaid diagrams. */
+  mermaid: themePair(mermaidTheme).default(TOOL_THEMES.mermaid),
+  /** D2 theme ids of ```d2 diagrams, unless a diagram picks its own. */
+  d2: themePair(d2Theme).default(TOOL_THEMES.d2),
+} satisfies Record<(typeof PACK_THEME_KEYS)[number], z.ZodType>
+
+/** The schema of datme.yaml; styles are the built-in ones and those of the theme pack. */
+const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
   .object({
     site: z
       .object({
@@ -267,25 +292,11 @@ const schema = z
       .default({ all: false, types: [], folders: [] }),
     theme: z
       .object({
-        /** Colour scheme before the reader picks one with the toggle; auto follows their system. */
-        scheme: z.enum(["auto", "light", "dark"]).default("auto"),
-        /** Accent colour of links and highlights; one value, or one per colour scheme. */
-        accent: z.union([cssColor, z.object({ light: cssColor, dark: cssColor }).strict()]).optional(),
-        /** Google Fonts families for headings and UI, reading text and code. */
-        fonts: z
-          .object({ heading: fontFamily.optional(), body: fontFamily.optional(), code: fontFamily.optional() })
-          .strict()
-          .default({}),
+        ...themeFields,
+        /** A theme pack the values above override: a folder of the vault, or a datme-theme-* package. */
+        preset: z.string().min(1).optional(),
         /** A stylesheet in the vault, loaded after datme's own. */
         css: z.string().default("datme.css"),
-        /** Shiki themes of code blocks. */
-        code: themePair(shikiTheme).default(TOOL_THEMES.code),
-        /** giscus themes of the comments. */
-        comments: themePair(giscusTheme).default(TOOL_THEMES.comments),
-        /** Mermaid themes of ```mermaid diagrams. */
-        mermaid: themePair(mermaidTheme).default(TOOL_THEMES.mermaid),
-        /** D2 theme ids of ```d2 diagrams, unless a diagram picks its own. */
-        d2: themePair(d2Theme).default(TOOL_THEMES.d2),
       })
       .strict()
       .default({ scheme: "auto", fonts: {}, css: "datme.css", ...TOOL_THEMES }),
@@ -457,13 +468,13 @@ const schema = z
          * maturity, recently tended first; herbarium: notes as pressed specimens; manuscript: a book page with
          * notes in its margin; lacquer: vermilion, black and gold leaf.
          */
-        style: z.enum(STYLES).default("notebook"),
+        style: z.enum(styles).default("notebook"),
         /** Folders whose notes use the other style, e.g. long-form writing. */
         classic: z.array(z.string()).default([]),
         /** A style per folder, subfolders included, e.g. { Writing: classic }. */
-        folders: z.record(z.string(), z.enum(STYLES)).default({}),
+        folders: z.record(z.string(), z.enum(styles)).default({}),
         /** A style per tag, nested tags included, e.g. { poem: classic }; a note's first matching tag wins. */
-        tags: z.record(z.string(), z.enum(STYLES)).default({}),
+        tags: z.record(z.string(), z.enum(styles)).default({}),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
         /**
@@ -474,7 +485,7 @@ const schema = z
           .union([z.boolean(), z.object({ hemisphere: z.enum(["north", "south"]).default("north") }).strict()])
           .default(false),
         /** Styles readers can pick from the View menu instead of the page's own; true for every site-wide style. */
-        readerSwitch: z.union([z.boolean(), z.array(z.enum(STYLES)).min(1)]).default(false),
+        readerSwitch: z.union([z.boolean(), z.array(z.enum(styles)).min(1)]).default(false),
       })
       .strict()
       .default({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false, readerSwitch: false }),
@@ -485,7 +496,7 @@ const schema = z
 
 export type TtsConfig = { models: Record<string, "vieneu">; folders: string[]; frontmatter: Record<string, string | number | boolean> }
 
-export type RawConfig = z.input<typeof schema>
+export type RawConfig = z.input<ReturnType<typeof makeSchema>>
 
 export type Hemisphere = "north" | "south"
 
@@ -544,9 +555,65 @@ export class ConfigError extends Error {
   }
 }
 
-/** Validate a parsed config and fill in every default. Pure, so it can be tested. */
+/** A problem of the config that does not stop the build, reported against a file as `datme check` does. */
+export interface ConfigWarning {
+  file: string
+  message: string
+}
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v)
+const isStyle = (name: unknown): name is Style => (STYLES as readonly unknown[]).includes(name)
+
+/**
+ * Lays the theme pack `theme.preset` names under the config: its values fill what `theme:`
+ * leaves out, its style is the site's unless `appearance.style` is set, and its styles join the
+ * built-in ones. Whatever is wrong with the pack is a warning, never a failed build.
+ */
+function withPack(raw: unknown, vault: string) {
+  const config = isObject(raw) ? raw : {}
+  const theme = isObject(config.theme) ? config.theme : {}
+  const styles: Record<StyleName, PackStyle> = {}
+  if (typeof theme.preset !== "string" || !theme.preset) return { raw, styles, warnings: [] as ConfigWarning[] }
+  const { pack, warnings: found } = loadPack(theme.preset, vault)
+  const warnings = found.map((message) => ({ file: pack?.file ?? "datme.yaml", message }))
+  if (!pack) return { raw, styles, warnings }
+  const warn = (message: string) => warnings.push({ file: pack.file, message })
+  const label = `theme ${pack.preset}`
+  const fromPack: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(pack.theme)) {
+    const checked = themeFields[key as keyof typeof themeFields].safeParse(value)
+    if (checked.success) fromPack[key] = value
+    else warn(`${label}: ${key}: ${checked.error.issues[0].message}, so it is ignored`)
+  }
+  for (const [name, style] of Object.entries(pack.styles)) {
+    if (isStyle(name)) warn(`${label}: styles.${name}: a built-in style has that name, so it is left out`)
+    else if (!isStyle(style.base)) warn(`${label}: styles.${name}: base ${style.base} is not one of ${STYLES.join(", ")}, so it is left out`)
+    else styles[name] = style
+  }
+  const appearance = isObject(config.appearance) ? config.appearance : {}
+  let style = appearance.style
+  if (style === undefined && pack.style !== undefined) {
+    if (isStyle(pack.style) || (typeof pack.style === "string" && pack.style in styles)) style = pack.style
+    else warn(`${label}: style ${JSON.stringify(pack.style)} is no style of datme or of the theme, so it is ignored`)
+  }
+  // Fonts merge one family at a time; a `fonts:` that is not a map is left for the schema to reject.
+  const fonts = theme.fonts === undefined || isObject(theme.fonts) ? { ...(fromPack.fonts as object | undefined), ...theme.fonts } : theme.fonts
+  return {
+    raw: { ...config, theme: { ...fromPack, ...theme, fonts }, ...(style === undefined ? {} : { appearance: { ...appearance, style } }) },
+    styles,
+    warnings,
+    pack: { dir: pack.dir, css: pack.css, fonts: pack.fonts },
+  }
+}
+
+/** Validate a parsed config and fill in every default; only a theme pack is read from the vault. */
 export function resolveConfig(raw: unknown, vault: string, env: Record<string, string | undefined> = {}) {
-  const parsed = schema.safeParse(raw ?? {})
+  const packed = withPack(raw, vault)
+  const packStyles = packed.styles
+  const styleNames: [StyleName, ...StyleName[]] = [...STYLES, ...Object.keys(packStyles)]
+  /** The built-in style a style builds on: itself, or the base of a theme pack's. */
+  const baseOf = (name: StyleName): Style => packStyles[name]?.base as Style | undefined ?? (name as Style)
+  const parsed = makeSchema(styleNames).safeParse(packed.raw ?? {})
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `  - ${i.path.join(".") || "(root)"}: ${i.message}`).join("\n")
     throw new ConfigError(`Invalid datme config in ${vault}:\n${issues}`)
@@ -601,7 +668,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     }
   }
   const { readerSwitch } = c.appearance
-  const pageStyle = Array.isArray(readerSwitch) && readerSwitch.find((st) => PAGE_STYLES.includes(st))
+  const pageStyle = Array.isArray(readerSwitch) && readerSwitch.find((st) => PAGE_STYLES.includes(baseOf(st)))
   if (pageStyle) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.readerSwitch: ${pageStyle} is made for a single page, so readers cannot pick it for the site`)
   }
@@ -691,12 +758,18 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
       folders: Object.fromEntries(Object.entries(c.appearance.folders).map(([p, style]) => [p.replace(/^\/+|\/+$/g, ""), style])),
       // Written as in a note's tags: `#poem`, `Poem` and `poem` are the same tag.
-      tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, Style] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
+      tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, StyleName] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
-      readerSwitch: readerSwitch === true ? STYLES.filter((st) => !PAGE_STYLES.includes(st)) : [...new Set(readerSwitch || [])],
+      readerSwitch: readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])],
     },
     strings: c.strings,
+    /** Every style the site knows: the built-in ones, then those of its theme pack. */
+    styles: styleNames,
+    /** The theme pack of `theme.preset`: its folder, stylesheets for every page, styles and own fonts. */
+    pack: packed.pack && { ...packed.pack, styles: packStyles },
+    /** Problems of the config that do not stop the build, reported by `datme check`. */
+    warnings: packed.warnings,
   }
 }
 

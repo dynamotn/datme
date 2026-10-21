@@ -1,4 +1,4 @@
-import { site, type SiteConfig, type Style } from "../site.config"
+import { site, type SiteConfig, type Style, type StyleName } from "../site.config"
 import type { Layout, Note } from "./vault"
 
 /** Navigation frames a note can ask for with its `chrome` property. */
@@ -35,14 +35,14 @@ export interface Explained<T, R> {
 }
 
 /** Style of a folder and its rule: the deepest of `classic` and `folders` that covers it, else the site style. */
-export function explainDir(dir: string, appearance: Rules): Explained<Style, LookRule> {
+export function explainDir(dir: string, appearance: Rules): Explained<StyleName, LookRule> {
   const { style, classic, folders } = appearance
   const flipped: Style = style === "notebook" ? "classic" : style === "classic" ? "notebook" : "classic"
-  const rules: [string, Style, boolean][] = [
-    ...classic.map((f): [string, Style, boolean] => [f, flipped, false]),
-    ...Object.entries(folders).map(([f, s]): [string, Style, boolean] => [f, s, true]),
+  const rules: [string, StyleName, boolean][] = [
+    ...classic.map((f): [string, StyleName, boolean] => [f, flipped, false]),
+    ...Object.entries(folders).map(([f, s]): [string, StyleName, boolean] => [f, s, true]),
   ]
-  let best: [string, Style, boolean] | undefined
+  let best: [string, StyleName, boolean] | undefined
   for (const rule of rules) {
     const [f, , fromFolders] = rule
     if (dir !== f && !dir.startsWith(f + "/")) continue
@@ -53,7 +53,7 @@ export function explainDir(dir: string, appearance: Rules): Explained<Style, Loo
 }
 
 /** Style of a folder: the deepest rule among `classic` and `folders` that covers it, else the site style. */
-export function resolveLook(dir: string, appearance: Rules): Style {
+export function resolveLook(dir: string, appearance: Rules): StyleName {
   return explainDir(dir, appearance).value
 }
 
@@ -99,11 +99,11 @@ export const LAYOUT_LOOKS: Partial<Record<Layout, LayoutLook>> = {
  * Style a note gets from its tags and the rule that gave it: the note's first tag that `appearance.tags`
  * covers, in any case, a nested tag such as `poem/haiku` being covered by `poem`; the deepest such entry wins.
  */
-export function explainTags(tags: readonly string[], appearance: TagRules): Explained<Style, LookRule> | undefined {
+export function explainTags(tags: readonly string[], appearance: TagRules): Explained<StyleName, LookRule> | undefined {
   // Tags match whatever their case, as in Obsidian.
   const entries = Object.entries(appearance.tags)
   for (const tag of tags.map((t) => t.toLowerCase())) {
-    let best: [string, Style] | undefined
+    let best: [string, StyleName] | undefined
     for (const entry of entries) {
       const key = entry[0].toLowerCase()
       if (tag !== key && !tag.startsWith(key + "/")) continue
@@ -118,7 +118,7 @@ export function explainTags(tags: readonly string[], appearance: TagRules): Expl
 type LookNote = Pick<Note, "dir" | "style" | "layout"> & { tags?: readonly string[] }
 
 /** Page style of a note and the rule that chose it: its own `style`, else its layout's, its tags', or its folder's. */
-export function explainLook(note: LookNote | undefined): Explained<Style, LookRule> {
+export function explainLook(note: LookNote | undefined): Explained<StyleName, LookRule> {
   if (!note) return { value: site.appearance.style, rule: { kind: "site" } }
   if (note.style) return { value: note.style, rule: { kind: "note" } }
   const fromLayout = note.layout && LAYOUT_LOOKS[note.layout]?.style
@@ -127,7 +127,7 @@ export function explainLook(note: LookNote | undefined): Explained<Style, LookRu
 }
 
 /** Page style of a note: its own `style`, else its layout's, its tags' or its folder's; the site style when there is no note. */
-export function lookOf(note: LookNote | undefined): Style {
+export function lookOf(note: LookNote | undefined): StyleName {
   return explainLook(note).value
 }
 
@@ -147,12 +147,18 @@ export function frameOf(note: Pick<Note, "chrome" | "layout"> | undefined): Fram
 /** Styles drawn dark first: a gallery wall at night, a screen of phosphor, blue drawing paper, black lacquer. */
 const DARK_FIRST: readonly Style[] = ["darkroom", "terminal", "blueprint", "lacquer"]
 
+/** The built-in style a style builds on: itself, or the base of one a theme pack adds. */
+export function baseStyle(look: StyleName, pack: Pick<NonNullable<SiteConfig["pack"]>, "styles"> | undefined = site.pack): Style {
+  return (pack?.styles[look]?.base ?? look) as Style
+}
+
 /** Whether a style opens dark when the reader has not chosen a scheme. */
-export function startsDark(look: Style): boolean {
-  return DARK_FIRST.includes(look)
+export function startsDark(look: StyleName): boolean {
+  return DARK_FIRST.includes(baseStyle(look))
 }
 
 /** Whether a style shows the garden: notes in beds by stage, with its planted and tended wording. */
-export function isGarden(look: Style): boolean {
-  return look === "garden" || look === "herbarium"
+export function isGarden(look: StyleName): boolean {
+  const base = baseStyle(look)
+  return base === "garden" || base === "herbarium"
 }

@@ -1,6 +1,6 @@
-import { PAGE_STYLES, site, type Style } from "../site.config"
+import { PAGE_STYLES, site, type Style, type StyleName } from "../site.config"
 
-/** How the reader switch draws each style it offers: the `data-look` it sets, then the stylesheets it links. */
+/** How the reader switch draws each style it offers: the `data-look` it sets (its built-in base), then the stylesheets it links. */
 export type LookSheets = Record<string, string[]>
 
 /**
@@ -8,9 +8,9 @@ export type LookSheets = Record<string, string[]>
  * included so the reader can go back to it. None when the switch is off or the page's style is
  * made for a single page: a résumé stays a résumé.
  */
-export function readerLooks(own: Style, sheets: Partial<Record<Style, string>>, choices: readonly Style[] = site.appearance.readerSwitch): LookSheets | undefined {
-  if (!choices.length || PAGE_STYLES.includes(own)) return undefined
-  return Object.fromEntries([own, ...choices].map((st) => [st, [st, ...(sheets[st] ? [sheets[st]] : [])]]))
+export function readerLooks(own: StyleName, draw: (style: StyleName) => string[], choices: readonly StyleName[] = site.appearance.readerSwitch): LookSheets | undefined {
+  if (!choices.length || PAGE_STYLES.includes(draw(own)[0] as Style)) return undefined
+  return Object.fromEntries([own, ...choices].map((st) => [st, draw(st)]))
 }
 
 /**

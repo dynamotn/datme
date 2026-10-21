@@ -1,18 +1,18 @@
 ---
 import type { Note } from "~/lib/vault"
-import { site, type Style } from "~/site.config"
+import { site, type StyleName } from "~/site.config"
 import { t, formatDate, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
 import Icon from "./Icon.astro"
 import PropValue from "./PropValue.astro"
 import { noteProperties } from "~/lib/properties"
 import { typeInfo } from "~/lib/types"
-import { isGarden } from "~/lib/look"
+import { baseStyle, isGarden } from "~/lib/look"
 
 interface Props {
   note: Note
   words: number
-  look: Style
+  look: StyleName
 }
 const { note, words, look } = Astro.props
 const garden = isGarden(look)
@@ -112,7 +112,7 @@ const tended =
   )
 }
 {
-  props.length > 0 && look !== "wiki" && (
+  props.length > 0 && baseStyle(look) !== "wiki" && (
     <details class="properties">
       <summary>{s.properties}</summary>
       <dl>

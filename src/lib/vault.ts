@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { execFileSync } from "node:child_process"
 import { parseYaml } from "./yaml"
-import { site, STYLES, type Lang, type Style } from "../site.config"
+import { site, type Lang, type StyleName } from "../site.config"
 import { pickOption, CHROMES, type Chrome } from "./look"
 import { langPrefix, t } from "./i18n"
 import { sluggify, slugTag, slugToUrl, urlToSlug, folderDisplayName } from "./slug"
@@ -92,7 +92,7 @@ export interface Note {
   /** Pictures of the speakers of a dialogue, by name (its `speakers` property). */
   speakers?: Record<string, string>
   /** Style this page is drawn in (`style` property), instead of its folder's. */
-  style?: Style
+  style?: StyleName
   /** Navigation frame of this page (`chrome` property), instead of the usual one. */
   chrome?: Chrome
   cssclasses: string[]
@@ -476,6 +476,8 @@ function buildVault(version: number): Vault {
 
   const problems: Problem[] = []
   const report = (level: Problem["level"], file: string, message: string) => void problems.push({ level, file, message })
+  // The config's own, such as a theme pack that could not be used.
+  for (const w of site.warnings) report("warning", w.file, w.message)
   // Every note of the vault, published or not, to tell a private link target from a missing one.
   const anyNote = new Set<string>()
   for (const rel of found.md) {
@@ -825,9 +827,9 @@ function buildVault(version: number): Vault {
               }),
             )
           : undefined
-      const { value: style, invalid: badStyle } = pickOption(s.fm.style, STYLES)
+      const { value: style, invalid: badStyle } = pickOption(s.fm.style, site.styles)
       if (badStyle && lang === site.defaultLang) {
-        report("warning", relFile, `style "${badStyle}" is not one of ${STYLES.join(", ")}, so the note keeps its usual style`)
+        report("warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`)
       }
       const { value: chrome, invalid: badChrome } = pickOption(s.fm.chrome, CHROMES)
       if (badChrome && lang === site.defaultLang) {

@@ -5,7 +5,7 @@ import { getVault, byRecent, countNotes, type FolderNode } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { t, formatDate } from "~/lib/i18n"
 import { isStream } from "~/lib/nav"
-import { explainDir, explainFrame, explainLook, isGarden } from "~/lib/look"
+import { explainDir, explainFrame, explainLook, isGarden, baseStyle } from "~/lib/look"
 import { previewOf } from "~/lib/dev-look"
 import { feedPath } from "~/lib/feed"
 import { withBase } from "~/lib/base"
@@ -100,9 +100,9 @@ const stream = isStream(folder.dir)
         folder.notes.length > 0 &&
         (isGarden(look) ? (
           <GardenBed notes={folder.notes} lang={lang} />
-        ) : look === "broadsheet" ? (
+        ) : baseStyle(look) === "broadsheet" ? (
           <Front lang={lang} notes={folder.notes} />
-        ) : look === "notebook" ? (
+        ) : baseStyle(look) === "notebook" ? (
           <div class="card-wall">
             {byRecent(folder.notes).map((n) => (
               <IndexCard note={n} level={2} />

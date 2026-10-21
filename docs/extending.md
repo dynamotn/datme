@@ -14,9 +14,67 @@ title: "Extending"
   loaded after datme's own, so it can restyle anything.
 - `cssclasses` in a note's frontmatter adds classes to that note, as in
   Obsidian.
+- `theme.preset` loads a theme pack, below.
 - `strings` overrides any text of the interface, per language. The built-in
   texts live in `src/i18n/<language>.json`; to add a language for everyone,
   see [CONTRIBUTING](https://gitlab.com/dynamo-brain/datme/-/blob/main/CONTRIBUTING.md).
+
+## Theme packs
+
+A theme pack is a look to reuse and share: a folder holding a `theme.yaml`,
+its stylesheets, and the fonts and pictures they load. `theme.preset` in
+`datme.yaml` names one:
+
+```yaml
+theme:
+  preset: ink               # .datme/themes/ink in the vault, else the datme-theme-ink package
+  # preset: themes/ink      # a folder of the vault, by its path
+  # preset: "@me/ink"       # a scoped package, by its full name
+  accent: "#2d6a4f"         # anything under theme: beats the pack's value
+```
+
+A name is looked up in `.datme/themes/<name>` of the vault, then as the
+package `datme-theme-<name>` (or the name itself, if it is scoped or already
+starts with `datme-theme-`) in `node_modules` next to the vault or to datme;
+install it with `bun add -d datme-theme-ink` beside the vault. A path must
+stay inside the vault.
+
+```yaml
+# theme.yaml
+name: Ink
+style: ink                  # the site's style, unless appearance.style is set
+accent: { light: "#1f3a93", dark: "#9db4ff" }
+fonts: { heading: Fraunces, body: Ink Serif }
+code: { light: github-light, dark: github-dark-dimmed }
+mermaid: neutral            # also scheme, comments and d2, as under theme:
+css: ink.css                # stylesheets for every page, one or a list
+styles:                     # styles of its own
+  ink:
+    base: classic           # the built-in style it builds on: its pages and stylesheet
+    css: paper.css          # loaded after the base's, only on pages in this style
+```
+
+- **Settings** take the same values as `theme:` in `datme.yaml`, and
+  `datme.yaml` wins key by key (font by font for `fonts`).
+- **Styles** a pack adds are used like the built-in ones: in
+  `appearance.style`, `folders`, `tags`, `readerSwitch` and a note's `style:`.
+  A page in one is drawn as its `base` (the same HTML, `data-look` and
+  stylesheet) with the pack's stylesheets added on top. A name is lower-case
+  letters, digits and `-`, and cannot be a built-in style's.
+- **Fonts**: a family that the pack's CSS declares with `@font-face` is the
+  pack's own and is never fetched from Google Fonts; other families are.
+- **Files**: the pack's `.css`, `.woff2`, `.woff`, `.ttf`, `.otf`, `.png`,
+  `.jpg`, `.gif`, `.webp` and `.avif` files are published under `/theme/`,
+  keeping their paths, so `url(fonts/ink.woff2)` in `ink.css` just works.
+  Nothing else is: no script of a pack ever runs, SVG files (which can carry
+  scripts) are left out, and so are hidden folders, `node_modules` and any
+  file a link points out of the pack's folder.
+
+Problems with a pack never stop the build: a missing pack, a value datme does
+not take or a stylesheet outside the pack is reported as a warning (by
+`datme check` and `datme dev`), and the site keeps datme's own value.
+`examples/themes/datme-theme-ink` in datme's repository is a complete pack to
+start from.
 
 ## Your own syntax: `datme.config.mjs`
 
@@ -101,6 +159,7 @@ A map of the code:
 | --- | --- |
 | `src/cli.ts` | The `datme` command |
 | `src/site.config.ts` | Loads and validates `datme.yaml` |
+| `src/lib/theme-pack.ts` | Finds and reads theme packs |
 | `src/lib/vault.ts` | Scans the vault; resolves links; builds backlinks, tags and folders |
 | `src/lib/obsidian.ts` | Turns Obsidian syntax into standard markdown |
 | `src/lib/markdown.ts` | The unified pipeline: callouts, KaTeX, Shiki, transclusion |

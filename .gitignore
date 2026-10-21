@@ -2,7 +2,7 @@ node_modules/
 dist/
 .astro/
 .DS_Store
-.datme/
+/.datme/
 bin/datme.js
 .lhci-site/
 .lhci-report/

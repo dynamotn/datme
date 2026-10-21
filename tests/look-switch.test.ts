@@ -21,15 +21,16 @@ describe("appearance.readerSwitch", () => {
 })
 
 describe("readerLooks", () => {
-  const sheets = { notebook: "/n.css", garden: "/g.css" }
+  const sheets: Record<string, string[]> = { notebook: ["/n.css"], garden: ["/g.css"] }
+  const draw = (st: string) => [st === "ink" ? "classic" : st, ...(sheets[st] ?? [])]
   test("the page's own style, then the choices, each with the look it sets and its stylesheet", () => {
-    expect(readerLooks("classic", sheets, ["notebook", "garden"])).toEqual({ classic: ["classic"], notebook: ["notebook", "/n.css"], garden: ["garden", "/g.css"] })
+    expect(readerLooks("classic", draw, ["notebook", "garden"])).toEqual({ classic: ["classic"], notebook: ["notebook", "/n.css"], garden: ["garden", "/g.css"] })
   })
   test("none when the switch is off or the page is a résumé or a gallery", () => {
-    expect(readerLooks("classic", sheets, [])).toBeUndefined()
-    expect(readerLooks("resume", sheets, ["notebook"])).toBeUndefined()
+    expect(readerLooks("classic", draw, [])).toBeUndefined()
+    expect(readerLooks("resume", draw, ["notebook"])).toBeUndefined()
     // The fixture leaves the switch off.
-    expect(readerLooks("notebook", sheets)).toBeUndefined()
+    expect(readerLooks("notebook", draw)).toBeUndefined()
   })
 })
 

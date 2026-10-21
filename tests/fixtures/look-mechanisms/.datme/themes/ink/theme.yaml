@@ -1,0 +1,15 @@
+# The Ink pack of examples/themes, with a font of its own and a few mistakes to warn about.
+name: Ink
+style: ink
+accent: { light: "#1f3a93", dark: "#9db4ff" }
+fonts:
+  heading: Fraunces
+  body: Ink Serif
+mermaid: pink
+css: [ink.css, ../../stray.css, missing.css, theme.js]
+styles:
+  ink:
+    base: classic
+    css: paper.css
+  Bad Name: { base: classic }
+colour: blue

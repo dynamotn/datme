@@ -1,0 +1,25 @@
+/* The ink style: classic's pages on cream paper, in blue-black ink. */
+:root {
+  --bg: #f4efe1;
+  --surface: #fbf7ec;
+  --surface-2: #ece5d3;
+  --ink: #1b2340;
+  --ink-2: #3a4262;
+  --muted: #5b6078;
+  --line: #ddd4bf;
+  --line-strong: #c8bea6;
+}
+:root[data-theme="dark"] {
+  --bg: #10131c;
+  --surface: #171b27;
+  --surface-2: #1f2433;
+  --ink: #e6e8f2;
+  --ink-2: #c1c6da;
+  --muted: #9298b0;
+  --line: #2a3043;
+  --line-strong: #3a4158;
+}
+.prose h1,
+.prose h2 {
+  letter-spacing: -0.01em;
+}
