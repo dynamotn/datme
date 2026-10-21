@@ -406,7 +406,8 @@ stages: {}
 # notebook: index cards on dotted paper; classic: a quiet serif blog;
 # garden: notes as plants in a bed, sized by their stage;
 # terminal: a monospace TTY in green phosphor; blueprint: grid paper and drawing sheets;
-# wiki: a reference page with an infobox of each note's properties.
+# wiki: a reference page with an infobox of each note's properties;
+# broadsheet: a newspaper, the home a front page and each top folder a section.
 appearance:
   style: notebook
   folders: {}

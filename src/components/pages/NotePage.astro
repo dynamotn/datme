@@ -79,6 +79,8 @@ const look = preview.style ?? explained.look.value
 const frame = preview.chrome ?? explained.frame.value
 const stacks = frame === "full"
 const garden = look === "garden"
+// A broadsheet names the section a story runs in, its top folder, above the headline.
+const section = look === "broadsheet" && note.dir ? vault.folders[note.lang].get(note.dir.split("/")[0]) : undefined
 // A wiki page boxes the note's properties beside its text, with its contents above it.
 const wiki = look === "wiki"
 const stageIcon = (n: Note) => (n.stage ? site.stages[n.stage]?.icon : undefined)
@@ -118,6 +120,13 @@ const NOW_STALE_YEARS = 0.25
     }
     {note.draft && <p class="draft-banner" role="note">✏️ {s.draftBanner}</p>}
     <DevProblems file={note.source.key + ".md"} />
+    {
+      section && (
+        <p class="bs-kicker">
+          <a href={section.url}>{section.name}</a>
+        </p>
+      )
+    }
     {
       note.layout === "cv" && !note.protected ? (
         <CvHead note={note} title={title} />

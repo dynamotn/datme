@@ -126,6 +126,26 @@ describe("wiki look", () => {
   })
 })
 
+describe("broadsheet look", () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/broadsheet.css"), "utf8")
+  const story = '[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose'
+
+  test("every rule is scoped to the broadsheet look", () => {
+    expectScoped("broadsheet.css", "broadsheet")
+  })
+
+  test("a story runs in two columns only where both fit, and opens on a drop cap", () => {
+    // A column count with a width: one column on a phone, two where each gets 19em.
+    expect(rule(css, story)).toContain("columns: 2 19em")
+    expect(rule(css, `${story} > p:first-of-type::first-letter`)).toContain("float: left")
+  })
+
+  test("a stream's newest note runs across the top of its columns", () => {
+    expect(rule(css, '[data-look="broadsheet"] .stream')).toContain("columns: 3 17rem")
+    expect(rule(css, '[data-look="broadsheet"] .stream-item:first-child')).toContain("column-span: all")
+  })
+})
+
 describe("the monospace font", () => {
   const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
   test("falls back to local faces sized to Iosevka's metrics, right after it in both looks", () => {

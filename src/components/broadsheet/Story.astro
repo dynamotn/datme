@@ -1,0 +1,31 @@
+---
+import type { Note } from "~/lib/vault"
+import { renderNote } from "~/lib/markdown"
+import { formatDate, t } from "~/lib/i18n"
+
+interface Props {
+  note: Note
+  /** The front page's lead: a larger headline, its picture and its reading time. */
+  lead?: boolean
+  /** The section the story runs in, above its headline. */
+  kicker?: string
+}
+const { note, lead = false, kicker } = Astro.props
+const r = await renderNote(note)
+const s = t(note.lang)
+const Headline = lead ? "h2" : "h3"
+const minutes = Math.max(1, Math.round(r.words / 220))
+const picture = lead ? (note.banner ?? note.cover) : undefined
+---
+
+<article class:list={["bs-story", { "bs-lead": lead }]}>
+  {kicker && <p class="bs-kicker">{kicker}</p>}
+  <Headline class="bs-headline"><a class="internal" href={note.url}>{r.h1 ?? note.title}</a></Headline>
+  {picture && <img class="bs-picture" src={picture} alt="" loading="lazy" decoding="async" />}
+  {r.description && <p class="bs-dek">{r.description}</p>}
+  <p class="bs-byline">
+    {note.created && <time datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>}
+    {lead && <span>{s.readingTime(minutes)}</span>}
+    {note.protected && <span title={s.locked}>🔒</span>}
+  </p>
+</article>

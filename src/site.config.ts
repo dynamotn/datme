@@ -15,7 +15,7 @@ export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
 export type Lang = string
 
 /** Every site style; `appearance.style` and `appearance.folders` take one of these. */
-export const STYLES = ["notebook", "classic", "garden", "resume", "darkroom", "terminal", "blueprint", "wiki"] as const
+export const STYLES = ["notebook", "classic", "garden", "resume", "darkroom", "terminal", "blueprint", "wiki", "broadsheet"] as const
 export type Style = (typeof STYLES)[number]
 
 export interface StageDef {

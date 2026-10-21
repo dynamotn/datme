@@ -1,0 +1,45 @@
+---
+import type { Lang } from "~/site.config"
+import { getVault, type Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { frontPage } from "~/lib/broadsheet"
+import Story from "./Story.astro"
+
+interface Props {
+  lang: Lang
+  notes: Note[]
+  /** One section per top folder (the home), or all the other stories under one label (a folder). */
+  bySection?: boolean
+}
+const { lang, notes, bySection = false } = Astro.props
+const s = t(lang)
+const folders = getVault().folders[lang]
+const front = frontPage(notes, bySection ? undefined : Infinity)
+// A folder's own page has one section; the home has one per top folder, named and linked after it.
+const sections = bySection
+  ? front.sections.map(({ dir, notes }) => ({ label: folders.get(dir)?.name ?? s.notes, url: folders.get(dir)?.url, notes }))
+  : [{ label: s.latest, url: undefined, notes: front.sections.flatMap((x) => x.notes) }]
+const kicker = (n: Note) => (bySection ? folders.get(n.dir.split("/")[0])?.name : undefined)
+---
+
+{
+  front.lead && (
+    <div class="bs-front">
+      <Story note={front.lead} lead kicker={kicker(front.lead)} />
+      {sections.some((x) => x.notes.length > 0) && (
+        <div class="bs-sections">
+          {sections
+            .filter((x) => x.notes.length > 0)
+            .map((section) => (
+              <section class="bs-section">
+                <h2 class="bs-section-label">{section.url ? <a href={section.url}>{section.label}</a> : section.label}</h2>
+                {section.notes.map((n) => (
+                  <Story note={n} />
+                ))}
+              </section>
+            ))}
+        </div>
+      )}
+    </div>
+  )
+}

@@ -74,3 +74,47 @@ describe("wiki look", () => {
     expect(read("index.html")).not.toContain('class="infobox"')
   })
 })
+
+describe("broadsheet look", () => {
+  test("the home is a front page: a masthead dated by the newest story, a lead, then a section per top folder", () => {
+    const html = read("index.html")
+    expect(html).toContain('data-look="broadsheet"')
+    expect(lookSheet(html)).toBe("broadsheet")
+    const masthead = html.match(/<header class="bs-masthead">[\s\S]*?<\/header>/)![0]
+    expect(masthead).toContain('<time datetime="2026-10-21T00:00:00.000Z">Wednesday, October 21, 2026</time>')
+    expect(masthead).toContain('<h1 class="bs-title">Looks</h1>')
+    const lead = html.match(/<article class="bs-story bs-lead">[\s\S]*?<\/article>/)![0]
+    expect(lead).toContain('<p class="bs-kicker">Essays</p>')
+    expect(lead).toContain('<h2 class="bs-headline"><a class="internal" href="/Essays/On-walking">On walking</a></h2>')
+    expect(lead).toMatch(/<img class="bs-picture" src="[^"]*road[^"]*" alt=""/)
+    expect(lead).toContain('<p class="bs-dek">Why the slow way round is often the quickest way to think.</p>')
+    const labels = [...html.matchAll(/<h2 class="bs-section-label"><a href="([^"]+)">([^<]+)<\/a><\/h2>/g)].map((m) => [m[1], m[2]])
+    expect(labels).toEqual([
+      ["/News/", "News"],
+      ["/Shell/", "Shell"],
+      ["/Plans/", "Plans"],
+      ["/Wiki/", "Wiki"],
+    ])
+    expect(html).toContain('<h3 class="bs-headline"><a class="internal" href="/News/Harbour">Harbour</a></h3>')
+  })
+
+  test("a story names its section above the headline", () => {
+    const html = read("Essays/On-walking/index.html")
+    expect(html).toContain('<p class="bs-kicker"><a href="/Essays/">Essays</a></p>')
+    expect(read("Wiki/Zettelkasten/index.html")).not.toContain("bs-kicker")
+  })
+
+  test("a folder's page leads with its newest note and runs the rest under one label", () => {
+    const html = read("Essays/index.html")
+    expect(html).toContain('<article class="bs-story bs-lead">')
+    expect(html).not.toContain("bs-section-label")
+    expect(read("Wiki/index.html")).not.toContain("bs-front")
+  })
+
+  test("a stream folder keeps its stream, newest first, for the stylesheet to lay out", () => {
+    const html = read("News/index.html")
+    expect(html).not.toContain("bs-front")
+    const titles = [...html.matchAll(/<article class="stream-item"[\s\S]*?<a class="internal" href="[^"]+">([^<]+)<\/a>/g)].map((m) => m[1])
+    expect(titles).toEqual(["Harbour", "Market", "Bridge"])
+  })
+})

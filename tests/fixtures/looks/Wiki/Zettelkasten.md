@@ -1,4 +1,5 @@
 ---
+created: 2026-08-01
 cover: "[[road.png]]"
 inventor: "[[Niklas Luhmann]]"
 year: 1951

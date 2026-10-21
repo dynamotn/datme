@@ -1,0 +1,487 @@
+/*
+ * Broadsheet look: a newspaper. Newsprint and black ink, a masthead with the
+ * date line on the home, the newest note as the lead story and the others
+ * in sections, one per top folder (src/components/broadsheet/). Headlines
+ * are heavy serif, each top folder is a small-caps section label, and a note
+ * opens on a drop cap, its text in two columns where the page is wide enough
+ * (a page with a layout keeps its own). A stream folder reads as a page of
+ * the paper: its newest note across the top, the others in columns.
+ * Everything is scoped to [data-look="broadsheet"].
+ */
+
+[data-look="broadsheet"] {
+  --bg: #f4f1ea;
+  --surface: #fbf9f4;
+  --surface-2: #ebe7dd;
+  --surface-3: #e0dbcf;
+  --ink: #1a1a1a;
+  --ink-2: #333230;
+  --muted: #5a5650;
+  --line: #cfc8ba;
+  --line-strong: #1a1a1a;
+  --accent: #9b1c1c;
+  --accent-2: #9b1c1c;
+  --accent-soft: rgb(155 28 28 / 0.08);
+  --clay: #9b1c1c;
+  --clay-soft: rgb(155 28 28 / 0.08);
+  --title-grad: linear-gradient(#1a1a1a, #1a1a1a);
+  --shadow: none;
+  --shadow-lg: 0 6px 24px rgb(0 0 0 / 0.18);
+  --font-heading: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --radius: 0;
+  --radius-sm: 0;
+  --measure: 58rem;
+}
+
+[data-look="broadsheet"][data-theme="dark"] {
+  --bg: #141311;
+  --surface: #1b1a17;
+  --surface-2: #23221e;
+  --surface-3: #2d2b26;
+  --ink: #ece8df;
+  --ink-2: #d3cec3;
+  --muted: #ada79b;
+  --line: #3a3731;
+  --line-strong: #ece8df;
+  --accent: #f08a7e;
+  --accent-2: #f08a7e;
+  --accent-soft: rgb(240 138 126 / 0.12);
+  --clay: #f08a7e;
+  --clay-soft: rgb(240 138 126 / 0.12);
+  --title-grad: linear-gradient(#ece8df, #ece8df);
+  --on-accent: #141311;
+}
+
+/* ---------- header: the paper's name in its own type ---------- */
+[data-look="broadsheet"] .site-header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-strong);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-look="broadsheet"] .brand-mark {
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: none;
+  font-family: var(--font-heading);
+}
+[data-look="broadsheet"] .brand-name {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+[data-look="broadsheet"] .main-nav a,
+[data-look="broadsheet"] .panel-title {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+}
+[data-look="broadsheet"] .main-nav a,
+[data-look="broadsheet"] .icon-btn,
+[data-look="broadsheet"] .search-trigger,
+[data-look="broadsheet"] .lang-switch summary {
+  border-radius: 0;
+}
+[data-look="broadsheet"] .search-trigger {
+  box-shadow: none;
+}
+
+/* ---------- the masthead of the home ---------- */
+[data-look="broadsheet"] .bs-masthead {
+  margin: 0 0 22px;
+  padding: 8px 0 12px;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 4px double var(--line-strong);
+  text-align: center;
+}
+[data-look="broadsheet"] .bs-dateline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0 0 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+}
+[data-look="broadsheet"] .bs-title {
+  margin: 4px 0;
+  font-family: var(--font-heading);
+  font-size: clamp(2.4rem, 1.2rem + 6vw, 5.4rem);
+  font-weight: 800;
+  font-variation-settings: "opsz" 72;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+[data-look="broadsheet"] .bs-motto {
+  margin: 6px 0 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  color: var(--ink-2);
+}
+[data-look="broadsheet"] .bs-intro {
+  max-width: 46rem;
+  margin: 0 auto 24px;
+  text-align: center;
+}
+
+/* ---------- the front page: a lead story, then sections in columns ---------- */
+[data-look="broadsheet"] .bs-front {
+  margin: 0 0 40px;
+}
+[data-look="broadsheet"] .bs-story {
+  margin: 0;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+[data-look="broadsheet"] .bs-story + .bs-story {
+  padding-top: 12px;
+}
+[data-look="broadsheet"] .bs-kicker {
+  margin: 0 0 4px;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}
+[data-look="broadsheet"] .bs-kicker a {
+  color: inherit;
+}
+[data-look="broadsheet"] .bs-headline {
+  margin: 0 0 6px;
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+[data-look="broadsheet"] .bs-headline a {
+  color: var(--ink);
+}
+@media (hover: hover) {
+  [data-look="broadsheet"] .bs-headline a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+}
+[data-look="broadsheet"] .bs-dek {
+  margin: 0 0 6px;
+  font-family: var(--font-read);
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+[data-look="broadsheet"] .bs-byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+}
+[data-look="broadsheet"] .bs-lead {
+  display: grid;
+  gap: 4px 28px;
+  margin-bottom: 18px;
+  padding-bottom: 20px;
+  border-bottom: 3px double var(--line-strong);
+}
+[data-look="broadsheet"] .bs-lead .bs-headline {
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3.2rem);
+  font-weight: 800;
+  font-variation-settings: "opsz" 72;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+[data-look="broadsheet"] .bs-lead .bs-dek {
+  font-size: 1.2rem;
+}
+[data-look="broadsheet"] .bs-picture {
+  display: block;
+  width: 100%;
+  max-height: 26rem;
+  object-fit: cover;
+  margin: 8px 0;
+  filter: grayscale(0.25) contrast(1.05);
+}
+/* Wide enough, the lead's picture sits beside its words. */
+@media (min-width: 1100px) {
+  [data-look="broadsheet"] .bs-lead:has(.bs-picture) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    /* The words stack at the top; the picture's height goes to the last row. */
+    grid-template-rows: repeat(4, auto) 1fr;
+  }
+  [data-look="broadsheet"] .bs-lead:has(.bs-picture) > :not(.bs-picture) {
+    grid-column: 1;
+  }
+  [data-look="broadsheet"] .bs-lead .bs-picture {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    margin: 0;
+  }
+}
+[data-look="broadsheet"] .bs-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+[data-look="broadsheet"] .bs-section {
+  padding: 0 16px;
+  border-left: 1px solid var(--line);
+}
+[data-look="broadsheet"] .bs-section:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+[data-look="broadsheet"] .bs-section-label {
+  margin: 0 0 10px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--line-strong);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.12em;
+}
+[data-look="broadsheet"] .bs-section-label a {
+  color: var(--ink);
+}
+
+/* A phone stacks the sections: no column rules between them. */
+@media (max-width: 640px) {
+  [data-look="broadsheet"] .bs-section {
+    padding: 0;
+    border-left: 0;
+  }
+  [data-look="broadsheet"] .bs-section + .bs-section {
+    margin-top: 18px;
+  }
+}
+
+/* ---------- a story: big headline, drop cap, columns ---------- */
+[data-look="broadsheet"] .note-title,
+[data-look="broadsheet"] .page-head h1 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-variation-settings: "opsz" 72;
+  font-size: clamp(2.2rem, 1.4rem + 3vw, 3.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+}
+[data-look="broadsheet"] .note-head {
+  border-bottom: 3px double var(--line-strong);
+}
+[data-look="broadsheet"] .note > .bs-kicker {
+  margin: 10px 0 0;
+}
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose {
+  columns: 2 19em;
+  column-gap: 2.2em;
+  column-rule: 1px solid var(--line);
+  font-size: calc(1.12rem * var(--reading-scale, 1));
+  line-height: 1.6;
+  hyphens: auto;
+}
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > p {
+  text-align: justify;
+}
+/* Headings, tables and diagrams run across the columns; nothing else breaks between them. */
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > h1,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > h2,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > .table-wrap,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > figure.diagram,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > pre.mermaid,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > .drawing,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > .base-embed {
+  column-span: all;
+}
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > pre,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > blockquote,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > figure,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > .callout,
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose img {
+  break-inside: avoid;
+}
+[data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.06em 0.08em 0 0;
+  font-family: var(--font-heading);
+  font-size: 3.6em;
+  font-weight: 800;
+  line-height: 0.8;
+  color: var(--ink);
+}
+[data-look="broadsheet"] .prose h1,
+[data-look="broadsheet"] .prose h2,
+[data-look="broadsheet"] .prose h3,
+[data-look="broadsheet"] .prose h4 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+[data-look="broadsheet"] .prose h2 {
+  padding-top: 6px;
+  border-top: 1px solid var(--line-strong);
+}
+[data-look="broadsheet"] .prose a,
+[data-look="broadsheet"] .prose a.internal {
+  color: inherit;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+@media (hover: hover) {
+  [data-look="broadsheet"] .prose a:hover,
+  [data-look="broadsheet"] .prose a.internal:hover {
+    background: none;
+    color: var(--accent);
+  }
+}
+[data-look="broadsheet"] .prose blockquote {
+  border-left: 0;
+  padding: 0.2em 0;
+  border-top: 2px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  font-family: var(--font-heading);
+  font-size: 1.15em;
+  font-style: italic;
+  font-weight: 600;
+}
+[data-look="broadsheet"] .prose pre,
+[data-look="broadsheet"] .prose :not(pre) > code,
+[data-look="broadsheet"] .prose .table-wrap,
+[data-look="broadsheet"] .prose .callout,
+[data-look="broadsheet"] .prose img {
+  border-radius: 0;
+}
+
+/* ---------- a stream folder: one page of the paper ---------- */
+[data-look="broadsheet"] .stream {
+  display: block;
+  max-width: none;
+  columns: 3 17rem;
+  column-gap: 28px;
+  column-rule: 1px solid var(--line);
+}
+[data-look="broadsheet"] .stream-item {
+  break-inside: avoid;
+  padding: 0 0 18px;
+  margin-bottom: 18px;
+  border-top: 0;
+  border-bottom: 1px solid var(--line);
+}
+[data-look="broadsheet"] .stream-item:first-child {
+  column-span: all;
+  padding-bottom: 22px;
+  border-bottom: 3px double var(--line-strong);
+}
+[data-look="broadsheet"] .stream-item header {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 2px;
+}
+[data-look="broadsheet"] .stream-item header a {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+[data-look="broadsheet"] .stream-item:first-child header a {
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3rem);
+  font-weight: 800;
+  font-variation-settings: "opsz" 72;
+  line-height: 1.05;
+}
+[data-look="broadsheet"] .stream-item time {
+  font-size: 12px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+}
+[data-look="broadsheet"] .stream-item .prose {
+  font-size: calc(1rem * var(--reading-scale, 1));
+}
+[data-look="broadsheet"] .stream-item:first-child .prose {
+  columns: 2 19em;
+  column-gap: 2.2em;
+  font-size: calc(1.1rem * var(--reading-scale, 1));
+}
+[data-look="broadsheet"] .stream-item:first-child .prose > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.06em 0.08em 0 0;
+  font-family: var(--font-heading);
+  font-size: 3.4em;
+  font-weight: 800;
+  line-height: 0.8;
+}
+
+/* ---------- boxes: rules, not cards ---------- */
+[data-look="broadsheet"] .chip {
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+}
+[data-look="broadsheet"] .chip.stage,
+[data-look="broadsheet"] .chip.type {
+  background: none;
+  color: var(--accent);
+}
+[data-look="broadsheet"] .backlinks {
+  border-top: 3px double var(--line-strong);
+}
+[data-look="broadsheet"] .backlinks h2 {
+  font-family: var(--font-ui);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}
+[data-look="broadsheet"] .backlink,
+[data-look="broadsheet"] .card,
+[data-look="broadsheet"] .index-card,
+[data-look="broadsheet"] .stage-card,
+[data-look="broadsheet"] .folder-card,
+[data-look="broadsheet"] .properties,
+[data-look="broadsheet"] .graph-box {
+  border-radius: 0;
+  box-shadow: none;
+}
+[data-look="broadsheet"] .backlink {
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  background: none;
+  padding: 10px 0 0;
+}
+@media (hover: hover) {
+  [data-look="broadsheet"] .backlink:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+[data-look="broadsheet"] .backlink strong {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+}
+
+@media print {
+  [data-look="broadsheet"] .note:not([class*="layout-"]):not(.is-wide) > .prose {
+    column-rule-color: #bbb;
+  }
+  [data-look="broadsheet"] .bs-picture {
+    filter: none;
+  }
+}

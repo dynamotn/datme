@@ -90,7 +90,8 @@ appearance:
                               # garden: notes as plants in a bed, sized by how grown they are;
                               # terminal: a monospace TTY in green phosphor (theme.accent for amber);
                               # blueprint: grid paper, mono lettering, diagrams on drawing sheets;
-                              # wiki: a dense reference page with an infobox of the note's properties
+                              # wiki: a dense reference page with an infobox of the note's properties;
+                              # broadsheet: a newspaper, the home a front page, each top folder a section
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
@@ -161,6 +162,15 @@ seedlings from evergreens. Readers filter the bed by stage (by top folder when
 there are no stages) and by tag. Folder and tag pages are beds too, and a note
 says when it was planted and last tended. `theme.accent` and `theme.fonts`
 override its moss green, Fraunces headings and Literata text.
+
+The `broadsheet` style turns the garden into a newspaper. The home is a front
+page: a masthead with the site's name, a date line (the day of the newest
+note) and the number of notes, the newest note as the lead story with its
+banner and description, then a section per top folder with its latest stories.
+A folder page leads with its newest note too. A note names its section above a
+heavy serif headline, opens on a drop cap and runs in two columns where the
+page is wide enough. It suits `stream` folders best: their newest note runs
+across the top and the others fill the columns below, like a page of the paper.
 
 The `terminal` style draws every page as a TTY: one monospace face, headings
 written as Markdown prompts (`$` before the title, `##` before a section), and

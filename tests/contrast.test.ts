@@ -118,7 +118,7 @@ describe("the looks' own palettes", () => {
   // Text and its grounds; the accent colours links and headings, so it must read on the page too.
   const TEXT = ["--ink", "--ink-2", "--muted", "--accent"]
   const GROUNDS = ["--bg", "--surface"]
-  const LOOKS = ["terminal", "blueprint", "wiki"]
+  const LOOKS = ["terminal", "blueprint", "wiki", "broadsheet"]
 
   for (const look of LOOKS) {
     for (const scheme of ["light", "dark"] as const) {

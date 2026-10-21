@@ -14,6 +14,8 @@ import NoteRow from "../NoteRow.astro"
 import Icon from "../Icon.astro"
 import IndexCard from "../IndexCard.astro"
 import GardenHome from "../garden/GardenHome.astro"
+import Front from "../broadsheet/Front.astro"
+import { editionDate } from "~/lib/broadsheet"
 
 interface Props {
   lang: Lang
@@ -52,6 +54,8 @@ const shelvesOfFolders = stages.length
 const blogUrl = blog.length
   ? slugToUrl(langPrefix(lang) + "tags/" + (blog[0].tags.find((x) => site.conventions.blogTags.includes(x)) ?? ""))
   : ""
+// A broadsheet is dated by its newest story.
+const edition = byRecent(counted, "created")[0]?.created
 // `datme dev` can preview the home in another style from its address.
 const look = previewOf(Astro.url).style ?? site.appearance.style
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
@@ -74,6 +78,26 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
   {
     look === "garden" ? (
       <GardenHome lang={lang} intro={intro} shelves={shelves} title={r?.h1 ?? site.title[lang]} />
+    ) : look === "broadsheet" ? (
+      <>
+        <header class="bs-masthead">
+          <p class="bs-dateline">
+            {edition && <time datetime={edition.toISOString()}>{editionDate(edition, lang)}</time>}
+            <span>{s.notesCount(counted.length)}</span>
+          </p>
+          <h1 class="bs-title">{r?.h1 ?? site.title[lang]}</h1>
+          {site.tagline[lang] && <p class="bs-motto">{site.tagline[lang]}</p>}
+        </header>
+        {intro && <div class="prose bs-intro" set:html={intro} />}
+        <Front lang={lang} notes={counted} bySection />
+        {shelves.length > 0 && (
+          <section class="section shelves">
+            {shelves.map((html) => (
+              <div class="shelf prose" set:html={html} />
+            ))}
+          </section>
+        )}
+      </>
     ) : look === "notebook" ? (
       <>
         <section class="nb-hero">

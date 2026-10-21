@@ -1,9 +1,11 @@
-# One folder per style, to check the markup each look adds.
+# A broadsheet site with one folder per other style, to check the markup each look adds.
 site:
   title: Looks
   author: Tester
 publish: all
 appearance:
+  style: broadsheet
+  stream: [News]
   folders:
     Shell: terminal
     Plans: blueprint
