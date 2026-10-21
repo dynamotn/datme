@@ -799,7 +799,8 @@ function buildVault(version: number): Vault {
       }
       const banner = fileProp("banner")?.href
       const cover = fileProp("cover")?.href ?? fileProp("avatar")?.href
-      const audio = fileProp("audio")
+      // A protected note's sound is part of what its password guards, so it is not published.
+      const audio = s.password ? undefined : fileProp("audio")
       const layoutField = typeof s.fm.layout === "string" ? s.fm.layout.trim().toLowerCase() : undefined
       const layout = LAYOUTS.find((l) => l === layoutField)
       if (layoutField && !layout && lang === site.defaultLang) {

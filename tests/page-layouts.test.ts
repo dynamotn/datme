@@ -396,6 +396,11 @@ describe("page layouts", () => {
     expect(read("Podcast/Pilot/index.html")).toContain('<audio class="item-audio" src="/assets/_assets/pilot.mp3" controls preload="none" aria-label="Pilot"></audio>')
   })
 
+  test("a protected note's sound stays out of the site", () => {
+    expect(fs.existsSync(path.join(out, "assets/_assets/locked.mp3"))).toBe(false)
+    expect(read("Locked-episode/index.html")).not.toContain("locked.mp3")
+  })
+
   test("the new collections have no serious or critical axe violations", async () => {
     const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
     for (const page of ["Journal/Journal/index.html", "Clippings/Clippings/index.html", "People/People/index.html", "Snippets/Snippets/index.html", "Podcast/Podcast/index.html", "Podcast/Pilot/index.html"]) {
