@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { Window } from "happy-dom"
 
 // End-to-end: a vault with a folder in each style, built once.
 const root = path.resolve(import.meta.dir, "..")
@@ -117,4 +118,22 @@ describe("broadsheet look", () => {
     const titles = [...html.matchAll(/<article class="stream-item"[\s\S]*?<a class="internal" href="[^"]+">([^<]+)<\/a>/g)].map((m) => m[1])
     expect(titles).toEqual(["Harbour", "Market", "Bridge"])
   })
+})
+
+describe("accessibility of the looks", () => {
+  const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
+  // As tests/a11y.test.ts: serious and critical axe violations of the markup, scripts not run.
+  const PAGES = ["index.html", "Essays/index.html", "Essays/On-walking/index.html", "News/index.html", "Wiki/Zettelkasten/index.html", "Shell/Uptime/index.html", "Plans/Pump/index.html"]
+  for (const page of PAGES) {
+    test(`${page} has no serious or critical axe violations`, async () => {
+      const window = new Window({ url: "https://example.com/", settings: { disableJavaScriptEvaluation: false } })
+      window.document.write(read(page).replace(/<script\b[\s\S]*?<\/script>/g, ""))
+      window.eval(axeSource)
+      type Result = { violations: { id: string; impact: string | null }[] }
+      const axe = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<Result> } }).axe
+      const res = await axe.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
+      await window.happyDOM.close()
+      expect(res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id)).toEqual([])
+    }, 30_000)
+  }
 })
