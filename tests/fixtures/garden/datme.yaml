@@ -1,4 +1,5 @@
-# A site in the garden style, with three stages and a classic folder.
+# A site in the garden style, with three stages, a classic folder, a herbarium
+# folder, and colours that follow the southern seasons.
 site:
   title: Garden test
 languages: [en-US]
@@ -10,3 +11,6 @@ stages:
 appearance:
   style: garden
   classic: [Writing]
+  folders:
+    Sources: herbarium
+  seasons: { hemisphere: south }

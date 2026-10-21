@@ -254,5 +254,9 @@
   "view": "View",
   "layout": "Layout",
   "shortcuts": "Shortcuts",
-  "seeAlso": "See also"
+  "seeAlso": "See also",
+  "specimenLabel": "Specimen label",
+  "collected": "Collected",
+  "growthStage": "Stage",
+  "foundNear": "Found near"
 }

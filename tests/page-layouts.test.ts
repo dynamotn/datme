@@ -320,6 +320,19 @@ describe("page layouts", () => {
     expect(html).not.toContain('class="cv-head"')
   })
 
+  test("a manuscript opens its series as a list of chapters, its footnotes ready for the margin", () => {
+    const html = read("Book/Chapter-one/index.html")
+    expect(html).toContain('data-look="manuscript"')
+    expect(html).toContain('<details class="series-box" open>')
+    expect(html).toContain('<span class="sidenote-number">1</span> A note that stands in the margin.</span>')
+  })
+
+  test("lacquer starts dark", () => {
+    const html = read("Lacquer/index.html")
+    expect(html).toContain('data-look="lacquer"')
+    expect(html).toContain('data-scheme-default="dark"')
+  })
+
   test("a note can override its layout's style and frame", () => {
     const html = read("Styled-CV/index.html")
     expect(html).toContain('data-look="garden"')

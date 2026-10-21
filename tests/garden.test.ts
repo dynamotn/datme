@@ -101,4 +101,41 @@ describe("garden style", () => {
     expect(html).toMatch(/Planted <time datetime="[^"]+">/)
     expect(html).not.toContain("Last tended")
   })
+
+  test("the garden takes the colours of the season it was built in, and the reader's script turns them", () => {
+    const home = read("index.html")
+    expect(home).toMatch(/<html[^>]* data-season="(spring|summer|autumn|winter)" data-hemisphere="south">/)
+    expect(home).toContain("doc.documentElement.dataset.season = [")
+    // Only the garden style follows the seasons.
+    expect(read("Writing/index.html")).not.toContain("data-season=")
+    expect(read("Sources/index.html")).not.toContain("data-season=")
+  })
+})
+
+describe("herbarium style", () => {
+  test("a folder in the herbarium style is a cabinet of sheets, with the garden's filters", () => {
+    const html = read("Sources/index.html")
+    expect(html).toContain('data-look="herbarium"')
+    expect(html).toContain('class="garden-bed"')
+    expect(html).toMatch(/<article class="garden-tile"[^>]*data-stage="Sources"/)
+  })
+
+  test("a note is a sheet with its label card: collected, its stage and what it was found near", () => {
+    const label = read("Sources/Book-notes/index.html").match(/<aside class="specimen-label"[\s\S]*?<\/aside>/)![0]
+    expect(label).toContain('aria-label="Specimen label"')
+    expect(label).toContain("<h2>Book notes</h2>")
+    expect(label).toContain('<dt>Collected</dt><dd><time datetime="2026-02-01T00:00:00.000Z">')
+    expect(label).toContain('<dt>Stage</dt><dd><span aria-hidden="true">📖</span> Literature</dd>')
+    expect(label).toContain('<dt>Found near</dt><dd><a class="internal" href="/Evergreen/Map">Map</a></dd>')
+  })
+
+  test("it keeps the garden's wording around the note", () => {
+    const html = read("Sources/Book-notes/index.html")
+    expect(html).toMatch(/Planted <time datetime="[^"]+">/)
+    expect(html).toContain("Paths from here")
+  })
+
+  test("only the herbarium has the label", () => {
+    expect(read("Evergreen/Gardens/index.html")).not.toContain("specimen-label")
+  })
 })

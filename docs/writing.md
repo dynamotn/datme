@@ -44,7 +44,7 @@ that folder's page.
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
 | `layout` | A page made for what the note holds: `cv`, `gallery`, `projects`, `books`… see [Page layouts](#page-layouts) |
-| `style` | The look of this page: `notebook`, `classic`, `garden`, `resume`, `darkroom`, `terminal`, `blueprint`, `wiki` or `broadsheet`. See [Page layouts](#page-layouts) |
+| `style` | The look of this page: `notebook`, `classic`, `garden`, `herbarium`, `manuscript`, `lacquer`, `terminal`, `blueprint`, `wiki`, `broadsheet`, `resume` or `darkroom`. See [Page layouts](#page-layouts) |
 | `chrome` | The frame around the page: `full`, or `minimal` for a thin bar with no menu, search or sidebars |
 | `cover` | The picture that stands for the note in a collection and beside its title (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |
@@ -107,7 +107,8 @@ check` warns of a link to a note her garden does not have.
 
 Footnotes (`[^1]`, or inline as `^[text]`) move into the margin as sidenotes on wide screens, in
 reader mode or when both sidebars are hidden, each tied to its line by a
-dashed leader. Footnotes that hold lists or code
+dashed leader. In the `manuscript` style they stand in the margin whenever
+the text has room for one. Footnotes that hold lists or code
 stay at the end. Hovering a footnote number shows it in a popover.
 
 Citations use Pandoc's syntax: `[@key]`, `[@key, p. 12]`, `[see @a; @b]`, or
@@ -120,7 +121,9 @@ reports keys that aren't in the bibliography.
 
 Notes that share `series: Name` (or `series: "[[Intro note]]"`) show their
 part number, the list of parts, and links to the previous and next part.
-`series_order` sets the order; otherwise the creation date does.
+`series_order` sets the order; otherwise the creation date does. In the
+`manuscript` style the list of parts is open, numbered like the chapters of
+a book.
 
 ## Trails
 
@@ -192,6 +195,15 @@ reader chose a theme, plain captions always show and cover captions appear on
 hover or focus on wide screens with a pointer. The `minimal` frame keeps a thin bar with the site's name and
 a light/dark toggle, and a one-line footer. The remaining layouts (all but `faq`) keep the header but
 lose the right rail (table of contents and graph) and stacked pages.
+
+Any note can also take one of the site styles for itself, `style: manuscript`
+for a long essay say: `herbarium` lays it out as a pressed specimen sheet with
+a label card giving the date it was collected (`created`), its stage and the
+first note that links to it; `manuscript` is a book page with a wide margin
+for its sidenotes, old-style figures, a drop cap and numbered chapters at
+each H2; `lacquer` is black lacquer with vermilion and gold leaf, and starts
+dark unless the reader chose a theme. See [Look and
+navigation](configuration.md#look-and-navigation).
 
 To override, set `style` and `chrome` on the note: `style: notebook` and
 `chrome: full` give a `cv` the usual site look. Without them the order is the

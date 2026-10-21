@@ -254,5 +254,9 @@
   "view": "表示",
   "layout": "レイアウト",
   "shortcuts": "ショートカット",
-  "seeAlso": "関連項目"
+  "seeAlso": "関連項目",
+  "specimenLabel": "標本ラベル",
+  "collected": "採集日",
+  "growthStage": "段階",
+  "foundNear": "採集地"
 }

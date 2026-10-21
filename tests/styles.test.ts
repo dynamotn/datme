@@ -146,6 +146,45 @@ describe("broadsheet look", () => {
   })
 })
 
+describe("herbarium, manuscript and lacquer looks", () => {
+  const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
+
+  for (const look of ["herbarium", "manuscript", "lacquer"]) {
+    test(`every rule is scoped to the ${look} look`, () => {
+      expectScoped(`${look}.css`, look)
+    })
+  }
+
+  test("each prints black on white, even from dark mode", () => {
+    const print = css("print.css")
+    for (const look of ["herbarium", "manuscript", "lacquer"]) expect(print).toContain(`[data-look="${look}"][data-theme="dark"]`)
+    // The sheet's tape and frame stay on screen.
+    expect(print).toContain('[data-look="herbarium"] article.note::before')
+  })
+
+  test("a herbarium sheet stops moving for readers who ask for less motion", () => {
+    expect(css("herbarium.css")).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\[data-look="herbarium"\] \.garden-tile \{\s*transition: none;/)
+  })
+
+  test("a manuscript puts its sidenotes in the margin whenever its text has room, not only in reader mode", () => {
+    const manuscript = css("manuscript.css")
+    expect(manuscript).toContain("container: manuscript / inline-size")
+    const query = manuscript.slice(manuscript.indexOf("@container manuscript"))
+    expect(query).toMatch(/\.sidenote \{\s*display: block;/)
+    expect(query).toContain(".footnotes {\n    display: none;")
+  })
+})
+
+describe("seasonal garden", () => {
+  const garden = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/garden.css"), "utf8")
+  test("every season has a palette in each scheme, as weak as the look's own", () => {
+    for (const season of ["spring", "summer", "autumn", "winter"]) {
+      expect(garden).toContain(`[data-look="garden"]:where([data-season="${season}"]) {`)
+      expect(garden).toContain(`[data-look="garden"][data-theme="dark"]:where([data-season="${season}"]) {`)
+    }
+  })
+})
+
 describe("the monospace font", () => {
   const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
   test("falls back to local faces sized to Iosevka's metrics, right after it in both looks", () => {

@@ -10,10 +10,14 @@ import terminalCss from "~/styles/terminal.css?url"
 import blueprintCss from "~/styles/blueprint.css?url"
 import wikiCss from "~/styles/wiki.css?url"
 import broadsheetCss from "~/styles/broadsheet.css?url"
+import herbariumCss from "~/styles/herbarium.css?url"
+import manuscriptCss from "~/styles/manuscript.css?url"
+import lacquerCss from "~/styles/lacquer.css?url"
 import printCss from "~/styles/print.css?url"
 import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
+import { seasonOf } from "~/lib/garden"
 import { startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
 import { previewOf, type LookTarget } from "~/lib/dev-look"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
@@ -120,12 +124,26 @@ const withRail = rail && frame === "full"
 const main = await Astro.slots.render("default")
 const railHtml = withRail && Astro.slots.has("rail") ? await Astro.slots.render("rail") : ""
 const hasMath = /class="katex[\s"]/.test(main) || /class="katex[\s"]/.test(railHtml)
-const LOOK_CSS: Partial<Record<Style, string>> = { notebook: notebookCss, garden: gardenCss, resume: resumeCss, darkroom: darkroomCss, terminal: terminalCss, blueprint: blueprintCss, wiki: wikiCss, broadsheet: broadsheetCss }
+const LOOK_CSS: Partial<Record<Style, string>> = {
+  notebook: notebookCss,
+  garden: gardenCss,
+  resume: resumeCss,
+  darkroom: darkroomCss,
+  terminal: terminalCss,
+  blueprint: blueprintCss,
+  wiki: wikiCss,
+  broadsheet: broadsheetCss,
+  herbarium: herbariumCss,
+  manuscript: manuscriptCss,
+  lacquer: lacquerCss,
+}
 const lookCss = LOOK_CSS[look]
+// A seasonal garden takes the colours of the build's season; the inline script below turns them to the reader's day.
+const seasons = look === "garden" ? site.appearance.seasons : false
 ---
 
 <!doctype html>
-<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme} data-scheme-default={startsDark(look) ? "dark" : undefined} data-chrome={frame}>
+<html lang={langMeta(lang).html} dir={langDir(lang)} data-lang={lang} data-look={look} data-offline={site.offline ? "" : undefined} data-mermaid={`${site.theme.mermaid.light} ${site.theme.mermaid.dark}`} data-theme={site.theme.scheme === "auto" ? undefined : site.theme.scheme} data-scheme-default={startsDark(look) ? "dark" : undefined} data-chrome={frame} data-season={seasons ? seasonOf(new Date(), seasons.hemisphere) : undefined} data-hemisphere={seasons ? seasons.hemisphere : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -230,6 +248,13 @@ const lookCss = LOOK_CSS[look]
           doc.documentElement.style.setProperty("--reading-scale", String(Number(prefs.size) || 1))
           doc.documentElement.classList.toggle("font-legible", prefs.legible === true)
           doc.documentElement.classList.toggle("high-contrast", prefs.contrast === true)
+          // A seasonal garden follows the reader's day, so a page cached since another season still turns;
+          // the same sum as seasonOf (src/lib/garden.ts).
+          const { season, hemisphere } = doc.documentElement.dataset
+          if (season) {
+            const month = (new Date().getMonth() + (hemisphere === "south" ? 6 : 0)) % 12
+            doc.documentElement.dataset.season = ["winter", "spring", "summer", "autumn"][Math.floor(((month + 1) % 12) / 3)]
+          }
         }
         apply(document)
         document.addEventListener("astro:before-swap", (e) => apply(e.newDocument))

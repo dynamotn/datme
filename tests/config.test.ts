@@ -187,13 +187,26 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, stream: [] })
+    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, stream: [], seasons: false })
   })
 
   test("the garden style and a style per folder", () => {
     const c = resolveConfig({ appearance: { style: "garden", folders: { "/Writing/": "classic", "Lab/Old": "notebook" } } }, "/v")
     expect(c.appearance.style).toBe("garden")
     expect(c.appearance.folders).toEqual({ Writing: "classic", "Lab/Old": "notebook" })
+  })
+
+  test("the garden can follow the seasons of either hemisphere", () => {
+    const seasons = (v: unknown) => resolveConfig({ appearance: { seasons: v } }, "/v").appearance.seasons
+    expect(seasons(true)).toEqual({ hemisphere: "north" })
+    expect(seasons(false)).toBe(false)
+    expect(seasons({})).toEqual({ hemisphere: "north" })
+    expect(seasons({ hemisphere: "south" })).toEqual({ hemisphere: "south" })
+    expect(() => seasons({ hemisphere: "east" })).toThrow()
+  })
+
+  test("the herbarium, manuscript and lacquer styles", () => {
+    for (const style of ["herbarium", "manuscript", "lacquer"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
   })
 
   test("unknown styles are rejected", () => {

@@ -107,10 +107,15 @@ export function frameOf(note: Pick<Note, "chrome" | "layout"> | undefined): Fram
   return explainFrame(note).value
 }
 
-/** Styles drawn dark first: a gallery wall at night, a screen of phosphor, blue drawing paper. */
-const DARK_FIRST: readonly Style[] = ["darkroom", "terminal", "blueprint"]
+/** Styles drawn dark first: a gallery wall at night, a screen of phosphor, blue drawing paper, black lacquer. */
+const DARK_FIRST: readonly Style[] = ["darkroom", "terminal", "blueprint", "lacquer"]
 
 /** Whether a style opens dark when the reader has not chosen a scheme. */
 export function startsDark(look: Style): boolean {
   return DARK_FIRST.includes(look)
+}
+
+/** Whether a style shows the garden: notes in beds by stage, with its planted and tended wording. */
+export function isGarden(look: Style): boolean {
+  return look === "garden" || look === "herbarium"
 }

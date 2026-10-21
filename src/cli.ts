@@ -407,11 +407,14 @@ stages: {}
 # garden: notes as plants in a bed, sized by their stage;
 # terminal: a monospace TTY in green phosphor; blueprint: grid paper and drawing sheets;
 # wiki: a reference page with an infobox of each note's properties;
-# broadsheet: a newspaper, the home a front page and each top folder a section.
+# broadsheet: a newspaper, the home a front page and each top folder a section;
+# herbarium: notes as pressed specimens in a cabinet; manuscript: a book page with sidenotes;
+# lacquer: black lacquer, vermilion and gold leaf.
 appearance:
   style: notebook
   folders: {}
-#    Writing: classic
+#    Writing: manuscript
+#  seasons: true               # the garden's colours follow the season
 
 # Columns of links in the footer, each a heading and entries written like nav.
 footer: {}

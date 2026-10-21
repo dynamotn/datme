@@ -7,15 +7,17 @@ interface Props {
   note: Note
   /** head: the parts of the series above the note; foot: previous and next part below it. */
   at: "head" | "foot"
+  /** Open from the start, as the manuscript style's list of chapters. */
+  open?: boolean
 }
-const { note, at } = Astro.props
+const { note, at, open = false } = Astro.props
 const place = seriesOf(note)
 const s = t(note.lang)
 ---
 
 {
   place && at === "head" && (
-    <details class="series-box">
+    <details class="series-box" open={open}>
       {/* No link inside the summary: it is a control of its own. */}
       <summary>
         <span class="series-label">{s.seriesPart(place.index + 1).replace("{total}", String(place.series.parts.length))}</span>{" "}

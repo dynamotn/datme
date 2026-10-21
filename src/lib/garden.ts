@@ -1,4 +1,4 @@
-import { site, type Lang, type StageDef } from "~/site.config"
+import { site, type Hemisphere, type Lang, type StageDef } from "~/site.config"
 import { folderDisplayName } from "./slug"
 import type { Note } from "./vault"
 
@@ -14,6 +14,25 @@ export const FILTER_TAGS = 12
 /** Stage keys, least to most mature. */
 function ranked(stages: Record<string, StageDef>): string[] {
   return Object.keys(stages).sort((a, b) => stages[a].order - stages[b].order)
+}
+
+/** A note's stage as the config defines it, if it has one. */
+export function stageOf(note: Pick<Note, "stage">, stages: Record<string, StageDef> = site.stages): StageDef | undefined {
+  return note.stage ? stages[note.stage] : undefined
+}
+
+/** The seasons a garden turns through, from the start of the year. */
+export const SEASONS = ["winter", "spring", "summer", "autumn"] as const
+export type Season = (typeof SEASONS)[number]
+
+/**
+ * Meteorological season of a day: spring from March in the north, from
+ * September in the south. The inline script of Base.astro cannot import this,
+ * so it repeats the same sum for the reader's own day.
+ */
+export function seasonOf(date: Date, hemisphere: Hemisphere = "north"): Season {
+  const month = (date.getMonth() + (hemisphere === "south" ? 6 : 0)) % 12
+  return SEASONS[Math.floor(((month + 1) % 12) / 3)]
 }
 
 /** The least mature stage is small, the most mature large; with fewer than two stages, all are medium. */

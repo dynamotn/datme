@@ -254,5 +254,9 @@
   "view": "Hiển thị",
   "layout": "Bố cục",
   "shortcuts": "Lối tắt",
-  "seeAlso": "Xem thêm"
+  "seeAlso": "Xem thêm",
+  "specimenLabel": "Nhãn tiêu bản",
+  "collected": "Ngày thu mẫu",
+  "growthStage": "Giai đoạn",
+  "foundNear": "Tìm thấy gần"
 }

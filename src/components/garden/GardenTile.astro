@@ -4,7 +4,7 @@ import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
 import { formatDate, t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
-import { tileSize } from "~/lib/garden"
+import { stageOf, tileSize } from "~/lib/garden"
 
 interface Props {
   note: Note
@@ -13,7 +13,7 @@ interface Props {
 }
 const { note, variant } = Astro.props
 const s = t(note.lang)
-const stage = note.stage ? site.stages[note.stage] : undefined
+const stage = stageOf(note)
 const size = variant === "recent" ? "small" : tileSize(note.stage)
 const tags = note.tags.filter((x) => !x.startsWith(site.conventions.typePrefix))
 const dated = (size !== "small" || variant === "recent") && note.updated

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, LAYOUT_LOOKS, explainDir, explainLook, explainFrame } from "../src/lib/look"
+import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame } from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 
@@ -100,8 +100,14 @@ describe("explainDir, explainLook and explainFrame", () => {
 })
 
 describe("startsDark", () => {
-  test("darkroom, terminal and blueprint start dark, the others light", () => {
-    const dark = ["darkroom", "terminal", "blueprint"]
+  test("darkroom, terminal, blueprint and lacquer start dark, the others light", () => {
+    const dark = ["darkroom", "terminal", "blueprint", "lacquer"]
     for (const s of STYLES) expect(startsDark(s)).toBe(dark.includes(s))
+  })
+})
+
+describe("isGarden", () => {
+  test("the herbarium shows the garden, pressed; the other styles do not", () => {
+    expect(STYLES.filter(isGarden)).toEqual(["garden", "herbarium"])
   })
 })

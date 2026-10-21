@@ -1,0 +1,449 @@
+/*
+ * Herbarium look: the garden pressed and kept. A note is a specimen sheet of
+ * cream paper held by two strips of linen tape, with its label card in the
+ * bottom-right corner; home, folder and tag pages are a cabinet of sheets.
+ * It shows the garden's own markup (beds, stages, planted and tended), so
+ * only its colours and shapes live here. Everything is scoped to
+ * [data-look="herbarium"].
+ */
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/literata/opsz-italic.css";
+
+[data-look="herbarium"] {
+  --bg: #e7e0cd;
+  --surface: #f8f3e3;
+  --surface-2: #efe8d4;
+  --surface-3: #e4dcc4;
+  --ink: #2a2619;
+  --ink-2: #454030;
+  --muted: #5c5541;
+  --line: #d9cfb5;
+  --line-strong: #bfb291;
+  --accent: #40632b;
+  --accent-2: #7a4c22;
+  --accent-soft: rgb(64 99 43 / 0.12);
+  --on-accent: #fff;
+  --earth: #7a4c22;
+  --clay: var(--earth);
+  --clay-soft: rgb(122 76 34 / 0.12);
+  /* The label card: whiter than the sheet it is glued to. */
+  --label: #fffdf5;
+  --tape: rgb(214 199 158 / 0.75);
+  --title-grad: linear-gradient(135deg, #40632b 0%, #7a4c22 100%);
+  --shadow: 0 1px 2px rgb(60 50 20 / 0.08), 0 14px 30px -18px rgb(60 50 20 / 0.45);
+  --font-ui: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-read: "Literata Variable", "Literata", Georgia, serif;
+  --font-heading: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --radius: 3px;
+  --radius-sm: 2px;
+}
+
+[data-look="herbarium"][data-theme="dark"] {
+  --bg: #17150f;
+  --surface: #221f17;
+  --surface-2: #2b271d;
+  --surface-3: #353024;
+  --ink: #ece4cf;
+  --ink-2: #d3cab2;
+  --muted: #aea58c;
+  --line: #3a3528;
+  --line-strong: #514a39;
+  --accent: #a9c98a;
+  --accent-2: #d6a36c;
+  --accent-soft: rgb(169 201 138 / 0.14);
+  --on-accent: #17150f;
+  --earth: #d6a36c;
+  --clay-soft: rgb(214 163 108 / 0.14);
+  --label: #2f2a20;
+  --tape: rgb(120 108 80 / 0.45);
+  --title-grad: linear-gradient(135deg, #a9c98a 0%, #d6a36c 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 30px -18px rgb(0 0 0 / 0.8);
+}
+
+[data-look="herbarium"] body {
+  font-family: var(--font-read);
+}
+
+/* ---------- type: Fraunces for names, Literata to read ---------- */
+[data-look="herbarium"] .brand-name,
+[data-look="herbarium"] .note-title,
+[data-look="herbarium"] .page-head h1,
+[data-look="herbarium"] .prose h1,
+[data-look="herbarium"] .prose h2,
+[data-look="herbarium"] .prose h3,
+[data-look="herbarium"] .prose h4,
+[data-look="herbarium"] .garden-gate h1,
+[data-look="herbarium"] .backlinks h2,
+[data-look="herbarium"] .specimen-label h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+/* Names on a sheet are written as a botanist would: in italics. */
+[data-look="herbarium"] .note-title,
+[data-look="herbarium"] .specimen-label h2 {
+  font-style: italic;
+}
+
+/* ---------- the sheet ---------- */
+[data-look="herbarium"] article.note {
+  position: relative;
+  padding: clamp(20px, 4vw, 52px) clamp(18px, 4.5vw, 56px) clamp(20px, 3vw, 36px);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+/* Two strips of linen tape hold the sheet down, as on the specimen itself. */
+[data-look="herbarium"] article.note::before,
+[data-look="herbarium"] article.note::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  width: 4.5rem;
+  height: 18px;
+  background: var(--tape);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.08);
+  pointer-events: none;
+}
+[data-look="herbarium"] article.note::before {
+  left: 14%;
+  transform: rotate(-3deg);
+}
+[data-look="herbarium"] article.note::after {
+  right: 14%;
+  transform: rotate(2.5deg);
+}
+[data-look="herbarium"] .prose a.internal {
+  border-radius: 2px;
+}
+[data-look="herbarium"] .chip.garden-stage {
+  font-family: var(--font-ui);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+[data-look="herbarium"] .garden-dates {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 15px;
+}
+[data-look="herbarium"] .garden-dates time {
+  font-style: normal;
+  color: var(--ink-2);
+}
+
+/* ---------- the label card, bottom right ---------- */
+[data-look="herbarium"] .specimen-label {
+  width: min(100%, 20rem);
+  margin: 2.5rem 0 0 auto;
+  padding: 12px 16px 14px;
+  border: 1px solid var(--line-strong);
+  outline: 1px solid var(--line);
+  outline-offset: 3px;
+  background: var(--label);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+[data-look="herbarium"] .specimen-kicker {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+[data-look="herbarium"] .specimen-label h2 {
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.1rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+[data-look="herbarium"] .specimen-label dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+}
+[data-look="herbarium"] .specimen-label dt {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+[data-look="herbarium"] .specimen-label dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+[data-look="herbarium"] .specimen-label a {
+  color: var(--accent);
+}
+
+/* ---------- cabinet: home, folders and tags ---------- */
+[data-look="herbarium"] .garden-gate {
+  max-width: 44rem;
+  margin: 8px 0 40px;
+}
+[data-look="herbarium"] .garden-gate h1 {
+  font-size: clamp(2.1rem, 5vw, 3.2rem);
+  line-height: 1.05;
+  margin: 0 0 10px;
+}
+[data-look="herbarium"] .garden-tagline {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 1.15rem;
+  font-style: italic;
+}
+[data-look="herbarium"] .garden-recent,
+[data-look="herbarium"] .garden-paths,
+[data-look="herbarium"] .garden-main,
+[data-look="herbarium"] .garden-beds {
+  margin: 0 0 44px;
+}
+/* Each section is a drawer of the cabinet, named on a small brass-edged plate. */
+[data-look="herbarium"] .garden-recent > h2,
+[data-look="herbarium"] .garden-paths > h2,
+[data-look="herbarium"] .garden-main > h2 {
+  display: inline-block;
+  margin: 0 0 16px;
+  padding: 3px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--label);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+[data-look="herbarium"] .garden-beds {
+  display: grid;
+  gap: 8px 32px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+/* Sheets stand in rows of the same size, whatever their stage; DOM order is reading order. */
+[data-look="herbarium"] .garden-bed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr));
+  gap: 18px;
+}
+[data-look="herbarium"] .garden-row {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 4px 2px 14px;
+  scrollbar-width: thin;
+}
+[data-look="herbarium"] .garden-row > .garden-tile {
+  flex: 0 0 10.5rem;
+  scroll-snap-align: start;
+}
+[data-look="herbarium"] .garden-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  aspect-ratio: 29 / 42;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  transition: transform 0.2s;
+}
+[data-look="herbarium"] .garden-tile[hidden] {
+  display: none;
+}
+/* The pressed specimen: its stage's mark, faded as a dried plant is. */
+[data-look="herbarium"] .garden-tile-icon {
+  position: absolute;
+  inset: 16% 0 auto;
+  text-align: center;
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: sepia(0.45) saturate(0.75);
+}
+[data-look="herbarium"] .garden-tile[data-size="small"] .garden-tile-icon {
+  font-size: 1.9rem;
+}
+[data-look="herbarium"] .garden-tile[data-size="large"] .garden-tile-icon {
+  font-size: 3.3rem;
+}
+/* Its label: title and date on a card in the corner. */
+[data-look="herbarium"] .garden-tile-title {
+  width: 85%;
+  margin: 0;
+  padding: 5px 8px 3px;
+  border: 1px solid var(--line-strong);
+  border-bottom: 0;
+  background: var(--label);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+[data-look="herbarium"] .garden-tile-title:last-child {
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 5px;
+}
+[data-look="herbarium"] .garden-tile-title a {
+  color: inherit;
+  text-decoration: none;
+}
+/* The whole sheet opens the note. */
+[data-look="herbarium"] .garden-tile-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+[data-look="herbarium"] .garden-tile-title a:focus-visible {
+  outline: none;
+}
+[data-look="herbarium"] .garden-tile:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+[data-look="herbarium"] .garden-tile-date {
+  width: 85%;
+  margin: 0;
+  padding: 0 8px 5px;
+  border: 1px solid var(--line-strong);
+  border-top: 0;
+  background: var(--label);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--muted);
+}
+/* A sheet keeps to its name; the note itself has the rest. */
+[data-look="herbarium"] .garden-tile-desc,
+[data-look="herbarium"] .garden-tags {
+  display: none;
+}
+[data-look="herbarium"] .garden-tile.is-path {
+  border-style: dashed;
+  border-color: var(--line-strong);
+}
+@media (hover: hover) {
+  [data-look="herbarium"] .garden-tile:hover {
+    transform: translateY(-3px);
+  }
+  [data-look="herbarium"] .garden-tile:hover .garden-tile-title a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+}
+
+/* ---------- filters ---------- */
+[data-look="herbarium"] .garden-filters:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-family: var(--font-ui);
+}
+[data-look="herbarium"] .garden-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+[data-look="herbarium"] .garden-chip,
+[data-look="herbarium"] .garden-tag-select,
+[data-look="herbarium"] .garden-more {
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--label);
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+[data-look="herbarium"] .garden-chip small {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+[data-look="herbarium"] .garden-chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+[data-look="herbarium"] .garden-chip[aria-pressed="true"] small {
+  color: inherit;
+}
+[data-look="herbarium"] .garden-chip:focus-visible,
+[data-look="herbarium"] .garden-tag-select:focus-visible,
+[data-look="herbarium"] .garden-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+[data-look="herbarium"] .garden-more {
+  display: block;
+  margin: 22px auto 0;
+  padding: 9px 20px;
+  font-weight: 600;
+}
+[data-look="herbarium"] .garden-more[hidden] {
+  display: none;
+}
+
+/* ---------- around the note: what it was found near ---------- */
+[data-look="herbarium"] .backlinks {
+  border-top: 0;
+}
+[data-look="herbarium"] .backlink {
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  border-radius: 2px;
+  background: var(--surface);
+}
+[data-look="herbarium"] .backlink p {
+  flex-basis: 100%;
+}
+[data-look="herbarium"] .backlink strong {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-style: italic;
+}
+
+@media (max-width: 520px) {
+  [data-look="herbarium"] .garden-bed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  [data-look="herbarium"] .garden-tile-icon {
+    font-size: 2.1rem;
+  }
+  [data-look="herbarium"] article.note::before,
+  [data-look="herbarium"] article.note::after {
+    width: 3rem;
+  }
+  [data-look="herbarium"] .specimen-label {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-look="herbarium"] .garden-tile {
+    transition: none;
+  }
+  [data-look="herbarium"] .garden-tile:hover {
+    transform: none;
+  }
+}

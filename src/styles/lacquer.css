@@ -1,0 +1,169 @@
+/*
+ * Lacquer look, after Vietnamese sơn mài: deep black lacquer with vermilion
+ * and gold leaf, polished rather than printed. Ornament stays sparse: a gold
+ * rule under the title with a lozenge at its heart, a vermilion lozenge
+ * before each section, gold inlay along quotes. It opens dark; the light
+ * variant is eggshell inlay with vermilion and darker gold. Everything is
+ * scoped to [data-look="lacquer"].
+ */
+
+[data-look="lacquer"] {
+  --bg: #f4ecdb;
+  --surface: #faf5ea;
+  --surface-2: #ece1ca;
+  --surface-3: #e1d3b7;
+  --ink: #1c1210;
+  --ink-2: #3b2a22;
+  --muted: #6a5445;
+  --line: #dccbaa;
+  --line-strong: #c2a979;
+  --accent: #a3261a;
+  --accent-2: #75570c;
+  --accent-soft: rgb(163 38 26 / 0.08);
+  --on-accent: #fff;
+  /* Gold leaf, darkened to read as text on eggshell. */
+  --clay: #75570c;
+  --clay-soft: rgb(117 87 12 / 0.1);
+  --gold: #b08a2e;
+  --vermilion: #b8301f;
+  --title-grad: linear-gradient(100deg, #a3261a 0%, #75570c 100%);
+  --shadow: 0 1px 2px rgb(60 20 10 / 0.06), 0 10px 26px -16px rgb(60 20 10 / 0.3);
+  --radius: 3px;
+  --radius-sm: 2px;
+}
+
+[data-look="lacquer"][data-theme="dark"] {
+  --bg: #120b08;
+  --surface: #1b110d;
+  --surface-2: #251710;
+  --surface-3: #2f1d14;
+  --ink: #f1e7d3;
+  --ink-2: #dccfb6;
+  --muted: #b4a58b;
+  --line: #34211a;
+  --line-strong: #563424;
+  --accent: #e8553c;
+  --accent-2: #dcb05a;
+  --accent-soft: rgb(232 85 60 / 0.12);
+  --on-accent: #120b08;
+  --clay: #dcb05a;
+  --clay-soft: rgb(220 176 90 / 0.12);
+  --gold: #d4a94f;
+  --vermilion: #d2442c;
+  --title-grad: linear-gradient(100deg, #e8553c 0%, #dcb05a 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 30px -16px rgb(0 0 0 / 0.9);
+}
+
+/* Layers of lacquer catch the light: a faint red glow in the depth of the black. */
+[data-look="lacquer"] body {
+  background:
+    radial-gradient(70rem 36rem at 12% -12%, color-mix(in srgb, var(--vermilion) 10%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  font-family: var(--font-read);
+}
+[data-look="lacquer"] .site-header {
+  border-bottom-color: color-mix(in srgb, var(--gold) 35%, var(--line));
+}
+[data-look="lacquer"] .brand-mark {
+  background: var(--vermilion);
+  color: #fff8ec;
+}
+
+/* ---------- the title, with its gold rule ---------- */
+[data-look="lacquer"] .note-title,
+[data-look="lacquer"] .page-head h1 {
+  font-family: var(--font-read);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+/* The gold rule takes the place of the plain line under the head. */
+[data-look="lacquer"] .note-head {
+  border-bottom: 0;
+}
+[data-look="lacquer"] .note-head::after {
+  content: "◆";
+  content: "◆" / "";
+  display: block;
+  margin-top: 10px;
+  font-size: 10px;
+  line-height: 1;
+  text-align: center;
+  color: var(--gold);
+  background:
+    linear-gradient(var(--gold), var(--gold)) left center / calc(50% - 14px) 1px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) right center / calc(50% - 14px) 1px no-repeat;
+}
+
+/* ---------- sections: a vermilion lozenge, headings in gold on black ---------- */
+[data-look="lacquer"] .prose h1,
+[data-look="lacquer"] .prose h2,
+[data-look="lacquer"] .prose h3,
+[data-look="lacquer"] .prose h4,
+[data-look="lacquer"] .prose h5 {
+  font-family: var(--font-read);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+[data-look="lacquer"] .prose h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55em;
+  color: var(--clay);
+}
+[data-look="lacquer"] .prose h2::before {
+  content: "";
+  flex: none;
+  width: 0.42em;
+  height: 0.42em;
+  transform: translateY(-0.12em) rotate(45deg);
+  background: var(--vermilion);
+}
+[data-look="lacquer"] .prose a {
+  text-decoration-color: color-mix(in srgb, var(--gold) 60%, transparent);
+}
+[data-look="lacquer"] .prose a.internal {
+  border-radius: 2px;
+}
+[data-look="lacquer"] .prose blockquote {
+  border-left: 2px solid var(--gold);
+  background: linear-gradient(90deg, var(--clay-soft), transparent 70%);
+  color: var(--ink-2);
+}
+[data-look="lacquer"] .prose hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ---------- cards and chips: inlaid panels with a hairline of gold ---------- */
+[data-look="lacquer"] .chip {
+  border-radius: 2px;
+}
+[data-look="lacquer"] .backlink,
+[data-look="lacquer"] .card,
+[data-look="lacquer"] .series-box,
+[data-look="lacquer"] .callout {
+  border-radius: var(--radius);
+}
+[data-look="lacquer"] .backlink,
+[data-look="lacquer"] .card {
+  border-color: color-mix(in srgb, var(--gold) 28%, var(--line));
+}
+[data-look="lacquer"] .backlink:hover,
+[data-look="lacquer"] .card:hover {
+  border-color: var(--gold);
+}
+[data-look="lacquer"] .hero h1 .gradient-text {
+  font-family: var(--font-read);
+  font-weight: 500;
+}
+[data-look="lacquer"] .stage-card {
+  border-radius: var(--radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-look="lacquer"] body {
+    background-attachment: scroll;
+  }
+}

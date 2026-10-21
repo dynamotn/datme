@@ -254,5 +254,9 @@
   "view": "Ansicht",
   "layout": "Layout",
   "shortcuts": "Schnellzugriff",
-  "seeAlso": "Siehe auch"
+  "seeAlso": "Siehe auch",
+  "specimenLabel": "Herbaretikett",
+  "collected": "Gesammelt",
+  "growthStage": "Stadium",
+  "foundNear": "Gefunden bei"
 }

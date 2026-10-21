@@ -19,7 +19,13 @@
   [data-look="wiki"],
   [data-look="wiki"][data-theme="dark"],
   [data-look="broadsheet"],
-  [data-look="broadsheet"][data-theme="dark"] {
+  [data-look="broadsheet"][data-theme="dark"],
+  [data-look="herbarium"],
+  [data-look="herbarium"][data-theme="dark"],
+  [data-look="manuscript"],
+  [data-look="manuscript"][data-theme="dark"],
+  [data-look="lacquer"],
+  [data-look="lacquer"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;
@@ -49,7 +55,9 @@
     --margin-line: transparent;
   }
   [data-look="garden"],
-  [data-look="garden"][data-theme="dark"] {
+  [data-look="garden"][data-theme="dark"],
+  [data-look="herbarium"],
+  [data-look="herbarium"][data-theme="dark"] {
     --earth: #000;
     --growth-small: #fff;
     --growth-medium: #f4f4f2;
@@ -73,6 +81,31 @@
   [data-look="garden"] .garden-filters,
   [data-look="garden"] .garden-more {
     display: none !important;
+  }
+  /* A specimen prints as its sheet's text and label, without the tape. */
+  [data-look="herbarium"],
+  [data-look="herbarium"][data-theme="dark"] {
+    --label: #fff;
+  }
+  [data-look="herbarium"] article.note {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  [data-look="herbarium"] article.note::before,
+  [data-look="herbarium"] article.note::after,
+  [data-look="herbarium"] .garden-filters,
+  [data-look="herbarium"] .garden-more {
+    display: none !important;
+  }
+  [data-look="herbarium"] .specimen-label {
+    break-inside: avoid;
+  }
+  /* Lacquer keeps its gold rules, in ink. */
+  [data-look="lacquer"],
+  [data-look="lacquer"][data-theme="dark"] {
+    --gold: #000;
+    --vermilion: #000;
   }
 
   html,

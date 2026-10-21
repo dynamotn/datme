@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { gardenChips, gardenOrder, tileSize, topTags } from "../src/lib/garden"
+import { gardenChips, gardenOrder, seasonOf, stageOf, tileSize, topTags } from "../src/lib/garden"
 import { listed } from "../src/lib/vault"
 import { site } from "../src/site.config"
 
@@ -46,6 +46,27 @@ describe("garden data", () => {
     const folders = new Set(notes.map((n) => n.dir.split("/")[0]).filter(Boolean))
     expect(chips.length).toBe(folders.size)
     expect(chips.every((c) => c.kind === "folder" && c.icon === "📁" && c.count > 0)).toBe(true)
+  })
+
+  test("a note's stage comes from the config, when it has one", () => {
+    const stages = s(["seed", "tree"])
+    expect(stageOf({ stage: "tree" }, stages)).toBe(stages.tree)
+    expect(stageOf({ stage: "gone" }, stages)).toBeUndefined()
+    expect(stageOf({ stage: undefined }, stages)).toBeUndefined()
+    const first = Object.keys(site.stages)[0]
+    expect(stageOf({ stage: first })).toBe(site.stages[first])
+  })
+
+  test("seasons follow the months of each hemisphere", () => {
+    const month = (m: number) => new Date(2026, m, 15)
+    expect([...Array(12).keys()].map((m): string => seasonOf(month(m)))).toEqual([
+      ...["winter", "winter", "spring", "spring", "spring", "summer", "summer", "summer"],
+      ...["autumn", "autumn", "autumn", "winter"],
+    ])
+    expect(seasonOf(month(0), "south")).toBe("summer")
+    expect(seasonOf(month(3), "south")).toBe("autumn")
+    expect(seasonOf(month(6), "south")).toBe("winter")
+    expect(seasonOf(month(9), "south")).toBe("spring")
   })
 
   test("top tags leave type tags out", () => {

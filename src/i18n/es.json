@@ -254,5 +254,9 @@
   "view": "Vista",
   "layout": "Disposición",
   "shortcuts": "Accesos directos",
-  "seeAlso": "Véase también"
+  "seeAlso": "Véase también",
+  "specimenLabel": "Etiqueta del espécimen",
+  "collected": "Recolectado",
+  "growthStage": "Etapa",
+  "foundNear": "Hallado cerca de"
 }

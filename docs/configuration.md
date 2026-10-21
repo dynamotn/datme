@@ -92,12 +92,16 @@ appearance:
                               # blueprint: grid paper, mono lettering, diagrams on drawing sheets;
                               # wiki: a dense reference page with an infobox of the note's properties;
                               # broadsheet: a newspaper, the home a front page, each top folder a section
+                              # herbarium: the garden pressed, each note a specimen sheet;
+                              # manuscript: a book page for long reading, notes in the margin;
+                              # lacquer: black lacquer, vermilion and gold leaf, dark first
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
     Garden: garden
   # classic: [Writing]        # older spelling of `folders: { Writing: classic }`
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
+  seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
 
 theme:
   scheme: auto                # light or dark before readers use the toggle; auto follows their system
@@ -193,6 +197,32 @@ titles over thin rules and blue links. A note's `cover` (else its `banner`) and
 its properties fill an infobox floated right of the text, its headings make a
 numbered contents box at the top, and its related notes are listed under "See
 also". On a phone the infobox comes first, full width.
+
+With `seasons: true` the garden's colours follow the year: fresh green and
+blossom in spring, deep green in summer, rust and ochre in autumn, frost blue
+in winter, each in a light and a dark variant. The season is that of the
+build date, and the page turns to the reader's own season when it opens, so a
+page cached since summer still shows autumn. Seasons are meteorological
+(spring from March); `seasons: { hemisphere: south }` starts spring in
+September. `theme.accent` still wins over the season's accent.
+
+The `herbarium` style is the garden pressed and kept: same stages, same
+filters, but every note is a sheet of cream paper held down by linen tape,
+with a label card in its bottom-right corner naming it, the date it was
+collected (`created`), its stage and the note it was found near (the first
+that links to it). Home, folder and tag pages show the notes as a cabinet of
+sheets of one size, the stage's icon pressed on each.
+
+The `manuscript` style is a book page for long reading: a narrow text column
+with a wide right margin where footnotes stand as sidenotes, old-style
+figures, a drop cap and small capitals on the first paragraph, and each H2
+opened like a chapter with a roman numeral. A note in a `series` shows its
+parts as a list of chapters.
+
+The `lacquer` style follows Vietnamese lacquer painting (sơn mài): black
+lacquer with vermilion and gold leaf, a gold rule under each title and a
+vermilion lozenge before each section. It opens dark unless the reader chose
+a theme; light mode is eggshell inlay with vermilion and darker gold.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,

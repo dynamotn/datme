@@ -7,6 +7,7 @@ import Icon from "./Icon.astro"
 import PropValue from "./PropValue.astro"
 import { noteProperties } from "~/lib/properties"
 import { typeInfo } from "~/lib/types"
+import { isGarden } from "~/lib/look"
 
 interface Props {
   note: Note
@@ -14,7 +15,7 @@ interface Props {
   look: Style
 }
 const { note, words, look } = Astro.props
-const garden = look === "garden"
+const garden = isGarden(look)
 const s = t(note.lang)
 const tagUrl = (tag: string) => slugToUrl(langPrefix(note.lang) + "tags/" + tag)
 const minutes = Math.max(1, Math.round(words / 220))

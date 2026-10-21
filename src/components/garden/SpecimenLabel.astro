@@ -1,0 +1,60 @@
+---
+import type { Note } from "~/lib/vault"
+import { site } from "~/site.config"
+import { formatDate, t } from "~/lib/i18n"
+import { stageOf } from "~/lib/garden"
+
+interface Props {
+  note: Note
+  title: string
+  /** The note it was found near: the first that links to it. */
+  near?: Note
+}
+const { note, title, near } = Astro.props
+const s = t(note.lang)
+const stage = stageOf(note)
+---
+
+{/* The herbarium's label card, in the corner of the sheet: the garden's own data, as a botanist would write it. */}
+<aside class="specimen-label" aria-label={s.specimenLabel}>
+  <p class="specimen-kicker">{site.title[note.lang]}</p>
+  <h2>{title}</h2>
+  {
+    (note.created || stage || near) && (
+      <dl>
+        {
+          note.created && (
+            <>
+              <dt>{s.collected}</dt>
+              <dd>
+                <time datetime={note.created.toISOString()}>{formatDate(note.created, note.lang)}</time>
+              </dd>
+            </>
+          )
+        }
+        {
+          stage && (
+            <>
+              <dt>{s.growthStage}</dt>
+              <dd>
+                <span aria-hidden="true">{stage.icon}</span> {stage.label[note.lang]}
+              </dd>
+            </>
+          )
+        }
+        {
+          near && (
+            <>
+              <dt>{s.foundNear}</dt>
+              <dd>
+                <a class="internal" href={near.url}>
+                  {near.title}
+                </a>
+              </dd>
+            </>
+          )
+        }
+      </dl>
+    )
+  }
+</aside>

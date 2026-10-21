@@ -1,0 +1,214 @@
+/*
+ * Manuscript look: a book page for long reading, after Tufte. A narrow text
+ * column with a wide right margin where footnotes stand as sidenotes,
+ * old-style figures, a drop cap on the first paragraph, sections opened like
+ * chapters with a roman numeral, and a note's series as its table of
+ * chapters. Everything is scoped to [data-look="manuscript"].
+ */
+
+[data-look="manuscript"] {
+  --bg: #fffff8;
+  --surface: #fbfaf1;
+  --surface-2: #f3f1e6;
+  --surface-3: #e9e6d8;
+  --ink: #111111;
+  --ink-2: #333333;
+  --muted: #5c5b55;
+  --line: #e4e1d3;
+  --line-strong: #c9c5b2;
+  /* Rubric red, as the scribes marked a beginning. */
+  --accent: #8b2018;
+  --accent-2: #8b2018;
+  --accent-soft: rgb(139 32 24 / 0.08);
+  --on-accent: #fff;
+  --clay: #8b2018;
+  --clay-soft: rgb(139 32 24 / 0.08);
+  --title-grad: linear-gradient(100deg, #111111 0%, #333333 100%);
+  --shadow: 0 1px 2px rgb(40 30 10 / 0.04), 0 8px 24px -14px rgb(40 30 10 / 0.18);
+  --radius: 2px;
+  --radius-sm: 2px;
+  /* The text column leaves this much to the right for the sidenotes. */
+  --margin-w: 15rem;
+}
+
+[data-look="manuscript"][data-theme="dark"] {
+  --bg: #151412;
+  --surface: #1c1b18;
+  --surface-2: #24221f;
+  --surface-3: #2d2b27;
+  --ink: #e9e5da;
+  --ink-2: #cfcabd;
+  --muted: #a8a397;
+  --line: #2d2b27;
+  --line-strong: #45423b;
+  --accent: #e5937f;
+  --accent-2: #e5937f;
+  --accent-soft: rgb(229 147 127 / 0.1);
+  --on-accent: #151412;
+  --clay: #e5937f;
+  --clay-soft: rgb(229 147 127 / 0.1);
+  --title-grad: linear-gradient(100deg, #e9e5da 0%, #cfcabd 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -14px rgb(0 0 0 / 0.6);
+}
+
+[data-look="manuscript"] body {
+  font-family: var(--font-read);
+}
+
+/* ---------- the page: room for the margin ---------- */
+[data-look="manuscript"] .note {
+  --measure: 54rem;
+}
+/* Reader mode keeps the margin, the most room a long read gets. */
+[data-look="manuscript"].reader .note {
+  --measure: 56rem;
+}
+[data-look="manuscript"] .prose {
+  container: manuscript / inline-size;
+  counter-reset: chapter;
+  /* Figures that sit in the line like lower-case letters; tables keep theirs lined up. */
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  hyphens: auto;
+}
+[data-look="manuscript"] .prose table {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* ---------- title and chapters ---------- */
+[data-look="manuscript"] .note-title {
+  font-family: var(--font-read);
+  font-weight: 400;
+  font-size: clamp(2.1rem, 4.6vw, 3.1rem);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+[data-look="manuscript"] .prose h1,
+[data-look="manuscript"] .prose h2,
+[data-look="manuscript"] .prose h3,
+[data-look="manuscript"] .prose h4,
+[data-look="manuscript"] .prose h5 {
+  font-family: var(--font-read);
+  letter-spacing: 0;
+}
+/* Each H2 opens a chapter: its numeral in rubric above a centred small-caps title. */
+[data-look="manuscript"] .prose h2 {
+  counter-increment: chapter;
+  margin: 2.6em 0 1em;
+  text-align: center;
+  font-size: 1.25em;
+  font-weight: 400;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+}
+[data-look="manuscript"] .prose h2::before {
+  content: counter(chapter, upper-roman);
+  display: block;
+  margin-bottom: 0.3em;
+  font-size: 0.8em;
+  font-variant-caps: normal;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+[data-look="manuscript"] .prose h3 {
+  font-size: 1.1em;
+  font-style: italic;
+  font-weight: 400;
+}
+[data-look="manuscript"] .prose h4,
+[data-look="manuscript"] .prose h5 {
+  font-weight: 600;
+}
+
+/* ---------- the first paragraph opens on a drop cap ---------- */
+[data-look="manuscript"] .prose > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.08em 0.08em 0 0;
+  font-size: 3.4em;
+  line-height: 0.82;
+  font-weight: 500;
+  color: var(--accent);
+}
+[data-look="manuscript"] .prose > p:first-of-type::first-line {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03em;
+}
+
+[data-look="manuscript"] .prose blockquote {
+  border-left: 0;
+  padding-left: 1.5em;
+  font-style: italic;
+  color: var(--ink-2);
+}
+[data-look="manuscript"] .prose hr {
+  border: 0;
+  text-align: center;
+}
+[data-look="manuscript"] .prose hr::after {
+  content: "⁂";
+  color: var(--muted);
+}
+
+/* ---------- sidenotes in the margin, whenever the column has room for one ---------- */
+[data-look="manuscript"] .prose .sidenote {
+  --sidenote-w: 12.5rem;
+  --sidenote-gap: 2.5rem;
+}
+@container manuscript (min-width: 44rem) {
+  [data-look="manuscript"] .prose > *:not(.footnotes) {
+    max-width: calc(100% - var(--margin-w));
+  }
+  /* As specific as the reader-mode rule of global.css, so the margin keeps this face there too. */
+  [data-look="manuscript"] .note .prose .sidenote {
+    display: block;
+    float: right;
+    clear: right;
+    position: relative;
+    width: var(--sidenote-w);
+    margin: 0.3em calc(-1 * (var(--sidenote-w) + var(--sidenote-gap))) 0.8em 0;
+    font-family: var(--font-read);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  [data-look="manuscript"] .prose:has(.sidenote) .footnotes {
+    display: none;
+  }
+}
+[data-look="manuscript"] .prose .sidenote-number {
+  font-weight: 400;
+}
+
+/* ---------- a series: its parts as the chapters of a book ---------- */
+[data-look="manuscript"] .series-box {
+  padding: 14px 0;
+  border: 0;
+  border-block: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: none;
+  font-family: var(--font-read);
+  font-size: 1rem;
+}
+[data-look="manuscript"] .series-box summary {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
+}
+[data-look="manuscript"] .series-box ol {
+  list-style: upper-roman;
+  padding-left: 2.6em;
+}
+[data-look="manuscript"] .series-box li::marker {
+  color: var(--accent);
+}
+[data-look="manuscript"] .series-box li[aria-current] {
+  font-style: italic;
+  font-weight: 400;
+}
+[data-look="manuscript"] .series-nav a {
+  border-radius: 0;
+}
+
+@media (max-width: 520px) {
+  [data-look="manuscript"] .prose > p:first-of-type::first-letter {
+    font-size: 2.9em;
+  }
+}

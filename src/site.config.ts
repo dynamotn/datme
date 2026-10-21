@@ -15,7 +15,20 @@ export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
 export type Lang = string
 
 /** Every site style; `appearance.style` and `appearance.folders` take one of these. */
-export const STYLES = ["notebook", "classic", "garden", "resume", "darkroom", "terminal", "blueprint", "wiki", "broadsheet"] as const
+export const STYLES = [
+  "notebook",
+  "classic",
+  "garden",
+  "resume",
+  "darkroom",
+  "terminal",
+  "blueprint",
+  "wiki",
+  "broadsheet",
+  "herbarium",
+  "manuscript",
+  "lacquer",
+] as const
 export type Style = (typeof STYLES)[number]
 
 export interface StageDef {
@@ -437,7 +450,11 @@ const schema = z
       .default({ iterations: 600_000 }),
     appearance: z
       .object({
-        /** notebook: index cards on dotted paper; classic: the quiet serif blog look; garden: tiles sized by maturity, recently tended first. */
+        /**
+         * notebook: index cards on dotted paper; classic: the quiet serif blog look; garden: tiles sized by
+         * maturity, recently tended first; herbarium: notes as pressed specimens; manuscript: a book page with
+         * notes in its margin; lacquer: vermilion, black and gold leaf.
+         */
         style: z.enum(STYLES).default("notebook"),
         /** Folders whose notes use the other style, e.g. long-form writing. */
         classic: z.array(z.string()).default([]),
@@ -445,9 +462,16 @@ const schema = z
         folders: z.record(z.string(), z.enum(STYLES)).default({}),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
+        /**
+         * The garden style's colours follow the season of the build, and of the reader's
+         * day once the page opens: true for the northern hemisphere, or { hemisphere: south }.
+         */
+        seasons: z
+          .union([z.boolean(), z.object({ hemisphere: z.enum(["north", "south"]).default("north") }).strict()])
+          .default(false),
       })
       .strict()
-      .default({ style: "notebook", classic: [], folders: {}, stream: [] }),
+      .default({ style: "notebook", classic: [], folders: {}, stream: [], seasons: false }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -456,6 +480,14 @@ const schema = z
 export type TtsConfig = { models: Record<string, "vieneu">; folders: string[]; frontmatter: Record<string, string | number | boolean> }
 
 export type RawConfig = z.input<typeof schema>
+
+export type Hemisphere = "north" | "south"
+
+/** `appearance.seasons` as the hemisphere whose seasons the garden follows, or false. */
+function seasonsOf(v: boolean | { hemisphere: Hemisphere }): false | { hemisphere: Hemisphere } {
+  if (v === true) return { hemisphere: "north" }
+  return v
+}
 
 function expandHome(p: string): string {
   return p === "~" || p.startsWith("~/") ? path.join(os.homedir(), p.slice(1)) : p
@@ -648,6 +680,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
       folders: Object.fromEntries(Object.entries(c.appearance.folders).map(([p, style]) => [p.replace(/^\/+|\/+$/g, ""), style])),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
+      seasons: seasonsOf(c.appearance.seasons),
     },
     strings: c.strings,
   }

@@ -141,3 +141,57 @@ describe("the looks' own palettes", () => {
     }
   })
 })
+
+/** Custom properties of each rule of a look's stylesheet, by selector. */
+function rules(file: string): Map<string, Record<string, string>> {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "")
+  const out = new Map<string, Record<string, string>>()
+  for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const vars = Object.fromEntries([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
+    // A leading @import ends at its semicolon.
+    const sel = selector.split(";").at(-1)!.trim()
+    out.set(sel, { ...out.get(sel), ...vars })
+  }
+  return out
+}
+
+/** The palette the given rules make together, later ones winning, with var() references followed. */
+function sheetPalette(file: string, selectors: string[]): Record<string, string> {
+  const all = rules(file)
+  const merged: Record<string, string> = Object.assign({}, ...selectors.map((sel) => all.get(sel) ?? {}))
+  const resolve = (v: string): string => v.replace(/^var\((--[\w-]+)\)$/, (_, name) => resolve(merged[name]))
+  return Object.fromEntries(Object.entries(merged).map(([k, v]) => [k, resolve(v)]))
+}
+
+/** Text colours a look sets that read under WCAG AA on a ground it sets; none should be listed. */
+function unreadable(name: string, p: Record<string, string>): string[] {
+  const out: string[] = p["--bg"] ? [] : [`${name}: no palette`]
+  const check = (fg: string, bg: string) => {
+    if (p[fg] && p[bg] && ratio(p[fg], p[bg]) < 4.5) out.push(`${name}: ${fg} on ${bg} is ${ratio(p[fg], p[bg]).toFixed(2)}:1`)
+  }
+  for (const fg of ["--ink", "--ink-2", "--muted", "--accent", "--earth", "--clay"])
+    for (const bg of ["--bg", "--surface", "--surface-2", "--label"]) check(fg, bg)
+  check("--on-accent", "--accent")
+  return out
+}
+
+describe("the palettes of the looks", () => {
+  test("herbarium, manuscript and lacquer read at AA in both schemes", () => {
+    for (const look of ["herbarium", "manuscript", "lacquer"]) {
+      const light = `[data-look="${look}"]`
+      expect(unreadable(`${look} light`, sheetPalette(`${look}.css`, [light]))).toEqual([])
+      expect(unreadable(`${look} dark`, sheetPalette(`${look}.css`, [light, `${light}[data-theme="dark"]`]))).toEqual([])
+    }
+  })
+
+  test("every season of the garden reads at AA in both schemes", () => {
+    const light = '[data-look="garden"]'
+    const dark = '[data-look="garden"][data-theme="dark"]'
+    for (const season of ["spring", "summer", "autumn", "winter"]) {
+      const where = `:where([data-season="${season}"])`
+      expect(unreadable(`${season} light`, sheetPalette("garden.css", [light, light + where]))).toEqual([])
+      // In cascade order: the dark rules outrank the light season, whatever their place in the file.
+      expect(unreadable(`${season} dark`, sheetPalette("garden.css", [light, light + where, dark, dark + where]))).toEqual([])
+    }
+  })
+})

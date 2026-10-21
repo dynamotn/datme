@@ -254,5 +254,9 @@
   "view": "显示",
   "layout": "布局",
   "shortcuts": "快捷链接",
-  "seeAlso": "参见"
+  "seeAlso": "参见",
+  "specimenLabel": "标本标签",
+  "collected": "采集于",
+  "growthStage": "阶段",
+  "foundNear": "发现于"
 }

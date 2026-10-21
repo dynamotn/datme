@@ -15,6 +15,9 @@ export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
   blueprint: { light: "#f7fafd", dark: "#0e3a72" },
   wiki: { light: "#f8f9fa", dark: "#101418" },
   broadsheet: { light: "#f4f1ea", dark: "#141311" },
+  herbarium: { light: "#e7e0cd", dark: "#17150f" },
+  manuscript: { light: "#fffff8", dark: "#151412" },
+  lacquer: { light: "#f4ecdb", dark: "#120b08" },
 }
 
 /** The web app manifest: lets readers install the garden and open it like an app. */
