@@ -30,6 +30,8 @@ export const STYLES = [
   "lacquer",
 ] as const
 export type Style = (typeof STYLES)[number]
+/** Styles made for a single page (a résumé, a gallery) rather than a whole site. */
+export const PAGE_STYLES: readonly Style[] = ["resume", "darkroom"]
 
 export interface StageDef {
   icon: string
@@ -471,9 +473,11 @@ const schema = z
         seasons: z
           .union([z.boolean(), z.object({ hemisphere: z.enum(["north", "south"]).default("north") }).strict()])
           .default(false),
+        /** Styles readers can pick from the View menu instead of the page's own; true for every site-wide style. */
+        readerSwitch: z.union([z.boolean(), z.array(z.enum(STYLES)).min(1)]).default(false),
       })
       .strict()
-      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false }),
+      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false, readerSwitch: false }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -596,6 +600,11 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       throw new ConfigError(`Invalid datme config in ${vault}:\n  - tts: selects no notes, set tts.folders or tts.frontmatter`)
     }
   }
+  const { readerSwitch } = c.appearance
+  const pageStyle = Array.isArray(readerSwitch) && readerSwitch.find((st) => PAGE_STYLES.includes(st))
+  if (pageStyle) {
+    throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.readerSwitch: ${pageStyle} is made for a single page, so readers cannot pick it for the site`)
+  }
   for (const [folder, def] of Object.entries(c.stages)) {
     // A string naming no preset is the stage's label; without one, the folder's name is.
     const preset = typeof def === "string" ? STAGE_PRESETS[def.toLowerCase()] : undefined
@@ -685,6 +694,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, Style] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
+      readerSwitch: readerSwitch === true ? STYLES.filter((st) => !PAGE_STYLES.includes(st)) : [...new Set(readerSwitch || [])],
     },
     strings: c.strings,
   }

@@ -138,6 +138,8 @@
   "prefsSize": "字号",
   "prefsLegible": "易读字体",
   "prefsContrast": "高对比度",
+  "readerStyle": "样式",
+  "readerStyleOwn": "作者设定的样式",
   "graphColorBy": "着色",
   "graphColorNone": "无",
   "graphColorType": "类型",

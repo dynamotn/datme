@@ -138,6 +138,8 @@
   "prefsSize": "文字の大きさ",
   "prefsLegible": "読みやすいフォント",
   "prefsContrast": "ハイコントラスト",
+  "readerStyle": "スタイル",
+  "readerStyleOwn": "作者の設定どおり",
   "graphColorBy": "色分け",
   "graphColorNone": "なし",
   "graphColorType": "種類",

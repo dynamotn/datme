@@ -138,6 +138,8 @@
   "prefsSize": "Text size",
   "prefsLegible": "Legible font",
   "prefsContrast": "High contrast",
+  "readerStyle": "Style",
+  "readerStyleOwn": "As the author set it",
   "graphColorBy": "Colour",
   "graphColorNone": "none",
   "graphColorType": "type",

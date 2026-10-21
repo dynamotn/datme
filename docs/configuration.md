@@ -105,6 +105,8 @@ appearance:
     til: notebook
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
   seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
+  readerSwitch: false         # true: readers pick notebook, classic or garden in the View menu;
+                              # or a list, e.g. [notebook, classic]
 
 theme:
   scheme: auto                # light or dark before readers use the toggle; auto follows their system
@@ -226,6 +228,15 @@ The `lacquer` style follows Vietnamese lacquer painting (sơn mài): black
 lacquer with vermilion and gold leaf, a gold rule under each title and a
 vermilion lozenge before each section. It opens dark unless the reader chose
 a theme; light mode is eggshell inlay with vermilion and darker gold.
+
+With `readerSwitch`, the View menu of every page lists the styles you offer,
+and a reader's pick restyles the whole site for them until they choose "As
+the author set it" again. The choice stays in their browser and applies
+before the page first shows, so it never flashes the author's style first;
+only the stylesheet of the chosen style is downloaded. It changes colours,
+type and paper, not what a page holds: a garden home keeps its tiles in the
+classic style. Pages in `resume` or `darkroom` keep their style, and those
+two cannot be offered.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,

@@ -3236,6 +3236,10 @@ li > .flashcard {
   align-items: center;
   gap: 8px;
 }
+/* Style names as written in datme.yaml, read as names. */
+.prefs-looks label span {
+  text-transform: capitalize;
+}
 :root.font-legible body,
 :root.font-legible .prose {
   font-family: "Atkinson Hyperlegible", var(--font-ui);

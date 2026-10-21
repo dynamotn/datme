@@ -138,6 +138,8 @@
   "prefsSize": "Cỡ chữ",
   "prefsLegible": "Phông dễ đọc",
   "prefsContrast": "Tương phản cao",
+  "readerStyle": "Kiểu trang",
+  "readerStyleOwn": "Theo tác giả chọn",
   "graphColorBy": "Tô màu",
   "graphColorNone": "không",
   "graphColorType": "loại",

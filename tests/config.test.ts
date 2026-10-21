@@ -187,7 +187,7 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false })
+    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false, readerSwitch: [] })
   })
 
   test("the garden style and a style per folder", () => {

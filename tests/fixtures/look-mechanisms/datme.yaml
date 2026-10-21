@@ -1,0 +1,11 @@
+# A site in the classic style that readers can restyle, with a style per tag.
+site:
+  title: Looks test
+languages: [en-US]
+publish: all
+appearance:
+  style: classic
+  tags:
+    poem: garden
+  readerSwitch: true
+  stream: [Thoughts]

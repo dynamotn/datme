@@ -17,6 +17,7 @@ import { setupOutdated } from "./outdated"
 import { setupGardenBed } from "./garden-bed"
 import { setupProgress } from "./progress"
 import { setupPrefs } from "./prefs"
+import { setupLookSwitch } from "./looks"
 import { openRandom, step } from "./wander"
 import { revealHash } from "./tabs"
 import { bindListen, setupListen } from "./listen"
@@ -368,6 +369,7 @@ document.addEventListener("astro:page-load", () => {
   setupGardenBed()
   setupProgress()
   setupPrefs()
+  setupLookSwitch()
   setupPractice()
   void setupGardenPractice()
   void setupDueBadge()

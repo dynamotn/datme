@@ -417,6 +417,7 @@ appearance:
 #  seasons: true               # the garden's colours follow the season
   tags: {}                    # a style per tag, before the folder's
 #    poem: classic
+  readerSwitch: false         # true: readers pick a style in the View menu
 
 # Columns of links in the footer, each a heading and entries written like nav.
 footer: {}

@@ -138,6 +138,8 @@
   "prefsSize": "Taille du texte",
   "prefsLegible": "Police lisible",
   "prefsContrast": "Contraste élevé",
+  "readerStyle": "Style",
+  "readerStyleOwn": "Celui choisi par l'auteur",
   "graphColorBy": "Couleur",
   "graphColorNone": "aucune",
   "graphColorType": "type",

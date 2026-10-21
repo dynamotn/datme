@@ -99,8 +99,9 @@ type never leaves the page. Nothing loads until they press the button. It needs
 - **The View menu:** the sliders button in the header gathers how the page is
   laid out and read: each sidebar folds away on its own, reader mode hides
   both, and the reading preferences enlarge the text, switch to a legible font
-  (Atkinson Hyperlegible) or high contrast. Every choice stays in the reader's
-  browser.
+  (Atkinson Hyperlegible) or high contrast. When the site offers it
+  (`appearance.readerSwitch`), a Style group restyles every page in another
+  of its styles. Every choice stays in the reader's browser.
 - **Graphs:** the wheel zooms a graph around the pointer, and the + and −
   buttons in its corner zoom it for readers without one.
 - **Languages:** with several languages, the header shows the current one;
