@@ -116,6 +116,17 @@ export function parseBibtex(src: string): BibEntry[] {
   return entries
 }
 
+/** A BibTeX value: LaTeX's special characters escaped, braced so capitals stay as written. */
+const bibValue = (v: string) => `{${v.replace(/[\\&%$#_{}]/g, (c) => (c === "\\" ? "\\textbackslash{}" : `\\${c}`)).replace(/\s+/g, " ").trim()}}`
+
+/** An entry written back as BibTeX, its fields in the order given; parseBibtex reads it back. */
+export function toBibtex(e: BibEntry): string {
+  const fields = Object.entries(e.fields).filter(([, v]) => v)
+  const width = Math.max(0, ...fields.map(([k]) => k.length))
+  const lines = fields.map(([k, v]) => `  ${k.padEnd(width)} = ${bibValue(v)}`)
+  return `@${e.type}{${e.key},\n${lines.join(",\n")}\n}`
+}
+
 // ---------- formatting ----------
 
 interface Person {

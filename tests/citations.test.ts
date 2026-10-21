@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
-import { cite, formatReference, latexText, parseBibtex, people, shortAuthors } from "../src/lib/citations"
+import { cite, formatReference, latexText, parseBibtex, people, shortAuthors, toBibtex } from "../src/lib/citations"
 import { getVault } from "../src/lib/vault"
 
 const entries = parseBibtex(fs.readFileSync(path.join(import.meta.dir, "fixtures/vault/_assets/refs.bib"), "utf8"))
@@ -12,6 +12,14 @@ describe("BibTeX", () => {
     expect(entries.map((e) => e.key)).toEqual(["luhmann1992", "ahrens2017"])
     expect(bib.get("luhmann1992")!.fields).toMatchObject({ year: "1992", publisher: "Suhrkamp", title: "Die Wissenschaft der Gesellschaft" })
     expect(bib.get("ahrens2017")!.fields).toMatchObject({ journal: "Journal of Note Taking", pages: "10–20" })
+  })
+
+  test("an entry written back as BibTeX reads back the same, its special characters escaped", () => {
+    const entry = { key: "ada2024", type: "article", fields: { author: "Ada Lovelace and Bob", title: "Notes & 100% of #tags_x", year: "2024", note: "" } }
+    const src = toBibtex(entry)
+    expect(src).toBe("@article{ada2024,\n  author = {Ada Lovelace and Bob},\n  title  = {Notes \\& 100\\% of \\#tags\\_x},\n  year   = {2024}\n}")
+    expect(parseBibtex(src)).toEqual([{ ...entry, fields: { author: "Ada Lovelace and Bob", title: "Notes & 100% of #tags_x", year: "2024" } }])
+    expect(toBibtex({ key: "k", type: "misc", fields: { title: "a\\b" } })).toContain("{a\\textbackslash{}b}")
   })
 
   test("LaTeX accents and escapes become plain text", () => {
