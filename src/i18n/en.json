@@ -258,5 +258,13 @@
   "specimenLabel": "Specimen label",
   "collected": "Collected",
   "growthStage": "Stage",
-  "foundNear": "Found near"
+  "foundNear": "Found near",
+  "statusUnread": "Unread",
+  "dailyOverTime": "Over time",
+  "peopleLinks": "How they are linked",
+  "snippetsAll": "All",
+  "snippetsFilter": "Filter by language",
+  "season": "Season {n}",
+  "episodeWith": "with",
+  "episodesFeed": "Podcast feed (RSS)"
 }

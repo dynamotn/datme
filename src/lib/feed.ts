@@ -1,3 +1,5 @@
+import fs from "node:fs"
+import path from "node:path"
 import rss from "@astrojs/rss"
 import { site, type Lang } from "~/site.config"
 import { listed, byRecent, getVault, type Note } from "./vault"
@@ -6,6 +8,9 @@ import { langPrefix } from "./i18n"
 import { sluggify } from "./slug"
 import { gardenChanges } from "./changes"
 import { t } from "./i18n"
+import { collectionOf, episodeNumber, field, specOf, whenOf } from "./note-layouts"
+import { audioType } from "./collection-views"
+import { escapeAttr } from "./html"
 
 /** What a feed covers: the whole site, a folder (with its subfolders) or a tag (with its subtags). */
 export type FeedScope = { kind: "site" } | { kind: "folder"; dir: string } | { kind: "tag"; tag: string }
@@ -79,5 +84,53 @@ export function changesFeed(lang: Lang, scope: FeedScope = { kind: "site" }): Pr
         categories: c.note.tags,
       }
     }),
+  })
+}
+
+/** Path of the podcast feed of an `episodes` collection, next to its page: Podcast/episodes.xml. */
+export function episodesPath(note: Note): string {
+  const dir = note.slug.replace(/(^|\/)index$/, "")
+  return dir ? `${dir}/episodes.xml` : "episodes.xml"
+}
+
+/**
+ * RSS of an `episodes` collection, newest first, each episode's `audio` as
+ * its enclosure, so podcast apps can follow it. A file of the vault gives its
+ * size; a sound elsewhere is of unknown length, which RSS writes as 0.
+ */
+export async function episodesFeed(note: Note): Promise<Response> {
+  // Newest first whatever the groups of the page, as podcast apps expect.
+  const time = (n: Note) => whenOf(n)?.getTime() ?? 0
+  const episodes = collectionOf(note, specOf(note, "episodes"))
+    .flatMap((g) => g.notes)
+    .sort((a, b) => time(b) - time(a))
+  return rss({
+    title: `${note.title} · ${site.title[note.lang]}`,
+    description: note.description ?? site.tagline[note.lang],
+    site: site.url ?? "http://localhost:4321",
+    xmlns: { itunes: "http://www.itunes.com/dtds/podcast-1.0.dtd" },
+    customData: `<language>${note.lang}</language>`,
+    items: await Promise.all(
+      episodes.map(async (n) => {
+        const r = await renderNote(n)
+        const duration = field(n, "duration|length")
+        const number = episodeNumber(n)
+        return {
+          title: r.h1 ?? n.title,
+          link: n.url,
+          pubDate: whenOf(n),
+          description: r.description,
+          categories: n.tags,
+          enclosure: n.audio && {
+            url: n.audio.href,
+            length: n.audio.file ? fs.statSync(path.join(site.vault, n.audio.file)).size : 0,
+            type: audioType(n.audio.href),
+          },
+          customData:
+            (duration ? `<itunes:duration>${escapeAttr(duration)}</itunes:duration>` : "") +
+            (number ? `<itunes:episode>${number}</itunes:episode>` : ""),
+        }
+      }),
+    ),
   })
 }

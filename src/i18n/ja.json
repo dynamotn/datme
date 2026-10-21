@@ -258,5 +258,13 @@
   "specimenLabel": "標本ラベル",
   "collected": "採集日",
   "growthStage": "段階",
-  "foundNear": "採集地"
+  "foundNear": "採集地",
+  "statusUnread": "未読",
+  "dailyOverTime": "推移",
+  "peopleLinks": "つながり",
+  "snippetsAll": "すべて",
+  "snippetsFilter": "言語で絞り込む",
+  "season": "シーズン {n}",
+  "episodeWith": "ゲスト:",
+  "episodesFeed": "ポッドキャストのフィード (RSS)"
 }

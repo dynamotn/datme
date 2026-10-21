@@ -258,5 +258,13 @@
   "specimenLabel": "Étiquette du spécimen",
   "collected": "Récolté",
   "growthStage": "Stade",
-  "foundNear": "Trouvé près de"
+  "foundNear": "Trouvé près de",
+  "statusUnread": "Non lu",
+  "dailyOverTime": "Au fil du temps",
+  "peopleLinks": "Leurs liens",
+  "snippetsAll": "Tous",
+  "snippetsFilter": "Filtrer par langage",
+  "season": "Saison {n}",
+  "episodeWith": "avec",
+  "episodesFeed": "Flux du podcast (RSS)"
 }

@@ -1,5 +1,5 @@
 import { openSearch, setupSearch } from "./search"
-import { mountLocalGraph, openGraph, teardownGraphs } from "./graph"
+import { mountLocalGraph, mountSetGraph, openGraph, teardownGraphs } from "./graph"
 import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
 import { base, withBase } from "./base"
@@ -55,6 +55,7 @@ document.addEventListener("click", (e) => {
   // A tap on the backdrop closes a dialog: the click lands on the <dialog> itself, outside its content.
   else if (target instanceof HTMLDialogElement && target.open && target.classList.contains("modal")) target.close()
   else if (target.closest("[data-print]")) window.print()
+  else if (target.closest("[data-snippet-lang]")) filterSnippets(target.closest<HTMLElement>("[data-snippet-lang]")!)
   else if (target.closest("[data-graph-zoom]")) {
     const btn = target.closest<HTMLElement>("[data-graph-zoom]")!
     const canvas = btn.closest(".graph-box, .graph-modal")?.querySelector("canvas")
@@ -193,11 +194,20 @@ function setupToc() {
   })
 }
 
+/** Snippets of one language, or all of them: the other cards hide, and a group left empty with them. */
+function filterSnippets(btn: HTMLElement) {
+  const lang = btn.dataset.snippetLang
+  const box = btn.closest(".collection")!
+  box.querySelectorAll("[data-snippet-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)))
+  box.querySelectorAll<HTMLElement>(".snippet").forEach((card) => (card.hidden = !!lang && card.dataset.language !== lang))
+  box.querySelectorAll<HTMLElement>(".collection-group").forEach((g) => (g.hidden = !g.querySelector(".snippet:not([hidden])")))
+}
+
 // ---- code blocks ----
 function setupCode() {
   // Browsers offer the clipboard on secure origins only: no copy button on plain http.
   if (!navigator.clipboard) return
-  document.querySelectorAll<HTMLPreElement>(".prose pre:not(.mermaid)").forEach((pre) => {
+  document.querySelectorAll<HTMLPreElement>(".prose pre:not(.mermaid), .snippet-code pre").forEach((pre) => {
     if (pre.parentElement?.classList.contains("code-block")) return
     const btn = document.createElement("button")
     btn.className = "copy-btn"
@@ -276,6 +286,7 @@ function renderDiagrams() {
 
 function setupLocalGraph() {
   document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="local"]').forEach(mountLocalGraph)
+  document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph="set"]').forEach(mountSetGraph)
 }
 
 // ---- offline reading: register the service worker, or drop one a previous config installed ----

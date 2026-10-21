@@ -14,7 +14,7 @@ const rating = item.rating && Math.round(item.rating)
 const scale = site.conventions.ratingScale
 ---
 
-<div class:list={["item-head", { "is-upright": item.upright }]}>
+<div class:list={["item-head", { "is-upright": item.upright, "is-round": item.round }]}>
   {note.cover && <img class="item-cover" src={note.cover} alt="" fetchpriority="high" decoding="async" />}
   <div class="item-id">
     <slot />
@@ -32,6 +32,7 @@ const scale = site.conventions.ratingScale
         </p>
       )
     }
+    {item.audio && <audio class="item-audio" src={item.audio} controls preload="none" aria-label={note.title} />}
     {
       item.links.length > 0 && (
         <p class="project-links item-links">

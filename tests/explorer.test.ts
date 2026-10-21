@@ -277,6 +277,20 @@ describe("the page script", () => {
     expect(document.querySelector<HTMLDetailsElement>("#open")!.open).toBe(true)
   })
 
+  test("snippet buttons show the cards of one language, and hide groups left empty", () => {
+    document.body.innerHTML = `<div class="collection">
+      <button data-snippet-lang=""><span>All</span></button><button data-snippet-lang="ts">ts</button>
+      <section class="collection-group" id="a"><article class="snippet" data-language="ts"></article><article class="snippet" data-language="sh"></article></section>
+      <section class="collection-group" id="b"><article class="snippet" data-language="sh"></article></section></div>`
+    const [all, ts] = document.querySelectorAll<HTMLButtonElement>("[data-snippet-lang]")
+    const hidden = () => [...document.querySelectorAll<HTMLElement>(".snippet, .collection-group")].map((e) => e.hidden)
+    ts.click()
+    expect(hidden()).toEqual([false, false, true, true, true])
+    expect([all, ts].map((b) => b.getAttribute("aria-pressed"))).toEqual(["false", "true"])
+    all.querySelector("span")!.click()
+    expect(hidden()).toEqual([false, false, false, false, false])
+  })
+
   test("the theme toggle switches and remembers the theme, and tells giscus, charts, maps and diagrams", async () => {
     delete root.dataset.theme
     root.dataset.mermaid = "forest night"

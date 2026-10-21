@@ -450,6 +450,21 @@ function remember(key: string, value: string) {
   }
 }
 
+/** Run `show` once the canvas comes near the view: a graph's index is fetched and laid out only then, never while hidden. */
+function whenSeen(canvas: HTMLCanvasElement, show: () => void) {
+  const watch = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return
+      unwatch()
+      show()
+    },
+    { rootMargin: "200px" },
+  )
+  const unwatch = () => (watch.disconnect(), live.delete(unwatch))
+  live.add(unwatch)
+  watch.observe(canvas)
+}
+
 /** The local graph of a note, as many links deep as the reader last chose, or as the site sets. */
 export function mountLocalGraph(canvas: HTMLCanvasElement) {
   const buttons = canvas.closest(".graph-box")?.querySelectorAll<HTMLButtonElement>("[data-graph-depth]") ?? []
@@ -471,18 +486,13 @@ export function mountLocalGraph(canvas: HTMLCanvasElement) {
       void show(depth)
     }),
   )
-  // Fetch the graph index and lay it out only once the graph comes into view: never while its rail is hidden.
-  const watch = new IntersectionObserver(
-    (entries) => {
-      if (!entries.some((e) => e.isIntersecting)) return
-      unwatch()
-      void show(parseDepth(recall(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1)))
-    },
-    { rootMargin: "200px" },
-  )
-  const unwatch = () => (watch.disconnect(), live.delete(unwatch))
-  live.add(unwatch)
-  watch.observe(canvas)
+  whenSeen(canvas, () => void show(parseDepth(recall(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1))))
+}
+
+/** The links between some notes only (`data-urls`), such as the people a collection lists. */
+export function mountSetGraph(canvas: HTMLCanvasElement) {
+  const urls = JSON.parse(canvas.dataset.urls ?? "[]") as string[]
+  whenSeen(canvas, () => void mountGraph(canvas, "global", { urls }))
 }
 
 /** The colours of the groups, under the global graph. */

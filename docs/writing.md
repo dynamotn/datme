@@ -265,6 +265,35 @@ A collection lists other notes:
   grouped by `category`.
 - **`places`**: a map of the places with a `location`, over a card for each,
   grouped by `country`.
+- **`daily`**: a journal. A calendar of the year marks each day with a
+  note (click one to open it), each numeric property named in `track`
+  (`track: [mood, sleep, pages]`) is drawn as a small chart over time, with
+  its numbers as a table for screen readers and paper, and the latest
+  entries (`limit`, 30 by default) follow, grouped by month. A day is the
+  note's `date`, else its name in the vault's daily note format, as on
+  `/calendar`, or a name starting with `YYYY-MM-DD`. A day keeps its usual
+  page, with its links to the days before and after.
+- **`bookmarks`**: a reading list of clipped pages, as the Obsidian Web
+  Clipper saves them: the site of `source` (or `url`) with its logo, or its
+  first letter for a site datme has no logo for (no favicon is fetched),
+  then `author`, `published` and the note's own first paragraph as your
+  comment. Grouped by `status`: unread, read, archived (`to-read`, `inbox`,
+  `later`, `done`, `archive`, …); `group: month` lists them by the month
+  they were clipped (their `created` date).
+- **`people`**: a grid of faces, from `avatar` (or `cover`), with initials
+  for anyone without one, their `role` and `org` (or `company`) and links
+  from `website`, `url` and `links`, sorted by name. Below, a graph of how
+  the people link to each other, with the same ties as a list.
+- **`snippets`**: code snippets or things learned. Each note is a card with
+  its first code block, highlighted and with a copy button, and its
+  `language` (else the block's) as a badge; buttons above filter the cards
+  by language.
+- **`episodes`**: a podcast or a newsletter. Each issue is a row with its
+  `number` (or `episode`), `date`, `duration`, `guests` and a player for its
+  `audio` (a file of the vault or a URL), newest first and grouped by
+  `season`, else by year. The collection has a podcast feed next to its
+  page (`episodes.xml`), each `audio` as an enclosure that podcast apps can
+  play; a sound elsewhere on the web is listed with an unknown length (0).
 - **`shelf`**: a shelf of anything else: games, records, podcasts. Name its
   statuses and the properties to show under each title:
 
@@ -286,8 +315,9 @@ go reading, to read, read, abandoned; movies go watching, to watch,
 watched, abandoned. Usual spellings of each status count (`ongoing`,
 `completed`, `want-to-read`, `dnf`, `watchlist`, `seen`, …). Any other
 status gets its own group after these, and notes without one come last.
-`group` picks another property to group by, `year`, or `none`, and
-`fields` the properties shown under each title.
+`group` picks another property to group by, `year`, `month`, or `none`
+(alternatives joined by `|`, such as `season|year`), and `fields` the
+properties shown under each title.
 
 ```markdown
 ---
@@ -307,6 +337,7 @@ a `timeline`, those notes at their dates.
 
 A note listed by a collection shows its `cover` beside its title, with what
 it is (author, years, date and event…), its status, rating and links. A
+person's page shows their face round, and an episode's its player. A
 recipe's page puts its ingredients (a section named *Ingredients* or
 *Nguyên liệu*) beside its steps, each one to tick off. Any note with a
 `cover` gets the same head.

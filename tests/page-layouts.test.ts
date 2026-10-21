@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { Window } from "happy-dom"
 import {
   cvHtml,
   faqHtml,
@@ -338,4 +339,74 @@ describe("page layouts", () => {
     expect(html).toContain('data-look="garden"')
     expect(html).toContain('data-chrome="full"')
   })
+
+  test("a journal: a calendar of its days, charts of what it tracks, then its latest entries by month", () => {
+    const html = article("Journal/Journal/index.html")
+    expect(html).toContain('<section class="activity daily-calendar" aria-label="Calendar">')
+    expect(html).toContain('<a class="day l3 internal" href="/Journal/2024-03-01" title="Mar 1, 2024: 2024-03-01"')
+    // A note dated by its `date` property counts as much as one named by its day.
+    expect(html).toContain('href="/Journal/New-Year\'s-Eve"')
+    expect(html.match(/<figure class="chart"/g)).toHaveLength(2)
+    expect(html).toContain('<tr><th scope="row">2024-03-01</th><td>7.5</td></tr>')
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["2024-03", "2023-12"])
+    expect(html).toContain('<span class="talk-meta">mood 4 · sleep 7.5</span>')
+    // A day keeps its usual page and its links to the days around it.
+    const day = read("Journal/2024-03-01/index.html")
+    expect(day).not.toContain("item-head")
+    expect(day).toContain('class="day-nav"')
+  })
+
+  test("bookmarks: a reading list by status, with the site's logo or letter, author, date and comment", () => {
+    const html = article("Clippings/Clippings/index.html")
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["unread", "read"])
+    expect(html).toMatch(/<span class="bookmark-icon" aria-hidden="true"><svg viewBox="0 0 24 24"/)
+    expect(html).toContain('<span class="bookmark-icon" aria-hidden="true">E</span>')
+    expect(html).toContain('<a class="bookmark-site" href="https://github.com/example/garden" rel="noopener">github.com ↗</a><span>Ann</span><time datetime="2024-05-01T00:00:00.000Z">May 1, 2024</time>')
+    expect(html).toContain('<p class="bookmark-comment">Worth a second look for the build.</p>')
+  })
+
+  test("people: faces or initials, roles, and how they link to each other", () => {
+    const html = article("People/People/index.html")
+    expect(html).toContain('<img class="person-avatar" src="/assets/_assets/portrait.png" alt=""')
+    expect(html).toContain('<span class="person-avatar person-initials" aria-hidden="true">GH</span>')
+    expect(html).toContain('<span class="person-meta">Mathematician</span><span class="person-meta">Analytical Engine</span>')
+    expect(html).toContain('<canvas data-graph="set" data-lang="en-US" data-urls="[&quot;/People/Ada-Lovelace&quot;,&quot;/People/Alan-Turing&quot;,&quot;/People/Grace-Hopper&quot;]"')
+    expect(html.match(/<ul class="people-ties"><li>/g)).toHaveLength(1)
+    expect(read("People/Ada-Lovelace/index.html")).toContain('<div class="item-head is-round"><img class="item-cover" src="/assets/_assets/portrait.png"')
+  })
+
+  test("snippets: each first code block, highlighted, with its language to filter by", () => {
+    const html = article("Snippets/Snippets/index.html")
+    expect(html).toContain('<button type="button" class="chip" data-snippet-lang="bash" aria-pressed="false">bash</button>')
+    expect(html).toContain('<article class="card snippet" data-language="ts">')
+    expect(html).toMatch(/<div class="snippet-code"><pre class="shiki [^"]*"[^>]*tabindex="0"><code class="language-ts">/)
+  })
+
+  test("episodes: by season, newest first, each with its sound, and a podcast feed", () => {
+    const html = article("Podcast/Podcast/index.html")
+    expect(html).toContain('<a href="/Podcast/Podcast/episodes.xml" type="application/rss+xml">Podcast feed (RSS)</a>')
+    expect(html).toContain('<h2 class="collection-title">Season 1 <span class="count">2</span>')
+    expect([...html.matchAll(/<span class="episode-number">(#\d+)<\/span>/g)].map((m) => m[1])).toEqual(["#2", "#1"])
+    expect(html).toContain('<audio src="/assets/_assets/pilot.mp3" controls preload="none" aria-label="Pilot"></audio>')
+    expect(html).toContain("<span>with Ada Lovelace</span>")
+    expect(read("Podcast/Podcast/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Podcast · Layouts" href="/Podcast/Podcast/episodes.xml">')
+    const feed = read("Podcast/Podcast/episodes.xml")
+    expect(feed).toContain('<enclosure url="http://localhost:4321/assets/_assets/pilot.mp3" length="12" type="audio/mpeg"/>')
+    expect(read("assets/_assets/pilot.mp3")).toBe("ID3fakeaudio")
+    expect(read("Podcast/Pilot/index.html")).toContain('<audio class="item-audio" src="/assets/_assets/pilot.mp3" controls preload="none" aria-label="Pilot"></audio>')
+  })
+
+  test("the new collections have no serious or critical axe violations", async () => {
+    const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
+    for (const page of ["Journal/Journal/index.html", "Clippings/Clippings/index.html", "People/People/index.html", "Snippets/Snippets/index.html", "Podcast/Podcast/index.html", "Podcast/Pilot/index.html"]) {
+      const window = new Window({ url: "https://garden.example/", settings: { disableJavaScriptEvaluation: false } })
+      window.document.write(read(page).replace(/<script\b[\s\S]*?<\/script>/g, ""))
+      window.eval(axeSource)
+      const axe = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; nodes: { target: string[] }[] }[] }> } }).axe
+      const res = await axe.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
+      await window.happyDOM.close()
+      const serious = res.violations.filter((v) => v.impact === "serious" || v.impact === "critical")
+      expect({ page, found: serious.map((v) => `${v.id} at ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`) }).toEqual({ page, found: [] })
+    }
+  }, 60_000)
 })

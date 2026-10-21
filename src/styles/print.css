@@ -186,10 +186,12 @@
   [data-look="notebook"] .shiki span {
     color: var(--shiki-light) !important;
   }
-  .prose figure.chart canvas {
+  .prose figure.chart canvas,
+  .daily-charts figure.chart canvas {
     display: none;
   }
-  .prose .chart-data {
+  .prose .chart-data,
+  .daily-charts .chart-data {
     position: static;
     width: auto;
     height: auto;
@@ -216,8 +218,31 @@
   }
   .prose .media-embed iframe,
   .prose video,
-  .prose audio {
+  .prose audio,
+  .episode audio,
+  .item-audio {
     display: none;
+  }
+  /* Collections on paper: no filters or live graph; code wraps; a bookmark's comment is whole. */
+  .snippet-filter,
+  .people-graph .graph-box {
+    display: none !important;
+  }
+  .snippet-code pre {
+    max-height: none;
+    background: var(--surface-2) !important;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .bookmark-comment {
+    display: block;
+    -webkit-line-clamp: none;
+  }
+  .snippet,
+  .person,
+  .episode,
+  .bookmark {
+    break-inside: avoid;
   }
   .prose .media-link {
     display: inline;

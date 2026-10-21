@@ -2,6 +2,21 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import path from "node:path"
 import { site, loadConfig, type SiteConfig } from "../src/site.config"
 import { getVault, type Note } from "../src/lib/vault"
+import { renderNote } from "../src/lib/markdown"
+import {
+  audioType,
+  bookmarkOf,
+  dailyDays,
+  firstParagraph,
+  initials,
+  listOf,
+  peopleTies,
+  snippetOf,
+  trackCharts,
+  trackedOf,
+} from "../src/lib/collection-views"
+import { episodesFeed, episodesPath } from "../src/lib/feed"
+import * as episodesRoute from "../src/pages/[...path]/episodes.xml"
 import {
   basesOf,
   collectionKindOf,
@@ -12,6 +27,8 @@ import {
   itemOf,
   layoutHtml,
   linksOf,
+  nameDay,
+  noteDay,
   periodOf,
   placesOf,
   plain,
@@ -373,5 +390,134 @@ describe("layouts of a note's own text", () => {
   test("blank lines between picture paragraphs keep one grid; a quote wall stays one wall", () => {
     expect(galleryHtml(`<p><img src="/a.png"></p>\n<p><img src="/b.png"></p>`).match(/gallery-grid/g)).toHaveLength(1)
     expect(quotesHtml(`<blockquote><p>A</p></blockquote>\n<blockquote><p>B</p></blockquote>`).match(/quote-wall/g)).toHaveLength(1)
+  })
+})
+
+describe("collections of their own kind", () => {
+  const keys = (key: string) => groupsOf(key).map(([k, label, notes]) => [k, label, (notes as string[]).sort()])
+
+  test("a daily note's day: its date, else its name in the daily format or starting with a date", () => {
+    expect(nameDay(note("Journal/2024-03-01"))).toBe("2024-03-01")
+    expect(nameDay(note("Journal/2024-03-05 Standup"))).toBe("2024-03-05")
+    expect(nameDay(note("Journal/2024-02-30"))).toBeUndefined()
+    expect(nameDay(note("Journal/Undated"))).toBeUndefined()
+    expect(noteDay(note("Journal/Retreat"))).toBe("2023-12-31")
+    expect(noteDay(note("Journal/2024-03-02"))).toBe("2024-03-02")
+    expect(whenOf(note("Journal/2024-03-05 Standup"))?.toISOString()).toBe("2024-03-05T00:00:00.000Z")
+  })
+
+  test("a journal by month, newest first; its days, tracked numbers and charts", () => {
+    const groups = groupsOf("Journal/Journal")
+    const dated = groups.filter(([k]) => (k as string) < "2025")
+    expect(dated).toEqual([
+      ["2024-03", "March 2024", ["Journal/2024-03-05 Standup", "Journal/2024-03-02", "Journal/2024-03-01"]],
+      ["2023-12", "December 2023", ["Journal/Retreat"]],
+    ])
+    const j = note("Journal/Journal")
+    const days = dailyDays(groups.flatMap(([, , n]) => (n as string[]).map(note)))
+    expect([...days.keys()].sort()).toEqual(["2023-12-31", "2024-03-01", "2024-03-02", "2024-03-05"])
+    const charts = trackCharts(j, days)
+    // Steps are never written down: no chart for them.
+    expect(charts).toHaveLength(2)
+    expect(charts[0]).toContain("<th scope=\"col\">mood</th>")
+    expect(charts[0]).toContain("<tr><th scope=\"row\">2023-12-31</th><td>5</td></tr>")
+    expect(charts[0]).not.toContain("2024-03-02</th>")
+    expect(charts[1]).toContain("<td>7.5</td>")
+    expect(trackedOf(j, note("Journal/2024-03-01"))).toEqual(["mood 4", "sleep 7.5"])
+    expect(trackedOf(j, note("Journal/Undated"))).toEqual([])
+    expect(trackCharts(withFm("Journal/Journal", {}), days)).toEqual([])
+  })
+
+  test("a day of a journal keeps the usual page", () => {
+    expect(collectionKindOf(note("Journal/2024-03-01"))).toBe("daily")
+    expect(itemOf(note("Journal/2024-03-01"))).toBeUndefined()
+  })
+
+  test("bookmarks by status, with their site, logo, date and first paragraph", async () => {
+    expect(keys("Clippings/Clippings")).toEqual([
+      ["unread", "Unread", ["Clippings/Loose clip", "Clippings/Repo"]],
+      ["archived", "Archived", ["Clippings/Essay"]],
+    ])
+    const repo = bookmarkOf(note("Clippings/Repo"))
+    expect(repo).toMatchObject({ href: "https://github.com/example/repo", site: "github.com", letter: "G" })
+    expect(repo.icon).toStartWith("M12")
+    expect(repo.published?.toISOString()).toBe("2024-05-01T00:00:00.000Z")
+    expect(bookmarkOf(note("Clippings/Essay"))).toEqual({ href: "https://www.essays.example/one", site: "essays.example", icon: undefined, letter: "E", published: undefined })
+    expect(bookmarkOf(note("Clippings/Loose clip"))).toEqual({ letter: "L" })
+    expect(bookmarkOf({ ...note("Clippings/Loose clip"), title: "" })).toEqual({ letter: "?" })
+    expect(firstParagraph((await renderNote(note("Clippings/Repo"))).html)).toBe("Worth another look &#x26; more.")
+    expect(firstParagraph((await renderNote(note("Clippings/Loose clip"))).html)).toBe("After the picture.")
+    expect(firstParagraph("<h2>x</h2>")).toBe("")
+    expect(itemOf(note("Clippings/Repo"))).toMatchObject({ kind: "bookmarks", byline: ["Ann", "May 1, 2024"], status: "Unread", links: [{ label: "github.com", href: "https://github.com/example/repo" }] })
+    expect(itemOf(note("Clippings/Essay"))).toMatchObject({ byline: [], status: "Archived" })
+  })
+
+  test("people by name, with their faces, roles and the links between them", () => {
+    expect(keys("People/People")).toEqual([["", "", ["People/Ada Lovelace", "People/Alan Turing", "People/Grace Hopper"]]])
+    expect(groupsOf("People/People")[0][2]).toEqual(["People/Ada Lovelace", "People/Alan Turing", "People/Grace Hopper"])
+    const ada = note("People/Ada Lovelace")
+    expect(ada.cover).toBe("/assets/_assets/cover.png")
+    expect(specOf(note("People/People"), "people").fields).toEqual(["role|job|position", "org|company|organization|affiliation"])
+    expect(itemOf(ada)).toMatchObject({ kind: "people", round: true, byline: ["Mathematician", "Analytical Engine"], links: [{ label: "ada.example", href: "https://ada.example" }] })
+    const people = ["People/Ada Lovelace", "People/Alan Turing", "People/Grace Hopper"].map(note)
+    // Ada and Grace link both ways: one tie. Ada's link to Plain and the pilot's to Ada are not between people.
+    expect(peopleTies(people).map(([a, b]) => [a.key, b.key].sort())).toEqual([["People/Ada Lovelace", "People/Grace Hopper"]])
+    expect(initials("Ada King Lovelace")).toBe("AL")
+    expect(initials("Ánh")).toBe("Á")
+    expect(initials("")).toBe("")
+  })
+
+  test("snippets show their first code block and its language", async () => {
+    const snip = async (key: string) => snippetOf(note(key), (await renderNote(note(key))).html)
+    const ts = await snip("Snippets/Reverse")
+    expect(ts.language).toBe("ts")
+    expect(ts.code).toStartWith('<pre class="shiki')
+    expect(ts.code).toEndWith("</pre>")
+    expect((await snip("Snippets/Shell")).language).toBe("bash")
+    expect((await snip("Snippets/Plain text")).language).toBe("")
+    expect(await snip("Snippets/Words")).toEqual({ code: undefined, language: "" })
+    expect(itemOf(note("Snippets/Shell"))).toMatchObject({ kind: "snippets", byline: ["bash"] })
+  })
+
+  test("episodes by season, else year, newest first, numbered", () => {
+    expect(groupsOf("Podcast/Podcast")).toEqual([
+      ["2022", "2022", ["Podcast/Old"]],
+      ["1", "Season 1", ["Podcast/Second", "Podcast/Pilot"]],
+      ["special", "special", ["Podcast/Bonus"]],
+    ])
+    const pilot = note("Podcast/Pilot")
+    expect(pilot.audio).toEqual({ href: "/assets/_assets/pilot.mp3", file: "_assets/pilot.mp3" })
+    expect(note("Podcast/Second").audio).toEqual({ href: "https://cdn.example/ep2.m4a?x=1" })
+    expect(note("Podcast/Old").audio).toBeUndefined()
+    expect(getVault().problems).toContainEqual({ level: "error", file: "Podcast/Old.md", message: 'audio "nope.mp3" is not in the vault' })
+    expect(itemOf(pilot)).toMatchObject({ kind: "episodes", audio: "/assets/_assets/pilot.mp3", byline: ["#1", "Jan 10, 2024", "32:10", "Ada Lovelace"] })
+    expect(itemOf(note("Podcast/Bonus"))).toMatchObject({ audio: undefined, byline: ["May 1, 2023"] })
+    expect(audioType("/a/b.MP3")).toBe("audio/mpeg")
+    expect(audioType("https://x.example/e.m4a?x=1#t")).toBe("audio/mp4")
+    expect(audioType("https://x.example/stream")).toBe("audio/mpeg")
+    expect(listOf("a, b")).toEqual(["a", "b"])
+    expect(listOf(["[[a]]", ""])).toEqual(["a"])
+  })
+
+  test("a podcast feed of the episodes, with enclosures", async () => {
+    const show = note("Podcast/Podcast")
+    expect(episodesPath(show)).toBe("Podcast/Podcast/episodes.xml")
+    expect(episodesPath({ ...show, slug: "index" })).toBe("episodes.xml")
+    const xml = await (await episodesFeed(show)).text()
+    expect(xml).toContain('xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"')
+    expect(xml).toContain("<description>A show.</description>")
+    expect(xml).toContain('<enclosure url="http://localhost:4321/assets/_assets/pilot.mp3" length="12" type="audio/mpeg"/>')
+    expect(xml).toContain('<enclosure url="https://cdn.example/ep2.m4a?x=1" length="0" type="audio/mp4"/>')
+    expect(xml).toContain("<itunes:duration>32:10</itunes:duration><itunes:episode>1</itunes:episode>")
+    const order = ["The second", "The first", "A bonus", "From before"].map((x) => xml.indexOf(x))
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    const noDescription = await (await episodesFeed({ ...show, description: undefined })).text()
+    // Without a description, the site's tagline, here none.
+    expect(noDescription).toContain("<description/><link>")
+
+    const paths = episodesRoute.getStaticPaths().filter((p) => p.props.note.lang === lang)
+    expect(paths.map((p) => p.params.path)).toEqual(["Podcast/Podcast"])
+    const r = await episodesRoute.GET({ props: paths[0].props })
+    expect(await r.text()).toContain("<itunes:episode>2</itunes:episode>")
   })
 })

@@ -77,6 +77,8 @@ export interface NoteFilter {
   tag?: string
   stage?: string
   fresh?: string
+  /** Only these notes, by URL: the people of a collection. */
+  urls?: string[]
 }
 
 /** Whether a note passes every set filter; a tag also matches its nested tags. */
@@ -86,6 +88,7 @@ export function matchesFilter(n: GraphNote, f: NoteFilter): boolean {
   if (f.tag && !n.g.some((g) => g === f.tag || g.startsWith(f.tag + "/"))) return false
   if (f.stage && n.st !== f.stage) return false
   if (f.fresh && (n.m == null || freshness(n.m) !== f.fresh)) return false
+  if (f.urls && !f.urls.some((u) => samePath(u, n.u))) return false
   return true
 }
 

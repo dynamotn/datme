@@ -1,15 +1,19 @@
 ---
 import type { Lang } from "~/site.config"
-import { listed } from "~/lib/vault"
+import { listed, type Note } from "~/lib/vault"
 import { activityWeeks, activeYears } from "~/lib/calendar"
 import { formatDate, t } from "~/lib/i18n"
 
 interface Props {
   lang: Lang
+  /** The days of a journal, YYYY-MM-DD: each day with a note links to it. Without them, the garden's activity. */
+  days?: Map<string, Note[]>
 }
-const { lang } = Astro.props
+const { lang, days } = Astro.props
 const s = t(lang)
-const notes = listed(lang).filter((n) => !n.isHome)
+const notes = days
+  ? [...days].flatMap(([day, ns]) => ns.map((n) => ({ title: n.title, created: new Date(`${day}T00:00:00Z`) })))
+  : listed(lang).filter((n) => !n.isHome)
 const calendars = activeYears(notes).map((year) => {
   const weeks = activityWeeks(notes, year)
   // A month name above the first week that starts in it.
@@ -20,18 +24,19 @@ const calendars = activeYears(notes).map((year) => {
   const total = weeks.flat().reduce((acc, d) => acc + d.created.length + d.updated.length, 0)
   return { year, weeks, months, total }
 })
+const title = days ? s.calendar : s.activity
 ---
 
 {
   calendars.length > 0 && (
-    <section class="activity" aria-label={s.activity}>
-      <p class="panel-title">{s.activity}</p>
+    <section class:list={["activity", { "daily-calendar": days }]} aria-label={title}>
+      <p class="panel-title">{title}</p>
       {calendars.map(({ year, weeks, months, total }, i) => (
         <details class="activity-year" open={i === 0}>
           <summary>
-            <b>{year}</b> <span>{s.activityCount(total)}</span>
+            <b>{year}</b> <span>{days ? s.notesCount(total) : s.activityCount(total)}</span>
           </summary>
-          <div class="activity-scroll" tabindex="0" role="region" aria-label={`${s.activity} ${year}`}>
+          <div class="activity-scroll" tabindex="0" role="region" aria-label={`${title} ${year}`}>
             <div class="activity-months" style={`grid-template-columns: repeat(${weeks.length}, 1fr)`}>
               {months.map((m) => (
                 <span>{m}</span>
@@ -40,6 +45,16 @@ const calendars = activeYears(notes).map((year) => {
             <div class="activity-grid" style={`grid-template-columns: repeat(${weeks.length}, 1fr)`}>
               {weeks.flat().map((d) => {
                 if (d.outside) return <span class="day out" />
+                if (days) {
+                  // A day of the journal: a note was written, or not.
+                  const label = `${formatDate(d.date, lang)}: ${d.created.join(", ") || "–"}`
+                  const day = days.get(d.key)
+                  return day ? (
+                    <a class="day l3 internal" href={day[0].url} title={label} aria-label={label} />
+                  ) : (
+                    <span class="day l0" title={label} />
+                  )
+                }
                 const label = `${formatDate(d.date, lang)}: ${
                   [
                     d.created.length ? `${s.created} ${d.created.join(", ")}` : "",

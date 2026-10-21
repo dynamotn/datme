@@ -65,17 +65,21 @@ export function parseChart(src: string): ChartSpec {
  */
 export function renderChart(src: string): string {
   try {
-    const spec = parseChart(src)
-    // The corner cell heads nothing, so it is a plain cell: an empty header confuses screen readers.
-    const head = `<tr><td></td>${spec.series.map((s) => `<th scope="col">${escapeAttr(s.title)}</th>`).join("")}</tr>`
-    const rows = spec.labels
-      .map((l, i) => `<tr><th scope="row">${escapeAttr(l)}</th>${spec.series.map((s) => `<td>${s.data[i] ?? ""}</td>`).join("")}</tr>`)
-      .join("")
-    const label = spec.series.map((s) => s.title).join(", ")
-    const style = spec.width ? ` style="max-width:${spec.width}"` : ""
-    return `<figure class="chart"${style} data-chart="${escapeAttr(JSON.stringify(spec))}"><canvas role="img" aria-label="${escapeAttr(label)}"></canvas><table class="chart-data">${head}${rows}</table></figure>`
+    return chartHtml(parseChart(src))
   } catch (e) {
     if (e instanceof ChartError) return `<p class="dataview dv-error">Chart: ${escapeAttr(e.message)}</p>`
     throw e
   }
+}
+
+/** A chart as the browser draws it, with its data as a table. */
+export function chartHtml(spec: ChartSpec): string {
+  // The corner cell heads nothing, so it is a plain cell: an empty header confuses screen readers.
+  const head = `<tr><td></td>${spec.series.map((s) => `<th scope="col">${escapeAttr(s.title)}</th>`).join("")}</tr>`
+  const rows = spec.labels
+    .map((l, i) => `<tr><th scope="row">${escapeAttr(l)}</th>${spec.series.map((s) => `<td>${s.data[i] ?? ""}</td>`).join("")}</tr>`)
+    .join("")
+  const label = spec.series.map((s) => s.title).join(", ")
+  const style = spec.width ? ` style="max-width:${spec.width}"` : ""
+  return `<figure class="chart"${style} data-chart="${escapeAttr(JSON.stringify(spec))}"><canvas role="img" aria-label="${escapeAttr(label)}"></canvas><table class="chart-data">${head}${rows}</table></figure>`
 }

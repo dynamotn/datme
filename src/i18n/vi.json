@@ -258,5 +258,13 @@
   "specimenLabel": "Nhãn tiêu bản",
   "collected": "Ngày thu mẫu",
   "growthStage": "Giai đoạn",
-  "foundNear": "Tìm thấy gần"
+  "foundNear": "Tìm thấy gần",
+  "statusUnread": "Chưa đọc",
+  "dailyOverTime": "Theo thời gian",
+  "peopleLinks": "Họ liên kết với nhau thế nào",
+  "snippetsAll": "Tất cả",
+  "snippetsFilter": "Lọc theo ngôn ngữ",
+  "season": "Mùa {n}",
+  "episodeWith": "cùng",
+  "episodesFeed": "Nguồn podcast (RSS)"
 }

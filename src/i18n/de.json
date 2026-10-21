@@ -258,5 +258,13 @@
   "specimenLabel": "Herbaretikett",
   "collected": "Gesammelt",
   "growthStage": "Stadium",
-  "foundNear": "Gefunden bei"
+  "foundNear": "Gefunden bei",
+  "statusUnread": "Ungelesen",
+  "dailyOverTime": "Im Zeitverlauf",
+  "peopleLinks": "Wie sie verbunden sind",
+  "snippetsAll": "Alle",
+  "snippetsFilter": "Nach Sprache filtern",
+  "season": "Staffel {n}",
+  "episodeWith": "mit",
+  "episodesFeed": "Podcast-Feed (RSS)"
 }

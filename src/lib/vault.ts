@@ -52,6 +52,11 @@ export const LAYOUTS = [
   "recipes",
   "places",
   "shelf",
+  "daily",
+  "bookmarks",
+  "people",
+  "snippets",
+  "episodes",
 ] as const
 export type Layout = (typeof LAYOUTS)[number]
 
@@ -70,8 +75,10 @@ export interface Note {
   updated?: Date
   banner?: string
   bannerPos: string
-  /** Picture standing for the note in a collection: its `cover` property, else its banner. */
+  /** Picture standing for the note in a collection: its `cover` property, else its `avatar`, else its banner. */
   cover?: string
+  /** Sound of an episode (`audio` property): a URL, or a file of the vault (`file`, vault-relative) that is then published. */
+  audio?: { href: string; file?: string }
   /** How the page is laid out (`layout` property): a page of its own text reshaped, or a collection of notes. */
   layout?: Layout
   /** Style this page is drawn in (`style` property), instead of its folder's. */
@@ -776,22 +783,23 @@ function buildVault(version: number): Vault {
       const updated =
         toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? git.get(relFile)?.updated ?? stat.mtime
 
-      // A picture property: a URL, or a file of the vault that is then published.
-      const picture = (field: "banner" | "cover"): string | undefined => {
+      // A picture or sound property: a URL, or a file of the vault that is then published.
+      const fileProp = (field: "banner" | "cover" | "avatar" | "audio"): { href: string; file?: string } | undefined => {
         const v = s.fm[field]
         if (typeof v !== "string" || !v) return undefined
         const b = v.replace(/^!?\[\[|\]\]$/g, "").replace(/\|.*$/, "")
-        if (/^https?:\/\//.test(b)) return b
+        if (/^https?:\/\//.test(b)) return { href: b }
         const asset = resolveAsset(b, s.dir)
         if (asset) {
           assets.add(asset)
-          return assetUrl(asset)
+          return { href: assetUrl(asset), file: asset }
         }
         if (lang === site.defaultLang) report("error", relFile, `${field} "${b}" is not in the vault`)
         return undefined
       }
-      const banner = picture("banner")
-      const cover = picture("cover")
+      const banner = fileProp("banner")?.href
+      const cover = fileProp("cover")?.href ?? fileProp("avatar")?.href
+      const audio = fileProp("audio")
       const layoutField = typeof s.fm.layout === "string" ? s.fm.layout.trim().toLowerCase() : undefined
       const layout = LAYOUTS.find((l) => l === layoutField)
       if (layoutField && !layout && lang === site.defaultLang) {
@@ -894,6 +902,7 @@ function buildVault(version: number): Vault {
         banner,
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
         cover: cover ?? banner,
+        audio,
         layout,
         style,
         chrome,

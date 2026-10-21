@@ -37,6 +37,8 @@ import ItemHead from "../ItemHead.astro"
 import Infobox from "../Infobox.astro"
 import { isOutdated } from "~/scripts/outdated"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
+import { episodesPath } from "~/lib/feed"
+import { slugToUrl } from "~/lib/slug"
 
 interface Props {
   note: Note
@@ -92,9 +94,11 @@ const item = itemOf(note)
 // A now page says when it was last true, and warns once it is three months old.
 const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefined
 const NOW_STALE_YEARS = 0.25
+// Podcast apps find the feed of a collection of episodes from its page.
+const feed = note.layout === "episodes" && !note.protected ? slugToUrl(episodesPath(note)) : undefined
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} feed={feed} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
   {/* Stacked pages belong to the full frame, the only one with their toggle. */}
   <div class="stack-row" data-stack-row={stacks ? "" : undefined}>
   <div class="stack-col" data-stack-col={stacks ? "" : undefined} data-url={stacks ? note.url : undefined} data-title={title}>

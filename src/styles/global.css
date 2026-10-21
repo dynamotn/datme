@@ -2455,7 +2455,8 @@ dialog.graph-modal {
   margin: 0 0 1.2em;
 }
 /* The data table is for screen readers and paper; the canvas shows it on screen. */
-.prose .chart-data {
+.prose .chart-data,
+.daily-charts .chart-data {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -5713,4 +5714,286 @@ summary.ntn-col-head {
   font-size: 15px;
   font-weight: 600;
   color: var(--accent);
+}
+
+/* A journal: its days on a calendar, what it tracks over time, then its latest entries. */
+.daily-calendar {
+  margin-bottom: 28px;
+}
+.daily-charts {
+  margin: 0 0 32px;
+}
+.daily-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 18px;
+}
+.daily-charts figure.chart {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.daily-desc {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Bookmarks: a reading list, each page under its site's logo. */
+.bookmark-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bookmark {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.bookmark-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+}
+.bookmark-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.bookmark-title {
+  font-weight: 600;
+}
+.bookmark-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.bookmark-meta > * + *::before {
+  content: "·";
+  margin: 0 6px;
+  color: var(--muted);
+}
+.bookmark-comment {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* People: faces in a grid, then how they link to each other. */
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.person-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.person-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--accent-soft);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+.person-initials {
+  color: var(--accent);
+  font-size: 28px;
+  font-weight: 700;
+}
+@media (hover: hover) {
+  .person-link:hover .person-avatar {
+    transform: translateY(-3px);
+  }
+}
+.person-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.person-meta {
+  color: var(--muted);
+}
+.person-links {
+  justify-content: center;
+  margin-top: 4px;
+}
+.people-graph .graph-box {
+  height: 320px;
+}
+.people-ties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.item-head.is-round .item-cover {
+  width: 120px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+/* Snippets: each note's first code block on a card, filtered by language. */
+.snippet-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 24px;
+}
+.snippet-filter button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.snippet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
+}
+.snippet {
+  gap: 10px;
+  padding: 16px 18px 18px;
+}
+.snippet[hidden],
+.collection-group[hidden] {
+  display: none;
+}
+.snippet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.snippet .card-title {
+  font-size: 1.1rem;
+}
+.snippet-lang {
+  flex: none;
+  font-family: var(--font-code);
+}
+.snippet-code pre {
+  max-height: 22em;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  overflow: auto;
+  line-height: 1.6;
+  font-size: 0.95em;
+}
+.snippet-code code {
+  font-family: var(--font-code);
+  font-size: 0.72em;
+}
+
+/* Episodes: numbered rows, each with its sound. */
+.collection-feed {
+  margin: 0 0 24px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.episode-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.episode {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  gap: 4px 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.episode-number {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  padding-top: 1px;
+}
+.episode-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.episode-meta {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.episode-meta > * + *::before {
+  content: "·";
+  margin: 0 6px;
+}
+.episode-desc {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.episode audio,
+.item-audio {
+  width: 100%;
+  max-width: 28rem;
+  height: 36px;
+}
+.item-audio {
+  display: block;
+  margin-top: 10px;
+}
+@media (max-width: 560px) {
+  .episode {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .episode-number:empty {
+    display: none;
+  }
 }

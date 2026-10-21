@@ -258,5 +258,13 @@
   "specimenLabel": "Etiqueta del espécimen",
   "collected": "Recolectado",
   "growthStage": "Etapa",
-  "foundNear": "Hallado cerca de"
+  "foundNear": "Hallado cerca de",
+  "statusUnread": "Sin leer",
+  "dailyOverTime": "A lo largo del tiempo",
+  "peopleLinks": "Cómo se enlazan",
+  "snippetsAll": "Todos",
+  "snippetsFilter": "Filtrar por lenguaje",
+  "season": "Temporada {n}",
+  "episodeWith": "con",
+  "episodesFeed": "Feed del podcast (RSS)"
 }

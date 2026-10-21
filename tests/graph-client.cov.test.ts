@@ -581,6 +581,35 @@ describe("the graph in the browser", () => {
     })
   })
 
+  describe("the graph of a set of notes", () => {
+    test("draws only the notes listed, and the links between them, once in view", async () => {
+      document.body.innerHTML = ""
+      const canvas = makeCanvas("cov-graph", { urls: JSON.stringify(["/en-US/b", "/en-US/c/", "/en-US/e"]) })
+      graph.mountSetGraph(canvas)
+      const w = watchers.at(-1)!
+      expect(w.observed).toEqual([canvas])
+      w.cb([{ isIntersecting: true }])
+      await settle(20)
+      resize(canvas)
+      const drawn = frame(canvas)
+      expect(drawn.circles).toHaveLength(3)
+      // B and C are linked; E stands alone.
+      expect(drawn.lines).toHaveLength(1)
+      graph.teardownGraphs()
+    })
+
+    test("a canvas without a list draws nothing", async () => {
+      document.body.innerHTML = ""
+      const canvas = makeCanvas("cov-graph")
+      graph.mountSetGraph(canvas)
+      watchers.at(-1)!.cb([{ isIntersecting: true }])
+      await settle(20)
+      resize(canvas)
+      expect(frame(canvas).circles).toHaveLength(0)
+      graph.teardownGraphs()
+    })
+  })
+
   describe("the global graph dialog", () => {
     const dialogHtml = (lang: string, view = "2d") => `<button id="opener"></button>
       <dialog data-graph-dialog data-view="${view}">

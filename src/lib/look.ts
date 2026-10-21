@@ -78,6 +78,11 @@ export const LAYOUT_LOOKS: Partial<Record<Layout, LayoutLook>> = {
   shelf: { frame: "full-norail" },
   books: { frame: "full-norail" },
   movies: { frame: "full-norail" },
+  daily: { frame: "full-norail" },
+  bookmarks: { frame: "full-norail" },
+  people: { frame: "full-norail" },
+  snippets: { frame: "full-norail" },
+  episodes: { frame: "full-norail" },
 }
 
 /** Page style of a note and the rule that chose it: its own `style`, else its layout's, else that of its folder. */

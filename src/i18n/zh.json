@@ -258,5 +258,13 @@
   "specimenLabel": "标本标签",
   "collected": "采集于",
   "growthStage": "阶段",
-  "foundNear": "发现于"
+  "foundNear": "发现于",
+  "statusUnread": "未读",
+  "dailyOverTime": "随时间变化",
+  "peopleLinks": "彼此的联系",
+  "snippetsAll": "全部",
+  "snippetsFilter": "按语言筛选",
+  "season": "第 {n} 季",
+  "episodeWith": "嘉宾:",
+  "episodesFeed": "播客订阅 (RSS)"
 }

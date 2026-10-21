@@ -6,6 +6,8 @@ import { currentPage, engineFor } from "./dataview-render"
 import { parseBase, runView, type BaseFile } from "./bases"
 import { parseLocation, type Place } from "./places"
 import { escapeAttr } from "./html"
+import { journal, type Day } from "./journal"
+import { dayKey } from "./calendar"
 
 /**
  * Page layouts a note asks for with its `layout` property. Some reshape the
@@ -15,8 +17,33 @@ import { escapeAttr } from "./html"
  * in its order and groups.
  */
 
-export type Collection = "projects" | "books" | "movies" | "talks" | "recipes" | "places" | "shelf"
-const COLLECTIONS: Collection[] = ["projects", "books", "movies", "talks", "recipes", "places", "shelf"]
+export type Collection =
+  | "projects"
+  | "books"
+  | "movies"
+  | "talks"
+  | "recipes"
+  | "places"
+  | "shelf"
+  | "daily"
+  | "bookmarks"
+  | "people"
+  | "snippets"
+  | "episodes"
+const COLLECTIONS: Collection[] = [
+  "projects",
+  "books",
+  "movies",
+  "talks",
+  "recipes",
+  "places",
+  "shelf",
+  "daily",
+  "bookmarks",
+  "people",
+  "snippets",
+  "episodes",
+]
 
 export const isCollection = (layout: Layout | undefined): layout is Collection => COLLECTIONS.includes(layout as Collection)
 
@@ -43,16 +70,24 @@ const STATUSES: Partial<Record<Collection, [key: string, label: StatusLabel, spe
     ["watched", "statusWatched", ["watched", "seen", "finished", "done", "completed"]],
     ["abandoned", "statusAbandoned", ["abandoned", "dropped"]],
   ],
+  bookmarks: [
+    ["unread", "statusUnread", ["unread", "to-read", "inbox", "new", "later", "read-later", "queued"]],
+    ["read", "statusRead", ["read", "done", "finished", "seen"]],
+    ["archived", "statusArchived", ["archived", "archive"]],
+  ],
 }
 
-/** How a collection looks: cards, a shelf of covers, or a list of dated rows. */
-export type Look = "cards" | "shelf" | "rows"
+/**
+ * How a collection looks: cards, a shelf of covers, a list of dated rows, or
+ * the page of its own kind (a journal, a reading list, faces, code, episodes).
+ */
+export type Look = "cards" | "shelf" | "rows" | "daily" | "bookmarks" | "people" | "snippets" | "episodes"
 
 /** A collection as its note sets it up: the preset of its layout under `group`, `statuses` and `fields`. */
 export interface Spec {
   kind: Collection
   look: Look
-  /** "status", "year", "none" or the property to group by (fallbacks joined by `|`). */
+  /** "status", "year", "month", "none" or the property to group by (fallbacks joined by `|`). */
   group: string
   statuses: { key: string; label: string; spellings: string[] }[]
   /** Properties shown under the title of each note, joined; each entry may list fallbacks with `|`. */
@@ -67,6 +102,11 @@ const PRESETS: Record<Collection, { look: Look; group: string; fields: string[] 
   recipes: { look: "cards", group: "category|course", fields: [] },
   places: { look: "cards", group: "country", fields: ["city|region"] },
   shelf: { look: "shelf", group: "status", fields: ["author|creator"] },
+  daily: { look: "daily", group: "month", fields: [] },
+  bookmarks: { look: "bookmarks", group: "status", fields: ["author|authors|byline"] },
+  people: { look: "people", group: "none", fields: ["role|job|position", "org|company|organization|affiliation"] },
+  snippets: { look: "snippets", group: "none", fields: [] },
+  episodes: { look: "episodes", group: "season|year", fields: ["guests|guest"] },
 }
 
 const normalize = (v: string) => v.trim().toLowerCase().replace(/[\s_]+/g, "-")
@@ -122,15 +162,47 @@ export function sourcesOf(note: Note): { folders: string[]; tags: string[] } {
   return { folders, tags }
 }
 
-/** When something in a collection happened: its end, else its date or start. */
+/** A date property as a date: a bare year as its first day; undefined when it is not one. */
+function dateOf(v: unknown): Date | undefined {
+  if (v == null || v === "") return undefined
+  const d = new Date(/^\d{4}$/.test(String(v)) ? `${v}-01-01` : String(v))
+  return Number.isNaN(d.getTime()) ? undefined : d
+}
+
+const journalDays = new WeakMap<Day[], Map<string, string>>()
+
+/**
+ * The day a note's name gives, as YYYY-MM-DD: the daily note format of the
+ * vault (as for /calendar and the links between days), else a name starting
+ * with YYYY-MM-DD.
+ */
+export function nameDay(n: Note): string | undefined {
+  const days = journal(n.lang)
+  let byKey = journalDays.get(days)
+  if (!byKey) journalDays.set(days, (byKey = new Map(days.map((d) => [d.note.key, d.date]))))
+  const known = byKey.get(n.key)
+  if (known) return known
+  const m = n.key.split("/").pop()!.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const d = m && new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
+  // 2024-02-30 is not a day.
+  return d && d.getUTCDate() === Number(m[3]) ? d.toISOString().slice(0, 10) : undefined
+}
+
+/** The day of a daily note, YYYY-MM-DD: its `date` property, else its name. */
+export function noteDay(n: Note): string | undefined {
+  const d = dateOf(n.source.fm.date)
+  return d ? dayKey(d) : nameDay(n)
+}
+
+/** When something in a collection happened: its end, else its date or start, else the day its name gives. */
 export function whenOf(n: Note): Date | undefined {
   const fm = n.source.fm
   for (const v of [fm.end, fm.finished, fm.watched, fm.visited, fm.date, fm.start, fm.started]) {
-    if (v == null || v === "") continue
-    const d = new Date(/^\d{4}$/.test(String(v)) ? `${v}-01-01` : String(v))
-    if (!Number.isNaN(d.getTime())) return d
+    const d = dateOf(v)
+    if (d) return d
   }
-  return n.created
+  const day = nameDay(n)
+  return day ? new Date(`${day}T00:00:00Z`) : n.created
 }
 
 // ---------- bases ----------
@@ -237,6 +309,36 @@ function notesOf(note: Note): BaseResult {
   return { notes, sorted: false }
 }
 
+/** The number of an episode, 0 without one. */
+export const episodeNumber = (n: Note) => Number.parseFloat(field(n, "number|episode|ep")) || 0
+
+/**
+ * What a note is grouped under: the first of `a|b|c` it has, `year` and
+ * `month` read from its date. Dated and numbered groups carry an `order`, to
+ * go newest first.
+ */
+function groupOf(n: Note, spec: Spec, statusOf: (value: string) => Spec["statuses"][number] | undefined, lang: Lang) {
+  for (const name of spec.group.split("|").map((x) => x.trim())) {
+    if (name === "year" || name === "month") {
+      const when = whenOf(n)
+      if (!when) continue
+      const year = when.getUTCFullYear()
+      if (name === "year") return { key: String(year), label: String(year), order: year }
+      const month = when.getUTCMonth()
+      const label = when.toLocaleDateString(lang, { month: "long", year: "numeric", timeZone: "UTC" })
+      return { key: `${year}-${String(month + 1).padStart(2, "0")}`, label, order: year * 12 + month }
+    }
+    const value = field(n, name)
+    if (!value) continue
+    const status = name === "status" ? statusOf(value) : undefined
+    if (status) return { key: status.key, label: status.label }
+    // Season 2 of a podcast, after season 3.
+    if (name === "season" && /^\d+$/.test(value)) return { key: value, label: t(lang).season.replace("{n}", value), order: Number(value) }
+    return { key: normalize(value), label: value }
+  }
+  return { key: "", label: "" }
+}
+
 /** The notes a collection page lists, grouped in reading order. */
 export function collectionOf(note: Note, spec: Spec): CollectionGroup[] {
   const s = t(note.lang)
@@ -252,34 +354,33 @@ export function collectionOf(note: Note, spec: Spec): CollectionGroup[] {
     })
   }
   const newest = (a: Note, b: Note) => (whenOf(b)?.getTime() ?? 0) - (whenOf(a)?.getTime() ?? 0) || collator.compare(a.title, b.title)
-  const notes = found.sorted ? found.notes : [...found.notes].sort(newest)
+  // People go by name, episodes by number, everything else newest first.
+  const order =
+    spec.kind === "people"
+      ? (a: Note, b: Note) => collator.compare(a.title, b.title)
+      : spec.kind === "episodes"
+        ? (a: Note, b: Note) => episodeNumber(b) - episodeNumber(a) || newest(a, b)
+        : newest
+  const notes = found.sorted ? found.notes : [...found.notes].sort(order)
   if (spec.group === "none") return notes.length ? [{ key: "", label: "", notes }] : []
-  const groups = new Map<string, CollectionGroup>()
+  const groups = new Map<string, CollectionGroup & { order?: number }>()
   for (const n of notes) {
-    let key: string
-    let label: string
-    if (spec.group === "year") {
-      const when = whenOf(n)
-      key = label = when ? String(when.getUTCFullYear()) : ""
-    } else {
-      const value = field(n, spec.group)
-      const status = spec.group === "status" && value ? statusOf(value) : undefined
-      key = status?.key ?? normalize(value)
-      label = status?.label ?? value
-    }
-    if (!groups.has(key)) groups.set(key, { key, label: label || s.statusOther, notes: [] })
+    const { key, label, order } = groupOf(n, spec, statusOf, note.lang)
+    if (!groups.has(key)) groups.set(key, { key, label: label || s.statusOther, notes: [], order })
     groups.get(key)!.notes.push(n)
   }
   const rank = (key: string) => {
     const i = spec.statuses.findIndex((st) => st.key === key)
     return i >= 0 ? i : spec.statuses.length
   }
-  return [...groups.values()].sort((a, b) => {
-    // Notes without the property come last; years go newest first; statuses in their order; anything else by name.
-    if (!a.key || !b.key) return a.key ? -1 : b.key ? 1 : 0
-    if (spec.group === "year") return Number(b.key) - Number(a.key)
-    return rank(a.key) - rank(b.key) || collator.compare(a.label, b.label)
-  })
+  return [...groups.values()]
+    .sort((a, b) => {
+      // Notes without the property come last; years, months and seasons go newest first; statuses in their order; anything else by name.
+      if (!a.key || !b.key) return a.key ? -1 : b.key ? 1 : 0
+      if (a.order !== undefined || b.order !== undefined) return (b.order ?? -Infinity) - (a.order ?? -Infinity)
+      return rank(a.key) - rank(b.key) || collator.compare(a.label, b.label)
+    })
+    .map(({ key, label, notes }) => ({ key, label, notes }))
 }
 
 /** Places of a collection with a location, for its map. */
@@ -350,7 +451,7 @@ export function statusLabelOf(n: Note, kind: Collection): string | undefined {
   return known ? t(n.lang)[known[1]] : value
 }
 
-/** Links of a note: a talk's `slides`, `video` and `paper`, then `repo`, `url`, `demo` and every URL in `links`. */
+/** Links of a note: a talk's `slides`, `video` and `paper`, then `source`, `repo`, `url`, `website`, `demo` and every URL in `links`. */
 export function linksOf(n: Note): { label: string; href: string }[] {
   const fm = n.source.fm
   const s = t(n.lang)
@@ -364,8 +465,10 @@ export function linksOf(n: Note): { label: string; href: string }[] {
   add(s.linkSlides, fm.slides)
   add(s.linkVideo, fm.video)
   add(s.linkPaper, fm.paper)
+  add("", fm.source)
   add("", fm.repo)
   add("", fm.url)
+  add("", fm.website)
   add("", fm.demo)
   const links = fm.links
   if (links && typeof links === "object" && !Array.isArray(links)) {
@@ -386,32 +489,58 @@ export interface Item {
   kind?: Collection
   /** Covers of books, films and shelves stand upright; the others lie wide. */
   upright: boolean
+  /** A person's picture is round. */
+  round?: boolean
+  /** Sound of an episode, played at its head. */
+  audio?: string
   byline: string[]
   rating?: number
   status?: string
   links: { label: string; href: string }[]
 }
 
-export function itemOf(n: Note): Item | undefined {
-  if (n.layout || n.protected) return undefined
-  const kind = collectionKindOf(n)
-  if (!kind && !n.source.fm.cover) return undefined
+/** What a note of a collection is, under its title: its author and year, a project's years, an episode's number… */
+function bylineOf(n: Note, kind: Collection | undefined): (string | undefined)[] {
   const preset = kind ? PRESETS[kind] : PRESETS.shelf
   const when = whenOf(n)
-  const byline =
-    kind === "projects"
-      ? [periodOf(n, n.lang), plain(n.source.fm.role)]
-      : kind === "recipes"
-        ? recipeFacts(n)
-        : kind === "talks"
-          ? [n.source.fm.date != null && when ? formatDate(when, n.lang) : "", ...preset.fields.map((f) => field(n, f))]
-          : kind === "places"
-            ? [field(n, "city|region"), field(n, "country"), n.source.fm.visited != null && when ? formatDate(when, n.lang) : ""]
-            : (kind ? preset.fields : ["author|authors|director|creator", "year|published|released"]).map((f) => field(n, f))
+  const fm = n.source.fm
+  switch (kind) {
+    case "projects":
+      return [periodOf(n, n.lang), plain(fm.role)]
+    case "recipes":
+      return recipeFacts(n)
+    case "talks":
+      return [fm.date != null && when ? formatDate(when, n.lang) : "", ...preset.fields.map((f) => field(n, f))]
+    case "places":
+      return [field(n, "city|region"), field(n, "country"), fm.visited != null && when ? formatDate(when, n.lang) : ""]
+    case "bookmarks": {
+      const published = dateOf(fm.published)
+      return [field(n, "author|authors|byline"), published ? formatDate(published, n.lang) : ""]
+    }
+    case "snippets":
+      return [field(n, "language")]
+    case "episodes":
+      return [episodeNumber(n) ? `#${field(n, "number|episode|ep")}` : "", formatDate(when, n.lang), field(n, "duration|length"), field(n, "guests|guest")]
+    case undefined:
+      return ["author|authors|director|creator", "year|published|released"].map((f) => field(n, f))
+    default:
+      return preset.fields.map((f) => field(n, f))
+  }
+}
+
+export function itemOf(n: Note): Item | undefined {
+  if (n.layout || n.protected) return undefined
+  // A day of a journal keeps the usual page, with its links to the days around it.
+  const listedIn = collectionKindOf(n)
+  const kind = listedIn === "daily" ? undefined : listedIn
+  if (!kind && !n.source.fm.cover) return undefined
+  const preset = kind ? PRESETS[kind] : PRESETS.shelf
   return {
     kind,
     upright: preset.look === "shelf",
-    byline: byline.filter((x): x is string => !!x),
+    round: kind === "people" || undefined,
+    audio: kind === "episodes" ? n.audio?.href : undefined,
+    byline: bylineOf(n, kind).filter((x): x is string => !!x),
     rating: ratingOf(n),
     status: kind ? statusLabelOf(n, kind) : plain(n.source.fm.status) || undefined,
     links: linksOf(n),

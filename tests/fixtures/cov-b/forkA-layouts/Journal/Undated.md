@@ -1,0 +1,1 @@
+No day at all.
