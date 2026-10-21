@@ -8,7 +8,7 @@ import { langPrefix } from "./i18n"
 import { sluggify } from "./slug"
 import { gardenChanges } from "./changes"
 import { t } from "./i18n"
-import { collectionOf, episodeNumber, field, specOf, whenOf } from "./note-layouts"
+import { collectionOf, episodeNumber, field, releasesOf, specOf, textOf, whenOf } from "./note-layouts"
 import { audioType } from "./collection-views"
 import { escapeAttr } from "./html"
 
@@ -132,5 +132,24 @@ export async function episodesFeed(note: Note): Promise<Response> {
         }
       }),
     ),
+  })
+}
+
+/** RSS of a changelog: each version with a number an item, at its anchor, dated when its heading gives a date. */
+export async function releasesFeed(note: Note): Promise<Response> {
+  const { releases } = releasesOf((await renderNote(note)).html)
+  return rss({
+    title: `${note.title} · ${site.title[note.lang]}`,
+    description: note.description ?? site.tagline[note.lang],
+    site: site.url ?? "http://localhost:4321",
+    customData: `<language>${note.lang}</language>`,
+    items: releases
+      .filter((r) => r.id)
+      .map((r) => ({
+        title: `${note.title} ${r.version}`,
+        link: `${note.url}#${r.id}`,
+        pubDate: r.date ? new Date(`${r.date}T00:00:00Z`) : undefined,
+        description: textOf(r.body),
+      })),
   })
 }

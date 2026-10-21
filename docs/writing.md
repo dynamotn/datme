@@ -153,7 +153,8 @@ stop on several trails, and readers can leave a trail at any time. Unlike a
 Notes tagged `type/term` are terms. The first mention of a term (its title or
 an alias, as a whole word) in any other note links to it, with a preview on
 hover. Links, code and headings are left alone. Set `glossary: false` to turn
-this off.
+this off. A page with `layout: glossary` lists these terms A–Z beside the
+ones it defines itself.
 
 ## Timeline, map and stats
 
@@ -185,7 +186,7 @@ Each layout also picks a look and a frame for its page:
 | `cv` | `resume` | `minimal` |
 | `links` | `classic` | `minimal` |
 | `gallery` | `darkroom` | `minimal` |
-| `faq` | the site's | `full` |
+| `faq`, `decision` | the site's | `full` |
 | all others | the site's | `full`, without the table of contents, the graph and stacked pages |
 
 The `resume` style is an A4 sheet on a grey desk, in two columns, and prints
@@ -193,7 +194,7 @@ as a clean white page even in dark mode. The `darkroom` style is a near-black
 gallery wall with pictures in rows of equal height; it starts dark unless the
 reader chose a theme, plain captions always show and cover captions appear on
 hover or focus on wide screens with a pointer. The `minimal` frame keeps a thin bar with the site's name and
-a light/dark toggle, and a one-line footer. The remaining layouts (all but `faq`) keep the header but
+a light/dark toggle, and a one-line footer. The remaining layouts (all but `faq` and `decision`) keep the header but
 lose the right rail (table of contents and graph) and stacked pages.
 
 Any note can also take one of the site styles for itself, `style: manuscript`
@@ -247,6 +248,55 @@ the address.
 - **`faq`**: each `##` heading is a question that opens on its answer.
 - **`quotes`**: quotes (`>`) become a wall of cards. A last line starting
   with a dash (`— Ada Lovelace`) is who said it.
+- **`paper`**: an academic paper. Under the title come the `authors` (a
+  list; wikilinks link to their notes), `affiliation` (or `affiliations`),
+  where it appeared (`journal` or `conference`, `volume`, `issue`, `pages`)
+  and links to its `doi` and `arxiv` id. A section named *Abstract*, or else
+  the text before the first heading, is the abstract, in a box; the rest
+  runs in two columns where the page is wide enough. A *Cite this* box gives
+  the reference and a BibTeX entry, built from the properties, to copy.
+- **`decision`**: an architecture decision record. `status` shows as a
+  coloured badge: proposed, accepted, rejected, deprecated or superseded, in
+  any usual spelling (`draft`, `approved`, `declined`, `obsolete`,
+  `replaced`…); `deciders`, `supersedes` and `superseded-by` (wikilinks)
+  follow. Sections named *Context*, *Options* (or *Considered options*),
+  *Decision* and *Consequences* each get a look of their own. A decision
+  with `superseded-by` (or `status: superseded`) opens with a banner
+  pointing to its replacement.
+- **`changelog`**: each `##` heading is a version, with an optional date
+  (`## 1.2.0 - 2026-10-01`, `## [1.2.0] - 2026-10-01` or `## v1.2.0
+  (2026-10-01)`), anchored at `#v1.2.0`. Keep a Changelog's `###` sections
+  (*Added*, *Changed*, *Deprecated*, *Removed*, *Fixed*, *Security*) become
+  coloured tags. The numbered versions also make an RSS feed at
+  `releases.xml` under the page, linked from it.
+- **`dialogue`**: an interview, podcast notes or a play. Paragraphs that
+  start with a speaker (`**Ada:** …`, `**Ada**: …`, or `Ada: …` once the
+  same name opens two paragraphs) become chat bubbles, each speaker on a
+  side and in a colour of their own. `speakers` lists the names, or maps
+  them to pictures (`speakers: { Ada: ada.jpg }`).
+- **`highlights`**: reading notes as Readwise or a Kindle plugin exports
+  them. The head shows the book: its `cover`, `author` and `source` (a
+  name, or a URL to link). Every quote and every list item becomes a card,
+  with its location (`(Location 123)`, `(p. 45)`, `— location: 123`) and
+  the note under it: the paragraphs right after a quote, or what a list
+  item nests. A *Metadata* section stays as it is.
+- **`glossary`**: definitions A–Z. Each `##` or `###` heading, and each
+  paragraph starting with a term in bold (`**Term**: what it means`), is a
+  term; a heading of a single letter only groups them. A bar of letters
+  jumps to each, and every term has an anchor of its own. Notes tagged
+  `type/term` that the page does not define are listed too, with their
+  `description`, linking to them.
+- **`trip`**: a travel journal. Each `##` heading is a day or a stop,
+  numbered down the page, with its pictures in a strip. A map at the top
+  joins the places of `route` (a list of notes with a `location`, `lat, lng`
+  pairs, or `{ name, location }`), or else the stops: a stop is where a line
+  of its own says (`📍 35.01, 135.77`), or at the first note it links to
+  that has a `location`.
+- **`syllabus`**: a course. Each `##` heading is a lesson, numbered, with
+  its reading time; a note without them lists the notes of its series
+  instead (the notes whose `series` links to it, or the series it names).
+  Readers tick lessons as done and see their progress; the ticks stay in
+  their browser.
 
 ### Collections
 

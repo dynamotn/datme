@@ -266,5 +266,20 @@
   "snippetsFilter": "言語で絞り込む",
   "season": "シーズン {n}",
   "episodeWith": "ゲスト:",
-  "episodesFeed": "ポッドキャストのフィード (RSS)"
+  "episodesFeed": "ポッドキャストのフィード (RSS)",
+  "citeThis": "引用する",
+  "abstract": "要旨",
+  "statusProposed": "提案中",
+  "statusAccepted": "承認済み",
+  "statusRejected": "却下",
+  "statusDeprecated": "非推奨",
+  "statusSuperseded": "置き換え済み",
+  "deciders": "決定者",
+  "supersedes": "置き換え対象",
+  "supersededBy": "置き換え先",
+  "supersededNotice": "この決定は{link}に置き換えられました。",
+  "supersededNoticeAlone": "この決定は置き換えられました。",
+  "glossaryLetters": "文字へ移動",
+  "lessonDone": "完了",
+  "syllabusProgress": "{total}レッスン中{done}完了"
 }

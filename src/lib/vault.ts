@@ -45,6 +45,14 @@ export const LAYOUTS = [
   "now",
   "faq",
   "quotes",
+  "paper",
+  "decision",
+  "changelog",
+  "dialogue",
+  "highlights",
+  "glossary",
+  "trip",
+  "syllabus",
   "projects",
   "books",
   "movies",
@@ -81,6 +89,8 @@ export interface Note {
   audio?: { href: string; file?: string }
   /** How the page is laid out (`layout` property): a page of its own text reshaped, or a collection of notes. */
   layout?: Layout
+  /** Pictures of the speakers of a dialogue, by name (its `speakers` property). */
+  speakers?: Record<string, string>
   /** Style this page is drawn in (`style` property), instead of its folder's. */
   style?: Style
   /** Navigation frame of this page (`chrome` property), instead of the usual one. */
@@ -784,8 +794,7 @@ function buildVault(version: number): Vault {
         toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? git.get(relFile)?.updated ?? stat.mtime
 
       // A picture or sound property: a URL, or a file of the vault that is then published.
-      const fileProp = (field: "banner" | "cover" | "avatar" | "audio"): { href: string; file?: string } | undefined => {
-        const v = s.fm[field]
+      const fileProp = (field: string, v: unknown = s.fm[field]): { href: string; file?: string } | undefined => {
         if (typeof v !== "string" || !v) return undefined
         const b = v.replace(/^!?\[\[|\]\]$/g, "").replace(/\|.*$/, "")
         if (/^https?:\/\//.test(b)) return { href: b }
@@ -806,6 +815,16 @@ function buildVault(version: number): Vault {
       if (layoutField && !layout && lang === site.defaultLang) {
         report("warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
       }
+      // A dialogue's `speakers` map names to pictures, published like a cover; a protected dialogue keeps them.
+      const speakers =
+        layout === "dialogue" && !s.password && s.fm.speakers && typeof s.fm.speakers === "object" && !Array.isArray(s.fm.speakers)
+          ? Object.fromEntries(
+              Object.entries(s.fm.speakers as Record<string, unknown>).flatMap(([name, v]) => {
+                const src = fileProp(`speakers.${name}`, v)?.href
+                return src ? [[name, src]] : []
+              }),
+            )
+          : undefined
       const { value: style, invalid: badStyle } = pickOption(s.fm.style, STYLES)
       if (badStyle && lang === site.defaultLang) {
         report("warning", relFile, `style "${badStyle}" is not one of ${STYLES.join(", ")}, so the note keeps its usual style`)
@@ -905,6 +924,7 @@ function buildVault(version: number): Vault {
         cover: cover ?? banner,
         audio,
         layout,
+        speakers,
         style,
         chrome,
         // A board or a deck needs the width of the page.

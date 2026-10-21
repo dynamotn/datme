@@ -17,24 +17,32 @@ import {
 } from "../src/lib/collection-views"
 import { episodesFeed, episodesPath } from "../src/lib/feed"
 import * as episodesRoute from "../src/pages/[...path]/episodes.xml"
+import { noteProperties } from "../src/lib/properties"
+import { releasesFeed } from "../src/lib/feed"
 import {
   basesOf,
   collectionKindOf,
   collectionOf,
+  decisionOf,
   field,
   galleryHtml,
   isCollection,
   itemOf,
   layoutHtml,
+  lessonsOf,
   linksOf,
   nameDay,
   noteDay,
+  paperOf,
   periodOf,
   placesOf,
   plain,
   quotesHtml,
   ratingOf,
   recipeFacts,
+  refsOf,
+  releasesUrl,
+  routeOf,
   runBase,
   sourcesOf,
   specOf,
@@ -519,5 +527,170 @@ describe("collections of their own kind", () => {
     expect(paths.map((p) => p.params.path)).toEqual(["Podcast/Podcast"])
     const r = await episodesRoute.GET({ props: paths[0].props })
     expect(await r.text()).toContain("<itunes:episode>2</itunes:episode>")
+  })
+})
+
+describe("layouts of a note's own text, from its properties", () => {
+  test("properties name people and notes: a list, or one value split at commas and \"and\"", () => {
+    const n = note("Texts/Decision")
+    expect(refsOf(n, "Ann, [[Plain]] and Bob; Cy")).toEqual([
+      { text: "Ann" },
+      { text: "Plain", href: note("Plain").url },
+      { text: "Bob" },
+      { text: "Cy" },
+    ])
+    expect(refsOf(n, ["[[No such note]]", ""])).toEqual([{ text: "No such note", href: undefined }])
+    expect(refsOf(n, undefined)).toEqual([])
+    expect(refsOf(n, 7)).toEqual([{ text: "7" }])
+    expect(refsOf(n, { a: 1 })).toEqual([])
+  })
+
+  test("a paper: its authors, affiliations and venue, its links, and the entry to cite it by", () => {
+    const paper = paperOf(note("Texts/Paper"))
+    expect(paper.authors).toEqual([{ text: "Pat Plain", href: note("Plain").url }, { text: "Ann Author" }])
+    expect(paper.affiliations).toEqual(["Garden Lab", "Slip Box Institute"])
+    expect(paper.venue).toBe("NoteConf, 1–10")
+    expect(paper.links.map((l) => l.href)).toEqual(["https://arxiv.org/abs/2301.00001", "https://slides.example/paper"])
+    expect(paper.entry).toEqual({
+      key: "plain2023paper",
+      type: "inproceedings",
+      fields: { author: "Pat Plain and Ann Author", title: "Paper", booktitle: "NoteConf", year: "2023", pages: "1--10", eprint: "2301.00001", archiveprefix: "arXiv" },
+    })
+    const preprint = paperOf(note("Texts/Preprint"))
+    expect(preprint.entry).toMatchObject({ key: "2022preprint", type: "misc", fields: { year: "2022", doi: "10.1/x" } })
+    expect(preprint.links).toEqual([{ label: "DOI", href: "https://doi.org/10.1/x" }])
+    expect(preprint.venue).toBe("")
+    expect(paperOf(withFm("Texts/Preprint", { journal: "J", volume: 2 })).venue).toBe("J 2")
+    // A note without a date of its own falls back to when it was made.
+    expect(paperOf({ ...note("Texts/Preprint"), created: undefined, source: { ...note("Texts/Preprint").source, fm: {} } }).entry.key).toBe("preprint")
+  })
+
+  test("a paper's page: the cite box first, the abstract, then the body", () => {
+    const html = layoutHtml(note("Texts/Paper"), `<p>Lead.</p><h2 id="abstract">Abstract</h2><p>Found.</p><h2>Results</h2><p>Plenty.</p>`)
+    expect(html).toStartWith('<details class="paper-cite"><summary>Cite this</summary><p class="paper-reference">')
+    expect(html).toContain("@inproceedings{plain2023paper,")
+    expect(html).toContain('<section class="paper-abstract"><h2 id="abstract">Abstract</h2><p>Found.</p></section><div class="paper-body"><p>Lead.</p><h2>Results</h2>')
+    expect(layoutHtml({ ...note("Texts/Paper"), protected: true }, "<p>x</p>")).toBe("<p>x</p>")
+  })
+
+  test("a decision: its status in any usual spelling, who decided, what it replaced or what replaced it", () => {
+    expect(decisionOf(note("Texts/Decision"))).toEqual({
+      status: { key: "proposed", label: "Proposed" },
+      deciders: [{ text: "Ann" }, { text: "Plain", href: note("Plain").url }],
+      supersedes: [{ text: "Old decision", href: note("Texts/Old decision").url }],
+      supersededBy: [],
+    })
+    expect(decisionOf(note("Texts/Old decision")).status).toEqual({ key: "superseded", label: "Superseded" })
+    expect(decisionOf(note("Texts/Odd decision")).status).toEqual({ key: "on-hold", label: "On hold" })
+    expect(decisionOf(note("Plain")).status).toBeUndefined()
+    expect(layoutHtml(note("Texts/Decision"), "<h2>Context</h2><p>x</p>")).toContain('<section class="adr-section adr-context">')
+  })
+
+  test("what a layout's head shows stays out of the properties block", () => {
+    expect(noteProperties(note("Texts/Paper")).map(([k]) => k)).toEqual(["slides"])
+    expect(noteProperties(note("Texts/Decision"))).toEqual([])
+    expect(noteProperties(note("Texts/Trip"))).toEqual([])
+  })
+
+  test("a changelog: its feed, at releases.xml under its page, lists the numbered versions", async () => {
+    const n = note("Texts/Changes")
+    expect(releasesUrl(n)).toBe(`${n.url}/releases.xml`)
+    expect(releasesUrl({ ...n, url: "/" })).toBe("/releases.xml")
+    const html = layoutHtml(n, "<h2>1.0.0</h2><p>x</p>")
+    expect(html).toBe(`<p class="release-feed"><a href="${n.url}/releases.xml">RSS</a></p><section class="release" id="v1.0.0"><h2>1.0.0</h2><p>x</p></section>`)
+    expect(layoutHtml({ ...n, protected: true }, "<h2>1.0.0</h2>")).not.toContain("release-feed")
+    const xml = await (await releasesFeed(n)).text()
+    expect([...xml.matchAll(/<title>([^<]+)<\/title>/g)].map((m) => m[1])).toEqual(["Changes · Layout coverage", "Changes v2.0.0", "Changes 1.0.0"])
+    expect(xml).toContain(`<link>http://localhost:4321${n.url}#v2.0.0</link>`)
+    expect(xml).toContain("<pubDate>Fri, 02 Jan 2026 00:00:00 GMT</pubDate>")
+    expect(xml).toContain("<description>Added Big thing.</description>")
+  })
+
+  test("a dialogue's speakers: a map to their pictures, published like a cover, or a list of names", () => {
+    const talk = note("Texts/Talk")
+    expect(talk.speakers).toEqual({ Ann: "/assets/_assets/cover.png" })
+    expect(getVault().problems.some((p) => p.file === "Texts/Talk.md" && p.message.includes("speakers.Bob"))).toBe(true)
+    expect(note("Texts/Chat").speakers).toBeUndefined()
+    const lines = "<p>Ann: Hi.</p><p>Bob: Hello.</p>"
+    expect(layoutHtml(talk, lines)).toContain('<img class="dialogue-avatar" src="/assets/_assets/cover.png"')
+    expect(layoutHtml(note("Texts/Chat"), lines).match(/dialogue-line/g)).toHaveLength(2)
+    expect(layoutHtml(note("Texts/Glossary"), "")).toBe(layoutHtml(note("Texts/Glossary"), ""))
+    expect(layoutHtml({ ...note("Texts/Chat"), source: { ...note("Texts/Chat").source, fm: {} } }, lines)).toBe(lines)
+  })
+
+  test("highlights show their book: its author, and where they come from as a link or a name", () => {
+    expect(itemOf(note("Texts/Highlights"))).toEqual({
+      kind: undefined,
+      upright: true,
+      byline: ["Ann Author"],
+      rating: undefined,
+      status: undefined,
+      links: [{ label: "readwise.io", href: "https://readwise.io/books/1" }],
+    })
+    expect(itemOf(note("Texts/Kindle"))).toMatchObject({ byline: ["Kindle"], links: [] })
+    expect(layoutHtml(note("Texts/Kindle"), "<blockquote><p>Q</p></blockquote>")).toContain("highlight-card")
+  })
+
+  test("a glossary lists the terms of the garden it does not define itself", () => {
+    const n = note("Texts/Glossary")
+    const html = layoutHtml(n, "<p><strong>Slip box</strong>: defined here.</p>")
+    expect(html).toContain('<dt><a class="internal" href="' + note("Texts/Card").url + '" data-key="Texts/Card">Card</a>')
+    expect(html).toContain("<dd></dd>")
+    // Slip is defined on the page under one of its names.
+    expect(html).not.toContain('data-key="Texts/Slip"')
+    expect(layoutHtml(n, "")).toContain('data-key="Texts/Slip">Slip</a><a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#slip">#</a></dt><dd><p>A box of slips.</p></dd>')
+    // The page of a term never lists itself.
+    expect(layoutHtml({ ...note("Texts/Slip"), layout: "glossary" }, "")).not.toContain('data-key="Texts/Slip"')
+  })
+
+  test("a trip's route: notes with a location, pairs and named places, in order", () => {
+    const n = note("Texts/Trip")
+    expect(routeOf(n)).toEqual([
+      { lat: 35.01, lng: 135.77, title: "Kyoto", url: note("Travel/Kyoto").url, description: undefined },
+      { lat: 10, lng: 20, title: "3", url: "" },
+      { lat: 16.4, lng: 107.5, title: "Huế", url: "" },
+      { lat: 1, lng: 2, title: "5", url: "" },
+    ])
+    expect(routeOf(note("Plain"))).toEqual([])
+    const html = layoutHtml(n, "<p>Intro</p><h2>Day 1</h2><p>x</p>")
+    expect(html).toStartWith('<p>Intro</p><div class="map-canvas trip-map" role="region" aria-label="Map" data-map="[{&quot;lat&quot;:35.01')
+    expect(html).toContain(" data-route ")
+  })
+
+  test("a trip without a route maps its stops: a pin of their own, or the first note they link to with a location", () => {
+    const n = { ...note("Texts/Trip"), source: { ...note("Texts/Trip").source, fm: {} } }
+    const html = layoutHtml(
+      n,
+      `<h2 id="d1">Day 1</h2><p>📍 1.5, 2.5</p><p><img src="/a.png" alt=""></p>` +
+        `<h2>Day 2 <a href="/Travel/Kyoto" class="internal" data-key="Travel/Kyoto">Kyoto</a></h2>` +
+        `<h2 id="d3">Day 3</h2><p>location: 95, 10</p>` +
+        `<h2 id="d4">Day 4</h2><p><a class="internal" data-key="Plain">Plain</a></p>`,
+    )
+    const places = JSON.parse(html.match(/data-map="([^"]*)"/)![1].replace(/&quot;/g, '"'))
+    expect(places).toEqual([
+      { lat: 1.5, lng: 2.5, title: "Day 1", url: "#d1" },
+      { lat: 35.01, lng: 135.77, title: "Day 2 Kyoto", url: "" },
+    ])
+    expect(html).toContain('<div class="trip-strip" role="group" aria-label="Day 1" tabindex="0"><figure class="gallery-item">')
+    expect(html).not.toContain("📍")
+    // A stop with nowhere to be leaves no map.
+    expect(layoutHtml(n, "<h2>Home</h2><p>Rest.</p>")).not.toContain("map-canvas")
+    expect(layoutHtml(n, "<p>No days.</p>")).toBe("<p>No days.</p>")
+  })
+
+  test("a syllabus lists the notes of the series it introduces, a locked one without its length", () => {
+    const n = note("Texts/Course")
+    const lessons = lessonsOf(n, [])
+    expect(lessons.map((l) => [l.id, l.minutes, l.body])).toEqual([
+      ["Texts/Lesson one", 1, "<p>Where to start.</p>"],
+      ["Texts/Lesson two", undefined, ""],
+    ])
+    expect(lessons[0].heading).toBe(`<h2 id="lesson-1"><a class="internal" href="${note("Texts/Lesson one").url}" data-key="Texts/Lesson one">Lesson one</a></h2>`)
+    // A part of the series naming it lists the others.
+    expect(lessonsOf(note("Texts/Lesson one"), []).map((l) => l.id)).toEqual(["Texts/Lesson two"])
+    expect(lessonsOf(note("Plain"), [])).toEqual([])
+    const html = layoutHtml(n, "<p>Intro</p>")
+    expect(html).toContain('<li class="lesson" data-lesson="Texts/Lesson two">')
+    expect(layoutHtml(n, "<h2>Only</h2><p>One lesson.</p>")).toContain('<li class="lesson" data-lesson="lesson-1">')
   })
 })

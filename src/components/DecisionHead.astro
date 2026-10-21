@@ -1,0 +1,70 @@
+---
+import type { Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { decisionOf, type Ref } from "~/lib/note-layouts"
+
+interface Props {
+  note: Note
+}
+const { note } = Astro.props
+const s = t(note.lang)
+const d = decisionOf(note)
+const [before, after] = s.supersededNotice.split("{link}")
+const facts: [string, Ref[]][] = [
+  [s.deciders, d.deciders],
+  [s.supersedes, d.supersedes],
+  [s.supersededBy, d.supersededBy],
+]
+---
+
+{/* A decision something replaced says so first, with the way to its replacement. */}
+{
+  d.status?.key === "superseded" && (
+    <p class="adr-banner" role="note">
+      {d.supersededBy.length > 0 ? (
+        <>
+          {before}
+          {d.supersededBy.map((r, i) => (
+            <>
+              {i > 0 && ", "}
+              {r.href ? (
+                <a class="internal" href={r.href}>
+                  {r.text}
+                </a>
+              ) : (
+                r.text
+              )}
+            </>
+          ))}
+          {after}
+        </>
+      ) : (
+        s.supersededNoticeAlone
+      )}
+    </p>
+  )
+}
+<div class="adr-head">
+  {d.status && <span class:list={["adr-status", `adr-status-${d.status.key}`]}>{d.status.label}</span>}
+  {
+    facts
+      .filter(([, refs]) => refs.length > 0)
+      .map(([label, refs]) => (
+        <span class="adr-fact">
+          {label}:{" "}
+          {refs.map((r, i) => (
+            <>
+              {i > 0 && ", "}
+              {r.href ? (
+                <a class="internal" href={r.href}>
+                  {r.text}
+                </a>
+              ) : (
+                r.text
+              )}
+            </>
+          ))}
+        </span>
+      ))
+  }
+</div>

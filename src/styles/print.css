@@ -295,6 +295,37 @@
     white-space: normal !important;
   }
 
+  /* Layouts on paper: no controls, the cards and lessons whole, every picture of a trip in view. */
+  .paper-cite,
+  .release-feed,
+  .glossary-letters,
+  .syllabus-progress,
+  .lesson-done,
+  .trip-map {
+    display: none !important;
+  }
+  .trip-strip {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .prose .trip-strip img {
+    height: 120px;
+  }
+  .glossary-entry,
+  .highlight-card,
+  .dialogue-line,
+  .lesson,
+  .adr-section {
+    break-inside: avoid;
+  }
+  .adr-banner,
+  .dialogue-bubble,
+  .adr-status,
+  .prose h3.change-tag {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   h1,
   h2,
   h3,

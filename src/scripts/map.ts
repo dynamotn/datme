@@ -89,6 +89,8 @@ export function mountMap(el: HTMLElement): void {
         : L.circleMarker([p.lat, p.lng], { radius: 8, color: accent, weight: 2, fillOpacity: 0.6 })
     marker.bindPopup(popup).addTo(map)
   }
+  // A trip's route joins its places in order.
+  if (el.dataset.route != null) L.polyline(places.map((p) => [p.lat, p.lng]), { color: accent, weight: 3, opacity: 0.7, dashArray: "6 8" }).addTo(map)
   const center = el.dataset.center?.split(",").map(Number) as [number, number] | undefined
   const zoom = el.dataset.zoom ? Number(el.dataset.zoom) : undefined
   if (center) return void map.setView(center, zoom ?? 13)

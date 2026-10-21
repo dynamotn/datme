@@ -266,5 +266,20 @@
   "snippetsFilter": "Lọc theo ngôn ngữ",
   "season": "Mùa {n}",
   "episodeWith": "cùng",
-  "episodesFeed": "Nguồn podcast (RSS)"
+  "episodesFeed": "Nguồn podcast (RSS)",
+  "citeThis": "Trích dẫn",
+  "abstract": "Tóm tắt",
+  "statusProposed": "Đề xuất",
+  "statusAccepted": "Đã chấp nhận",
+  "statusRejected": "Bị từ chối",
+  "statusDeprecated": "Không còn dùng",
+  "statusSuperseded": "Đã bị thay thế",
+  "deciders": "Người quyết định",
+  "supersedes": "Thay thế cho",
+  "supersededBy": "Được thay thế bởi",
+  "supersededNotice": "Quyết định này đã được thay thế bởi {link}.",
+  "supersededNoticeAlone": "Quyết định này đã được thay thế.",
+  "glossaryLetters": "Chuyển đến chữ cái",
+  "lessonDone": "Xong",
+  "syllabusProgress": "Đã xong {done}/{total} bài"
 }

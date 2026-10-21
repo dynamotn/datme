@@ -26,6 +26,7 @@ const L = {
   tileLayer: layer,
   marker: layer,
   circleMarker: layer,
+  polyline: layer,
   divIcon: () => ({}),
   latLngBounds: (points: LatLng[]) => ({ points, getCenter: () => points[0] }),
 }

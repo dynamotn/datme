@@ -266,5 +266,20 @@
   "snippetsFilter": "Filter by language",
   "season": "Season {n}",
   "episodeWith": "with",
-  "episodesFeed": "Podcast feed (RSS)"
+  "episodesFeed": "Podcast feed (RSS)",
+  "citeThis": "Cite this",
+  "abstract": "Abstract",
+  "statusProposed": "Proposed",
+  "statusAccepted": "Accepted",
+  "statusRejected": "Rejected",
+  "statusDeprecated": "Deprecated",
+  "statusSuperseded": "Superseded",
+  "deciders": "Deciders",
+  "supersedes": "Supersedes",
+  "supersededBy": "Superseded by",
+  "supersededNotice": "This decision has been superseded by {link}.",
+  "supersededNoticeAlone": "This decision has been superseded.",
+  "glossaryLetters": "Jump to a letter",
+  "lessonDone": "Done",
+  "syllabusProgress": "{done} of {total} lessons done"
 }

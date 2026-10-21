@@ -25,6 +25,7 @@ import { setupTrail, trailStep } from "./trail"
 import { setupWalk } from "./walk"
 import { setupFootprints } from "./footprints"
 import { setupHighlights } from "./highlights"
+import { setupSyllabus } from "./syllabus"
 
 const root = document.documentElement
 
@@ -376,6 +377,7 @@ document.addEventListener("astro:page-load", () => {
   void setupWalk()
   setupFootprints()
   setupHighlights()
+  setupSyllabus()
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())

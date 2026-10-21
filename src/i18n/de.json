@@ -266,5 +266,20 @@
   "snippetsFilter": "Nach Sprache filtern",
   "season": "Staffel {n}",
   "episodeWith": "mit",
-  "episodesFeed": "Podcast-Feed (RSS)"
+  "episodesFeed": "Podcast-Feed (RSS)",
+  "citeThis": "Zitieren",
+  "abstract": "Zusammenfassung",
+  "statusProposed": "Vorgeschlagen",
+  "statusAccepted": "Angenommen",
+  "statusRejected": "Abgelehnt",
+  "statusDeprecated": "Veraltet",
+  "statusSuperseded": "Abgelöst",
+  "deciders": "Entscheider",
+  "supersedes": "Löst ab",
+  "supersededBy": "Abgelöst durch",
+  "supersededNotice": "Diese Entscheidung wurde durch {link} abgelöst.",
+  "supersededNoticeAlone": "Diese Entscheidung wurde abgelöst.",
+  "glossaryLetters": "Zu einem Buchstaben springen",
+  "lessonDone": "Erledigt",
+  "syllabusProgress": "{done} von {total} Lektionen erledigt"
 }

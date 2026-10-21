@@ -62,6 +62,7 @@ const L = {
   tileLayer: (url: string, opts: object) => new FakeLayer("tiles", url, opts as Record<string, unknown>),
   marker: (at: LatLng, opts: Record<string, unknown>) => new FakeLayer("marker", at, opts),
   circleMarker: (at: LatLng, opts: Record<string, unknown>) => new FakeLayer("circle", at, opts),
+  polyline: (at: LatLng[], opts: Record<string, unknown>) => new FakeLayer("line", at, opts),
   divIcon: (opts: object) => ({ divIcon: opts }),
   latLngBounds: (points: LatLng[]) => new FakeBounds(points),
 }
@@ -152,6 +153,23 @@ describe("maps", () => {
     expect(plain.kind).toBe("circle")
     expect(plain.opts.color).toBe("#2d6a4f")
     expect(m.fitted!.opts).toEqual({ padding: [32, 32], maxZoom: 7 })
+  })
+
+  test("a trip's route joins its places in order with a dashed line", () => {
+    made.length = 0
+    const places = [
+      { lat: 1, lng: 2, title: "Day 1", url: "#day-1" },
+      { lat: 3, lng: 4, title: "Day 2", url: "#day-2" },
+    ]
+    maps.mountMap(mapEl({ "data-tiles": "t", "data-map": JSON.stringify(places), "data-route": "" }))
+    const line = made[0].layers.find((l) => l.kind === "line")!
+    expect(line.at).toEqual([
+      [1, 2],
+      [3, 4],
+    ])
+    expect(line.opts.dashArray).toBe("6 8")
+    maps.mountMap(mapEl({ "data-tiles": "t", "data-map": JSON.stringify(places) }))
+    expect(made[1].layers.some((l) => l.kind === "line")).toBe(false)
   })
 
   test("a fixed centre sets the view, at zoom 13 unless given; one place is centred at zoom 10", () => {

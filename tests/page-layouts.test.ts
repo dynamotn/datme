@@ -4,14 +4,25 @@ import os from "node:os"
 import path from "node:path"
 import { Window } from "happy-dom"
 import {
+  changelogHtml,
+  citeHtml,
   cvHtml,
+  decisionHtml,
+  dialogueHtml,
   faqHtml,
   galleryHtml,
+  glossaryEntries,
+  glossaryHtml,
+  highlightsHtml,
+  letterOf,
   linksHtml,
+  paperHtml,
   parseRating,
   plain,
   quotesHtml,
   recipeHtml,
+  releasesOf,
+  syllabusHtml,
   timelineHtml,
   usesHtml,
   withoutBases,
@@ -97,6 +108,128 @@ describe("layout transforms", () => {
 
   test("a collection leaves out the bases it shows, nested divs and all", () => {
     expect(withoutBases(`<p>a</p><div class="base-embed"><div class="card-wall"><div>x</div></div></div><p>b</p>`)).toBe(`<p>a</p><p>b</p>`)
+  })
+
+  test("a paper: the text before the first heading is its abstract, unless a section is named so", () => {
+    expect(paperHtml(`<p>We found.</p><h2>Method</h2><p>x</p>`, "Abstract", "<cite-box>")).toBe(
+      `<cite-box><section class="paper-abstract"><h2 class="paper-abstract-title">Abstract</h2><p>We found.</p></section><div class="paper-body"><h2>Method</h2><p>x</p></div>`,
+    )
+    expect(paperHtml(`<p>Lead.</p><h3>Aside</h3><p>y</p>`, "Abstract")).toBe(
+      `<section class="paper-abstract"><h2 class="paper-abstract-title">Abstract</h2><p>Lead.</p></section><div class="paper-body"><h3>Aside</h3><p>y</p></div>`,
+    )
+    expect(paperHtml(`<h2>Method</h2>`, "Abstract")).toBe(`<div class="paper-body"><h2>Method</h2></div>`)
+    expect(paperHtml(`<h2 id="tóm-tắt">Tóm tắt<a class="heading-anchor" href="#t">#</a></h2><p>a</p><h2>B</h2>`, "x")).toStartWith(
+      `<section class="paper-abstract"><h2 id="tóm-tắt">`,
+    )
+  })
+
+  test("the cite box gives the reference and its BibTeX, escaped", () => {
+    const html = citeHtml({ key: "k", type: "misc", fields: { author: "Ada Lovelace", title: "Notes & <tags>", journal: "J", year: "1843", pages: "1--2" } }, "Cite this")
+    expect(html).toContain("<summary>Cite this</summary>")
+    expect(html).toContain("Lovelace, A. (1843).")
+    expect(html).toContain("<em>J</em>, 1–2.")
+    expect(html).toContain("title   = {Notes \\&amp; &lt;tags&gt;}")
+    expect(html).toContain("pages   = {1--2}")
+  })
+
+  test("a decision record: each known section gets a look of its own", () => {
+    const html = decisionHtml(`<p>Intro</p><h2>Context</h2><p>a</p><h2>Decision outcome</h2><p>b</p><h2>Hệ quả</h2><p>c</p><h2>Status</h2><p>d</p><h2>Phương án</h2>`)
+    expect(html).toBe(
+      `<p>Intro</p><section class="adr-section adr-context"><h2>Context</h2><p>a</p></section>` +
+        `<section class="adr-section adr-decision"><h2>Decision outcome</h2><p>b</p></section>` +
+        `<section class="adr-section adr-consequences"><h2>Hệ quả</h2><p>c</p></section><h2>Status</h2><p>d</p>` +
+        `<section class="adr-section adr-options"><h2>Phương án</h2></section>`,
+    )
+  })
+
+  test("a changelog: versions with their dates and anchors, kinds of change as tags", () => {
+    const html = `<p>Hi</p><h2 id="unreleased">[Unreleased]</h2><h3 id="added">Added</h3><ul><li>x</li></ul>` +
+      `<h2 id="v">[<a href="https://x/compare">1.2.0</a>] - 2026-10-01<a class="heading-anchor" href="#120---2026-10-01">#</a></h2><h3>Fixed</h3><h3>Thanks</h3>` +
+      `<h2>v1.1.0 (2026-09-01)</h2><h3>Bảo mật</h3><h2>1.0.0 — 2026-13-45</h2>`
+    const { releases } = releasesOf(html)
+    expect(releases.map((r) => [r.version, r.date, r.id])).toEqual([
+      ["Unreleased", undefined, undefined],
+      ["1.2.0", "2026-10-01", "v1.2.0"],
+      ["v1.1.0", "2026-09-01", "v1.1.0"],
+      ["1.0.0", undefined, "v1.0.0"],
+    ])
+    const out = changelogHtml(html, "en-US", "<feed>")
+    expect(out).toStartWith(`<p>Hi</p><feed><section class="release"><h2 id="unreleased">Unreleased</h2><h3 id="added" class="change-tag change-added">Added</h3>`)
+    expect(out).toContain(
+      `<section class="release" id="v1.2.0"><h2 id="v"><a href="https://x/compare">1.2.0</a><a class="heading-anchor" href="#120---2026-10-01">#</a></h2><p class="release-date"><time datetime="2026-10-01">Oct 1, 2026</time></p><h3 class="change-tag change-fixed">Fixed</h3><h3>Thanks</h3>`,
+    )
+    expect(out).toContain(`<h3 class="change-tag change-security">Bảo mật</h3>`)
+    expect(out).toContain(`<section class="release" id="v1.0.0"><h2>1.0.0</h2></section>`)
+    expect(changelogHtml("<p>No versions.</p>", "en-US")).toBe("<p>No versions.</p>")
+  })
+
+  test("a dialogue: bold names always, plain ones when they recur or are speakers", () => {
+    const html = dialogueHtml(
+      `<p>Intro</p>\n<p><strong>Ada:</strong> One.</p>\n<p><strong>Ada</strong>: Two.</p>\n<p>Bob: Three.</p>\n<p>Note: four.</p>\n<p>Bob: Five.</p>\n<p>Cy: Six.</p><p><strong>Bold</strong> text.</p>`,
+      { Cy: "/cy.png", Ada: undefined },
+    )
+    expect(html.match(/<div class="dialogue">/g)).toHaveLength(2)
+    expect(html).toContain(`<div class="dialogue-line voice-0"><p class="dialogue-who"><span>Ada</span></p><div class="dialogue-bubble"><p>One.</p></div></div>`)
+    expect(html).toContain(`<div class="dialogue-line voice-0 is-more"><p class="dialogue-who"><span>Ada</span></p><div class="dialogue-bubble"><p>Two.</p></div></div>`)
+    expect(html).toContain(`<div class="dialogue-line voice-1 is-end"><p class="dialogue-who"><span>Bob</span></p>`)
+    expect(html).toContain(`<p>Note: four.</p>`)
+    expect(html).toContain(`<div class="dialogue-line voice-2"><p class="dialogue-who"><img class="dialogue-avatar" src="/cy.png" alt="" loading="lazy"><span>Cy</span></p>`)
+    expect(html).toContain(`<p><strong>Bold</strong> text.</p>`)
+    expect(dialogueHtml(`<p>Plain text.</p>`)).toBe(`<p>Plain text.</p>`)
+  })
+
+  test("highlights: quotes and list items become cards with their location and note", () => {
+    const html = highlightsHtml(
+      `<p>Intro</p><blockquote>\n<p>One. — location: <a href="kindle://x">12</a></p>\n</blockquote>\n<p>Note: mine.</p>\n<p>More of mine.</p><h3>Next</h3>` +
+        `<blockquote><p>Two (p. xiv)</p></blockquote><blockquote><p>Three.</p></blockquote><ol><li>Four (Location 10-12)<ul><li><strong>Note:</strong> why</li><li>also</li></ul></li><li><p>Five (Page 3)</p></li><li>Seven<ul><li>Note: one</li></ul></li></ol>` +
+        `<h2>Metadata</h2><ul><li>Author: X</li></ul><h2>More</h2><ul><li>Six</li></ul>`,
+    )
+    expect(html).toStartWith(
+      `<p>Intro</p><div class="highlight-list"><figure class="highlight-card"><blockquote><p>One.</p></blockquote><div class="highlight-note"><p>mine.</p>\n<p>More of mine.</p></div><figcaption>location: <a href="kindle://x">12</a></figcaption></figure></div><h3>Next</h3>`,
+    )
+    expect(html).toContain(`<blockquote><p>Two</p></blockquote><figcaption>p. xiv</figcaption>`)
+    expect(html).toContain(`<blockquote><p>Three.</p></blockquote></figure>`)
+    expect(html).toContain(`<blockquote><p>Four</p></blockquote><div class="highlight-note"><ul><li>why</li><li>also</li></ul></div><figcaption>Location 10-12</figcaption>`)
+    expect(html).toContain(`<blockquote><p>Five</p></blockquote><figcaption>Page 3</figcaption>`)
+    expect(html).toContain(`<blockquote><p>Seven</p></blockquote><div class="highlight-note">one</div></figure>`)
+    expect(html).toContain(`<h2>Metadata</h2><ul><li>Author: X</li></ul>`)
+    expect(html).toContain(`<h2>More</h2><div class="highlight-list"><figure class="highlight-card"><blockquote><p>Six</p></blockquote></figure></div>`)
+  })
+
+  test("a glossary: terms from headings and bold paragraphs, filed by letter", () => {
+    const { intro, entries } = glossaryEntries(
+      `<p>Intro</p><h2 id="b">Backlink<a class="heading-anchor" href="#b">#</a></h2><p>Back.</p><h2>A</h2><p>Under A.</p>` +
+        `<p><strong>Atom</strong>: small.</p><p><strong>Bare:</strong></p><p><strong>Loud</strong> not a term.</p><h3>2FA</h3>`,
+    )
+    expect(intro).toBe("<p>Intro</p>")
+    expect(entries.map((e) => [e.term, e.id, e.definition])).toEqual([
+      ["Backlink", "b", "<p>Back.</p><p>Under A.</p>"],
+      ["Atom", undefined, "<p>small.</p>"],
+      ["Bare", undefined, "<p><strong>Loud</strong> not a term.</p>"],
+      ["2FA", undefined, ""],
+    ])
+    const html = glossaryHtml(intro, [...entries, { term: "Atom", definition: "" }, { term: "!", definition: "" }], "en-US", "Letters")
+    expect(html).toStartWith(`<p>Intro</p><nav class="glossary-letters" aria-label="Letters"><a href="#letter-a">A</a><a href="#letter-b">B</a><span aria-hidden="true">C</span>`)
+    expect(html).toContain(`<a href="#letter-other">#</a></nav>`)
+    expect(html).toContain(`<div class="glossary-entry" id="atom"><dt>Atom<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#atom">#</a></dt><dd><p>small.</p></dd></div><div class="glossary-entry" id="atom-2">`)
+    expect(html).toContain(`<section class="glossary-group" id="letter-other"><h2 class="glossary-letter">#</h2><dl><div class="glossary-entry" id="term"><dt>!<a`)
+    expect(html).toMatch(/id="letter-b"[\s\S]*id="letter-other"/)
+    expect(html).toContain(`<div class="glossary-entry" id="term">`)
+    expect(glossaryHtml("<p>x</p>", [], "en-US", "L")).toBe("<p>x</p>")
+    // Terms in other scripts get their own letters, without A–Z.
+    expect(glossaryHtml("", [{ term: "ねこ", definition: "" }], "ja-JP", "L")).toContain(`<nav class="glossary-letters" aria-label="L"><a href="#letter-ね">ね</a></nav>`)
+    expect(letterOf("Évergreen", "en-US")).toBe("E")
+    expect(letterOf("", "en-US")).toBe("#")
+  })
+
+  test("a syllabus: numbered lessons with their time and a box to tick, the progress hidden until the browser counts", () => {
+    const html = syllabusHtml("<p>Intro</p>", [{ id: "a", heading: "<h2>One</h2>", minutes: 3, body: "<p>x</p>" }, { id: "b", heading: "<h2>Two</h2>", body: " " }], "en-US")
+    expect(html).toBe(
+      `<p>Intro</p><div class="syllabus-progress" data-syllabus-progress data-template="{done} of {total} lessons done" hidden><progress max="2" value="0" aria-hidden="true"></progress><span>0 of 2 lessons done</span></div>` +
+        `<ol class="syllabus"><li class="lesson" data-lesson="a"><div class="lesson-head"><h2>One</h2><span class="lesson-time">3 min read</span><label class="lesson-done"><input type="checkbox" data-lesson-done><span class="sr-only">One: </span>Done</label></div><div class="lesson-body"><p>x</p></div></li>` +
+        `<li class="lesson" data-lesson="b"><div class="lesson-head"><h2>Two</h2><label class="lesson-done"><input type="checkbox" data-lesson-done><span class="sr-only">Two: </span>Done</label></div></li></ol>`,
+    )
+    expect(syllabusHtml("<p>Intro</p>", [], "en-US")).toBe("<p>Intro</p>")
   })
 
   test("frontmatter values read as plain text, wikilinks by their alias or name", () => {
@@ -334,6 +467,93 @@ describe("page layouts", () => {
     expect(html).toContain('data-scheme-default="dark"')
   })
 
+  test("a paper: authors linked to their notes, the venue, links, a cite box and the abstract", () => {
+    const html = article("Paper/index.html")
+    expect(html).toContain('<p class="paper-authors"><a class="internal" href="/CV">Ada Lovelace</a>, <span>Charles Babbage</span></p>')
+    expect(html).toContain('<p class="paper-venue">Journal of Note Taking 12(3), 45–67</p>')
+    expect(html).toContain('<a href="https://doi.org/10.1234/notes.2024" rel="noopener">DOI ↗</a>')
+    expect(html).toContain("@article{lovelace2024gardens,")
+    expect(html).toContain('<section class="paper-abstract"><h2 class="paper-abstract-title">Abstract</h2><p>We study')
+    expect(html).toContain('<div class="paper-body"><h2 id="introduction">')
+    expect(html).not.toContain('class="properties')
+    expect(read("Paper/index.html")).toContain('data-chrome="full-norail"')
+  })
+
+  test("a superseded decision says so first, with a link to what replaced it", () => {
+    const html = article("Decision/index.html")
+    expect(html).toContain('<p class="adr-banner" role="note">This decision has been superseded by <a class="internal" href="/New-search">New search</a>.</p>')
+    expect(html).toContain('<span class="adr-status adr-status-superseded">Superseded</span>')
+    expect(html).toContain('<span class="adr-fact">Deciders: <a class="internal" href="/CV">Ada</a>, Bob</span>')
+    expect(html.match(/<section class="adr-section adr-/g)).toHaveLength(4)
+    const next = article("New-search/index.html")
+    expect(next).toContain('<span class="adr-status adr-status-accepted">Accepted</span>')
+    expect(next).toContain('Supersedes: <a class="internal" href="/Decision">Use SQLite for search</a>')
+    expect(next).not.toContain("adr-banner")
+    expect(read("Decision/index.html")).toContain('data-chrome="full"')
+  })
+
+  test("a changelog: versions with anchors and dates, tags for kinds of change, and a feed of its versions", () => {
+    const html = article("Changelog/index.html")
+    expect(html).toContain('<section class="release" id="v1.2.0"><h2 id="120---2026-10-01">1.2.0<a')
+    expect(html).toContain('<p class="release-date"><time datetime="2026-10-01">Oct 1, 2026</time></p>')
+    expect(html).toContain('class="change-tag change-fixed">Fixed')
+    expect(read("Changelog/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Changelog · Layouts" href="/Changelog/releases.xml">')
+    const xml = read("Changelog/releases.xml")
+    expect([...xml.matchAll(/<link>([^<]+)<\/link>/g)].map((m) => m[1]).slice(1)).toEqual(["http://localhost:4321/Changelog#v1.2.0", "http://localhost:4321/Changelog#v1.1.0"])
+  })
+
+  test("a dialogue: bubbles per speaker, a picture for a speaker that has one", () => {
+    const html = article("Interview/index.html")
+    expect(html.match(/<div class="dialogue-line /g)).toHaveLength(4)
+    expect(html).toContain('<img class="dialogue-avatar" src="/assets/_assets/portrait.png" alt=""')
+    expect(html).toContain("<p>Note: this line is not a speaker.</p>")
+  })
+
+  test("highlights: the book's head, a card per highlight, the metadata left alone", () => {
+    const html = article("Smart-Notes-highlights/index.html")
+    expect(html).toContain('<div class="item-head is-upright"><img class="item-cover" src="/assets/_assets/cover.png"')
+    expect(html).toContain('<p class="item-byline">Sönke Ahrens · Kindle</p>')
+    expect(html.match(/<figure class="highlight-card">/g)).toHaveLength(3)
+    expect(html).toContain("<figcaption>Location 123</figcaption>")
+    expect(html).toContain('<div class="highlight-note">keep the context.</div>')
+    expect(html).toContain("<li>Author: Sönke Ahrens</li>")
+  })
+
+  test("a glossary: letters to jump to, terms A–Z, and the garden's own terms", () => {
+    const html = article("Terms/index.html")
+    expect(html).toContain('<nav class="glossary-letters" aria-label="Jump to a letter"><a href="#letter-a">A</a>')
+    expect([...html.matchAll(/<div class="glossary-entry" id="([^"]+)"/g)].map((m) => m[1])).toEqual(["atomic-note", "backlink", "évergreen", "zettel", "zettelkasten"])
+    expect(html).toContain('<dt><a class="internal" href="/Zettelkasten" data-key="Zettelkasten">Zettelkasten</a>')
+  })
+
+  test("a trip: a map of its stops joined by the route, each day with its pictures in a strip", () => {
+    const html = article("Japan-trip/index.html")
+    expect(html).toMatch(/<div class="map-canvas trip-map" role="region" aria-label="Map" data-map="[^"]*Đà Lạt[^"]*" data-route /)
+    expect(html.match(/<li class="trip-stop">/g)).toHaveLength(3)
+    expect(html).toContain('<div class="trip-strip" role="group" aria-label="Day 1 — Đà Lạt" tabindex="0">')
+    expect(html.match(/<figure class="gallery-item"/g)).toHaveLength(2)
+  })
+
+  test("a syllabus: lessons to tick, with their reading time and the progress", () => {
+    const html = article("Course/index.html")
+    expect(html.match(/<li class="lesson" data-lesson="/g)).toHaveLength(3)
+    expect(html).toContain('<span class="lesson-time">1 min read</span>')
+    expect(html).toContain('data-syllabus-progress data-template="{done} of {total} lessons done" hidden')
+  })
+
+  test("the new layouts have no serious or critical axe violations", async () => {
+    const axe = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
+    for (const page of ["Paper", "Decision", "Changelog", "Interview", "Smart-Notes-highlights", "Terms", "Japan-trip", "Course"]) {
+      const window = new Window({ url: "https://garden.example/", settings: { disableJavaScriptEvaluation: false } })
+      window.document.write(read(`${page}/index.html`).replace(/<script\b[\s\S]*?<\/script>/g, ""))
+      window.eval(axe)
+      const run = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null }[] }> } }).axe
+      const res = await run.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
+      await window.happyDOM.close()
+      expect({ page, found: res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id) }).toEqual({ page, found: [] })
+    }
+  }, 120_000)
+
   test("a note can override its layout's style and frame", () => {
     const html = read("Styled-CV/index.html")
     expect(html).toContain('data-look="garden"')
@@ -399,6 +619,11 @@ describe("page layouts", () => {
   test("a protected note's sound stays out of the site", () => {
     expect(fs.existsSync(path.join(out, "assets/_assets/locked.mp3"))).toBe(false)
     expect(read("Locked-episode/index.html")).not.toContain("locked.mp3")
+  })
+
+  test("a protected dialogue's speaker pictures stay out of the site", () => {
+    expect(fs.existsSync(path.join(out, "assets/_assets/secret-face.png"))).toBe(false)
+    expect(read("Locked-interview/index.html")).not.toContain("secret-face.png")
   })
 
   test("the new collections have no serious or critical axe violations", async () => {

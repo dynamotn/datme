@@ -1,5 +1,5 @@
 import { site } from "../site.config"
-import { getVault, type Note } from "./vault"
+import { getVault, type Layout, type Note } from "./vault"
 import { GLOBAL as MARP_DIRECTIVES } from "./slides"
 
 export type PropValue =
@@ -87,6 +87,32 @@ export function toProp(
   return { kind: "text", text }
 }
 
+/** Properties the head or body of a layout already shows. */
+const LAYOUT_SHOWN: Partial<Record<Layout, string[]>> = {
+  cv: ["role", "headline", "email", "phone", "location", "links"],
+  paper: [
+    "authors",
+    "author",
+    "affiliation",
+    "affiliations",
+    "doi",
+    "arxiv",
+    "journal",
+    "venue",
+    "booktitle",
+    "conference",
+    "volume",
+    "issue",
+    "number",
+    "pages",
+    "publisher",
+  ],
+  decision: ["status", "deciders", "supersedes", "superseded-by", "superseded_by", "supersededBy"],
+  highlights: ["author", "authors", "source", "url"],
+  dialogue: ["speakers"],
+  trip: ["route"],
+}
+
 /** The properties block of a note: aliases first, then every other non-hidden key. */
 export function noteProperties(note: Note): [string, PropValue][] {
   if (note.protected) return []
@@ -95,13 +121,8 @@ export function noteProperties(note: Note): [string, PropValue][] {
   const directives = note.slides ? ["marp", ...MARP_DIRECTIVES] : []
   // A stage property is already shown as the stage chip.
   const stage = note.stage === note.source.fm.stage ? ["stage"] : []
-  // What a layout already shows: where a collection's notes come from, the head of a résumé.
-  const layout =
-    note.layout === "cv"
-      ? ["role", "headline", "email", "phone", "location", "links"]
-      : note.layout
-        ? ["from", "group", "statuses", "fields"]
-        : []
+  // What a layout already shows: where a collection's notes come from, the head of a résumé, a paper or a decision.
+  const layout = note.layout ? (LAYOUT_SHOWN[note.layout] ?? ["from", "group", "statuses", "fields"]) : []
   const hidden = new Set([...HIDDEN_PROPERTIES, ...directives, ...stage, ...layout, ...site.properties.hide].map((k) => k.toLowerCase()))
   const resolve = (target: string) => {
     const s = vault.resolveNote(target, note.dir)

@@ -8,12 +8,18 @@ import { parseLocation, type Place } from "./places"
 import { escapeAttr } from "./html"
 import { journal, type Day } from "./journal"
 import { dayKey } from "./calendar"
+import { toProp } from "./properties"
+import { allSeries } from "./series"
+import { glossary } from "./glossary"
+import { formatReference, people, toBibtex, type BibEntry } from "./citations"
+import { absUrl } from "./base"
 
 /**
  * Page layouts a note asks for with its `layout` property. Some reshape the
  * note's own text (a résumé, a gallery, a timeline, links, uses, a FAQ,
- * quotes); collections list other notes, grouped by status, year or any
- * property. A collection whose note embeds a base lists what the base finds,
+ * quotes, a paper, a decision record, a changelog, a dialogue, reading
+ * highlights, a glossary, a trip, a syllabus); collections list other notes,
+ * grouped by status, year or any property. A collection whose note embeds a base lists what the base finds,
  * in its order and groups.
  */
 
@@ -529,21 +535,28 @@ function bylineOf(n: Note, kind: Collection | undefined): (string | undefined)[]
 }
 
 export function itemOf(n: Note): Item | undefined {
-  if (n.layout || n.protected) return undefined
+  // Reading highlights show the book they come from the same way.
+  const highlights = n.layout === "highlights"
+  if ((n.layout && !highlights) || n.protected) return undefined
   // A day of a journal keeps the usual page, with its links to the days around it.
-  const listedIn = collectionKindOf(n)
+  const listedIn = highlights ? undefined : collectionKindOf(n)
   const kind = listedIn === "daily" ? undefined : listedIn
-  if (!kind && !n.source.fm.cover) return undefined
+  if (!kind && !n.source.fm.cover && !highlights) return undefined
   const preset = kind ? PRESETS[kind] : PRESETS.shelf
+  // Where highlights come from: a URL to link, or a name such as Kindle.
+  const source = highlights ? plain(n.source.fm.source) : ""
+  const sourceUrl = /^https?:\/\//.test(source)
   return {
     kind,
     upright: preset.look === "shelf",
     round: kind === "people" || undefined,
     audio: kind === "episodes" ? n.audio?.href : undefined,
-    byline: bylineOf(n, kind).filter((x): x is string => !!x),
+    byline: [...bylineOf(n, kind), sourceUrl ? "" : source].filter((x): x is string => !!x),
     rating: ratingOf(n),
     status: kind ? statusLabelOf(n, kind) : plain(n.source.fm.status) || undefined,
-    links: linksOf(n),
+    links: [...(sourceUrl ? [{ label: new URL(source).hostname.replace(/^www\./, ""), href: source }] : []), ...linksOf(n)].filter(
+      (l, i, all) => all.findIndex((o) => o.href === l.href) === i,
+    ),
   }
 }
 
@@ -555,13 +568,13 @@ const IMG = /<img\b[^>]*>/g
 /**
  * A gallery: runs of paragraphs holding nothing but pictures become one grid,
  * each picture a figure captioned by its alt text. Text and headings stay, so
- * a heading starts an album.
+ * a heading starts an album. `open` is the tag the grid opens with.
  */
-export function galleryHtml(html: string): string {
+export function galleryHtml(html: string, open = '<div class="gallery-grid">'): string {
   const out: string[] = []
   let grid: string[] = []
   const flush = () => {
-    if (grid.length) out.push(`<div class="gallery-grid">${grid.join("")}</div>`)
+    if (grid.length) out.push(`${open}${grid.join("")}</div>`)
     grid = []
   }
   for (const part of html.split(/(<p>[\s\S]*?<\/p>)/)) {
@@ -720,6 +733,647 @@ export function recipeHtml(html: string): string {
   return `${intro}<div class="recipe"><aside class="recipe-ingredients">${ingredients.heading}${ticks}</aside><div class="recipe-steps">${rest.join("")}</div></div>`
 }
 
+// ---------- helpers of the layouts below ----------
+
+const ANCHOR = /<a class="heading-anchor"[\s\S]*?<\/a>/g
+/** Text of some HTML: tags and heading anchors dropped, spaces collapsed. */
+export const textOf = (html: string) =>
+  unescape(html.replace(ANCHOR, "").replace(/<[^>]+>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim()
+/** The id of the heading an HTML part starts with. */
+const idOf = (heading: string) => heading.match(/^<h\d[^>]*\sid="([^"]*)"/)?.[1]
+/** Minutes it takes to read some words, at the pace of the reading time of notes. */
+const minutesOf = (words: number) => Math.max(1, Math.round(words / 220))
+const wordsIn = (text: string) => text.match(/\S+/g)?.length ?? 0
+
+/** Something a property names: its text, linked to its note when that is published. */
+export interface Ref {
+  text: string
+  href?: string
+}
+
+/**
+ * People or notes a property names: a list, or one value split at commas,
+ * semicolons and "and" (not inside a wikilink). Wikilinks link to their notes.
+ */
+export function refsOf(note: Note, v: unknown): Ref[] {
+  const list = Array.isArray(v) ? v : typeof v === "string" ? v.split(/\s*[;,](?![^[]*\]\])\s*|\s+and\s+/) : v == null ? [] : [v]
+  const vault = getVault()
+  const resolve = (target: string) => {
+    const s = vault.resolveNote(target, note.dir)
+    return s && vault.byKey[note.lang].get(s.key)
+  }
+  return list.flatMap((x) => {
+    const p = toProp(x, resolve, (target, alias) => vault.privateLink(target, note.dir, alias, note.lang))
+    return p?.kind === "text" ? [{ text: p.text, href: p.href }] : []
+  })
+}
+
+/** Top-level elements named `tags` in some HTML, and the HTML between them: nested ones count, so each match is whole. */
+function topLevel(html: string, tags: string[]): { tag?: string; html: string }[] {
+  const out: { tag?: string; html: string }[] = []
+  const open = new RegExp(`<(${tags.join("|")})\\b[^>]*>`, "g")
+  let at = 0
+  for (let m = open.exec(html); m; m = open.exec(html)) {
+    const tag = m[1]
+    const inner = new RegExp(`<${tag}\\b[^>]*>|</${tag}>`, "g")
+    inner.lastIndex = m.index + m[0].length
+    let depth = 1
+    let end = html.length
+    for (let x = inner.exec(html); x; x = inner.exec(html)) {
+      depth += x[0].startsWith("</") ? -1 : 1
+      if (!depth) {
+        end = x.index + x[0].length
+        break
+      }
+    }
+    if (m.index > at) out.push({ html: html.slice(at, m.index) })
+    out.push({ tag, html: html.slice(m.index, end) })
+    at = open.lastIndex = end
+  }
+  if (at < html.length) out.push({ html: html.slice(at) })
+  return out
+}
+
+/** What is inside an element's outer HTML. */
+const innerOf = (outer: string) => outer.slice(outer.indexOf(">") + 1, outer.lastIndexOf("</"))
+
+// ---------- a paper ----------
+
+/** What the head of a paper shows, and the entry readers cite it by. */
+export interface Paper {
+  authors: Ref[]
+  affiliations: string[]
+  /** Where it appeared: a journal or conference, its volume, issue and pages. */
+  venue: string
+  links: { label: string; href: string }[]
+  entry: BibEntry
+}
+
+const doiOf = (v: string) => v.replace(/^https?:\/\/(dx\.)?doi\.org\//i, "").replace(/^doi:\s*/i, "")
+const arxivOf = (v: string) =>
+  v
+    .replace(/^https?:\/\/arxiv\.org\/(abs|pdf)\//i, "")
+    .replace(/^arxiv:\s*/i, "")
+    .replace(/\.pdf$/, "")
+/** A word for a citation key: plain ASCII letters and digits. */
+const keyWord = (v: string) =>
+  v
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+
+/** Only the fields with a value. */
+const filled = (fields: Record<string, string>) => Object.fromEntries(Object.entries(fields).filter(([, v]) => v))
+
+export function paperOf(note: Note): Paper {
+  const fm = note.source.fm
+  const authors = refsOf(note, fm.authors ?? fm.author)
+  const listOf = (v: unknown) => (Array.isArray(v) ? v.map(plain) : [plain(v)]).filter(Boolean)
+  const journal = field(note, "journal|venue")
+  const booktitle = field(note, "booktitle|conference")
+  const volume = field(note, "volume")
+  const number = field(note, "issue|number")
+  // BibTeX writes a range of pages with two dashes.
+  const pages = field(note, "pages").replace(/\s*[-–—]+\s*/g, "--")
+  const year = field(note, "year").slice(0, 4) || (note.created ? String(note.created.getUTCFullYear()) : "")
+  const doi = doiOf(plain(fm.doi))
+  const arxiv = arxivOf(plain(fm.arxiv))
+  const first = people(authors[0]?.text)[0]?.family ?? ""
+  const word = note.title.split(/\s+/).find((w) => !/^(a|an|the|on|of|in|for|to)$/i.test(w)) ?? ""
+  const entry: BibEntry = {
+    key: keyWord(first) + year + keyWord(word) || "paper",
+    type: journal ? "article" : booktitle ? "inproceedings" : "misc",
+    fields: filled({
+      author: authors.map((a) => a.text).join(" and "),
+      title: note.title,
+      journal,
+      booktitle: journal ? "" : booktitle,
+      year,
+      volume,
+      number,
+      pages,
+      publisher: field(note, "publisher"),
+      doi,
+      eprint: arxiv,
+      archiveprefix: arxiv && "arXiv",
+      url: site.url ? absUrl(note.url) : "",
+    }),
+  }
+  const container = journal || booktitle
+  return {
+    authors,
+    affiliations: listOf(fm.affiliations ?? fm.affiliation),
+    venue: container && `${container}${volume ? ` ${volume}` : ""}${number ? `(${number})` : ""}${pages ? `, ${pages.replace(/--/g, "–")}` : ""}`,
+    links: [
+      ...(doi ? [{ label: "DOI", href: `https://doi.org/${doi}` }] : []),
+      ...(arxiv ? [{ label: "arXiv", href: `https://arxiv.org/abs/${arxiv}` }] : []),
+      ...linksOf(note),
+    ],
+    entry,
+  }
+}
+
+/** "Cite this": the reference as the bibliography of a note would give it, and its BibTeX to copy. */
+export function citeHtml(entry: BibEntry, label: string): string {
+  return (
+    `<details class="paper-cite"><summary>${escapeAttr(label)}</summary>` +
+    `<p class="paper-reference">${formatReference({ ...entry, fields: { ...entry.fields, pages: entry.fields.pages?.replace(/--/g, "–") } })}</p>` +
+    `<pre><code class="language-bibtex">${escapeAttr(toBibtex(entry))}</code></pre></details>`
+  )
+}
+
+const ABSTRACT = /^(abstract|summary|tóm tắt|zusammenfassung|résumé|resumen|要旨|概要|摘要)$/i
+
+/**
+ * A paper: its abstract (a section named so, else the text before the first
+ * heading) in a box, then the rest of the text, in two columns where the
+ * page is wide enough. `cite` goes first.
+ */
+export function paperHtml(html: string, abstractLabel: string, cite = ""): string {
+  const { intro, parts } = sections(html)
+  const at = parts.findIndex((p) => ABSTRACT.test(textOf(p.heading)))
+  let abstract: string
+  let rest: string
+  if (at >= 0) {
+    abstract = parts[at].heading + parts[at].body
+    rest = intro + parts.filter((_, i) => i !== at).map((p) => p.heading + p.body).join("")
+  } else {
+    // Up to the first heading of any level.
+    const cut = intro.search(/<h[3-6][\s>]/)
+    const lead = cut < 0 ? intro : intro.slice(0, cut)
+    abstract = lead.trim() ? `<h2 class="paper-abstract-title">${escapeAttr(abstractLabel)}</h2>${lead}` : ""
+    rest = intro.slice(lead.length) + parts.map((p) => p.heading + p.body).join("")
+  }
+  return `${cite}${abstract ? `<section class="paper-abstract">${abstract}</section>` : ""}<div class="paper-body">${rest}</div>`
+}
+
+// ---------- a decision record ----------
+
+type DecisionLabel = Extract<StringKey, `status${string}`>
+const DECISION_STATUSES: [key: string, label: DecisionLabel, spellings: string[]][] = [
+  ["proposed", "statusProposed", ["proposed", "draft", "open", "pending", "rfc", "in-review", "under-review"]],
+  ["accepted", "statusAccepted", ["accepted", "approved", "adopted", "agreed", "decided"]],
+  ["rejected", "statusRejected", ["rejected", "declined", "refused"]],
+  ["deprecated", "statusDeprecated", ["deprecated", "obsolete", "retired"]],
+  ["superseded", "statusSuperseded", ["superseded", "superceded", "replaced"]],
+]
+
+/** What the head of an architecture decision record shows. */
+export interface Decision {
+  /** A known status keeps its key, so it gets its colour; any other is shown as written. */
+  status?: { key: string; label: string }
+  deciders: Ref[]
+  supersedes: Ref[]
+  supersededBy: Ref[]
+}
+
+export function decisionOf(note: Note): Decision {
+  const fm = note.source.fm
+  const s = t(note.lang)
+  const supersededBy = refsOf(note, fm["superseded-by"] ?? fm.superseded_by ?? fm.supersededBy)
+  const value = plain(fm.status)
+  const known = DECISION_STATUSES.find(([, , spellings]) => spellings.includes(normalize(value)))
+  // A decision something else replaced is superseded, whatever its status says.
+  const status = known
+    ? { key: known[0], label: s[known[1]] }
+    : value
+      ? { key: normalize(value), label: value }
+      : supersededBy.length
+        ? { key: "superseded", label: s.statusSuperseded }
+        : undefined
+  return { status, deciders: refsOf(note, fm.deciders), supersedes: refsOf(note, fm.supersedes), supersededBy }
+}
+
+const DECISION_PARTS: [cls: string, heading: RegExp][] = [
+  ["context", /^(context|background|problem|bối cảnh|ngữ cảnh|vấn đề|kontext|hintergrund|contexte|contexto|背景|コンテキスト)/i],
+  ["options", /^(options|considered options|alternatives|phương án|các lựa chọn|lựa chọn|optionen|alternativen|choix|opciones|alternativas|選択肢|选项|方案)/i],
+  ["decision", /^(decision|outcome|quyết định|entscheidung|décision|decisión|決定|决定|决策)/i],
+  ["consequences", /^(consequences|implications|hệ quả|kết quả|konsequenzen|folgen|conséquences|consecuencias|結果|影響|后果|影响)/i],
+]
+
+/** A decision record: its context, options, decision and consequences each a section of its own look. */
+export function decisionHtml(html: string): string {
+  const { intro, parts } = sections(html)
+  return (
+    intro +
+    parts
+      .map((p) => {
+        const part = DECISION_PARTS.find(([, re]) => re.test(textOf(p.heading)))
+        return part ? `<section class="adr-section adr-${part[0]}">${p.heading}${p.body}</section>` : p.heading + p.body
+      })
+      .join("")
+  )
+}
+
+// ---------- a changelog ----------
+
+/** A version of a changelog: an H2 such as "1.2.0 - 2026-10-01", and what changed in it. */
+export interface Release {
+  version: string
+  /** The day it came out, as written (YYYY-MM-DD). */
+  date?: string
+  /** Its anchor: v1.2.0 for a version number, else the heading's own. */
+  id?: string
+  heading: string
+  body: string
+}
+
+const RELEASE_DATE = /\s*(?:[-–—:]\s*)?\(?\s*(\d{4}-\d{2}-\d{2})\s*\)?/
+
+/** The versions of a changelog, newest first as written, after the text that introduces them. */
+export function releasesOf(html: string): { intro: string; releases: Release[] } {
+  const { intro, parts } = sections(html)
+  return {
+    intro,
+    releases: parts.map((p) => {
+      const written = textOf(p.heading).match(/\d{4}-\d{2}-\d{2}/)?.[0]
+      const date = written && !Number.isNaN(new Date(`${written}T00:00:00Z`).getTime()) ? written : undefined
+      // The date leaves the heading's text for a line of its own; Keep a Changelog's brackets go too.
+      const heading = p.heading.replace(/(^|>)([^<]+)/g, (_m, gt: string, text: string) => gt + text.replace(RELEASE_DATE, "").replace(/[[\]]/g, ""))
+      const version = textOf(heading)
+      return { version, date, id: /^v?\d/.test(version) ? `v${version.replace(/^v/, "")}` : undefined, heading, body: p.body }
+    }),
+  }
+}
+
+/** Keep a Changelog's kinds of change, and their usual names in other languages. */
+const CHANGE_KINDS: [kind: string, heading: RegExp][] = [
+  ["added", /^(added|new|features?|thêm|mới|hinzugefügt|neu|ajouté|nouveau|añadido|nuevo|追加|新增)/i],
+  ["changed", /^(changed|changes|improved|thay đổi|cải tiến|geändert|modifié|cambiado|変更|变更)/i],
+  ["deprecated", /^(deprecated|ngừng hỗ trợ|veraltet|obsolète|déprécié|obsoleto|非推奨|弃用)/i],
+  ["removed", /^(removed|loại bỏ|đã xoá|đã xóa|entfernt|supprimé|eliminado|削除|移除)/i],
+  ["fixed", /^(fixed|bug ?fixes|sửa lỗi|đã sửa|behoben|corrigé|arreglado|corregido|修正|修复)/i],
+  ["security", /^(security|bảo mật|sicherheit|sécurité|seguridad|セキュリティ|安全)/i],
+]
+
+/** Where the feed of a changelog's versions is: releases.xml under its page. */
+export const releasesUrl = (note: Note) => `${note.url.replace(/\/$/, "")}/releases.xml`
+
+/**
+ * A changelog: each H2 a version, its date on a line of its own and an
+ * anchor of its own; Keep a Changelog's H3 sections become coloured tags.
+ */
+export function changelogHtml(html: string, lang: Lang, feed = ""): string {
+  const { intro, releases } = releasesOf(html)
+  if (!releases.length) return html
+  const tag = (body: string) =>
+    body.replace(/<h3([^>]*)>([\s\S]*?)<\/h3>/g, (h3, attrs: string, inner: string) => {
+      const kind = CHANGE_KINDS.find(([, re]) => re.test(textOf(inner)))?.[0]
+      return kind ? `<h3${attrs} class="change-tag change-${kind}">${inner}</h3>` : h3
+    })
+  const out = releases.map((r) => {
+    const date = r.date
+      ? `<p class="release-date"><time datetime="${r.date}">${escapeAttr(formatDate(new Date(`${r.date}T00:00:00Z`), lang))}</time></p>`
+      : ""
+    return `<section class="release"${r.id ? ` id="${escapeAttr(r.id)}"` : ""}>${r.heading}${date}${tag(r.body)}</section>`
+  })
+  return intro + feed + out.join("")
+}
+
+// ---------- a dialogue ----------
+
+/** "**Ada:** text", "**Ada**: text" or "Ada: text" at the start of a paragraph. */
+const SAID = /^<p>\s*(?:<strong>([^<]{1,40}?)\s*(:?)\s*<\/strong>\s*(:?)|([\p{L}][\p{L}\p{N}.'’ -]{0,38}?)\s*(:))\s*/u
+/** Bubble colours: a speaker keeps one, from this many. */
+const VOICES = 6
+
+/**
+ * A dialogue: runs of paragraphs that start with a speaker's name become
+ * chat bubbles, each speaker on a side and in a colour of their own. A name
+ * in bold always counts; a plain one only when it opens two paragraphs or
+ * more, or is one of `speakers`, so "Note: …" stays a paragraph. `speakers`
+ * maps names to their pictures.
+ */
+export function dialogueHtml(html: string, speakers: Record<string, string | undefined> = {}): string {
+  const parts = html.split(/(<p>[\s\S]*?<\/p>)/)
+  const known = new Map(Object.entries(speakers).map(([name, src]) => [name.toLowerCase(), src]))
+  const said = (part: string) => {
+    const m = part.match(SAID)
+    if (!m) return undefined
+    const bold = m[1] !== undefined
+    if (bold && !m[2] && !m[3]) return undefined
+    return { name: (bold ? m[1] : m[4]).trim(), bold, rest: part.slice(m[0].length) }
+  }
+  // How many paragraphs each name opens.
+  const opens = new Map<string, number>()
+  for (const part of parts) {
+    const key = said(part)?.name.toLowerCase()
+    if (key) opens.set(key, (opens.get(key) ?? 0) + 1)
+  }
+  const order: string[] = []
+  const out: string[] = []
+  let run: string[] = []
+  let last = ""
+  const flush = () => {
+    if (run.length) out.push(`<div class="dialogue">${run.join("")}</div>`)
+    run = []
+    last = ""
+  }
+  for (const part of parts) {
+    const s = said(part)
+    const key = s?.name.toLowerCase() ?? ""
+    if (s && (s.bold || known.has(key) || (opens.get(key) ?? 0) > 1)) {
+      if (!order.includes(key)) order.push(key)
+      const i = order.indexOf(key)
+      const src = known.get(key)
+      const avatar = src ? `<img class="dialogue-avatar" src="${escapeAttr(src)}" alt="" loading="lazy">` : ""
+      const cls = ["dialogue-line", `voice-${i % VOICES}`, i % 2 ? "is-end" : "", key === last ? "is-more" : ""].filter(Boolean).join(" ")
+      run.push(`<div class="${cls}"><p class="dialogue-who">${avatar}<span>${s.name}</span></p><div class="dialogue-bubble"><p>${s.rest}</div></div>`)
+      last = key
+    } else if (part.trim() || !run.length) {
+      flush()
+      out.push(part)
+    }
+  }
+  flush()
+  return out.join("")
+}
+
+// ---------- reading highlights ----------
+
+/** Where a highlight is in its book: "(Location 123)", "(p. 45)", "— location: [123](kindle://…)". */
+const LOCATOR =
+  /\s*(?:\(\s*((?:<a\b[^>]*>)?\s*(?:loc(?:ation)?\.?|page|pg\.?|pp?\.)\s*:?\s*[\dxivlc]+(?:\s*[-–]\s*[\dxivlc]+)?\s*(?:<\/a>)?)\s*\)|[—–]\s*((?:loc(?:ation)?|page)\s*:\s*(?:<a\b[^>]*>)?\s*\d+(?:\s*[-–]\s*\d+)?\s*(?:<\/a>)?))/i
+
+/** A highlight as a card: its text, where it is in the book, and the reader's note. */
+function highlightCard(text: string, note: string): string {
+  let at = ""
+  const quote = text.replace(LOCATOR, (_m, a?: string, b?: string) => {
+    at = (a ?? b)!
+    return ""
+  })
+  // "Note: …" marks the reader's own words in Readwise and Kindle exports.
+  const own = note.replace(/^((?:\s*<(?:p|ul|ol|li)>)*)\s*(?:<strong>)?\s*note\s*:\s*(?:<\/strong>)?\s*/i, "$1")
+  return (
+    `<figure class="highlight-card"><blockquote>${quote.includes("<p>") ? quote.trim() : `<p>${quote.trim()}</p>`}</blockquote>` +
+    (own.trim() ? `<div class="highlight-note">${own.trim()}</div>` : "") +
+    (at ? `<figcaption>${at.trim()}</figcaption>` : "") +
+    `</figure>`
+  )
+}
+
+/** The cards of a run of text: each quote with the paragraphs after it, each item of a list with what it nests. */
+function highlightCards(html: string): string {
+  const out: string[] = []
+  let cards: string[] = []
+  const flush = () => {
+    if (cards.length) out.push(`<div class="highlight-list">${cards.join("")}</div>`)
+    cards = []
+  }
+  const blocks = topLevel(html, ["blockquote", "ul", "ol"])
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i]
+    if (b.tag === "blockquote") {
+      // The paragraphs right after a quote are the reader's note on it.
+      const next = blocks[i + 1]
+      const lead = next && !next.tag ? (next.html.match(/^(?:\s*<p>[\s\S]*?<\/p>)+/)?.[0] ?? "") : ""
+      cards.push(highlightCard(innerOf(b.html), lead))
+      if (lead) next.html = next.html.slice(lead.length)
+    } else if (b.tag) {
+      for (const li of topLevel(innerOf(b.html), ["li"]).filter((x) => x.tag)) {
+        const inner = innerOf(li.html)
+        const nested = inner.search(/<(ul|ol)\b/)
+        if (nested < 0) {
+          cards.push(highlightCard(inner, ""))
+          continue
+        }
+        // What the item nests is the reader's note: one item as its text, more as a list.
+        const list = topLevel(inner.slice(nested), ["ul", "ol"])[0].html
+        const items = topLevel(innerOf(list), ["li"]).filter((x) => x.tag)
+        cards.push(highlightCard(inner.slice(0, nested), items.length === 1 ? innerOf(items[0].html) : list))
+      }
+    } else if (b.html.trim() || !cards.length) {
+      flush()
+      out.push(b.html)
+    }
+  }
+  flush()
+  return out.join("")
+}
+
+/**
+ * Reading highlights, as Readwise or a Kindle plugin exports them: every
+ * quote and every list item becomes a card with its location and the note
+ * under it. A Metadata section stays as it is.
+ */
+export function highlightsHtml(html: string): string {
+  const { intro, parts } = sections(html)
+  return (
+    highlightCards(intro) +
+    parts.map((p) => p.heading + (/^(metadata|siêu dữ liệu|metadaten|métadonnées|metadatos)$/i.test(textOf(p.heading)) ? p.body : highlightCards(p.body))).join("")
+  )
+}
+
+// ---------- a glossary ----------
+
+/** A term of a glossary page: how it is written (HTML), its anchor and its definition. */
+export interface GlossaryEntry {
+  term: string
+  id?: string
+  definition: string
+}
+
+/** A term in bold opening a paragraph, then a colon or a dash: "**Term**: what it means." */
+const BOLD_TERM = /^<p>\s*<strong>([\s\S]+?)\s*(:?)\s*<\/strong>\s*([:—–-]?)\s*([\s\S]*)<\/p>$/
+
+/** The terms a glossary page defines, after the text that introduces them. */
+export function glossaryEntries(html: string): { intro: string; entries: GlossaryEntry[] } {
+  let intro = ""
+  const entries: GlossaryEntry[] = []
+  for (const chunk of html.split(/(?=<h[23][\s>])/)) {
+    const heading = chunk.match(/^<h([23])[^>]*>[\s\S]*?<\/h\1>/)?.[0] ?? ""
+    // A heading of one letter only groups terms; any other names one.
+    if (heading && !/^\p{L}$/u.test(textOf(heading))) entries.push({ term: innerOf(heading).replace(ANCHOR, ""), id: idOf(heading), definition: "" })
+    for (const part of chunk.slice(heading.length).split(/(<p>[\s\S]*?<\/p>)/)) {
+      const m = part.match(BOLD_TERM)
+      if (m && (m[2] || m[3])) entries.push({ term: m[1], definition: m[4].trim() ? `<p>${m[4].trim()}</p>` : "" })
+      else if (entries.length) entries.at(-1)!.definition += part
+      else intro += part
+    }
+  }
+  return { intro, entries }
+}
+
+/** The letter a term is filed under: its first, without accents, or # for a digit or a sign. */
+export function letterOf(term: string, lang: Lang): string {
+  const first = [...term.normalize("NFD").replace(/[̀-ͯ]/g, "")][0] ?? ""
+  return /\p{L}/u.test(first) ? first.toLocaleUpperCase(lang) : "#"
+}
+
+const LATIN = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+
+/**
+ * A glossary: every term A–Z in a list of definitions, under its letter,
+ * each with an anchor of its own, and a bar of letters to jump to.
+ */
+export function glossaryHtml(intro: string, entries: GlossaryEntry[], lang: Lang, label: string): string {
+  if (!entries.length) return intro
+  const collator = new Intl.Collator(lang, { numeric: true, sensitivity: "base" })
+  const sorted = [...entries].sort((a, b) => collator.compare(textOf(a.term), textOf(b.term)))
+  const used = new Set(sorted.map((e) => e.id).filter(Boolean))
+  const groups = new Map<string, string[]>()
+  for (const e of sorted) {
+    const text = textOf(e.term)
+    let id = e.id
+    if (!id) {
+      const base = text.toLocaleLowerCase(lang).replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") || "term"
+      id = base
+      for (let n = 2; used.has(id); n++) id = `${base}-${n}`
+      used.add(id)
+    }
+    const letter = letterOf(text, lang)
+    if (!groups.has(letter)) groups.set(letter, [])
+    groups
+      .get(letter)!
+      .push(
+        `<div class="glossary-entry" id="${escapeAttr(id)}"><dt>${e.term}<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#${escapeAttr(id)}">#</a></dt><dd>${e.definition}</dd></div>`,
+      )
+  }
+  const letterId = (l: string) => `letter-${l === "#" ? "other" : l.toLocaleLowerCase(lang)}`
+  // Digits and signs come after the letters.
+  const present = [...groups.keys()].sort((a, b) => Number(a === "#") - Number(b === "#"))
+  // A–Z for terms in Latin letters, with the missing ones greyed; any other letter as it comes.
+  const bar = [...(present.some((l) => LATIN.includes(l)) ? LATIN : []), ...present.filter((l) => !LATIN.includes(l))].map((l) =>
+    groups.has(l) ? `<a href="#${escapeAttr(letterId(l))}">${escapeAttr(l)}</a>` : `<span aria-hidden="true">${l}</span>`,
+  )
+  const body = present.map(
+    (l) =>
+      `<section class="glossary-group" id="${escapeAttr(letterId(l))}"><h2 class="glossary-letter">${escapeAttr(l)}</h2><dl>${groups.get(l)!.join("")}</dl></section>`,
+  )
+  return `${intro}<nav class="glossary-letters" aria-label="${escapeAttr(label)}">${bar.join("")}</nav>${body.join("")}`
+}
+
+/** Notes tagged as terms that a glossary page does not define itself, as entries linking to them. */
+function termNotes(note: Note, defined: GlossaryEntry[]): GlossaryEntry[] {
+  const names = new Set(defined.map((e) => textOf(e.term).toLocaleLowerCase(note.lang)))
+  const byKey = getVault().byKey[note.lang]
+  return glossary(note.lang).terms.flatMap((term) => {
+    const n = byKey.get(term.key)!
+    if (n.key === note.key || term.names.some((x) => names.has(x.toLocaleLowerCase(note.lang)))) return []
+    return [
+      {
+        term: `<a class="internal" href="${escapeAttr(n.url)}" data-key="${escapeAttr(n.key)}">${escapeAttr(n.title)}</a>`,
+        definition: n.description ? `<p>${escapeAttr(n.description)}</p>` : "",
+      },
+    ]
+  })
+}
+
+// ---------- a trip ----------
+
+/** A line of its own giving where a stop is: "📍 35.01, 135.77" or "location: 35.01, 135.77". */
+const PIN = /<p>\s*(?:📍|location\s*:)\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*<\/p>\s*/iu
+
+/** The place a note is at, if it has a location and is published. */
+function placeOfNote(note: Note, key: string): Place | undefined {
+  const n = getVault().byKey[note.lang].get(key)
+  const loc = n && !n.protected ? parseLocation(n.source.fm.location ?? n.source.fm.coordinates) : undefined
+  return loc && { lat: loc[0], lng: loc[1], title: n!.title, url: n!.url, description: n!.description }
+}
+
+/** The places of a trip's `route`: notes with a location, "lat, lng" pairs, or { name, location }. */
+export function routeOf(note: Note): Place[] {
+  const raw = note.source.fm.route
+  const vault = getVault()
+  return (Array.isArray(raw) ? raw : []).flatMap((item, i): Place[] => {
+    const link = typeof item === "string" ? item.match(/^\[\[([^\]|#]+)/) : null
+    if (link) {
+      const s = vault.resolveNote(link[1], note.dir)
+      const place = s && placeOfNote(note, s.key)
+      return place ? [place] : []
+    }
+    const named = item && typeof item === "object" && !Array.isArray(item) ? (item as Record<string, unknown>) : undefined
+    const loc = parseLocation(named?.location ?? item)
+    return loc ? [{ lat: loc[0], lng: loc[1], title: plain(named?.name) || String(i + 1), url: "" }] : []
+  })
+}
+
+/**
+ * A trip: each H2 a day or a stop, numbered down the page, its pictures in a
+ * strip; a map of the route (`route`, else where each stop is) goes first.
+ * A stop is where its own 📍 line says, else at the first note it links to
+ * with a location.
+ */
+export function tripHtml(note: Note, html: string): string {
+  const { intro, parts } = sections(html)
+  if (!parts.length) return html
+  const s = t(note.lang)
+  const stops: Place[] = []
+  const days = parts.map((p) => {
+    const title = textOf(p.heading)
+    const pin = p.body.match(PIN)
+    const linked = (p.heading + p.body).match(/class="internal" data-key="([^"]*)"/)
+    const place = pin ? { lat: Number(pin[1]), lng: Number(pin[2]) } : linked ? placeOfNote(note, unescape(linked[1])) : undefined
+    const id = idOf(p.heading)
+    if (place && parseLocation([place.lat, place.lng])) stops.push({ lat: place.lat, lng: place.lng, title, url: id ? `#${id}` : "" })
+    const body = galleryHtml(pin ? p.body.replace(PIN, "") : p.body, `<div class="trip-strip" role="group" aria-label="${escapeAttr(title)}" tabindex="0">`)
+    return `<li class="trip-stop">${p.heading}<div class="trip-body">${body}</div></li>`
+  })
+  const route = routeOf(note)
+  const places = route.length ? route : stops
+  const map = places.length
+    ? `<div class="map-canvas trip-map" role="region" aria-label="${escapeAttr(s.map)}" data-map="${escapeAttr(JSON.stringify(places))}"${places.length > 1 ? " data-route" : ""}` +
+      ` data-tiles="${escapeAttr(site.map.tiles)}"${site.map.darkTiles ? ` data-tiles-dark="${escapeAttr(site.map.darkTiles)}"` : ""} data-attribution="${escapeAttr(site.map.attribution)}"></div>`
+    : ""
+  return `${intro}${map}<ol class="trip-stops">${days.join("")}</ol>`
+}
+
+// ---------- a syllabus ----------
+
+/** A lesson of a course: its heading, how long it takes to read, and what it says. */
+export interface Lesson {
+  id: string
+  heading: string
+  minutes?: number
+  body: string
+}
+
+/** The lessons of a course: its H2 sections, else the notes of its series. */
+export function lessonsOf(note: Note, parts: { heading: string; body: string }[]): Lesson[] {
+  if (parts.length) {
+    return parts.map((p, i) => ({ id: idOf(p.heading) ?? `lesson-${i + 1}`, heading: p.heading, minutes: minutesOf(wordsIn(textOf(p.body))), body: p.body }))
+  }
+  const own = typeof note.source.fm.series === "string" ? note.source.fm.series.trim() : ""
+  const series = [...allSeries(note.lang).entries()].find(([key, s]) => key === own || s.intro?.key === note.key)?.[1]
+  return (series?.parts ?? [])
+    .filter((n) => n.key !== note.key)
+    .map((n, i) => ({
+      id: n.key,
+      heading: `<h2 id="lesson-${i + 1}"><a class="internal" href="${escapeAttr(n.url)}" data-key="${escapeAttr(n.key)}">${escapeAttr(n.title)}</a></h2>`,
+      // A protected lesson tells nothing of its length.
+      minutes: n.protected ? undefined : minutesOf(wordsIn(n.md.replace(/<[^>]+>|[#*_>`[\]()!|]/g, " "))),
+      body: n.description && !n.protected ? `<p>${escapeAttr(n.description)}</p>` : "",
+    }))
+}
+
+/**
+ * A syllabus: numbered lessons, each with its reading time and a box to tick
+ * once done; the browser keeps the ticks and shows the progress.
+ */
+export function syllabusHtml(intro: string, lessons: Lesson[], lang: Lang): string {
+  if (!lessons.length) return intro
+  const s = t(lang)
+  const total = lessons.length
+  const items = lessons.map(
+    (l) =>
+      `<li class="lesson" data-lesson="${escapeAttr(l.id)}"><div class="lesson-head">${l.heading}` +
+      (l.minutes ? `<span class="lesson-time">${escapeAttr(s.readingTime(l.minutes))}</span>` : "") +
+      `<label class="lesson-done"><input type="checkbox" data-lesson-done><span class="sr-only">${escapeAttr(textOf(l.heading))}: </span>${escapeAttr(s.lessonDone)}</label></div>` +
+      (l.body.trim() ? `<div class="lesson-body">${l.body}</div>` : "") +
+      `</li>`,
+  )
+  const count = s.syllabusProgress.replace("{done}", "0").replace("{total}", String(total))
+  return (
+    intro +
+    `<div class="syllabus-progress" data-syllabus-progress data-template="${escapeAttr(s.syllabusProgress)}" hidden><progress max="${total}" value="0" aria-hidden="true"></progress><span>${escapeAttr(count)}</span></div>` +
+    `<ol class="syllabus">${items.join("")}</ol>`
+  )
+}
+
 /** A note's rendered text reshaped by its layout; a recipe of a collection gets its two columns. */
 export function layoutHtml(note: Note, html: string): string {
   switch (note.layout) {
@@ -748,6 +1402,32 @@ export function layoutHtml(note: Note, html: string): string {
       return faqHtml(html)
     case "quotes":
       return quotesHtml(html)
+    case "paper":
+      return note.protected ? html : paperHtml(html, t(note.lang).abstract, citeHtml(paperOf(note).entry, t(note.lang).citeThis))
+    case "decision":
+      return decisionHtml(html)
+    case "changelog": {
+      const feed = note.protected ? "" : `<p class="release-feed"><a href="${escapeAttr(releasesUrl(note))}">${escapeAttr(t(note.lang).rss)}</a></p>`
+      return changelogHtml(html, note.lang, feed)
+    }
+    case "dialogue": {
+      // `speakers` lists names, or maps them to pictures.
+      const raw = note.source.fm.speakers
+      const names = Array.isArray(raw) ? raw.map(plain) : raw && typeof raw === "object" ? Object.keys(raw) : []
+      return dialogueHtml(html, { ...Object.fromEntries(names.map((n) => [n, undefined])), ...note.speakers })
+    }
+    case "highlights":
+      return highlightsHtml(html)
+    case "glossary": {
+      const { intro, entries } = glossaryEntries(html)
+      return glossaryHtml(intro, [...entries, ...termNotes(note, entries)], note.lang, t(note.lang).glossaryLetters)
+    }
+    case "trip":
+      return tripHtml(note, html)
+    case "syllabus": {
+      const { intro, parts } = sections(html)
+      return syllabusHtml(intro, lessonsOf(note, parts), note.lang)
+    }
     case undefined:
       return collectionKindOf(note) === "recipes" ? recipeHtml(html) : html
     default:

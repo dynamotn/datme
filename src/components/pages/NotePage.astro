@@ -32,9 +32,11 @@ import Outdated from "../Outdated.astro"
 import Collection from "../Collection.astro"
 import CvHead from "../CvHead.astro"
 import LinksHead from "../LinksHead.astro"
-import { isCollection, itemOf, layoutHtml } from "~/lib/note-layouts"
+import { isCollection, itemOf, layoutHtml, releasesUrl } from "~/lib/note-layouts"
 import ItemHead from "../ItemHead.astro"
 import Infobox from "../Infobox.astro"
+import PaperHead from "../PaperHead.astro"
+import DecisionHead from "../DecisionHead.astro"
 import { isOutdated } from "~/scripts/outdated"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 import { episodesPath } from "~/lib/feed"
@@ -94,8 +96,14 @@ const item = itemOf(note)
 // A now page says when it was last true, and warns once it is three months old.
 const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefined
 const NOW_STALE_YEARS = 0.25
-// Podcast apps find the feed of a collection of episodes from its page.
-const feed = note.layout === "episodes" && !note.protected ? slugToUrl(episodesPath(note)) : undefined
+// Podcast apps find the feed of a collection of episodes from its page, and a changelog has a feed of its versions.
+const feed = note.protected
+  ? undefined
+  : note.layout === "episodes"
+    ? slugToUrl(episodesPath(note))
+    : note.layout === "changelog"
+      ? releasesUrl(note)
+      : undefined
 ---
 
 <Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} feed={feed} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
@@ -152,6 +160,8 @@ const feed = note.layout === "episodes" && !note.protected ? slugToUrl(episodesP
         <header class="note-head">
           <NoteMeta note={note} words={r.words} look={look}>
             <h1 class="note-title p-name">{title}</h1>
+            {note.layout === "paper" && !note.protected && <PaperHead note={note} />}
+            {note.layout === "decision" && !note.protected && <DecisionHead note={note} />}
           </NoteMeta>
           <NoteTools note={note} />
         </header>

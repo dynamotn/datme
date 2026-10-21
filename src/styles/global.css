@@ -5997,3 +5997,592 @@ summary.ntn-col-head {
     display: none;
   }
 }
+/* A paper: authors under the title, the abstract in a box, the text in two columns where it fits. */
+.layout-paper {
+  --measure: 60rem;
+}
+.paper-head {
+  margin: 10px 0 4px;
+  font-family: var(--font-ui);
+}
+.paper-head p {
+  margin: 0 0 4px;
+}
+.paper-authors {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.paper-affiliations,
+.paper-venue {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.paper-venue {
+  font-style: italic;
+}
+.paper-links {
+  margin-top: 8px !important;
+}
+.paper-cite {
+  margin: 0 0 1.2em;
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.paper-cite > summary {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+.paper-cite > summary::-webkit-details-marker {
+  display: none;
+}
+.paper-cite > summary::before {
+  content: "❝ ";
+  color: var(--accent);
+}
+.paper-reference {
+  margin: 12px 0 8px;
+}
+.paper-abstract {
+  margin: 0 0 1.6em;
+  padding: 16px 20px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--surface-2);
+}
+.prose .paper-abstract > h2:first-child {
+  margin: 0 0 8px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.paper-abstract > :last-child {
+  margin-bottom: 0;
+}
+.paper-body {
+  columns: 2 21rem;
+  column-gap: 2.5rem;
+}
+.paper-body > :first-child {
+  margin-top: 0;
+}
+.paper-body h2,
+.paper-body h3 {
+  break-after: avoid;
+}
+.paper-body figure,
+.paper-body pre,
+.paper-body table,
+.paper-body blockquote,
+.paper-body .callout,
+.paper-body .katex-display {
+  break-inside: avoid;
+}
+.paper-body .references,
+.paper-body .footnotes {
+  column-span: all;
+}
+
+/* A decision record: its status, who decided, and what it replaced or what replaced it. */
+.adr-banner {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--clay);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--clay-soft);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+}
+.adr-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin: 10px 0 4px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.adr-status {
+  --hue: var(--muted);
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--hue) 18%, var(--surface));
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.adr-status-proposed {
+  --hue: #eab308;
+}
+.adr-status-accepted {
+  --hue: #22c55e;
+}
+.adr-status-rejected {
+  --hue: #ef4444;
+}
+.adr-status-deprecated {
+  --hue: #f97316;
+}
+.adr-status-superseded {
+  --hue: #a855f7;
+}
+.adr-section {
+  margin: 1.4em 0;
+  padding: 2px 18px;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.adr-section > h2:first-child {
+  margin-top: 0.8em;
+  font-size: 1.15rem;
+}
+.adr-context {
+  border-left-color: var(--line-strong);
+}
+.adr-options {
+  border-left-color: var(--clay);
+}
+.adr-decision {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+}
+.adr-consequences {
+  border-left-color: var(--ink-2);
+}
+
+/* A changelog: versions down the page, kinds of change as coloured tags. */
+.release-feed {
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.release {
+  margin: 0 0 2em;
+  padding-top: 0.4em;
+  border-top: 1px solid var(--line);
+}
+.release > h2:first-child {
+  margin: 0.4em 0 0;
+  font-family: var(--font-code);
+  font-size: 1.35rem;
+}
+.release-date {
+  margin: 2px 0 0.8em;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.prose h3.change-tag {
+  display: inline-block;
+  margin: 1em 0 0.4em;
+  --hue: var(--muted);
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--hue) 18%, var(--surface));
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.prose h3.change-added {
+  --hue: #22c55e;
+}
+.prose h3.change-changed {
+  --hue: #3b82f6;
+}
+.prose h3.change-deprecated {
+  --hue: #f97316;
+}
+.prose h3.change-removed {
+  --hue: #ef4444;
+}
+.prose h3.change-fixed {
+  --hue: #a855f7;
+}
+.prose h3.change-security {
+  --hue: #eab308;
+}
+
+/* A dialogue: bubbles on either side, a colour per speaker. */
+.dialogue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 1.2em 0;
+}
+.dialogue-line {
+  --hue: #3b82f6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: min(36rem, 88%);
+}
+.dialogue-line.is-end {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.dialogue-line.voice-1 {
+  --hue: #22c55e;
+}
+.dialogue-line.voice-2 {
+  --hue: #a855f7;
+}
+.dialogue-line.voice-3 {
+  --hue: #f97316;
+}
+.dialogue-line.voice-4 {
+  --hue: #eab308;
+}
+.dialogue-line.voice-5 {
+  --hue: #ef4444;
+}
+.prose .dialogue-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 2px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.dialogue-line.is-more .dialogue-who {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.prose .dialogue-avatar {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.dialogue-bubble {
+  padding: 8px 14px;
+  border-radius: 4px 16px 16px 16px;
+  background: color-mix(in srgb, var(--hue) 16%, var(--surface));
+  color: var(--ink);
+}
+.dialogue-line.is-end .dialogue-bubble {
+  border-radius: 16px 4px 16px 16px;
+}
+.dialogue-bubble > p {
+  margin: 0;
+}
+
+/* Reading highlights: a card for each, with where it is and the reader's note. */
+.highlight-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 1.2em 0;
+}
+.highlight-card {
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #eab308;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+/* Specific enough to win over a look's own quotes. */
+.prose figure.highlight-card > blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-read);
+  font-size: 1.05em;
+}
+.highlight-card blockquote > :last-child,
+.highlight-note > :last-child {
+  margin-bottom: 0;
+}
+.highlight-note {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 0.92em;
+  color: var(--ink-2);
+}
+.highlight-note ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+.highlight-card figcaption {
+  margin-top: 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* A glossary: a bar of letters, then terms A–Z. */
+.glossary-letters {
+  position: sticky;
+  top: calc(var(--header-h) + 4px);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0 0 1.4em;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.glossary-letters > a,
+.glossary-letters > span {
+  min-width: 1.9em;
+  padding: 3px 0;
+  border-radius: 6px;
+  text-align: center;
+}
+.prose .glossary-letters > a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+.glossary-letters > a:hover,
+.glossary-letters > a:focus-visible {
+  background: var(--accent-soft);
+}
+.glossary-letters > span {
+  color: var(--muted);
+  opacity: 0.45;
+}
+.glossary-group {
+  scroll-margin-top: calc(var(--header-h) + 64px);
+}
+.prose .glossary-letter {
+  margin: 1.4em 0 0.4em;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+}
+.glossary-group dl {
+  margin: 0;
+}
+.glossary-entry {
+  padding: 8px 0;
+  scroll-margin-top: calc(var(--header-h) + 64px);
+}
+.glossary-entry:target {
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+}
+.glossary-entry dt {
+  font-weight: 700;
+}
+.glossary-entry dt .heading-anchor {
+  margin-left: 6px;
+}
+.glossary-entry dd {
+  margin: 2px 0 0;
+  color: var(--ink-2);
+}
+.glossary-entry dd > :first-child {
+  margin-top: 0;
+}
+.glossary-entry dd > :last-child {
+  margin-bottom: 0;
+}
+
+/* A trip: the map of the route, then each stop down a line, its pictures in a strip. */
+.trip-map {
+  height: min(50vh, 420px);
+  margin: 0 0 28px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.trip-stops {
+  counter-reset: stop;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trip-stop {
+  position: relative;
+  counter-increment: stop;
+  margin: 0;
+  padding: 0 0 24px 44px;
+  border-left: 2px solid var(--line);
+  margin-left: 14px;
+}
+.trip-stop:last-child {
+  border-left-color: transparent;
+}
+.trip-stop::before {
+  content: counter(stop);
+  position: absolute;
+  top: 0;
+  left: -15px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+}
+.prose .trip-stop > h2:first-child {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+.trip-body > :last-child {
+  margin-bottom: 0;
+}
+.trip-strip {
+  display: flex;
+  gap: 10px;
+  margin: 1em 0;
+  padding-bottom: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.trip-strip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.trip-strip .gallery-item {
+  flex: none;
+  margin: 0;
+  scroll-snap-align: start;
+}
+.prose .trip-strip img {
+  height: 180px;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  cursor: zoom-in;
+}
+.trip-strip figcaption {
+  max-width: 16rem;
+  margin-top: 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* A syllabus: numbered lessons, each to tick once done, and the progress so far. */
+.syllabus-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 1.2em;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.syllabus-progress progress {
+  flex: 1;
+  max-width: 18rem;
+  height: 8px;
+  accent-color: var(--accent);
+}
+.syllabus {
+  counter-reset: lesson;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lesson {
+  counter-increment: lesson;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.lesson-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+.lesson-head::before {
+  content: counter(lesson);
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+}
+.lesson.is-done .lesson-head::before {
+  content: "✓";
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.prose .lesson-head > h2 {
+  flex: 1;
+  min-width: 12rem;
+  margin: 0;
+  font-size: 1.15rem;
+}
+.lesson-time,
+.lesson-done {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.lesson-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.lesson-done input {
+  accent-color: var(--accent);
+}
+.lesson-body {
+  margin: 8px 0 0 44px;
+}
+.lesson-body > :first-child {
+  margin-top: 0;
+}
+.lesson-body > :last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 560px) {
+  .lesson-body {
+    margin-left: 0;
+  }
+  .dialogue-line {
+    max-width: 94%;
+  }
+  .trip-stop {
+    padding-left: 30px;
+  }
+}

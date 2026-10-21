@@ -266,5 +266,20 @@
   "snippetsFilter": "按语言筛选",
   "season": "第 {n} 季",
   "episodeWith": "嘉宾:",
-  "episodesFeed": "播客订阅 (RSS)"
+  "episodesFeed": "播客订阅 (RSS)",
+  "citeThis": "引用",
+  "abstract": "摘要",
+  "statusProposed": "提议中",
+  "statusAccepted": "已接受",
+  "statusRejected": "已拒绝",
+  "statusDeprecated": "已弃用",
+  "statusSuperseded": "已取代",
+  "deciders": "决策者",
+  "supersedes": "取代",
+  "supersededBy": "取代者",
+  "supersededNotice": "此决策已被{link}取代。",
+  "supersededNoticeAlone": "此决策已被取代。",
+  "glossaryLetters": "跳转到字母",
+  "lessonDone": "完成",
+  "syllabusProgress": "已完成 {done}/{total} 课"
 }
