@@ -100,8 +100,8 @@ describe("explainDir, explainLook and explainFrame", () => {
 })
 
 describe("startsDark", () => {
-  test("darkroom and terminal start dark, the others light", () => {
-    const dark = ["darkroom", "terminal"]
+  test("darkroom, terminal and blueprint start dark, the others light", () => {
+    const dark = ["darkroom", "terminal", "blueprint"]
     for (const s of STYLES) expect(startsDark(s)).toBe(dark.includes(s))
   })
 })

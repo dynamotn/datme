@@ -107,8 +107,8 @@ export function frameOf(note: Pick<Note, "chrome" | "layout"> | undefined): Fram
   return explainFrame(note).value
 }
 
-/** Styles drawn dark first: a gallery wall at night, a screen of phosphor. */
-const DARK_FIRST: readonly Style[] = ["darkroom", "terminal"]
+/** Styles drawn dark first: a gallery wall at night, a screen of phosphor, blue drawing paper. */
+const DARK_FIRST: readonly Style[] = ["darkroom", "terminal", "blueprint"]
 
 /** Whether a style opens dark when the reader has not chosen a scheme. */
 export function startsDark(look: Style): boolean {

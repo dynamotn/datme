@@ -13,7 +13,9 @@
   [data-look="resume"],
   [data-look="resume"][data-theme="dark"],
   [data-look="terminal"],
-  [data-look="terminal"][data-theme="dark"] {
+  [data-look="terminal"][data-theme="dark"],
+  [data-look="blueprint"],
+  [data-look="blueprint"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;

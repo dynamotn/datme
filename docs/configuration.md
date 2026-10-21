@@ -88,7 +88,8 @@ archiveDeadLinks: true        # dead links found by `check --external` point to 
 appearance:
   style: notebook             # notebook: index cards on dotted paper; classic: a quiet serif blog;
                               # garden: notes as plants in a bed, sized by how grown they are;
-                              # terminal: a monospace TTY in green phosphor (theme.accent for amber)
+                              # terminal: a monospace TTY in green phosphor (theme.accent for amber);
+                              # blueprint: grid paper, mono lettering, diagrams on drawing sheets
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
@@ -168,6 +169,13 @@ printout on ruled paper. The phosphor is green; `theme.accent` sets another
 (`"#ffb000"` for amber), and the text is mixed from it so any accent stays
 readable. The reader's legible-font and high-contrast options replace the
 monospace and drop the glow.
+
+The `blueprint` style is an engineering drawing: blue grid paper with white
+and cyan line work (it opens dark), or white paper with blue ink in light mode.
+Titles and headings are lettered in Space Mono capitals, sections are numbered
+`01 /`, `02 /`, and every Mermaid, D2, Typst or Excalidraw diagram sits on a
+framed drawing sheet with a title block in its corner (`DWG 01 · MERMAID ·
+SCALE NTS`). It prints on white without the grid.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,

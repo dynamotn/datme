@@ -12,6 +12,7 @@ export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
   resume: { light: "#e9e7e2", dark: "#1b1c1e" },
   darkroom: { light: "#f4f2ee", dark: "#0b0b0b" },
   terminal: { light: "#f3f1e7", dark: "#090c09" },
+  blueprint: { light: "#f7fafd", dark: "#0e3a72" },
 }
 
 /** The web app manifest: lets readers install the garden and open it like an app. */

@@ -1,0 +1,353 @@
+/*
+ * Blueprint look: an engineering drawing. Blue grid paper with white and cyan
+ * line work in dark mode, white paper ruled in pale blue with blue ink in
+ * light mode. Headings are lettered in Space Mono capitals, boxes are square
+ * and outlined, and each diagram (Mermaid, D2, Typst, Excalidraw) sits on a
+ * drawing sheet with a numbered title block in its corner. Everything is
+ * scoped to [data-look="blueprint"].
+ */
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+
+[data-look="blueprint"] {
+  --bg: #f7fafd;
+  --surface: #ffffff;
+  --surface-2: #eaf1fa;
+  --surface-3: #dce7f5;
+  --ink: #0b2f63;
+  --ink-2: #1d4378;
+  --muted: #3c5a85;
+  --line: #b9cde8;
+  --line-strong: #0b2f63;
+  --accent: #0050b3;
+  --accent-2: #0050b3;
+  --accent-soft: rgb(0 80 179 / 0.1);
+  --clay: #0050b3;
+  --clay-soft: rgb(0 80 179 / 0.08);
+  --title-grad: linear-gradient(135deg, #0b2f63 0%, #0050b3 100%);
+  --grid: rgb(0 80 179 / 0.07);
+  --grid-major: rgb(0 80 179 / 0.14);
+  --shadow: none;
+  --shadow-lg: 0 0 0 1px var(--line-strong);
+  --font-heading: "Space Mono", "Iosevka Dynamo", ui-monospace, monospace;
+  --radius: 0;
+  --radius-sm: 0;
+}
+
+[data-look="blueprint"][data-theme="dark"] {
+  --bg: #0e3a72;
+  --surface: #11427f;
+  --surface-2: #164b8c;
+  --surface-3: #1c5599;
+  --ink: #eef5ff;
+  --ink-2: #d4e4f8;
+  --muted: #b3cbea;
+  --line: #3d6aa6;
+  --line-strong: #d4e4f8;
+  --accent: #8ae6ff;
+  --accent-2: #8ae6ff;
+  --accent-soft: rgb(138 230 255 / 0.14);
+  --on-accent: #08264d;
+  --clay: #8ae6ff;
+  --clay-soft: rgb(138 230 255 / 0.12);
+  --title-grad: linear-gradient(135deg, #8ae6ff 0%, #eef5ff 100%);
+  --grid: rgb(255 255 255 / 0.07);
+  --grid-major: rgb(255 255 255 / 0.15);
+}
+
+/* ---------- the paper: a fine grid, a coarser one every five squares ---------- */
+[data-look="blueprint"] body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:
+    100px 100px,
+    100px 100px,
+    20px 20px,
+    20px 20px;
+}
+[data-look="blueprint"].high-contrast body {
+  background-image: none;
+}
+[data-look="blueprint"] ::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+[data-look="blueprint"] :focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  border-radius: 0;
+}
+
+/* ---------- header and frame: drawn, not shaded ---------- */
+[data-look="blueprint"] .site-header {
+  background: var(--bg);
+  border-bottom: 2px solid var(--line-strong);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-look="blueprint"] .brand-mark {
+  border-radius: 0;
+  background: none;
+  border: 2px solid var(--line-strong);
+  color: var(--ink);
+  box-shadow: none;
+  font-family: var(--font-heading);
+}
+[data-look="blueprint"] .brand-name,
+[data-look="blueprint"] .main-nav a,
+[data-look="blueprint"] .panel-title {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+[data-look="blueprint"] .main-nav a {
+  font-size: 12.5px;
+}
+[data-look="blueprint"] .main-nav a,
+[data-look="blueprint"] .icon-btn,
+[data-look="blueprint"] .search-trigger,
+[data-look="blueprint"] .lang-switch summary {
+  border-radius: 0;
+}
+[data-look="blueprint"] .search-trigger {
+  border-color: var(--line);
+  background: var(--bg);
+  box-shadow: none;
+}
+[data-look="blueprint"] .sidebar-left {
+  border-right: 2px solid var(--line-strong);
+}
+
+/* ---------- lettering: mono capitals for titles and headings ---------- */
+[data-look="blueprint"] .note-title,
+[data-look="blueprint"] .page-head h1,
+[data-look="blueprint"] .hero h1,
+[data-look="blueprint"] .nb-hero h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 1.25rem + 1.4vw, 2.3rem);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+[data-look="blueprint"] .note.is-blog .note-title {
+  font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.5rem);
+}
+[data-look="blueprint"] .gradient-text {
+  background: none;
+  color: var(--ink);
+}
+/* The head of a note is the drawing's title strip: a double rule under it. */
+[data-look="blueprint"] .note-head {
+  border-bottom: 3px double var(--line-strong);
+}
+[data-look="blueprint"] .prose {
+  counter-reset: blueprint-section blueprint-sheet;
+}
+[data-look="blueprint"] .prose h1,
+[data-look="blueprint"] .prose h2,
+[data-look="blueprint"] .prose h3,
+[data-look="blueprint"] .prose h4,
+[data-look="blueprint"] .prose h5 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+[data-look="blueprint"] .prose h2 {
+  font-size: 1.05em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--line-strong);
+}
+[data-look="blueprint"] .prose h3,
+[data-look="blueprint"] .prose h4,
+[data-look="blueprint"] .prose h5 {
+  font-size: 0.9em;
+}
+/* Sections are numbered like the zones of a sheet. */
+[data-look="blueprint"] .prose h2::before {
+  counter-increment: blueprint-section;
+  content: counter(blueprint-section, decimal-leading-zero) " / ";
+  content: counter(blueprint-section, decimal-leading-zero) " / " / "";
+  color: var(--accent);
+}
+[data-look="blueprint"] .prose a,
+[data-look="blueprint"] .prose a.internal {
+  color: var(--accent);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+@media (hover: hover) {
+  [data-look="blueprint"] .prose a:hover,
+  [data-look="blueprint"] .prose a.internal:hover {
+    background: var(--accent-soft);
+    text-decoration-style: solid;
+  }
+}
+[data-look="blueprint"] .prose blockquote {
+  border-left: 2px solid var(--accent);
+  font-style: normal;
+  color: var(--ink-2);
+}
+[data-look="blueprint"] .prose hr {
+  border: 0;
+  border-top: 1px dashed var(--line-strong);
+}
+[data-look="blueprint"] .prose :not(pre) > code {
+  border-radius: 0;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+[data-look="blueprint"] .prose pre {
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  box-shadow: none;
+}
+[data-look="blueprint"] .prose img,
+[data-look="blueprint"] .prose .table-wrap,
+[data-look="blueprint"] .prose .callout {
+  border-radius: 0;
+}
+[data-look="blueprint"] .prose table th {
+  font-family: var(--font-heading);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- drawing sheets: each diagram framed, with its title block ---------- */
+[data-look="blueprint"] .prose pre.mermaid,
+[data-look="blueprint"] .prose figure.diagram,
+[data-look="blueprint"] .prose .drawing.generated {
+  counter-increment: blueprint-sheet;
+  margin: 1.4em 0 1.6em;
+  padding: 18px 18px 10px;
+  border: 2px solid var(--line-strong);
+  outline: 1px solid var(--line-strong);
+  outline-offset: -8px;
+  background: var(--surface);
+}
+[data-look="blueprint"] .prose pre.mermaid::after,
+[data-look="blueprint"] .prose figure.diagram::after,
+[data-look="blueprint"] .prose .drawing.generated::after {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  font: 700 10.5px/1.4 var(--font-heading);
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: pre;
+  color: var(--ink);
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  DIAGRAM  ·  SCALE NTS";
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  DIAGRAM  ·  SCALE NTS" / "";
+}
+[data-look="blueprint"] .prose pre.mermaid::after {
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  MERMAID  ·  SCALE NTS";
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  MERMAID  ·  SCALE NTS" / "";
+}
+[data-look="blueprint"] .prose figure.diagram-d2::after {
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  D2  ·  SCALE NTS";
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  D2  ·  SCALE NTS" / "";
+}
+[data-look="blueprint"] .prose .drawing.generated::after {
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  EXCALIDRAW  ·  SCALE NTS";
+  content: "DWG " counter(blueprint-sheet, decimal-leading-zero) "  ·  EXCALIDRAW  ·  SCALE NTS" / "";
+}
+
+/* ---------- boxes: square and outlined, the grid showing through ---------- */
+[data-look="blueprint"] .chip {
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-heading);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+[data-look="blueprint"] .chip.stage,
+[data-look="blueprint"] .chip.type {
+  border-color: var(--accent);
+  background: transparent;
+  color: var(--accent);
+}
+[data-look="blueprint"] .properties,
+[data-look="blueprint"] .backlink,
+[data-look="blueprint"] .card,
+[data-look="blueprint"] .index-card,
+[data-look="blueprint"] .stage-card,
+[data-look="blueprint"] .folder-card,
+[data-look="blueprint"] .note-row,
+[data-look="blueprint"] .modal,
+[data-look="blueprint"] .prefs-panel,
+[data-look="blueprint"] .lang-switch ul,
+[data-look="blueprint"] .graph-box {
+  border-radius: 0;
+  box-shadow: none;
+}
+[data-look="blueprint"] .backlink,
+[data-look="blueprint"] .card,
+[data-look="blueprint"] .index-card,
+[data-look="blueprint"] .stage-card,
+[data-look="blueprint"] .folder-card {
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+@media (hover: hover) {
+  [data-look="blueprint"] .backlink:hover,
+  [data-look="blueprint"] .card:hover {
+    transform: none;
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+}
+[data-look="blueprint"] .backlinks {
+  border-top: 2px solid var(--line-strong);
+}
+[data-look="blueprint"] .backlinks h2 {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+[data-look="blueprint"] .backlinks h2 .count {
+  border-radius: 0;
+}
+[data-look="blueprint"] .toc li a.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  [data-look="blueprint"] .prose pre.mermaid,
+  [data-look="blueprint"] .prose figure.diagram,
+  [data-look="blueprint"] .prose .drawing.generated {
+    padding: 12px 10px 8px;
+  }
+}
+
+@media print {
+  [data-look="blueprint"] body {
+    background: #fff;
+  }
+  [data-look="blueprint"] .prose pre.mermaid,
+  [data-look="blueprint"] .prose figure.diagram,
+  [data-look="blueprint"] .prose .drawing.generated {
+    break-inside: avoid;
+    background: #fff;
+  }
+}

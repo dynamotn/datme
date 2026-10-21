@@ -35,3 +35,14 @@ describe("terminal look", () => {
     expect(html).toContain('<meta name="theme-color" content="#090c09" media="(prefers-color-scheme: dark)"')
   })
 })
+
+describe("blueprint look", () => {
+  test("a note in a blueprint folder links its sheet, opens dark and keeps its diagrams", () => {
+    const html = read("Plans/Pump/index.html")
+    expect(html).toContain('data-look="blueprint"')
+    expect(html).toContain('data-scheme-default="dark"')
+    expect(lookSheet(html)).toBe("blueprint")
+    expect(html).toContain('<pre class="mermaid">')
+    expect(html).toContain('<figure class="diagram diagram-d2">')
+  })
+})

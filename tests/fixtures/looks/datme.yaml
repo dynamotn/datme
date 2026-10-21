@@ -6,3 +6,4 @@ publish: all
 appearance:
   folders:
     Shell: terminal
+    Plans: blueprint

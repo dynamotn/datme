@@ -82,6 +82,32 @@ describe("terminal look", () => {
   })
 })
 
+describe("blueprint look", () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/blueprint.css"), "utf8")
+
+  test("every rule is scoped to the blueprint look", () => {
+    expectScoped("blueprint.css", "blueprint")
+  })
+
+  test("each kind of diagram sits on a numbered sheet with a title block", () => {
+    for (const sheet of ["pre.mermaid", "figure.diagram-d2", ".drawing.generated"]) {
+      expect(rule(css, `[data-look="blueprint"] .prose ${sheet}::after`)).toContain("counter(blueprint-sheet, decimal-leading-zero)")
+    }
+    for (const kind of ["MERMAID", "D2", "EXCALIDRAW"]) expect(css).toContain(`  ·  ${kind}  ·  SCALE NTS" / ""`)
+    expect(css).toContain("counter-increment: blueprint-sheet")
+  })
+
+  test("its lettering is decoration that screen readers skip", () => {
+    for (const m of css.matchAll(/content: ([^;]+);\n\s*content: (.+);/g)) expect(m[2]).toBe(`${m[1]} / ""`)
+  })
+
+  test("it prints on white paper, without its grid", () => {
+    const print = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/print.css"), "utf8")
+    expect(print).toContain('[data-look="blueprint"][data-theme="dark"]')
+    expect(css.slice(css.indexOf("@media print"))).toContain("background: #fff")
+  })
+})
+
 describe("the monospace font", () => {
   const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
   test("falls back to local faces sized to Iosevka's metrics, right after it in both looks", () => {
