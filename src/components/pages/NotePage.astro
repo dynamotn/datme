@@ -32,6 +32,7 @@ import CvHead from "../CvHead.astro"
 import LinksHead from "../LinksHead.astro"
 import { isCollection, itemOf, layoutHtml } from "~/lib/note-layouts"
 import ItemHead from "../ItemHead.astro"
+import Infobox from "../Infobox.astro"
 import { isOutdated } from "~/scripts/outdated"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
 
@@ -78,6 +79,8 @@ const look = preview.style ?? explained.look.value
 const frame = preview.chrome ?? explained.frame.value
 const stacks = frame === "full"
 const garden = look === "garden"
+// A wiki page boxes the note's properties beside its text, with its contents above it.
+const wiki = look === "wiki"
 const stageIcon = (n: Note) => (n.stage ? site.stages[n.stage]?.icon : undefined)
 // A book, a film or a project of a collection shows its cover beside its title.
 const item = itemOf(note)
@@ -98,7 +101,7 @@ const NOW_STALE_YEARS = 0.25
     transition:name="note"
   >
     {
-      note.banner && (
+      note.banner && !wiki && (
         <figure class="banner">
           <img src={note.banner} alt="" style={`object-position: ${note.bannerPos}`} fetchpriority="high" decoding="async" />
         </figure>
@@ -194,6 +197,12 @@ const NOW_STALE_YEARS = 0.25
               </a>
             </p>
           )}
+          {wiki && <Infobox note={note} title={title} />}
+          {wiki && (
+            <div class="wiki-toc">
+              <Toc headings={r.headings} lang={note.lang} />
+            </div>
+          )}
           <div class="prose e-content" lang={original ? langMeta(original.lang).html : undefined} set:html={html} />
           {isCollection(note.layout) && <Collection note={note} kind={note.layout} />}
         </>
@@ -234,7 +243,7 @@ const NOW_STALE_YEARS = 0.25
   {
     plain && related.length > 0 && (
       <section class="backlinks related">
-        <h2>{garden ? s.nearby : s.related}</h2>
+        <h2>{garden ? s.nearby : wiki ? s.seeAlso : s.related}</h2>
         <div class="backlink-grid">
           {related.map((r) => (
             <a class="backlink internal" href={r.note.url}>

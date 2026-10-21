@@ -8,6 +8,7 @@ import resumeCss from "~/styles/resume.css?url"
 import darkroomCss from "~/styles/darkroom.css?url"
 import terminalCss from "~/styles/terminal.css?url"
 import blueprintCss from "~/styles/blueprint.css?url"
+import wikiCss from "~/styles/wiki.css?url"
 import printCss from "~/styles/print.css?url"
 import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style } from "~/site.config"
@@ -118,7 +119,7 @@ const withRail = rail && frame === "full"
 const main = await Astro.slots.render("default")
 const railHtml = withRail && Astro.slots.has("rail") ? await Astro.slots.render("rail") : ""
 const hasMath = /class="katex[\s"]/.test(main) || /class="katex[\s"]/.test(railHtml)
-const LOOK_CSS: Partial<Record<Style, string>> = { notebook: notebookCss, garden: gardenCss, resume: resumeCss, darkroom: darkroomCss, terminal: terminalCss, blueprint: blueprintCss }
+const LOOK_CSS: Partial<Record<Style, string>> = { notebook: notebookCss, garden: gardenCss, resume: resumeCss, darkroom: darkroomCss, terminal: terminalCss, blueprint: blueprintCss, wiki: wikiCss }
 const lookCss = LOOK_CSS[look]
 ---
 

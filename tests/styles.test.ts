@@ -108,6 +108,24 @@ describe("blueprint look", () => {
   })
 })
 
+describe("wiki look", () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/wiki.css"), "utf8")
+
+  test("every rule is scoped to the wiki look", () => {
+    expectScoped("wiki.css", "wiki")
+  })
+
+  test("the infobox floats beside the text, and stacks above it on a phone", () => {
+    expect(rule(css, '[data-look="wiki"] .infobox')).toContain("float: right")
+    const phone = css.slice(css.indexOf("@media (max-width: 640px)"))
+    expect(rule(phone, '[data-look="wiki"] .infobox')).toContain("float: none")
+  })
+
+  test("the rail's contents give way to the box at the top", () => {
+    expect(rule(css, '[data-look="wiki"] .sidebar-right .toc')).toContain("display: none")
+  })
+})
+
 describe("the monospace font", () => {
   const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
   test("falls back to local faces sized to Iosevka's metrics, right after it in both looks", () => {

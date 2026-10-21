@@ -1,0 +1,43 @@
+---
+import type { Note } from "~/lib/vault"
+import { t } from "~/lib/i18n"
+import { noteProperties } from "~/lib/properties"
+import PropValue from "./PropValue.astro"
+
+interface Props {
+  note: Note
+  title: string
+}
+const { note, title } = Astro.props
+const s = t(note.lang)
+const rows = noteProperties(note)
+// The wiki look's box beside the text: the note's picture on top, then its properties.
+const image = note.protected ? undefined : (note.cover ?? note.banner)
+---
+
+{
+  (image || rows.length > 0) && (
+    <div class="infobox">
+      <table>
+        <caption>{title}</caption>
+        <tbody>
+          {image && (
+            <tr>
+              <td colspan="2" class="infobox-image">
+                <img src={image} alt="" decoding="async" />
+              </td>
+            </tr>
+          )}
+          {rows.map(([key, value]) => (
+            <tr>
+              <th scope="row">{key === "aliases" ? s.aliases : key}</th>
+              <td>
+                <PropValue value={value} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}

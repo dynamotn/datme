@@ -15,7 +15,9 @@
   [data-look="terminal"],
   [data-look="terminal"][data-theme="dark"],
   [data-look="blueprint"],
-  [data-look="blueprint"][data-theme="dark"] {
+  [data-look="blueprint"][data-theme="dark"],
+  [data-look="wiki"],
+  [data-look="wiki"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;

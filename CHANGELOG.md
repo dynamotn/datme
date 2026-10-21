@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A `terminal` style (`style: terminal` on a note, or `appearance.style` / `appearance.folders`) draws pages as a TTY: monospace throughout, the title after a `$` prompt with a cursor that blinks unless the reader prefers less motion, section headings after their `##` marks, square dashed boxes. It opens dark, green phosphor on black with faint scanlines, and its light mode is a teletype printout on ruled paper; `theme.accent` changes the phosphor (amber, say) while the text stays readable. The reader's legible-font and high-contrast choices still apply, and it prints on plain white paper.
 - A `blueprint` style draws pages as engineering drawings: blue grid paper with white and cyan line work (it opens dark), or white paper ruled in pale blue with blue ink in light mode; titles and headings in Space Mono capitals, numbered sections, square outlined boxes, and every Mermaid, D2, Typst or Excalidraw diagram framed as a drawing sheet with a numbered title block. It prints on white without the grid.
+- A `wiki` style makes a garden read like an encyclopedia: dense sans-serif text, serif titles over thin rules, blue links, an infobox floated beside the text with the note's cover (or banner) and its properties, a numbered contents box at the top, and related notes listed under "See also". On a phone the infobox comes first, full width.
 
 ## [3.1.0] - 2026-10-20
 

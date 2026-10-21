@@ -1,0 +1,411 @@
+/*
+ * Wiki look: a dense reference page. Sans-serif text at a smaller size, serif
+ * titles over thin rules, blue links without underlines, an infobox of the
+ * note's properties floated right (src/components/Infobox.astro) and its
+ * contents in a box at the top. Related notes become a "See also" list.
+ * Everything is scoped to [data-look="wiki"].
+ */
+
+[data-look="wiki"] {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --surface-2: #f8f9fa;
+  --surface-3: #eaecf0;
+  --ink: #202122;
+  --ink-2: #303233;
+  --muted: #54595d;
+  --line: #c8ccd1;
+  --line-strong: #a2a9b1;
+  --accent: #0645ad;
+  --accent-2: #0b0080;
+  --accent-soft: rgb(6 69 173 / 0.08);
+  --clay: #54595d;
+  --clay-soft: #eaecf0;
+  --title-grad: linear-gradient(#202122, #202122);
+  --shadow: none;
+  --shadow-lg: 0 4px 16px rgb(0 0 0 / 0.18);
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter Variable", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-read: var(--font-ui);
+  --font-heading: "Linux Libertine", "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --radius: 2px;
+  --radius-sm: 2px;
+  --measure: 62rem;
+}
+
+[data-look="wiki"][data-theme="dark"] {
+  --bg: #101418;
+  --surface: #161b21;
+  --surface-2: #1c2128;
+  --surface-3: #27292d;
+  --ink: #eaecf0;
+  --ink-2: #c8ccd1;
+  --muted: #a2a9b1;
+  --line: #3a3f45;
+  --line-strong: #54595d;
+  --accent: #88a3e8;
+  --accent-2: #a8bdf0;
+  --accent-soft: rgb(136 163 232 / 0.12);
+  --clay: #a2a9b1;
+  --clay-soft: #27292d;
+  --title-grad: linear-gradient(#eaecf0, #eaecf0);
+  --on-accent: #101418;
+}
+
+/* ---------- the page: white sheet on a grey ground ---------- */
+[data-look="wiki"] .site-header {
+  background: var(--bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-look="wiki"] .brand-mark {
+  border-radius: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  box-shadow: none;
+  font-family: var(--font-heading);
+}
+[data-look="wiki"] .brand-name {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.15rem;
+}
+[data-look="wiki"] .main {
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+[data-look="wiki"] .sidebar-left {
+  border-right: 0;
+}
+/* The contents box at the top of the note takes the rail's place. */
+[data-look="wiki"] .sidebar-right .toc {
+  display: none;
+}
+
+/* ---------- titles: serif over a thin rule ---------- */
+[data-look="wiki"] .note-title,
+[data-look="wiki"] .page-head h1 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: clamp(1.7rem, 1.4rem + 1vw, 2.1rem);
+  line-height: 1.25;
+  letter-spacing: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line-strong);
+}
+[data-look="wiki"] .note.is-blog .note-title {
+  font-size: clamp(1.8rem, 1.45rem + 1.2vw, 2.3rem);
+}
+[data-look="wiki"] .note-head {
+  gap: 8px;
+  padding-bottom: 0;
+  margin-bottom: 16px;
+  border-bottom: 0;
+}
+[data-look="wiki"] .note-meta {
+  font-size: 12.5px;
+}
+[data-look="wiki"] .chip {
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+/* ---------- text: dense, sans-serif, blue links ---------- */
+[data-look="wiki"] .prose {
+  font-size: calc(0.97rem * var(--reading-scale, 1));
+  line-height: 1.6;
+}
+[data-look="wiki"] .prose p,
+[data-look="wiki"] .prose ul,
+[data-look="wiki"] .prose ol,
+[data-look="wiki"] .prose blockquote,
+[data-look="wiki"] .prose pre,
+[data-look="wiki"] .prose figure {
+  margin-bottom: 0.7em;
+}
+[data-look="wiki"] .prose h1,
+[data-look="wiki"] .prose h2 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0;
+  margin: 1.2em 0 0.4em;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line-strong);
+  /* The rule stops at the infobox instead of running under it. */
+  display: flow-root;
+}
+[data-look="wiki"] .prose h1 {
+  font-size: 1.6em;
+}
+[data-look="wiki"] .prose h2 {
+  font-size: 1.45em;
+}
+[data-look="wiki"] .prose h3,
+[data-look="wiki"] .prose h4,
+[data-look="wiki"] .prose h5 {
+  font-weight: 700;
+  letter-spacing: 0;
+  margin: 1em 0 0.3em;
+}
+[data-look="wiki"] .prose h3 {
+  font-size: 1.15em;
+}
+[data-look="wiki"] .prose a,
+[data-look="wiki"] .prose a.internal {
+  color: var(--accent);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  text-decoration: none;
+}
+@media (hover: hover) {
+  [data-look="wiki"] .prose a:hover,
+  [data-look="wiki"] .prose a.internal:hover {
+    background: none;
+    text-decoration: underline;
+  }
+}
+[data-look="wiki"] .prose .broken-link {
+  color: #d73333;
+  border-bottom: 0;
+}
+[data-look="wiki"][data-theme="dark"] .prose .broken-link {
+  color: #fd7865;
+}
+[data-look="wiki"] .prose blockquote {
+  border-left: 3px solid var(--line);
+  font-style: normal;
+}
+[data-look="wiki"] .prose pre,
+[data-look="wiki"] .prose :not(pre) > code,
+[data-look="wiki"] .prose .table-wrap,
+[data-look="wiki"] .prose .callout,
+[data-look="wiki"] .prose img {
+  border-radius: 2px;
+}
+[data-look="wiki"] .prose table {
+  font-size: 0.92em;
+}
+[data-look="wiki"] .prose table th {
+  background: var(--surface-3);
+}
+
+/* ---------- infobox: the note's properties, floated right ---------- */
+[data-look="wiki"] .infobox {
+  float: right;
+  clear: right;
+  width: 22em;
+  max-width: 45%;
+  margin: 0 0 1em 1.4em;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+[data-look="wiki"] .infobox table {
+  width: 100%;
+  border-spacing: 3px;
+}
+[data-look="wiki"] .infobox caption {
+  padding: 2px 4px 6px;
+  font-family: var(--font-heading);
+  font-size: 1.25em;
+  font-weight: 700;
+  text-align: center;
+}
+[data-look="wiki"] .infobox th,
+[data-look="wiki"] .infobox td {
+  padding: 2px 4px;
+  vertical-align: top;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+[data-look="wiki"] .infobox th {
+  width: 36%;
+  font-weight: 700;
+}
+[data-look="wiki"] .infobox .infobox-image {
+  padding: 0 0 4px;
+  text-align: center;
+}
+[data-look="wiki"] .infobox img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+[data-look="wiki"] .infobox a {
+  color: var(--accent);
+}
+[data-look="wiki"] .infobox .prop-list {
+  display: inline;
+}
+[data-look="wiki"] .infobox .prop-list > * + *::before {
+  content: ", ";
+}
+[data-look="wiki"] .infobox .prop-map {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0 8px;
+  margin: 0;
+}
+[data-look="wiki"] .infobox .prop-map dd {
+  margin: 0;
+}
+/* A book or a project shows its cover and facts in the infobox, not beside its title. */
+[data-look="wiki"] .note:has(.infobox-image) .item-cover,
+[data-look="wiki"] .note:has(.infobox) .item-byline {
+  display: none;
+}
+
+/* ---------- contents: a box at the top, numbered ---------- */
+[data-look="wiki"] .wiki-toc .toc {
+  display: inline-block;
+  min-width: 14em;
+  max-width: 100%;
+  margin: 0 0 1em;
+  padding: 8px 14px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  font-size: 0.88rem;
+  counter-reset: wiki-h2;
+}
+[data-look="wiki"] .wiki-toc .panel-title {
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 0.95em;
+  letter-spacing: 0;
+  text-transform: none;
+}
+[data-look="wiki"] .wiki-toc .toc ol {
+  border-left: 0;
+  font-size: inherit;
+}
+[data-look="wiki"] .wiki-toc .toc li a {
+  margin: 0;
+  padding: 1px 0;
+  border-left: 0;
+  color: var(--accent);
+}
+[data-look="wiki"] .wiki-toc .toc li.d2 {
+  counter-increment: wiki-h2;
+  counter-reset: wiki-h3;
+}
+[data-look="wiki"] .wiki-toc .toc li.d3 {
+  counter-increment: wiki-h3;
+  padding-left: 1.6em;
+}
+[data-look="wiki"] .wiki-toc .toc li.d4 {
+  padding-left: 3.2em;
+}
+[data-look="wiki"] .wiki-toc .toc li.d2 a::before {
+  content: counter(wiki-h2) " ";
+  content: counter(wiki-h2) " " / "";
+  color: var(--ink);
+}
+[data-look="wiki"] .wiki-toc .toc li.d3 a::before {
+  content: counter(wiki-h2) "." counter(wiki-h3) " ";
+  content: counter(wiki-h2) "." counter(wiki-h3) " " / "";
+  color: var(--ink);
+}
+[data-look="wiki"] .wiki-toc .toc li a.active {
+  font-weight: 400;
+}
+
+/* ---------- backlinks and See also: plain lists of titles ---------- */
+[data-look="wiki"] .backlinks {
+  clear: both;
+  margin-top: 32px;
+  padding-top: 0;
+  border-top: 0;
+}
+[data-look="wiki"] .backlinks h2 {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 400;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line-strong);
+}
+[data-look="wiki"] .backlinks h2 .count {
+  font-family: var(--font-ui);
+  border-radius: 2px;
+}
+[data-look="wiki"] .backlink-grid {
+  display: block;
+  padding-left: 1.4em;
+}
+[data-look="wiki"] .backlink {
+  display: list-item;
+  list-style: disc;
+  padding: 0;
+  margin: 0 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+@media (hover: hover) {
+  [data-look="wiki"] .backlink:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  [data-look="wiki"] .backlink:hover strong {
+    text-decoration: underline;
+  }
+}
+[data-look="wiki"] .backlink strong {
+  color: var(--accent);
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+[data-look="wiki"] .backlink p {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  -webkit-line-clamp: 1;
+}
+[data-look="wiki"] .related .backlink p {
+  display: none;
+}
+
+/* ---------- cards and lists: flat and thin ---------- */
+[data-look="wiki"] .card,
+[data-look="wiki"] .index-card,
+[data-look="wiki"] .stage-card,
+[data-look="wiki"] .folder-card,
+[data-look="wiki"] .properties,
+[data-look="wiki"] .graph-box {
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+/* A phone has no room beside the text: the infobox comes first, full width. */
+@media (max-width: 640px) {
+  [data-look="wiki"] .infobox {
+    float: none;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 1em;
+  }
+  [data-look="wiki"] .wiki-toc .toc {
+    display: block;
+  }
+}
+
+@media print {
+  [data-look="wiki"] .main {
+    border: 0;
+  }
+  [data-look="wiki"] .infobox {
+    break-inside: avoid;
+    background: #fff;
+  }
+  [data-look="wiki"] .wiki-toc {
+    display: none;
+  }
+}

@@ -46,3 +46,31 @@ describe("blueprint look", () => {
     expect(html).toContain('<figure class="diagram diagram-d2">')
   })
 })
+
+describe("wiki look", () => {
+  test("a note boxes its picture and properties beside the text, its contents above it", () => {
+    const html = read("Wiki/Zettelkasten/index.html")
+    expect(html).toContain('data-look="wiki"')
+    expect(lookSheet(html)).toBe("wiki")
+    const box = html.match(/<div class="infobox"><table>[\s\S]*?<\/table><\/div>/)![0]
+    expect(box).toContain("<caption>Zettelkasten</caption>")
+    expect(box).toMatch(/<td colspan="2" class="infobox-image"><img src="[^"]*road[^"]*"/)
+    expect(box).toMatch(/<th scope="row">inventor<\/th><td><a href="\/Wiki\/Niklas-Luhmann" class="internal">Niklas Luhmann<\/a>/)
+    expect(box).toContain('<th scope="row">year</th><td><span>1951</span>')
+    // The infobox replaces the properties drawer and the banner; the box comes before the text.
+    expect(html).not.toContain('<details class="properties">')
+    expect(html.indexOf('class="infobox"')).toBeLessThan(html.indexOf('class="wiki-toc"'))
+    expect(html.indexOf('class="wiki-toc"')).toBeLessThan(html.indexOf('class="prose e-content"'))
+  })
+
+  test("related notes are listed under See also", () => {
+    const html = read("Wiki/Zettelkasten/index.html")
+    expect(html).toMatch(/<section class="backlinks related"[^>]*>\s*<h2[^>]*>See also<\/h2>/)
+  })
+
+  test("a note without properties or a picture has no infobox", () => {
+    const html = read("Wiki/Niklas-Luhmann/index.html")
+    expect(html).toContain('<th scope="row">born</th>')
+    expect(read("index.html")).not.toContain('class="infobox"')
+  })
+})

@@ -89,7 +89,8 @@ appearance:
   style: notebook             # notebook: index cards on dotted paper; classic: a quiet serif blog;
                               # garden: notes as plants in a bed, sized by how grown they are;
                               # terminal: a monospace TTY in green phosphor (theme.accent for amber);
-                              # blueprint: grid paper, mono lettering, diagrams on drawing sheets
+                              # blueprint: grid paper, mono lettering, diagrams on drawing sheets;
+                              # wiki: a dense reference page with an infobox of the note's properties
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
@@ -176,6 +177,12 @@ Titles and headings are lettered in Space Mono capitals, sections are numbered
 `01 /`, `02 /`, and every Mermaid, D2, Typst or Excalidraw diagram sits on a
 framed drawing sheet with a title block in its corner (`DWG 01 · MERMAID ·
 SCALE NTS`). It prints on white without the grid.
+
+The `wiki` style reads like an encyclopedia: dense sans-serif text, serif
+titles over thin rules and blue links. A note's `cover` (else its `banner`) and
+its properties fill an infobox floated right of the text, its headings make a
+numbered contents box at the top, and its related notes are listed under "See
+also". On a phone the infobox comes first, full width.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,
