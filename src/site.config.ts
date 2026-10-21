@@ -4,7 +4,7 @@ import path from "node:path"
 import { parseYaml } from "./lib/yaml"
 import { z } from "astro/zod"
 import { bundledThemes } from "shiki"
-import { folderDisplayName } from "./lib/slug"
+import { folderDisplayName, slugTag } from "./lib/slug"
 import { CONFIG_FILES } from "./lib/config-files"
 import { basePath, useSite } from "./lib/base"
 
@@ -460,6 +460,8 @@ const schema = z
         classic: z.array(z.string()).default([]),
         /** A style per folder, subfolders included, e.g. { Writing: classic }. */
         folders: z.record(z.string(), z.enum(STYLES)).default({}),
+        /** A style per tag, nested tags included, e.g. { poem: classic }; a note's first matching tag wins. */
+        tags: z.record(z.string(), z.enum(STYLES)).default({}),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
         /**
@@ -471,7 +473,7 @@ const schema = z
           .default(false),
       })
       .strict()
-      .default({ style: "notebook", classic: [], folders: {}, stream: [], seasons: false }),
+      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -679,6 +681,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       style: c.appearance.style,
       classic: c.appearance.classic.map((p) => p.replace(/^\/+|\/+$/g, "")),
       folders: Object.fromEntries(Object.entries(c.appearance.folders).map(([p, style]) => [p.replace(/^\/+|\/+$/g, ""), style])),
+      // Written as in a note's tags: `#poem`, `Poem` and `poem` are the same tag.
+      tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, Style] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
     },

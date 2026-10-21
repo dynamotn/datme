@@ -66,6 +66,7 @@ describe("describeLookRule and describeFrameRule", () => {
     expect(describeLookRule({ kind: "note" }, note)).toBe("style: in Writing/Essay.md")
     expect(describeLookRule({ kind: "note" }, { kind: "site" })).toBe("style: in the note")
     expect(describeLookRule({ kind: "layout", layout: "cv" }, note)).toBe("the default of layout: cv")
+    expect(describeLookRule({ kind: "tags", tag: "poem" }, note)).toBe("appearance.tags → poem")
     expect(describeLookRule({ kind: "folders", folder: "Writing" }, note)).toBe("appearance.folders → Writing")
     expect(describeLookRule({ kind: "classic", folder: "Writing" }, note)).toBe("appearance.classic → Writing")
     expect(describeLookRule({ kind: "site" }, note)).toBe("appearance.style")
@@ -84,6 +85,15 @@ describe("configLines", () => {
       { where: "frontmatter of Writing/Essay.md", code: "style: garden\nchrome: minimal" },
       { where: "datme.yaml, for the whole folder", code: "appearance:\n  folders:\n    Writing: garden" },
     ])
+  })
+  test("a tagged note: its tag in datme.yaml too, between its frontmatter and its folder", () => {
+    expect(configLines({ ...note, tag: "poem/haiku" }, { style: "classic", chrome: "minimal" })).toEqual([
+      { where: "frontmatter of Writing/Essay.md", code: "style: classic\nchrome: minimal" },
+      { where: "datme.yaml, for every note tagged poem/haiku", code: "appearance:\n  tags:\n    poem/haiku: classic" },
+      { where: "datme.yaml, for the whole folder", code: "appearance:\n  folders:\n    Writing: classic" },
+    ])
+    // A tag has nothing to say about a chrome.
+    expect(configLines({ ...note, tag: "poem" }, { chrome: "minimal" })).toHaveLength(1)
   })
   test("a note at the vault's root: the whole site instead of a folder", () => {
     expect(configLines({ kind: "note", file: "About.md", dir: "" }, { style: "classic" })).toEqual([

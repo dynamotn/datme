@@ -415,6 +415,8 @@ appearance:
   folders: {}
 #    Writing: manuscript
 #  seasons: true               # the garden's colours follow the season
+  tags: {}                    # a style per tag, before the folder's
+#    poem: classic
 
 # Columns of links in the footer, each a heading and entries written like nav.
 footer: {}

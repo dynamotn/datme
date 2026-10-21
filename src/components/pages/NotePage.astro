@@ -75,10 +75,12 @@ const jsonLd = noteLd(note, { title, description: r.description, image, words: r
 // A résumé and a gallery reshape the note's text; a page with a layout is a destination, not a note among others.
 const html = layoutHtml(note, r.html)
 const plain = !note.layout
+const ownLook = explainLook(note)
 const explained = {
-  look: explainLook(note),
+  look: ownLook,
   frame: explainFrame(note),
-  target: { kind: "note", file: note.source.key + ".md", dir: note.dir } as const,
+  // `datme dev` offers to style every note of its tag: the one that styles it now, else its first.
+  target: { kind: "note", file: note.source.key + ".md", dir: note.dir, tag: ownLook.rule.kind === "tags" ? ownLook.rule.tag : note.tags[0] } as const,
 }
 const preview = previewOf(Astro.url)
 const look = preview.style ?? explained.look.value

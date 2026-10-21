@@ -100,6 +100,9 @@ appearance:
     Writing: classic
     Garden: garden
   # classic: [Writing]        # older spelling of `folders: { Writing: classic }`
+  tags:                       # a style per tag, nested tags included (poem/haiku follows poem);
+    poem: classic             # a note's first tag found here wins, and beats its folder
+    til: notebook
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
   seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
 

@@ -187,7 +187,7 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, stream: [], seasons: false })
+    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false })
   })
 
   test("the garden style and a style per folder", () => {
@@ -207,6 +207,12 @@ describe("menu and appearance", () => {
 
   test("the herbarium, manuscript and lacquer styles", () => {
     for (const style of ["herbarium", "manuscript", "lacquer"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
+  })
+
+  test("a style per tag, written as in a note's tags", () => {
+    const c = resolveConfig({ appearance: { tags: { "#Poem": "classic", "type/TIL": "garden", "#": "garden" } } }, "/v")
+    expect(c.appearance.tags).toEqual({ Poem: "classic", "type/TIL": "garden" })
+    expect(() => resolveConfig({ appearance: { tags: { poem: "fancy" } } }, "/v")).toThrow()
   })
 
   test("unknown styles are rejected", () => {

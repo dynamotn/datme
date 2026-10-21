@@ -16,11 +16,13 @@ export function pickOption<T extends string>(value: unknown, options: readonly T
 }
 
 type Rules = Pick<SiteConfig["appearance"], "style" | "classic" | "folders">
+type TagRules = Pick<SiteConfig["appearance"], "tags">
 
 /** The rule that gave a page its style, for `datme dev` to name. */
 export type LookRule =
   | { kind: "note" }
   | { kind: "layout"; layout: Layout }
+  | { kind: "tags"; tag: string }
   | { kind: "folders" | "classic"; folder: string }
   | { kind: "site" }
 
@@ -93,17 +95,39 @@ export const LAYOUT_LOOKS: Partial<Record<Layout, LayoutLook>> = {
   episodes: { frame: "full-norail" },
 }
 
-/** Page style of a note and the rule that chose it: its own `style`, else its layout's, else that of its folder. */
-export function explainLook(note: Pick<Note, "dir" | "style" | "layout"> | undefined): Explained<Style, LookRule> {
+/**
+ * Style a note gets from its tags and the rule that gave it: the note's first tag that `appearance.tags`
+ * covers, in any case, a nested tag such as `poem/haiku` being covered by `poem`; the deepest such entry wins.
+ */
+export function explainTags(tags: readonly string[], appearance: TagRules): Explained<Style, LookRule> | undefined {
+  // Tags match whatever their case, as in Obsidian.
+  const entries = Object.entries(appearance.tags)
+  for (const tag of tags.map((t) => t.toLowerCase())) {
+    let best: [string, Style] | undefined
+    for (const entry of entries) {
+      const key = entry[0].toLowerCase()
+      if (tag !== key && !tag.startsWith(key + "/")) continue
+      if (!best || key.length > best[0].length) best = entry
+    }
+    if (best) return { value: best[1], rule: { kind: "tags", tag: best[0] } }
+  }
+  return undefined
+}
+
+/** What the style of a note's page depends on. */
+type LookNote = Pick<Note, "dir" | "style" | "layout"> & { tags?: readonly string[] }
+
+/** Page style of a note and the rule that chose it: its own `style`, else its layout's, its tags', or its folder's. */
+export function explainLook(note: LookNote | undefined): Explained<Style, LookRule> {
   if (!note) return { value: site.appearance.style, rule: { kind: "site" } }
   if (note.style) return { value: note.style, rule: { kind: "note" } }
   const fromLayout = note.layout && LAYOUT_LOOKS[note.layout]?.style
   if (note.layout && fromLayout) return { value: fromLayout, rule: { kind: "layout", layout: note.layout } }
-  return explainDir(note.dir, site.appearance)
+  return explainTags(note.tags ?? [], site.appearance) ?? explainDir(note.dir, site.appearance)
 }
 
-/** Page style of a note: its own `style`, else its layout's, else that of its folder; the site style when there is no note. */
-export function lookOf(note: Pick<Note, "dir" | "style" | "layout"> | undefined): Style {
+/** Page style of a note: its own `style`, else its layout's, its tags' or its folder's; the site style when there is no note. */
+export function lookOf(note: LookNote | undefined): Style {
   return explainLook(note).value
 }
 

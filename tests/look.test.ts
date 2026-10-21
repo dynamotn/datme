@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame } from "../src/lib/look"
+import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags } from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 
@@ -96,6 +96,28 @@ describe("explainDir, explainLook and explainFrame", () => {
     expect(explainFrame({ chrome: "full", layout: "cv" })).toEqual({ value: "full", rule: { kind: "note" } })
     expect(explainFrame({ layout: "cv" })).toEqual({ value: "minimal", rule: { kind: "layout", layout: "cv" } })
     expect(explainFrame(undefined)).toEqual({ value: "full", rule: { kind: "default" } })
+  })
+})
+
+describe("explainTags", () => {
+  const rules = { tags: { poem: "classic" as const, "poem/haiku": "garden" as const, til: "notebook" as const } }
+  test("the note's first tag with a style wins, whatever the order of the config", () => {
+    expect(explainTags(["draft", "til", "poem"], rules)).toEqual({ value: "notebook", rule: { kind: "tags", tag: "til" } })
+    expect(explainTags(["Poem", "til"], rules)).toEqual({ value: "classic", rule: { kind: "tags", tag: "poem" } })
+  })
+  test("a nested tag takes its parent's style, unless it has its own", () => {
+    expect(explainTags(["poem/sonnet"], rules)?.rule).toEqual({ kind: "tags", tag: "poem" })
+    expect(explainTags(["poem/haiku/spring"], rules)).toEqual({ value: "garden", rule: { kind: "tags", tag: "poem/haiku" } })
+    expect(explainTags(["poems"], rules)).toBeUndefined()
+  })
+  test("no tag, or no rule, gives nothing", () => {
+    expect(explainTags([], rules)).toBeUndefined()
+    expect(explainTags(["poem"], { tags: {} })).toBeUndefined()
+  })
+  test("in explainLook, tags come after the note and its layout, before its folder", () => {
+    // The fixture styles no tag: a note's tags leave it to its folder.
+    expect(explainLook({ dir: "07_Project", tags: ["poem"] }).rule).toEqual({ kind: "classic", folder: "07_Project" })
+    expect(lookOf({ dir: "03_Atomic", layout: "cv", tags: ["poem"] })).toBe("resume")
   })
 })
 
