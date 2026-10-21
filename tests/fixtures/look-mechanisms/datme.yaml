@@ -1,9 +1,13 @@
 # A site in the classic style that readers can restyle, with a style per tag
-# and the Ink theme pack of .datme/themes, whose style the Ink folder uses.
+# and the Ink theme pack of .datme/themes, whose style the Ink folder uses; the
+# home is a bento of tiles.
 site:
   title: Looks test
 languages: [en-US]
 publish: all
+home:
+  layout: bento
+  tiles: [now, recent, random, stats, graph, stream, tags, recent]
 appearance:
   style: classic
   tags:

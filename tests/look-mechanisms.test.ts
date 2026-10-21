@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { Window } from "happy-dom"
 
-// A site readers can restyle, with a style per tag and a theme pack: built once, then read and checked with axe.
+// A site readers can restyle, with a style per tag, a theme pack and a bento home: built once, then read and checked with axe.
 const root = path.resolve(import.meta.dir, "..")
 const vault = path.join(root, "tests/fixtures/look-mechanisms")
 let out = ""
@@ -34,6 +34,36 @@ async function violations(page: string): Promise<string[]> {
   await window.happyDOM.close()
   return res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.help}`)
 }
+
+describe("a bento home", () => {
+  const home = () => read("index.html")
+  const tile = (name: string) => home().split(`class="bento-tile bento-${name}"`)[1]?.split("</section>")[0] ?? ""
+  test("the tiles come in the order of datme.yaml, each once, after the home note's intro", () => {
+    const order = [...home().matchAll(/class="bento-tile bento-(\w+)"/g)].map((m) => m[1])
+    expect(order).toEqual(["now", "recent", "random", "stats", "graph", "stream", "tags"])
+    expect(home().indexOf('class="bento-head"')).toBeLessThan(home().indexOf('class="bento"'))
+    expect(home()).toContain("A garden to dress in every style.")
+    // The home note's sections still follow, as shelves.
+    expect(home()).toMatch(/class="shelf prose"[^>]*>\s*<h2[^>]*>Where to start/)
+  })
+  test("now, recent, random and stats", () => {
+    expect(tile("now")).toContain('href="/Now"')
+    expect(tile("now")).toContain("Writing about styles and planting tomatoes.")
+    expect(tile("recent")).toContain('href="/recent"')
+    expect(tile("recent")).not.toContain('href="/Now"')
+    expect(tile("random")).toMatch(/<button class="bento-dice" type="button" data-random>/)
+    expect(tile("stats")).toMatch(/<dt>notes<\/dt><dd>7<\/dd>/)
+    expect(tile("stats")).toContain('href="/stats"')
+  })
+  test("a graph around the most linked note, the newest short notes and the most used tags", () => {
+    expect(tile("graph")).toMatch(/<canvas data-graph="local" data-lang="en-US" data-current="\/Notes\/(Haiku|Plain)"/)
+    expect(tile("graph")).not.toContain("panel-title")
+    const stream = tile("stream")
+    expect(stream.indexOf("Evening")).toBeLessThan(stream.indexOf("Morning"))
+    expect(stream).toContain('href="/Thoughts/"')
+    expect(tile("tags")).toMatch(/href="\/tags\/poem">poem <small>2<\/small>/)
+  })
+})
 
 describe("a theme pack", () => {
   test("a style of the pack draws as its base, with its own stylesheet after the base's", () => {

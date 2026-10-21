@@ -1,0 +1,141 @@
+---
+import { site, type BentoTile, type Lang } from "~/site.config"
+import { bentoOf } from "~/lib/bento"
+import { gardenStats } from "~/lib/stats"
+import { renderNote } from "~/lib/markdown"
+import { formatDate, langPrefix, t } from "~/lib/i18n"
+import { slugToUrl } from "~/lib/slug"
+import NoteRow from "./NoteRow.astro"
+import LocalGraph from "./LocalGraph.astro"
+
+interface Props {
+  lang: Lang
+  tiles: BentoTile[]
+  /** The home note up to its first H2. */
+  intro: string
+  /** The H2 sections of the home note. */
+  shelves: string[]
+  title: string
+}
+const { lang, tiles, intro, shelves, title } = Astro.props
+const s = t(lang)
+const b = bentoOf(lang)
+const stats = tiles.includes("stats") ? await gardenStats(lang) : undefined
+const nowText = b.now && (await renderNote(b.now)).description
+const streamTexts = await Promise.all(b.stream.map(async (n) => (await renderNote(n)).description))
+const fmt = (n: number) => n.toLocaleString(lang)
+const url = (slug: string) => slugToUrl(langPrefix(lang) + slug)
+// A tile with nothing to show is left out, so the grid closes up around the others.
+const shown = tiles.filter((tile) => {
+  if (tile === "now") return !!b.now
+  if (tile === "recent") return b.recent.length > 0
+  if (tile === "graph") return !!b.hub
+  if (tile === "stream") return b.stream.length > 0
+  if (tile === "tags") return b.tags.length > 0
+  return true
+})
+const id = (tile: BentoTile) => `bento-${tile}`
+---
+
+<section class="bento-head">
+  <h1>{title}</h1>
+  {site.tagline[lang] && <p class="bento-tagline">{site.tagline[lang]}</p>}
+  {intro && <div class="prose" set:html={intro} />}
+</section>
+
+<div class="bento">
+  {
+    shown.map((tile) => (
+      <section class:list={["bento-tile", `bento-${tile}`]} aria-labelledby={id(tile)}>
+        {tile === "now" && b.now && (
+          <>
+            <h2 id={id(tile)}>{s.bentoNow}</h2>
+            <a class="bento-now-title internal" href={b.now.url}>{b.now.title}</a>
+            {nowText && <p>{nowText}</p>}
+            {(b.now.updated ?? b.now.created) && (
+              <p class="bento-meta">
+                {s.updated} {formatDate(b.now.updated ?? b.now.created, lang)}
+              </p>
+            )}
+          </>
+        )}
+        {tile === "recent" && (
+          <>
+            <h2 id={id(tile)}>{s.recent}</h2>
+            <ul class="note-list">
+              {b.recent.map((n) => (
+                <NoteRow note={n} />
+              ))}
+            </ul>
+            <a class="bento-more" href={url("recent")}>{s.seeAll} →</a>
+          </>
+        )}
+        {tile === "random" && (
+          <>
+            <h2 id={id(tile)}>{s.randomNote}</h2>
+            <p>{s.bentoRandomLead}</p>
+            <button class="bento-dice" type="button" data-random>
+              <span aria-hidden="true">🎲</span> {s.randomNote}
+            </button>
+          </>
+        )}
+        {tile === "stats" && stats && (
+          <>
+            <h2 id={id(tile)}>{s.stats}</h2>
+            <dl class="bento-numbers">
+              <div><dt>{s.notes}</dt><dd>{fmt(stats.notes)}</dd></div>
+              <div><dt>{s.statsWords}</dt><dd>{fmt(stats.words)}</dd></div>
+              <div><dt>{s.links}</dt><dd>{fmt(stats.links)}</dd></div>
+              <div><dt>{s.tags}</dt><dd>{fmt(stats.tags)}</dd></div>
+            </dl>
+            <a class="bento-more" href={url("stats")}>{s.seeAll} →</a>
+          </>
+        )}
+        {tile === "graph" && b.hub && (
+          <>
+            <h2 id={id(tile)}>{s.graph}</h2>
+            <LocalGraph lang={lang} current={b.hub.url} heading={false} />
+          </>
+        )}
+        {tile === "stream" && (
+          <>
+            <h2 id={id(tile)}>{s.bentoStream}</h2>
+            <ul class="bento-stream-list">
+              {b.stream.map((n, i) => (
+                <li>
+                  <a class="internal" href={n.url}>{n.title}</a>
+                  {streamTexts[i] && <p>{streamTexts[i]}</p>}
+                  {n.created && <time datetime={n.created.toISOString()}>{formatDate(n.created, lang)}</time>}
+                </li>
+              ))}
+            </ul>
+            {b.streamUrl && <a class="bento-more" href={b.streamUrl}>{s.seeAll} →</a>}
+          </>
+        )}
+        {tile === "tags" && (
+          <>
+            <h2 id={id(tile)}>{s.tags}</h2>
+            <div class="chips">
+              {b.tags.map(({ tag, count }) => (
+                <a class="chip tag" href={url("tags/" + tag)}>
+                  {tag} <small>{count}</small>
+                </a>
+              ))}
+            </div>
+            <a class="bento-more" href={url("tags")}>{s.allTags} →</a>
+          </>
+        )}
+      </section>
+    ))
+  }
+</div>
+
+{
+  shelves.length > 0 && (
+    <section class="section shelves">
+      {shelves.map((html) => (
+        <div class="shelf prose" set:html={html} />
+      ))}
+    </section>
+  )
+}

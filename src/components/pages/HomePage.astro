@@ -17,6 +17,7 @@ import IndexCard from "../IndexCard.astro"
 import GardenHome from "../garden/GardenHome.astro"
 import Front from "../broadsheet/Front.astro"
 import { editionDate } from "~/lib/broadsheet"
+import BentoHome from "../BentoHome.astro"
 
 interface Props {
   lang: Lang
@@ -77,7 +78,10 @@ const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPr
     </a>
   </aside>
   {
-    isGarden(look) ? (
+    // A bento asked for in datme.yaml wins over the home of any style, the broadsheet's front page included.
+    site.bento ? (
+      <BentoHome lang={lang} tiles={site.bento.tiles} intro={intro} shelves={shelves} title={r?.h1 ?? site.title[lang]} />
+    ) : isGarden(look) ? (
       <GardenHome lang={lang} intro={intro} shelves={shelves} title={r?.h1 ?? site.title[lang]} />
     ) : look === "broadsheet" ? (
       <>

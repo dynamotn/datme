@@ -6,13 +6,15 @@ import Icon from "./Icon.astro"
 interface Props {
   lang: Lang
   current?: string
+  /** Whether it shows its own title; off where a heading already names it. */
+  heading?: boolean
 }
-const { lang, current } = Astro.props
+const { lang, current, heading = true } = Astro.props
 const s = t(lang)
 ---
 
 <section>
-  <p class="panel-title">{s.graph}</p>
+  {heading && <p class="panel-title">{s.graph}</p>}
   <div class="graph-box">
     <canvas data-graph="local" data-lang={lang} data-current={current} data-depth={site.graph.depth}></canvas>
     <div class="graph-depth" role="group" aria-label={s.graphDepth} title={s.graphDepth}>

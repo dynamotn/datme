@@ -40,6 +40,8 @@ See [Privacy](privacy.md) for the whole picture.
 publish: explicit             # or `all`: everything except `publish: false`
 home: index.md                # note rendered as the home page: the part above the
                               # first H2 is the hero, each H2 section becomes a shelf
+# home: bento                 # the same note over a dashboard of tiles, or choose them:
+# home: { note: index.md, layout: bento, tiles: [now, recent, random, stats, graph, stream, tags] }
 ignore: [Archive, Journal]    # added to .obsidian, .trash, templates, private
 privateLinks: text            # links to private notes: text, placeholder or hide
 check:
@@ -238,6 +240,14 @@ only the stylesheet of the chosen style is downloaded. It changes colours,
 type and paper, not what a page holds: a garden home keeps its tiles in the
 classic style. Pages in `resume` or `darkroom` keep their style, and those
 two cannot be offered.
+
+`home: bento` lays the home out as a grid of tiles under the home note's
+intro, in whichever style the site has: the latest note with `layout: now`,
+the notes tended most recently, a button to a random note, the numbers of
+/stats, a small graph around the most linked note, the newest notes of the
+`stream` folders and the most used tags. `tiles` picks which and in what
+order; a tile with nothing to show (no now note, no stream folder) is left
+out, and the grid closes up to one column on a phone.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,

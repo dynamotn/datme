@@ -1845,6 +1845,135 @@ details.callout[open] > summary::after {
   gap: 18px;
 }
 
+/* ---------- bento home: a dashboard of tiles, in any style ---------- */
+.bento-head {
+  max-width: var(--measure);
+  margin: 4px 0 24px;
+}
+.bento-head h1 {
+  margin: 0 0 6px;
+  font: 800 clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem) / 1.1 var(--font-heading, var(--font-ui));
+  letter-spacing: -0.02em;
+}
+.bento-tagline {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font: 600 14px var(--font-ui);
+}
+.bento {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  grid-auto-flow: dense;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.bento-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+.bento-tile h2 {
+  margin: 0;
+  font: 700 12px var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.bento-tile p {
+  margin: 0;
+  color: var(--ink-2);
+  font: 15px/1.5 var(--font-read);
+}
+.bento-tile .note-list {
+  margin: 0;
+}
+.bento-tile time {
+  color: var(--muted);
+  font: 13px var(--font-ui);
+}
+.bento-tile .bento-meta {
+  color: var(--muted);
+  font: 13px var(--font-ui);
+}
+.bento-more {
+  margin-top: auto;
+  color: var(--accent);
+  font: 600 13px var(--font-ui);
+}
+.bento-now-title {
+  color: var(--ink);
+  font: 700 1.25rem/1.25 var(--font-heading, var(--font-ui));
+  text-decoration: none;
+}
+.bento-dice {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 600 14px var(--font-ui);
+  cursor: pointer;
+}
+.bento-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+.bento-numbers dt {
+  color: var(--muted);
+  font: 600 12px var(--font-ui);
+}
+.bento-numbers dd {
+  margin: 0;
+  font: 800 1.5rem var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.bento-stream-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bento-stream-list li {
+  display: grid;
+  gap: 2px;
+}
+.bento-stream-list a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.bento-graph .graph-box {
+  height: 260px;
+}
+/* Room for two columns: the lists and the graph take both. */
+@container (min-width: 34rem) {
+  .bento-recent,
+  .bento-graph {
+    grid-column: span 2;
+  }
+}
+@media (hover: hover) {
+  .bento-dice:hover {
+    filter: brightness(1.08);
+  }
+  .bento-stream-list a:hover,
+  .bento-now-title:hover {
+    color: var(--accent);
+  }
+}
+
 /* ---------- listing pages ---------- */
 .page-head {
   margin-bottom: 32px;

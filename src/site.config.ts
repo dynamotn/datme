@@ -31,6 +31,10 @@ export const STYLES = [
   "lacquer",
 ] as const
 export type Style = (typeof STYLES)[number]
+/** Tiles of a bento home, in their default order. */
+export const BENTO_TILES = ["now", "recent", "random", "stats", "graph", "stream", "tags"] as const
+export type BentoTile = (typeof BENTO_TILES)[number]
+
 /** A built-in style, or one a theme pack adds on top of one. */
 export type StyleName = string
 /** Styles made for a single page (a résumé, a gallery) rather than a whole site. */
@@ -180,8 +184,22 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
      * placeholder, a neutral "a private note"; hide, nothing unless the link has an alias.
      */
     privateLinks: z.enum(["text", "placeholder", "hide"]).default("text"),
-    /** Vault-relative note rendered as the home page. */
-    home: z.string().default("index.md"),
+    /**
+     * Vault-relative note rendered as the home page; `bento` keeps index.md and lays the home out as a
+     * dashboard of tiles, which the long form chooses: { note, layout: bento, tiles: [now, recent…] }.
+     */
+    home: z
+      .union([
+        z.string(),
+        z
+          .object({
+            note: z.string().default("index.md"),
+            layout: z.enum(["default", "bento"]).default("default"),
+            tiles: z.array(z.enum(BENTO_TILES)).min(1).default([...BENTO_TILES]),
+          })
+          .strict(),
+      ])
+      .default("index.md"),
     conventions: z
       .object({
         /** Tags starting with this prefix give a note its types, shown as chips. */
@@ -704,7 +722,10 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     stages,
     publish: c.publish,
     privateLinks: c.privateLinks,
-    home: c.home.replace(/^\/+/, ""),
+    // A note's path always ends in .md, so `home: bento` names no note.
+    home: (typeof c.home === "string" ? (c.home === "bento" ? "index.md" : c.home) : c.home.note).replace(/^\/+/, ""),
+    /** The tiles of a bento home, in order; none for the home of the site's style. */
+    bento: c.home === "bento" ? { tiles: [...BENTO_TILES] } : typeof c.home === "object" && c.home.layout === "bento" ? { tiles: [...new Set(c.home.tiles)] } : undefined,
     conventions: c.conventions,
     footer: footerGroups(c.footer, navItem, langs),
     poweredBy: c.poweredBy,

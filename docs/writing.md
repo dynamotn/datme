@@ -248,6 +248,7 @@ the address.
   name in bold (`- **Vim** — my editor`) or a link becomes a grid of cards.
 - **`now`**: what you are doing now. The page says when it was last
   updated, and warns readers once that is more than three months ago.
+  With `home: bento`, the latest one is a tile of the home page.
 - **`faq`**: each `##` heading is a question that opens on its answer.
 - **`quotes`**: quotes (`>`) become a wall of cards. A last line starting
   with a dash (`— Ada Lovelace`) is who said it.

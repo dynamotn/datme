@@ -167,6 +167,22 @@ describe("publishing rules and conventions", () => {
     expect(c.conventions.typePrefix).toBe("type/")
   })
 
+  test("a bento home: the short form keeps index.md, the long one picks its note and tiles", () => {
+    expect(resolveConfig({}, "/v").bento).toBeUndefined()
+    const short = resolveConfig({ home: "bento" }, "/v")
+    expect(short.home).toBe("index.md")
+    expect(short.bento).toEqual({ tiles: ["now", "recent", "random", "stats", "graph", "stream", "tags"] })
+    const long = resolveConfig({ home: { note: "/Start.md", layout: "bento", tiles: ["stats", "now", "stats"] } }, "/v")
+    expect(long.home).toBe("Start.md")
+    expect(long.bento).toEqual({ tiles: ["stats", "now"] })
+    const plain = resolveConfig({ home: { note: "Start.md" } }, "/v")
+    expect(plain.home).toBe("Start.md")
+    expect(plain.bento).toBeUndefined()
+    expect(() => resolveConfig({ home: { layout: "bento", tiles: ["weather"] } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ home: { layout: "bento", tiles: [] } }, "/v")).toThrow(ConfigError)
+    expect(() => resolveConfig({ home: { layout: "grid" } }, "/v")).toThrow(ConfigError)
+  })
+
   test("unknown publish modes are rejected", () => {
     expect(() => resolveConfig({ publish: "some" }, "/v")).toThrow(ConfigError)
   })

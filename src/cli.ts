@@ -389,8 +389,9 @@ languages: [en-US]
 # explicit: only notes with \`publish: true\`; all: every note except \`publish: false\`.
 publish: explicit
 
-# Note rendered as the home page.
+# Note rendered as the home page; \`home: bento\` makes it a dashboard of tiles.
 home: index.md
+# home: { note: index.md, layout: bento, tiles: [now, recent, random, stats, graph, stream, tags] }
 
 # Folders never published, on top of .obsidian, .trash, templates and private.
 ignore: []
