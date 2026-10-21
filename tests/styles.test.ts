@@ -52,6 +52,36 @@ describe("darkroom look", () => {
   })
 })
 
+describe("terminal look", () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/terminal.css"), "utf8")
+
+  test("every rule is scoped to the terminal look", () => {
+    expectScoped("terminal.css", "terminal")
+  })
+
+  test("the cursor blinks only for readers who allow motion", () => {
+    const blink = css.indexOf("animation: terminal-blink")
+    expect(blink).toBeGreaterThan(0)
+    expect(css.lastIndexOf("@media (prefers-reduced-motion: no-preference)", blink)).toBeGreaterThan(css.lastIndexOf("}\n}", blink))
+  })
+
+  test("the reader's legible font replaces the monospace everywhere", () => {
+    expect(rule(css, '[data-look="terminal"].font-legible')).toContain('--term: "Atkinson Hyperlegible"')
+    for (const v of ["--font-ui", "--font-read", "--font-heading"]) expect(rule(css, '[data-look="terminal"]')).toContain(`${v}: var(--term)`)
+  })
+
+  test("prompts are decoration that screen readers skip", () => {
+    for (const m of css.matchAll(/content: "([^"]+)";\n\s*content: (.+);/g)) expect(m[2]).toBe(`"${m[1]}" / ""`)
+    expect(css).toContain('content: "$ " / "";')
+  })
+
+  test("it prints on white paper, without its scanlines or cursor", () => {
+    const print = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/print.css"), "utf8")
+    expect(print).toContain('[data-look="terminal"][data-theme="dark"]')
+    expect(css.slice(css.indexOf("@media print"))).toContain(".note-title::after")
+  })
+})
+
 describe("the monospace font", () => {
   const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
   test("falls back to local faces sized to Iosevka's metrics, right after it in both looks", () => {

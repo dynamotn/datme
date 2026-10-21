@@ -1,0 +1,8 @@
+# One folder per style, to check the markup each look adds.
+site:
+  title: Looks
+  author: Tester
+publish: all
+appearance:
+  folders:
+    Shell: terminal

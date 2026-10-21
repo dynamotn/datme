@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test"
+import fs from "node:fs"
+import path from "node:path"
 import { contrastRatio, DARK_INK, luminance, onAccent, parseColor } from "../src/lib/contrast"
 import { themeCss } from "../src/lib/theme"
 import { site } from "../src/site.config"
@@ -74,5 +76,68 @@ describe("the theme's CSS", () => {
   test("an accent it cannot read keeps the look's own text colour", () => {
     site.theme = { ...before, accent: "teal", fonts: {} }
     expect(themeCss()).not.toContain("--on-accent")
+  })
+})
+
+/**
+ * The variables a look's stylesheet gives one scheme: its light block, with
+ * the dark block over it for "dark". An accent passed in replaces the look's
+ * own, as theme.accent does.
+ */
+function palette(look: string, scheme: "light" | "dark", accent?: string): Record<string, string> {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", `${look}.css`), "utf8")
+  const block = (selector: string) => {
+    const at = css.indexOf(`${selector} {`)
+    const vars: Record<string, string> = {}
+    for (const m of css.slice(at, css.indexOf("}", at)).matchAll(/(--[\w-]+):\s*([^;]+);/g)) vars[m[1]] = m[2].trim()
+    return vars
+  }
+  const vars = { ...block(`[data-look="${look}"]`), ...(scheme === "dark" ? block(`[data-look="${look}"][data-theme="dark"]`) : {}) }
+  if (accent) vars["--accent"] = accent
+  return vars
+}
+
+/** A colour of a palette as sRGB: a hex, a var() of the palette, or a color-mix() of the two in srgb. */
+function resolve(vars: Record<string, string>, value: string): [number, number, number] {
+  const ref = value.match(/^var\((--[\w-]+)\)$/)
+  if (ref) return resolve(vars, vars[ref[1]])
+  const mix = value.match(/^color-mix\(in srgb, (.+) (\d+)%, (.+)\)$/)
+  if (mix) {
+    const [a, b, p] = [resolve(vars, mix[1]), resolve(vars, mix[3]), Number(mix[2]) / 100]
+    return a.map((c, i) => c * p + b[i] * (1 - p)) as [number, number, number]
+  }
+  return parseColor(value)!
+}
+
+/** Contrast of two variables of a palette. */
+function contrast(vars: Record<string, string>, fg: string, bg: string): number {
+  return contrastRatio(luminance(resolve(vars, vars[fg])), luminance(resolve(vars, vars[bg])))
+}
+
+describe("the looks' own palettes", () => {
+  // Text and its grounds; the accent colours links and headings, so it must read on the page too.
+  const TEXT = ["--ink", "--ink-2", "--muted", "--accent"]
+  const GROUNDS = ["--bg", "--surface"]
+  const LOOKS = ["terminal"]
+
+  for (const look of LOOKS) {
+    for (const scheme of ["light", "dark"] as const) {
+      test(`${look} reads at 4.5:1 or better in ${scheme} mode`, () => {
+        const vars = palette(look, scheme)
+        for (const fg of TEXT) for (const bg of GROUNDS) expect({ fg, bg, ok: contrast(vars, fg, bg) >= 4.5 }).toEqual({ fg, bg, ok: true })
+      })
+    }
+  }
+
+  test("the terminal's text stays readable whatever the accent", () => {
+    // Its text is mixed from the accent, toward white on the screen and black on paper.
+    for (const accent of ["#000000", "#ffffff", "#7c3aed", "#ffb000", "#0047ff"]) {
+      for (const scheme of ["light", "dark"] as const) {
+        const vars = palette("terminal", scheme, accent)
+        for (const fg of ["--ink", "--ink-2", "--muted"]) {
+          expect({ accent, scheme, fg, ok: contrast(vars, fg, "--bg") >= 4.5 }).toEqual({ accent, scheme, fg, ok: true })
+        }
+      }
+    }
   })
 })

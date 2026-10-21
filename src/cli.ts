@@ -404,7 +404,8 @@ stages: {}
 #  Maps: { icon: "🗺️", label: Maps of content }
 
 # notebook: index cards on dotted paper; classic: a quiet serif blog;
-# garden: notes as plants in a bed, sized by their stage.
+# garden: notes as plants in a bed, sized by their stage;
+# terminal: a monospace TTY in green phosphor.
 appearance:
   style: notebook
   folders: {}

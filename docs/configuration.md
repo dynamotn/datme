@@ -87,7 +87,8 @@ archiveDeadLinks: true        # dead links found by `check --external` point to 
 ```yaml
 appearance:
   style: notebook             # notebook: index cards on dotted paper; classic: a quiet serif blog;
-                              # garden: notes as plants in a bed, sized by how grown they are
+                              # garden: notes as plants in a bed, sized by how grown they are;
+                              # terminal: a monospace TTY in green phosphor (theme.accent for amber)
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
@@ -158,6 +159,15 @@ seedlings from evergreens. Readers filter the bed by stage (by top folder when
 there are no stages) and by tag. Folder and tag pages are beds too, and a note
 says when it was planted and last tended. `theme.accent` and `theme.fonts`
 override its moss green, Fraunces headings and Literata text.
+
+The `terminal` style draws every page as a TTY: one monospace face, headings
+written as Markdown prompts (`$` before the title, `##` before a section), and
+a cursor after the title that blinks unless the reader asked for less motion.
+It opens dark, phosphor on black with faint scanlines; light mode is a teletype
+printout on ruled paper. The phosphor is green; `theme.accent` sets another
+(`"#ffb000"` for amber), and the text is mixed from it so any accent stays
+readable. The reader's legible-font and high-contrast options replace the
+monospace and drop the glow.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,

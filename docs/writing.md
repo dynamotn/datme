@@ -44,7 +44,7 @@ that folder's page.
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
 | `layout` | A page made for what the note holds: `cv`, `gallery`, `projects`, `books`… see [Page layouts](#page-layouts) |
-| `style` | The look of this page: `notebook`, `classic`, `garden`, `resume` or `darkroom`. See [Page layouts](#page-layouts) |
+| `style` | The look of this page: `notebook`, `classic`, `garden`, `resume`, `darkroom` or `terminal`. See [Page layouts](#page-layouts) |
 | `chrome` | The frame around the page: `full`, or `minimal` for a thin bar with no menu, search or sidebars |
 | `cover` | The picture that stands for the note in a collection and beside its title (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |

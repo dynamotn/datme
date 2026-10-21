@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `terminal` style (`style: terminal` on a note, or `appearance.style` / `appearance.folders`) draws pages as a TTY: monospace throughout, the title after a `$` prompt with a cursor that blinks unless the reader prefers less motion, section headings after their `##` marks, square dashed boxes. It opens dark, green phosphor on black with faint scanlines, and its light mode is a teletype printout on ruled paper; `theme.accent` changes the phosphor (amber, say) while the text stays readable. The reader's legible-font and high-contrast choices still apply, and it prints on plain white paper.
+
 ## [3.1.0] - 2026-10-20
 
 ### Added

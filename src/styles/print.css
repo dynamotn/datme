@@ -1,4 +1,4 @@
-/* ---------- print: the note alone, black on white, in every look (notebook, classic, garden, resume) and theme ---------- */
+/* ---------- print: the note alone, black on white, in every look and theme ---------- */
 @media print {
   @page {
     margin: 18mm 16mm;
@@ -11,7 +11,9 @@
   [data-look="garden"],
   [data-look="garden"][data-theme="dark"],
   [data-look="resume"],
-  [data-look="resume"][data-theme="dark"] {
+  [data-look="resume"][data-theme="dark"],
+  [data-look="terminal"],
+  [data-look="terminal"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;
