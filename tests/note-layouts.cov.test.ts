@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import path from "node:path"
 import { site, loadConfig, type SiteConfig } from "../src/site.config"
 import { getVault, type Note } from "../src/lib/vault"
-import { renderNote } from "../src/lib/markdown"
+import { renderNote, renderTranslation } from "../src/lib/markdown"
 import {
   audioType,
   bookmarkOf,
@@ -31,6 +31,8 @@ import {
   layoutHtml,
   lessonsOf,
   linksOf,
+  loreLinksOf,
+  loreTree,
   nameDay,
   noteDay,
   paperOf,
@@ -41,6 +43,7 @@ import {
   ratingOf,
   recipeFacts,
   refsOf,
+  relationsOf,
   releasesUrl,
   routeOf,
   runBase,
@@ -692,5 +695,131 @@ describe("layouts of a note's own text, from its properties", () => {
     const html = layoutHtml(n, "<p>Intro</p>")
     expect(html).toContain('<li class="lesson" data-lesson="Texts/Lesson two">')
     expect(layoutHtml(n, "<h2>Only</h2><p>One lesson.</p>")).toContain('<li class="lesson" data-lesson="lesson-1">')
+  })
+})
+
+describe("seven more layouts of a note's own text", () => {
+  const problem = (file: string, text: string) => getVault().problems.some((p) => p.file === file && p.message.includes(text))
+
+  test("a poem keeps its line breaks and indentation, and renders the translation it goes beside", async () => {
+    const n = note("Texts/Verse")
+    expect(n.hardBreaks).toBe(true)
+    expect(n.md).toContain("\u00a0\u00a0the wind returns.")
+    // The code block of the English text stays out of the Vietnamese one.
+    expect(n.translation).toEqual({ lang: "vi-VN", md: "\nTrăng lên,\n\u00a0\u00a0gió về.\n" })
+    const translation = await renderTranslation(n)
+    expect(translation).toBe("<p>Trăng lên,<br>\n\u00a0\u00a0gió về.</p>")
+    const html = layoutHtml(n, (await renderNote(n)).html, translation)
+    expect(html).toStartWith('<div class="poem is-numbered is-bilingual"><div class="poem-pair poem-langs"><p lang="en-US">English</p><p lang="vi-VN">Tiếng Việt</p></div>')
+    // Only the English text has the code block, so its row has nothing beside it.
+    expect(html).toContain('<div class="poem-pair"><div class="poem-col" lang="en-US"><pre')
+    expect(html).toContain('</pre></div><div class="poem-col" lang="vi-VN"></div></div>')
+    // Unrendered, the poem is shown alone.
+    expect(layoutHtml(n, "<p>x</p>")).toBe('<div class="poem is-numbered"><p class="stanza">x</p></div>')
+    expect(layoutHtml({ ...n, protected: true }, "")).toBe("")
+    // A poem whose page is in its `bilingual` language goes beside its original, which comes first.
+    const native = note("Texts/Native verse")
+    expect(native.translation).toEqual({ lang: "vi-VN", md: "\nGốc.\n" })
+    expect(layoutHtml(native, "<p>Root.</p>", "<p>Gốc.</p>")).toContain('<div class="poem-col" lang="vi-VN"><p class="stanza">Gốc.</p></div><div class="poem-col" lang="en-US">')
+    expect(note("Texts/Same verse").translation).toBeUndefined()
+    expect(await renderTranslation(note("Texts/Same verse"))).toBeUndefined()
+    expect(note("Texts/Lonely verse").translation).toBeUndefined()
+    expect(problem("Texts/Lonely verse.md", 'bilingual "fr-FR" has no <!--lang:fr-FR--> block')).toBe(true)
+    // A protected poem's translation is part of what its password guards.
+    expect(note("Texts/Locked verse").translation).toBeUndefined()
+    expect(await renderTranslation({ ...n, protected: true })).toBeUndefined()
+    expect(noteProperties(n)).toEqual([])
+  })
+
+  test("a letter: its place and date written out, signed by a picture or in words", () => {
+    const letter = note("Texts/Letter")
+    expect(letter.signature).toBe("/assets/_assets/cover.png")
+    expect(layoutHtml(letter, "<p>Dear Ann,</p><p>Body.</p>")).toBe(
+      '<div class="letter"><p class="letter-dateline">Huế, <time datetime="2026-03-04">March 4, 2026</time></p><p class="letter-salutation">Dear Ann,</p><p>Body.</p>' +
+        '<div class="letter-sign"><img class="letter-signature-image" src="/assets/_assets/cover.png" alt="Signature" loading="lazy"></div></div>',
+    )
+    const words = note("Texts/Word letter")
+    expect(words.signature).toBeUndefined()
+    expect(layoutHtml(words, "<p>Hi.</p>")).toBe('<div class="letter"><p class="letter-dateline">someday</p><p>Hi.</p><div class="letter-sign"><p class="letter-signature">Ada</p></div></div>')
+    expect(layoutHtml(withFm("Texts/Word letter", {}), "<p>Hi.</p>")).toBe('<div class="letter"><p>Hi.</p></div>')
+    // A protected letter publishes no signature, and its page shows nothing of it.
+    expect(note("Texts/Locked letter").signature).toBeUndefined()
+    expect(layoutHtml(note("Texts/Locked letter"), "")).toBe("")
+    expect(noteProperties(letter)).toEqual([])
+  })
+
+  test("a comparison reads + and - items as pros and cons, and its pick by name", () => {
+    const n = note("Texts/Compare")
+    expect(n.md).toContain("* ✅ Fast\n* ❌ Slow\n+ ✅ Already marked")
+    expect(n.md).toContain("```text\n+ in code\n```")
+    const html = layoutHtml(n, "<h2>A</h2><ul><li>✅ Fast</li></ul><h2>B</h2><p>x</p>")
+    expect(html).toContain('<section class="compare-option is-picked"><h2>B</h2><p class="compare-badge">Our pick</p>')
+    expect(html).toContain('<p class="compare-label">Pros</p>')
+    expect(noteProperties(n)).toEqual([])
+  })
+
+  test("a checklist makes the note's tasks tickable", () => {
+    const n = withFm("Plain", {}, { layout: "checklist" })
+    expect(layoutHtml(n, '<ul><li class="task-list-item"><input type="checkbox" disabled aria-label="A"> A</li></ul>')).toContain('<input type="checkbox" aria-label="A" data-check="a">')
+  })
+
+  test("a recipe card: the cover and facts of its note, and nothing of a protected one", () => {
+    const card = layoutHtml(note("Texts/Card recipe"), "<h2>Ingredients</h2><ul><li>Tea</li></ul>")
+    expect(card).toStartWith('<div class="recipe-card"><img class="recipe-card-cover" src="/assets/_assets/cover.png" alt="" loading="lazy"><p class="recipe-card-facts">⏱ 5 min</p><div class="recipe">')
+    expect(card).toEndWith('<p class="recipe-card-tools"><button type="button" class="recipe-card-print" data-print>Print card</button></p>')
+    expect(layoutHtml(note("Texts/Bare card"), "<p>Nothing.</p>")).toStartWith('<div class="recipe-card"><p>Nothing.</p></div>')
+    expect(layoutHtml({ ...note("Texts/Card recipe"), protected: true }, "")).toBe("")
+    expect(noteProperties(note("Texts/Card recipe"))).toEqual([])
+  })
+
+  test("a hub draws its note's sections round its title", () => {
+    const html = layoutHtml(withFm("Plain", {}, { layout: "hub" }), '<h2 id="a">A</h2><ul><li><a href="/x">X</a></li></ul>')
+    expect(html).toContain('<text class="hub-centre-label" y="6" text-anchor="middle">Plain</text>')
+  })
+
+  test("lore: relations as a map, a list or unquoted links; the family they make; who names an entity, and how", () => {
+    const a = note("Texts/Lore A")
+    expect(relationsOf(a)).toEqual([
+      { name: "parent", refs: [{ text: "Lore B", href: note("Texts/Lore B").url, key: "Texts/Lore B" }] },
+      {
+        name: "allies",
+        refs: [{ text: "Lore C", href: note("Texts/Lore C").url, key: "Texts/Lore C" }, { text: "Dee", key: undefined }, { text: "Plain", href: note("Plain").url, key: "Plain" }],
+      },
+      { name: "rank", refs: [{ text: "3", key: undefined }] },
+    ])
+    expect(relationsOf(note("Texts/Lore B")).map((r) => [r.name, r.refs.map((x) => x.key)])).toEqual([
+      ["child", ["Texts/Lore A"]],
+      ["mentor", ["Texts/Lore A"]],
+    ])
+    expect(relationsOf(note("Texts/Lore D"))).toEqual([])
+    expect(relationsOf(note("Plain"))).toEqual([])
+    expect(relationsOf(withFm("Texts/Lore A", { relations: { ghost: "[[No such entity]]", none: [] } }))).toEqual([{ name: "ghost", refs: [{ text: "No such entity", href: undefined, key: undefined }] }])
+    // The protected entity naming A as its enemy says nothing; B names it twice, C only links to it.
+    const links = loreLinksOf(a)
+    expect(links.relations.map((g) => [g.name, g.notes.map((x) => x.key)])).toEqual([
+      ["child", ["Texts/Lore B"]],
+      ["mentor", ["Texts/Lore B"]],
+    ])
+    expect(links.mentions.map((x) => x.key)).toEqual(["Texts/Lore C"])
+    const html = layoutHtml(a, "<p>Hero.</p>")
+    expect(html).toStartWith('<p>Hero.</p><section class="lore-relations"><h2>Relations</h2><dl><div><dt>parent</dt><dd><a class="internal" href="' + note("Texts/Lore B").url + '">Lore B</a></dd></div>')
+    expect(html).toContain("<div><dt>rank</dt><dd>3</dd></div>")
+    expect(html).toContain('<section class="lore-links"><h2>In the lore</h2><dl><div><dt>child of</dt>')
+    expect(html).toContain('<div><dt>Mentioned in</dt><dd><a class="internal" href="' + note("Texts/Lore C").url + '">Lore C</a></dd></div>')
+    expect(html).not.toContain("enemy")
+    expect(layoutHtml(note("Texts/Lore D"), "")).toBe("")
+    expect(layoutHtml({ ...a, protected: true }, "")).toBe("")
+    expect(noteProperties(a).map(([k]) => k)).toEqual(["kind"])
+    const tree = loreTree("Me", [
+      { name: "Mother", refs: [{ text: "Ma", href: "/ma" }] },
+      { name: "wife", refs: [{ text: "Wi" }] },
+      { name: "Con", refs: [{ text: "Kid" }] },
+      { name: "ally", refs: [{ text: "Al" }] },
+    ])
+    expect(tree).toBe(
+      '<figure class="lore-tree" aria-hidden="true"><ul class="lore-tree-row is-up"><li><a class="internal" href="/ma" tabindex="-1">Ma</a><small>Mother</small></li></ul>' +
+        '<ul class="lore-tree-row is-self"><li class="lore-self">Me</li><li>Wi<small>wife</small></li></ul><ul class="lore-tree-row is-down"><li>Kid<small>Con</small></li></ul></figure>',
+    )
+    expect(loreTree("Me", [{ name: "ally", refs: [{ text: "Al" }] }])).toBe("")
   })
 })

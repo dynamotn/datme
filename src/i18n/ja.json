@@ -309,5 +309,17 @@
   "pages": "ページ",
   "pageOf": "{total} ページ中 {n} ページ",
   "previousPage": "前のページ",
-  "nextPage": "次のページ"
+  "nextPage": "次のページ",
+  "signature": "署名",
+  "comparePros": "長所",
+  "compareCons": "短所",
+  "compareSummary": "一覧",
+  "comparePicked": "おすすめ",
+  "checklistProgress": "{total} 件中 {done} 件完了",
+  "checklistReset": "リセット",
+  "printCard": "カードを印刷",
+  "loreRelations": "関係",
+  "relationOf": "{relation}として",
+  "loreMentions": "言及",
+  "loreLinks": "世界観の中で"
 }

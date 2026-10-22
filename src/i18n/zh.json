@@ -309,5 +309,17 @@
   "pages": "页面",
   "pageOf": "第 {n} 页，共 {total} 页",
   "previousPage": "上一页",
-  "nextPage": "下一页"
+  "nextPage": "下一页",
+  "signature": "签名",
+  "comparePros": "优点",
+  "compareCons": "缺点",
+  "compareSummary": "一览",
+  "comparePicked": "我们的选择",
+  "checklistProgress": "已完成 {done}/{total}",
+  "checklistReset": "重置",
+  "printCard": "打印卡片",
+  "loreRelations": "关系",
+  "relationOf": "作为{relation}",
+  "loreMentions": "提及于",
+  "loreLinks": "在设定中"
 }

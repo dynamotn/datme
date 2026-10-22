@@ -309,5 +309,17 @@
   "pages": "Seiten",
   "pageOf": "Seite {n} von {total}",
   "previousPage": "Vorherige Seite",
-  "nextPage": "Nächste Seite"
+  "nextPage": "Nächste Seite",
+  "signature": "Unterschrift",
+  "comparePros": "Vorteile",
+  "compareCons": "Nachteile",
+  "compareSummary": "Auf einen Blick",
+  "comparePicked": "Unsere Wahl",
+  "checklistProgress": "{done} von {total} erledigt",
+  "checklistReset": "Zurücksetzen",
+  "printCard": "Karte drucken",
+  "loreRelations": "Beziehungen",
+  "relationOf": "{relation} von",
+  "loreMentions": "Erwähnt in",
+  "loreLinks": "In der Welt"
 }

@@ -309,5 +309,17 @@
   "pages": "Páginas",
   "pageOf": "Página {n} de {total}",
   "previousPage": "Página anterior",
-  "nextPage": "Página siguiente"
+  "nextPage": "Página siguiente",
+  "signature": "Firma",
+  "comparePros": "Ventajas",
+  "compareCons": "Desventajas",
+  "compareSummary": "De un vistazo",
+  "comparePicked": "Nuestra elección",
+  "checklistProgress": "{done} de {total} hechos",
+  "checklistReset": "Restablecer",
+  "printCard": "Imprimir ficha",
+  "loreRelations": "Relaciones",
+  "relationOf": "{relation} de",
+  "loreMentions": "Mencionado en",
+  "loreLinks": "En el mundo"
 }

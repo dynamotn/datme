@@ -6942,3 +6942,589 @@ summary.ntn-col-head {
     padding-left: 30px;
   }
 }
+
+/* A poem: its stanzas centred as one block, each line where the poet put it; a translation beside it. */
+.layout-poem .note-head {
+  text-align: center;
+}
+.layout-poem .note-head .chips,
+.layout-poem .note-head .note-meta,
+.layout-poem .note-tools {
+  justify-content: center;
+}
+.poem {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 1.6em;
+  counter-reset: stanza;
+  font-family: var(--font-read);
+  font-size: 1.12em;
+  line-height: 1.75;
+}
+.prose .poem .stanza {
+  margin: 0 0 1.4em;
+}
+.poem.is-numbered {
+  padding-left: 2.4em;
+}
+.poem.is-numbered > .stanza,
+.poem.is-numbered .poem-col:first-child > .stanza {
+  position: relative;
+  counter-increment: stanza;
+}
+.poem.is-numbered > .stanza::before,
+.poem.is-numbered .poem-col:first-child > .stanza::before {
+  content: counter(stanza);
+  content: counter(stanza) / "";
+  position: absolute;
+  right: calc(100% + 1.2em);
+  top: 0.35em;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+}
+.poem.is-bilingual {
+  width: auto;
+}
+.poem-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 2.5rem;
+}
+.poem-pair.is-shared > * {
+  grid-column: 1 / -1;
+}
+.prose .poem-langs p {
+  margin: 0 0 1em;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.poem-col + .poem-col {
+  color: var(--ink-2);
+}
+/* A phone has room for one column: the translation goes under each stanza. */
+@media (max-width: 640px) {
+  .poem-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .poem-langs {
+    display: none;
+  }
+  .prose .poem-col:first-child > .stanza {
+    margin-bottom: 0.5em;
+  }
+  .poem-col + .poem-col {
+    margin-bottom: 1.4em;
+    padding-left: 12px;
+    border-left: 2px solid var(--line);
+  }
+  .prose .poem-col + .poem-col > .stanza {
+    margin-bottom: 0;
+  }
+}
+
+/* A letter: a sheet of paper in the site's own colours, the date at the top right, the signature at the foot. */
+.layout-letter {
+  --measure: 44rem;
+}
+.letter {
+  margin: 8px 0 2em;
+  padding: clamp(22px, 6vw, 56px) clamp(18px, 6vw, 60px);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-family: var(--font-read);
+  font-size: 1.06em;
+  line-height: 1.75;
+}
+.prose .letter-dateline {
+  margin: 0 0 2em;
+  color: var(--ink-2);
+  font-style: italic;
+  text-align: right;
+}
+.prose .letter-salutation {
+  margin-bottom: 1.2em;
+}
+.letter-sign {
+  width: fit-content;
+  min-width: min(100%, 14rem);
+  margin: 2.4em 0 0 auto;
+}
+.prose .letter-closing {
+  margin: 0 0 0.4em;
+}
+.prose .letter-signature {
+  margin: 0;
+  font-size: 1.35em;
+  font-style: italic;
+}
+.prose .letter-signature-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 90px;
+  border-radius: 0;
+}
+/* Ink drawn dark on a light page stays legible on a dark one. */
+:root[data-theme="dark"] .prose .letter-signature-image {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* A comparison: a table of the options' facts, then a card each, what speaks for and against it side by side. */
+.layout-compare {
+  --measure: 64rem;
+}
+.compare-table caption {
+  padding: 6px 10px;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+.compare-table .is-picked {
+  background: var(--accent-soft);
+}
+.compare-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 16px;
+  margin: 1.4em 0;
+}
+.compare-option {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.compare-option.is-picked {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.prose .compare-option > h2:first-child {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+.prose .compare-badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+}
+.compare-procon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.prose .compare-label {
+  margin: 0 0 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.compare-pros .compare-label {
+  color: var(--accent);
+}
+.compare-cons .compare-label {
+  color: var(--clay);
+}
+.prose .compare-procon ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.prose .compare-procon li {
+  position: relative;
+  padding-left: 1.3em;
+}
+.compare-procon li::before {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+.compare-pros li::before {
+  content: "✓";
+  content: "✓" / "";
+  color: var(--accent);
+}
+.compare-cons li::before {
+  content: "✗";
+  content: "✗" / "";
+  color: var(--clay);
+}
+
+/* A checklist: every task a box to tick, each section's count under its heading, the progress of the whole on top. */
+.checklist-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 1.2em;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.checklist-progress[hidden],
+.syllabus-progress[hidden] {
+  display: none;
+}
+.checklist-progress progress {
+  flex: 1;
+  max-width: 18rem;
+  height: 8px;
+  accent-color: var(--accent);
+}
+.checklist-reset {
+  margin-left: auto;
+  padding: 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.checklist-reset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.prose .checklist-count {
+  margin: -0.6em 0 0.6em;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+}
+.checklist-section.is-done > h2::after {
+  content: " ✓";
+  content: " ✓" / "";
+  color: var(--accent);
+}
+.prose .checklist input[data-check] {
+  width: 1.15em;
+  height: 1.15em;
+  cursor: pointer;
+}
+.checklist .task-list-item:has(> input[data-check]:checked) {
+  color: var(--muted);
+}
+
+/* A recipe card: an index card the size of A6, on screen as on paper. */
+.layout-recipe-card {
+  --measure: 52rem;
+}
+.recipe-card {
+  display: flow-root;
+  aspect-ratio: 148 / 105;
+  padding: 24px 28px;
+  border: 1px solid var(--line-strong);
+  border-top: 6px solid var(--clay);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.prose .recipe-card-cover {
+  float: right;
+  width: 32%;
+  max-height: 10rem;
+  margin: 0 0 12px 18px;
+  object-fit: cover;
+}
+.prose .recipe-card-facts {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+}
+.recipe-card .recipe {
+  clear: both;
+  grid-template-columns: minmax(150px, 13rem) minmax(0, 1fr);
+  gap: 20px;
+}
+.recipe-card .recipe-ingredients {
+  position: static;
+}
+.prose .recipe-card-tools {
+  text-align: right;
+}
+.recipe-card-print {
+  padding: 6px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+}
+.recipe-card-print:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@media (max-width: 720px) {
+  .recipe-card {
+    aspect-ratio: auto;
+    padding: 18px 16px;
+  }
+  .prose .recipe-card-cover {
+    float: none;
+    width: 100%;
+    margin: 0 0 12px;
+  }
+  .recipe-card .recipe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A hub: a map of content drawn round the note, then its sections, the map's words for every reader. */
+.layout-hub {
+  --measure: 64rem;
+}
+.hub-map {
+  margin: 0 0 1.6em;
+}
+.hub-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  font-family: var(--font-ui);
+}
+.hub-spoke-line {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+.hub-leaf-line {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.hub-centre {
+  fill: var(--accent);
+}
+.hub-centre-label {
+  fill: var(--on-accent);
+  font-size: 16px;
+  font-weight: 700;
+}
+.hub-spoke {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.hub-spoke.hub-c1,
+.hub-spoke.hub-c4 {
+  stroke: var(--clay);
+}
+.hub-spoke.hub-c2,
+.hub-spoke.hub-c5 {
+  stroke: var(--ink-2);
+}
+.hub-svg a {
+  background: none;
+  text-decoration: none;
+}
+/* Labels sit on a halo of the page, over the lines that cross them. */
+.hub-spoke-label,
+.hub-leaf-label {
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
+.hub-spoke-label {
+  fill: var(--ink);
+  font-size: 17px;
+  font-weight: 700;
+}
+.hub-leaf {
+  fill: var(--surface-2);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+.hub-leaf-label {
+  fill: var(--ink-2);
+  font-size: 15px;
+}
+.hub-svg a:hover .hub-leaf-label,
+.hub-svg a:hover .hub-spoke-label {
+  fill: var(--accent);
+  text-decoration: underline;
+}
+.hub-svg a:hover .hub-leaf {
+  fill: var(--accent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hub-leaf {
+    transition: fill 0.15s;
+  }
+}
+.hub-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.prose .hub-section {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.prose .hub-section > h2:first-child {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+/* On a phone the map's words would be too small to read: the sections say it all. */
+@media (max-width: 560px) {
+  .hub-map {
+    display: none;
+  }
+}
+
+/* Lore: the entity's properties boxed beside its text, its relations and their family tree, then the lore naming it. */
+.layout-lore .infobox {
+  float: right;
+  clear: right;
+  width: 20em;
+  max-width: 45%;
+  margin: 0 0 1em 1.4em;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.layout-lore .infobox table {
+  width: 100%;
+  border-spacing: 3px;
+}
+.layout-lore .infobox caption {
+  padding: 2px 4px 6px;
+  font-size: 1.2em;
+  font-weight: 700;
+}
+.layout-lore .infobox th,
+.layout-lore .infobox td {
+  padding: 2px 4px;
+  overflow-wrap: anywhere;
+  text-align: left;
+  vertical-align: top;
+}
+.layout-lore .infobox th {
+  width: 38%;
+}
+.layout-lore .infobox img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+.lore-relations dl,
+.lore-links dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 18px;
+  margin: 0 0 1em;
+}
+.lore-relations dl > div,
+.lore-links dl > div {
+  display: contents;
+}
+.lore-relations dt,
+.lore-links dt {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.lore-relations dt::first-letter,
+.lore-links dt::first-letter {
+  text-transform: uppercase;
+}
+.lore-relations dd,
+.lore-links dd {
+  margin: 0;
+}
+.lore-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin: 1.2em 0;
+  padding: 18px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.prose .lore-tree-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.prose .lore-tree-row li {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  text-align: center;
+}
+.lore-tree-row small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.prose .lore-tree-row .lore-self {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+.lore-tree-row.is-up::after,
+.lore-tree-row.is-down::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  height: 24px;
+  border-left: 2px solid var(--line-strong);
+}
+.lore-tree-row.is-up::after {
+  top: 100%;
+}
+.lore-tree-row.is-down::before {
+  bottom: 100%;
+}
+@media (max-width: 640px) {
+  .layout-lore .infobox {
+    float: none;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 1em;
+  }
+}

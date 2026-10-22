@@ -309,5 +309,17 @@
   "pages": "Pages",
   "pageOf": "Page {n} sur {total}",
   "previousPage": "Page précédente",
-  "nextPage": "Page suivante"
+  "nextPage": "Page suivante",
+  "signature": "Signature",
+  "comparePros": "Avantages",
+  "compareCons": "Inconvénients",
+  "compareSummary": "En bref",
+  "comparePicked": "Notre choix",
+  "checklistProgress": "{done} sur {total} faits",
+  "checklistReset": "Réinitialiser",
+  "printCard": "Imprimer la fiche",
+  "loreRelations": "Relations",
+  "relationOf": "{relation} de",
+  "loreMentions": "Mentionné dans",
+  "loreLinks": "Dans l’univers"
 }

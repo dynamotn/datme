@@ -419,8 +419,86 @@
   .highlight-card,
   .dialogue-line,
   .lesson,
-  .adr-section {
+  .adr-section,
+  .poem-pair,
+  .prose .stanza,
+  .letter-sign,
+  .compare-option,
+  .hub-section,
+  .lore-tree {
     break-inside: avoid;
+  }
+  /* The new layouts on paper: the hub's list instead of its map, no buttons, a letter without its sheet. */
+  .checklist-progress,
+  .checklist-count,
+  .recipe-card-tools,
+  .hub-map {
+    display: none !important;
+  }
+  .letter,
+  .compare-option,
+  .hub-section {
+    box-shadow: none;
+  }
+  .letter {
+    padding: 0;
+    border: 0;
+  }
+  .compare-table {
+    overflow: visible;
+  }
+  .compare-badge,
+  .compare-option.is-picked,
+  .compare-table .is-picked {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  :root[data-theme="dark"] .prose .letter-signature-image {
+    filter: none;
+  }
+  /* A recipe card prints alone on a card of A6, the title on it and nothing else. */
+  /* A6 lying down, by its size: Chromium knows no A6. */
+  @page recipe-card {
+    size: 148mm 105mm;
+    margin: 6mm;
+  }
+  :root:has(.layout-recipe-card) {
+    page: recipe-card;
+  }
+  .layout-recipe-card {
+    font-size: 8.5pt;
+  }
+  .layout-recipe-card .crumbs,
+  .layout-recipe-card .chips,
+  .layout-recipe-card .note-meta,
+  .layout-recipe-card .note-tools,
+  .layout-recipe-card .recipe-card-cover,
+  .layout-recipe-card .recipe-tick input {
+    display: none !important;
+  }
+  .layout-recipe-card .note-title {
+    margin: 0 0 2mm;
+    font-size: 15pt;
+  }
+  .recipe-card {
+    aspect-ratio: auto;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .recipe-card .recipe {
+    grid-template-columns: 36% minmax(0, 1fr);
+    gap: 4mm;
+  }
+  .recipe-card .recipe-ingredients {
+    padding: 0;
+    background: none;
+  }
+  .recipe-card .prose h2,
+  .layout-recipe-card .prose h2 {
+    margin: 0 0 1mm;
+    font-size: 10pt;
   }
   .adr-banner,
   .dialogue-bubble,

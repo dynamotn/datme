@@ -309,5 +309,17 @@
   "pages": "Trang",
   "pageOf": "Trang {n} / {total}",
   "previousPage": "Trang trước",
-  "nextPage": "Trang sau"
+  "nextPage": "Trang sau",
+  "signature": "Chữ ký",
+  "comparePros": "Ưu điểm",
+  "compareCons": "Nhược điểm",
+  "compareSummary": "Tóm lược",
+  "comparePicked": "Lựa chọn",
+  "checklistProgress": "Đã xong {done}/{total}",
+  "checklistReset": "Đặt lại",
+  "printCard": "In thẻ",
+  "loreRelations": "Quan hệ",
+  "relationOf": "{relation} của",
+  "loreMentions": "Được nhắc trong",
+  "loreLinks": "Trong thế giới truyện"
 }

@@ -875,6 +875,12 @@ export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Re
   return note.protected ? Promise.resolve(SEALED) : renderFull(note, stack)
 }
 
+/** The translation a poem is shown beside, rendered like the poem; undefined without one. */
+export async function renderTranslation(note: Note): Promise<string | undefined> {
+  if (!note.translation || note.protected) return undefined
+  return String(await processorFor(note.lang, [note.key], {}, note.hardBreaks, await plugins()).process(note.translation.md))
+}
+
 /** HTML the vault's plugins add to the `<head>` of every page. */
 export async function userHead(): Promise<string> {
   return (await plugins()).head

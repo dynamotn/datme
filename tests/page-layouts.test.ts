@@ -5,7 +5,10 @@ import path from "node:path"
 import { Window } from "happy-dom"
 import {
   changelogHtml,
+  checklistHtml,
   citeHtml,
+  compareHtml,
+  compareOf,
   cvHtml,
   decisionHtml,
   dialogueHtml,
@@ -14,11 +17,15 @@ import {
   glossaryEntries,
   glossaryHtml,
   highlightsHtml,
+  hubHtml,
+  hubSvg,
+  letterHtml,
   letterOf,
   linksHtml,
   paperHtml,
   parseRating,
   plain,
+  poemHtml,
   quotesHtml,
   recipeHtml,
   releasesOf,
@@ -27,6 +34,7 @@ import {
   usesHtml,
   withoutBases,
 } from "../src/lib/note-layouts"
+import { keepIndent, markProsCons } from "../src/lib/layout-source"
 
 describe("layout transforms", () => {
   test("ratings are read as numbers or stars and capped at the scale", () => {
@@ -230,6 +238,136 @@ describe("layout transforms", () => {
         `<li class="lesson" data-lesson="b"><div class="lesson-head"><h2>Two</h2><label class="lesson-done"><input type="checkbox" data-lesson-done><span class="sr-only">Two: </span>Done</label></div></li></ol>`,
     )
     expect(syllabusHtml("<p>Intro</p>", [], "en-US")).toBe("<p>Intro</p>")
+  })
+
+  test("a poem keeps its indentation as non-breaking spaces, outside code", () => {
+    expect(keepIndent("Line\n  two\n\tthree\n```\n  code\n```\n   ")).toBe("Line\n\u00a0\u00a0two\n\u00a0\u00a0\u00a0\u00a0three\n```\n  code\n```\n   ")
+  })
+
+  test("a poem: its stanzas centred, numbered on demand; beside a translation, stanza by stanza", () => {
+    expect(poemHtml("<p>One<br>\ntwo</p>\n<hr>\n<p>Three</p>", false)).toBe(`<div class="poem"><p class="stanza">One<br>\ntwo</p><hr><p class="stanza">Three</p></div>`)
+    expect(poemHtml("<p>A</p>", true)).toStartWith(`<div class="poem is-numbered">`)
+    const html = poemHtml("<h2>T</h2><p>Own</p><p>More</p>", false, { html: "<h2>T</h2><p>Khác</p>", lang: "vi-VN", ownLang: "en-US", first: false })
+    expect(html).toBe(
+      `<div class="poem is-bilingual"><div class="poem-pair poem-langs"><p lang="en-US">English</p><p lang="vi-VN">Tiếng Việt</p></div>` +
+        `<div class="poem-pair is-shared"><h2>T</h2></div>` +
+        `<div class="poem-pair"><div class="poem-col" lang="en-US"><p class="stanza">Own</p></div><div class="poem-col" lang="vi-VN"><p class="stanza">Khác</p></div></div>` +
+        `<div class="poem-pair"><div class="poem-col" lang="en-US"><p class="stanza">More</p></div><div class="poem-col" lang="vi-VN"></div></div></div>`,
+    )
+    // The original goes first.
+    expect(poemHtml("<p>Own</p>", false, { html: "<p>Gốc</p>", lang: "vi-VN", ownLang: "en-US", first: true })).toContain(
+      `<div class="poem-col" lang="vi-VN"><p class="stanza">Gốc</p></div><div class="poem-col" lang="en-US">`,
+    )
+  })
+
+  test("a letter: the date line, the salutation, and the closing and signature at its foot", () => {
+    const line = { place: "Huế", date: "March 4, 2026", datetime: "2026-03-04" }
+    expect(letterHtml("<p>Dear Ann,</p>\n<p>Body.</p>\n<p>Yours,<br>\nAda</p>", line)).toBe(
+      `<div class="letter"><p class="letter-dateline">Huế, <time datetime="2026-03-04">March 4, 2026</time></p><p class="letter-salutation">Dear Ann,</p><p>Body.</p>` +
+        `<div class="letter-sign"><p class="letter-closing">Yours,</p><p class="letter-signature">Ada</p></div></div>`,
+    )
+    // A short paragraph before a last one of one line is the closing; a long one is the body.
+    expect(letterHtml("<p>Hi,</p><p>Body.</p><p>With love,</p><p>Ada</p>", {})).toContain(
+      `<div class="letter-sign"><p class="letter-closing">With love,</p><p class="letter-signature">Ada</p></div></div>`,
+    )
+    expect(letterHtml("<p>Hi,</p><p>Body.</p><p>This paragraph says far more than any closing would.</p><p>Ada</p>", {})).toContain(
+      `<p>This paragraph says far more than any closing would.</p><div class="letter-sign"><p class="letter-signature">Ada</p></div>`,
+    )
+    // Too short to sign: a salutation and a body.
+    expect(letterHtml("<p>Hi,</p><p>Body.</p>", { place: "Hà Nội" })).toBe(`<div class="letter"><p class="letter-dateline">Hà Nội</p><p class="letter-salutation">Hi,</p><p>Body.</p></div>`)
+    expect(letterHtml("<h2>No paragraphs</h2>", { date: "someday" })).toBe(`<div class="letter"><p class="letter-dateline">someday</p><h2>No paragraphs</h2></div>`)
+    // The signature property: after the last paragraph as the closing, or alone.
+    expect(letterHtml("<p>Hi,</p><p>Body.</p><p>Love,</p>", {}, { image: "/sig.png", alt: "Signature" })).toContain(
+      `<div class="letter-sign"><p class="letter-closing">Love,</p><img class="letter-signature-image" src="/sig.png" alt="Signature" loading="lazy"></div>`,
+    )
+    expect(letterHtml("<p>Body.</p>", {}, { text: "Ada & co", alt: "Signature" })).toBe(`<div class="letter"><p>Body.</p><div class="letter-sign"><p class="letter-signature">Ada &amp; co</p></div></div>`)
+    expect(letterHtml("<p>Body.</p>", {}, { alt: "Signature" })).toContain(`<p class="letter-signature"></p>`)
+  })
+
+  test("pros and cons written with + and -: a list of their own, outside code, in lists that have a +", () => {
+    expect(markProsCons("+ Fast\n- Slow\n+ ✅ Marked\n\n- plain\n- list\n```\n+ code\n```")).toBe("* ✅ Fast\n* ❌ Slow\n+ ✅ Marked\n\n- plain\n- list\n```\n+ code\n```")
+  })
+
+  test("a comparison: pros and cons from marks or subheadings, facts from key: value lines", () => {
+    const { intro, options } = compareOf(
+      `<p>Intro</p><h2 id="a">A</h2>\n<p>price: 10<br>\nspeed:: fast</p>\n<ul><li>✅ Good</li><li><p>❌ Bad</p></li></ul><ul><li>Weight: 2 kg</li></ul><ul><li>Plain item</li></ul><p>Note it.</p>` +
+        `<h2>B</h2><h3>Pros</h3><ul><li>Cheap</li></ul><h3>Nhược điểm</h3><ol><li>Loud</li></ol><h3>Story</h3><ul><li>told</li></ul><blockquote><p>q</p></blockquote>`,
+    )
+    expect(intro).toBe("<p>Intro</p>")
+    expect(options.map((o) => [o.name, o.id, o.pros, o.cons, o.facts])).toEqual([
+      ["A", "a", ["Good"], ["<p>Bad</p>"], [["price", "10"], ["speed", "fast"], ["Weight", "2 kg"]]],
+      ["B", undefined, ["Cheap"], ["Loud"], []],
+    ])
+    expect(options[0].body).toBe("<ul><li>Plain item</li></ul><p>Note it.</p>")
+    expect(options[1].body).toBe("<h3>Story</h3><ul><li>told</li></ul><blockquote><p>q</p></blockquote>")
+    const labels = { pros: "Pros", cons: "Cons", summary: "At a glance", picked: "Our pick" }
+    const html = compareHtml(intro, options, " b ", labels)
+    expect(html).toStartWith(
+      `<p>Intro</p><div class="table-wrap compare-table" role="region" aria-label="At a glance" tabindex="0"><table><caption>At a glance</caption><thead><tr><td></td><th scope="col">A</th><th scope="col" class="is-picked">B</th></tr></thead>`,
+    )
+    expect(html).toContain(`<tr><th scope="row">price</th><td>10</td><td class="is-picked">—</td></tr>`)
+    expect(html).toContain(
+      `<section class="compare-option"><h2 id="a">A</h2><ul><li>Plain item</li></ul><p>Note it.</p><div class="compare-procon"><div class="compare-pros"><p class="compare-label">Pros</p><ul><li>Good</li></ul></div><div class="compare-cons"><p class="compare-label">Cons</p><ul><li><p>Bad</p></li></ul></div></div></section>`,
+    )
+    expect(html).toContain(`<section class="compare-option is-picked"><h2>B</h2><p class="compare-badge">Our pick</p>`)
+    // Without facts, no table; without pros or cons, no columns; without options, the text alone.
+    const bare = compareHtml("", compareOf("<h2>C</h2><p>Just text.</p>").options, "", labels)
+    expect(bare).toBe(`<div class="compare-options"><section class="compare-option"><h2>C</h2><p>Just text.</p></section></div>`)
+    expect(compareHtml("<p>x</p>", [], "", labels)).toBe("<p>x</p>")
+  })
+
+  test("a checklist: every task a box to tick, counted per section, outside task queries", () => {
+    const labels = { progress: "{done} of {total} done", reset: "Reset" }
+    const html = checklistHtml(
+      `<p>Intro</p><ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" disabled aria-label="Pass &amp; port"> Pass</li></ul>` +
+        `<h2>Clothes</h2><ul><li class="task-list-item"><input type="checkbox" checked disabled aria-label="Socks"> Socks</li><li class="task-list-item"><input type="checkbox" disabled aria-label="Socks"> Socks</li><li class="task-list-item"><input type="checkbox" disabled> ?</li></ul>` +
+        `<h2>Notes</h2><p>No tasks.</p><div class="dataview dv-tasks tasks-query"><ul><li class="task-list-item"><input type="checkbox" disabled aria-label="Elsewhere"> Elsewhere</li></ul></div>`,
+      labels,
+    )
+    expect(html).toStartWith(
+      `<div class="checklist" data-checklist><div class="checklist-progress" data-checklist-progress data-template="{done} of {total} done" hidden><progress max="4" value="0" aria-hidden="true"></progress><span>0 of 4 done</span><button type="button" class="checklist-reset" data-checklist-reset>Reset</button></div><p>Intro</p>`,
+    )
+    expect(html).toContain(`<input type="checkbox" aria-label="Pass &amp; port" data-check="pass-port">`)
+    expect(html).toContain(
+      `<section class="checklist-section" data-checklist-section><h2>Clothes</h2><p class="checklist-count" data-checklist-count hidden></p><ul><li class="task-list-item"><input type="checkbox" checked aria-label="Socks" data-check="socks">`,
+    )
+    expect(html).toContain(`data-check="socks-2"`)
+    expect(html).toContain(`<input type="checkbox" data-check="item">`)
+    // A section without tasks stays as it is, and so do the tasks a query gathers.
+    expect(html).toContain(`<h2>Notes</h2><p>No tasks.</p><div class="dataview dv-tasks tasks-query"><ul><li class="task-list-item"><input type="checkbox" disabled aria-label="Elsewhere">`)
+    expect(checklistHtml("<ul><li>No tasks</li></ul>", labels)).toBe("<ul><li>No tasks</li></ul>")
+  })
+
+  test("a hub: its sections as spokes of a map, their links as leaves, and the sections as a list", () => {
+    const html = hubHtml(
+      "Index",
+      `<p>Intro</p><h2 id="w">Writing<a class="heading-anchor" href="#w">#</a></h2><ul><li><a class="internal" href="/a">A</a></li><li><a href="/a">A again</a></li><li><a href="#top">Top</a></li><li><a href="/e"><img alt=""></a></li><sup><a href="#fn-1" data-footnote-ref>1</a></sup></ul>`,
+    )
+    expect(html).toStartWith(`<p>Intro</p><figure class="hub-map" aria-hidden="true"><svg class="hub-svg" viewBox="`)
+    expect(html).toContain(`<a href="/a" tabindex="-1"><title>A</title><circle class="hub-leaf" cx="0" cy="-290" r="5"/><text class="hub-leaf-label" x="0" y="-304" text-anchor="middle">A</text></a>`)
+    expect(html).toContain(`<a href="#w" tabindex="-1"><title>Writing</title><circle class="hub-spoke hub-c0" cx="0" cy="-150" r="11"/>`)
+    expect(html.match(/class="hub-leaf"/g)).toHaveLength(1)
+    expect(html).toContain(`<ul class="hub-sections"><li class="hub-section"><h2 id="w">Writing`)
+    expect(hubHtml("Index", "<p>No sections.</p>")).toBe("<p>No sections.</p>")
+    // Leaves beyond eight are counted on the last; crowded ones alternate their distance; labels sit away from the centre.
+    const many = Array.from({ length: 10 }, (_, i) => ({ label: `Leaf number ${i} with a long name`, href: `/l${i}` }))
+    const svg = hubSvg("A title far too long to fit in the centre", [
+      { label: "Down", leaves: many },
+      { label: "Left", id: "left", leaves: [{ label: "x", href: "/x" }] },
+      { label: "Up", leaves: [] },
+      { label: "Right", leaves: [] },
+    ])
+    expect(svg.match(/class="hub-leaf"/g)).toHaveLength(9)
+    expect(svg).toContain(`<g><circle class="hub-leaf"`)
+    expect(svg).toContain(`>+3</text>`)
+    expect(svg).toContain(`Leaf number 0 with a…`)
+    expect(svg).toContain(`A title far too long to…`)
+    expect(svg).toContain(`text-anchor="start"`)
+    expect(svg).toContain(`text-anchor="end"`)
+    expect(svg).toContain(`<g><circle class="hub-spoke hub-c0"`)
+    // The frame holds every point and its label.
+    const [x, y, w, h] = svg.match(/viewBox="([^"]+)"/)![1].split(" ").map(Number)
+    expect(x < -330 && y < -330 && x + w > 330 && y + h > 150).toBe(true)
   })
 
   test("frontmatter values read as plain text, wikilinks by their alias or name", () => {
@@ -551,6 +689,109 @@ describe("page layouts", () => {
       const res = await run.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
       await window.happyDOM.close()
       expect({ page, found: res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id) }).toEqual({ page, found: [] })
+    }
+  }, 120_000)
+
+  test("a poem: centred stanzas, numbered, their lines and indentation kept", () => {
+    const html = article("Poem/index.html")
+    expect(html).toContain('<div class="poem is-numbered"><p class="stanza">The road goes on,<br>\n\u00a0\u00a0\u00a0\u00a0and on it goes,<br>')
+    expect(html.match(/<p class="stanza">/g)).toHaveLength(2)
+    expect(html).not.toContain('class="properties')
+    expect(read("Poem/index.html")).toContain('data-chrome="full-norail"')
+  })
+
+  test("a bilingual poem: the original and its translation side by side, stanza by stanza", () => {
+    const html = article("Bilingual-poem/index.html")
+    expect(html).toContain('<div class="poem-pair poem-langs"><p lang="en-US">English</p><p lang="vi-VN">Tiếng Việt</p></div>')
+    expect(html.match(/<div class="poem-pair">/g)).toHaveLength(2)
+    expect(html).toContain('<div class="poem-col" lang="vi-VN"><p class="stanza">Thu ăn măng trúc,<br>\n\u00a0\u00a0đông ăn giá.</p></div>')
+  })
+
+  test("a letter: its place and date, salutation, closing and a signature published like a picture", () => {
+    const html = article("Letter/index.html")
+    expect(html).toContain('<p class="letter-dateline">Hà Nội, <time datetime="2026-10-01">October 1, 2026</time></p><p class="letter-salutation">Dear Ann,</p>')
+    expect(html).toContain('<div class="letter-sign"><p class="letter-closing">Warm regards,</p><img class="letter-signature-image" src="/assets/_assets/signature.png" alt="Signature"')
+    expect(read("assets/_assets/signature.png").length).toBeGreaterThan(0)
+    expect(html).not.toContain('class="properties')
+    expect(article("Short-letter/index.html")).toContain('<div class="letter-sign"><p class="letter-closing">Yours,</p><p class="letter-signature">Ada</p></div>')
+  })
+
+  test("a comparison: a table of facts, pros and cons from marks, + and - and subheadings, the pick", () => {
+    const html = article("Note-apps/index.html")
+    expect(html).toContain('<th scope="col" class="is-picked">Obsidian</th><th scope="col">Notion</th><th scope="col">Paper</th>')
+    expect(html).toContain('<tr><th scope="row">price</th><td class="is-picked">free</td><td>from $10</td><td>—</td></tr>')
+    expect(html).toContain('<section class="compare-option is-picked"><h2 id="obsidian">')
+    expect(html).toContain('<div class="compare-pros"><p class="compare-label">Pros</p><ul><li>Databases</li></ul></div><div class="compare-cons"><p class="compare-label">Cons</p><ul><li>Slow offline</li><li>Lock-in</li></ul></div>')
+    expect(html).toContain('<ul><li>Nothing to install</li></ul>')
+  })
+
+  test("a checklist: tasks to tick with their progress; tasks elsewhere stay read only", () => {
+    const html = article("Packing/index.html")
+    expect(html).toContain('<div class="checklist" data-checklist><div class="checklist-progress" data-checklist-progress data-template="{done} of {total} done" hidden><progress max="7"')
+    expect(html.match(/data-check="/g)).toHaveLength(7)
+    expect(html).not.toMatch(/<input type="checkbox"[^>]*disabled/)
+    expect(html.match(/data-checklist-section/g)).toHaveLength(2)
+    const chores = article("Chores/index.html")
+    expect(chores).toContain('<input type="checkbox" disabled aria-label="Water the plants">')
+    expect(chores).not.toContain("data-check")
+  })
+
+  test("a recipe card: its facts, ingredients beside the steps, and a button to print it on A6", () => {
+    const html = article("Pancakes/index.html")
+    expect(html).toContain('<div class="recipe-card"><img class="recipe-card-cover" src="/assets/_assets/road.png" alt=""')
+    expect(html).toContain('<p class="recipe-card-facts">⏱ 20 min · 🍽 4</p>')
+    // The ingredients are an aside, where the article helper stops.
+    expect(read("Pancakes/index.html")).toContain('<aside class="recipe-ingredients">')
+    expect(read("Pancakes/index.html")).toContain('<button type="button" class="recipe-card-print" data-print>Print card</button>')
+    expect(html).not.toContain('class="properties')
+    const css = fs.readdirSync(path.join(out, "_astro")).filter((f) => f.endsWith(".css")).map((f) => read(`_astro/${f}`)).join("")
+    expect(css).toContain("@page recipe-card{size:148mm 105mm")
+  })
+
+  test("a hub: a map drawn at build time, hidden from screen readers, and its sections as the list they read", () => {
+    const html = article("Map-of-content/index.html")
+    expect(html).toMatch(/<figure class="hub-map" aria-hidden="true"><svg class="hub-svg" viewBox="[^"]+" aria-hidden="true" focusable="false">/)
+    expect(html.match(/<circle class="hub-spoke /g)).toHaveLength(3)
+    expect(html.match(/<circle class="hub-leaf"/g)).toHaveLength(7)
+    expect(html).toContain('<a href="/Paper" tabindex="-1"><title>Paper</title>')
+    expect(html.match(/<li class="hub-section">/g)).toHaveLength(3)
+  })
+
+  test("lore: properties in an infobox, relations and their family tree, and the lore naming it by relation", () => {
+    const html = article("Lore/Aria/index.html")
+    expect(html).toContain('<div class="infobox">')
+    expect(html).toMatch(/<th scope="row">species<\/th>\s*<td>/)
+    expect(html).not.toContain('class="properties')
+    expect(html).toContain('<div><dt>parent</dt><dd><a class="internal" href="/Lore/Borin">Borin</a></dd></div><div><dt>ally</dt><dd><a class="internal" href="/Lore/Cael">Cael</a></dd></div>')
+    expect(html).toContain('<ul class="lore-tree-row is-up"><li><a class="internal" href="/Lore/Borin" tabindex="-1">Borin</a><small>parent</small></li></ul>')
+    expect(html).toContain('<div><dt>child of</dt><dd><a class="internal" href="/Lore/Borin">Borin</a></dd></div><div><dt>Mentioned in</dt><dd><a class="internal" href="/Lore/Cael">Cael</a></dd></div>')
+    expect(read("Lore/Aria/index.html")).toContain('data-chrome="full"')
+  })
+
+  test("protected poems, letters and lore keep their translation, signature and relations inside the ciphertext", () => {
+    const poem = read("Locked-poem/index.html")
+    for (const secret of ["Lời thề", "A vow kept", "poem-pair"]) expect(poem).not.toContain(secret)
+    expect(fs.existsSync(path.join(out, "assets/_assets/secret-signature.png"))).toBe(false)
+    const letter = read("Locked-letter/index.html")
+    for (const secret of ["secret-signature", "Secret Valley", "letter-dateline"]) expect(letter).not.toContain(secret)
+    const hidden = read("Lore/Hidden/index.html")
+    for (const secret of ["enemy", "lore-relations", "infobox"]) expect(hidden).not.toContain(secret)
+    // Nor does another entity's page tell what the protected one says of it.
+    expect(article("Lore/Aria/index.html")).not.toContain("Hidden")
+    expect(article("Lore/Aria/index.html")).not.toContain("enemy")
+  })
+
+  test("the seven new layouts have no serious or critical axe violations", async () => {
+    const axe = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
+    for (const page of ["Poem", "Bilingual-poem", "Letter", "Note-apps", "Packing", "Pancakes", "Map-of-content", "Lore/Aria"]) {
+      const window = new Window({ url: "https://garden.example/", settings: { disableJavaScriptEvaluation: false } })
+      window.document.write(read(`${page}/index.html`).replace(/<script\b[\s\S]*?<\/script>/g, ""))
+      window.eval(axe)
+      const run = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; nodes: { target: string[] }[] }[] }> } }).axe
+      const res = await run.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
+      await window.happyDOM.close()
+      const serious = res.violations.filter((v) => v.impact === "serious" || v.impact === "critical")
+      expect({ page, found: serious.map((v) => `${v.id} at ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`) }).toEqual({ page, found: [] })
     }
   }, 120_000)
 

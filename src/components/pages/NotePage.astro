@@ -1,7 +1,7 @@
 ---
 import type { Note } from "~/lib/vault"
 import { getVault } from "~/lib/vault"
-import { renderNote, renderSecret } from "~/lib/markdown"
+import { renderNote, renderSecret, renderTranslation } from "~/lib/markdown"
 import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
@@ -79,7 +79,8 @@ const pagefindFilters = [`folder:${note.dir.split("/")[0]}`, ...note.types.map((
   .join(", ")
 const jsonLd = noteLd(note, { title, description: r.description, image, words: r.words })
 // A résumé and a gallery reshape the note's text; a page with a layout is a destination, not a note among others.
-const html = layoutHtml(note, r.html)
+// A poem shown beside its translation renders that too.
+const html = layoutHtml(note, r.html, note.layout === "poem" ? await renderTranslation(note) : undefined)
 const plain = !note.layout
 const ownLook = explainLook(note)
 const explained = {
@@ -254,7 +255,7 @@ const feed = note.protected
               </a>
             </p>
           )}
-          {wiki && <Infobox note={note} title={title} />}
+          {(wiki || note.layout === "lore") && <Infobox note={note} title={title} />}
           {wiki && (
             <div class="wiki-toc">
               <Toc headings={r.headings} lang={note.lang} />

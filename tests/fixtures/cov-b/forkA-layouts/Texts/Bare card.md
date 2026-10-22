@@ -1,0 +1,5 @@
+---
+layout: recipe-card
+---
+
+Nothing.

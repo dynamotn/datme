@@ -111,6 +111,11 @@ const LAYOUT_SHOWN: Partial<Record<Layout, string[]>> = {
   highlights: ["author", "authors", "source", "url"],
   dialogue: ["speakers"],
   trip: ["route"],
+  poem: ["bilingual", "numbered"],
+  letter: ["place", "date", "signature"],
+  compare: ["pick"],
+  "recipe-card": ["time", "total_time", "duration", "servings", "serves", "yield"],
+  lore: ["relations"],
 }
 
 /** The properties block of a note: aliases first, then every other non-hidden key. */

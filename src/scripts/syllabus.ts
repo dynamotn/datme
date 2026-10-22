@@ -2,29 +2,12 @@
  * The lessons of a syllabus a reader has ticked as done, kept in their
  * browser per course, and the progress they make.
  */
-import { deckPath } from "./practice"
-
-const KEY = "datme:syllabus:"
+import { loadTicks, saveTicks } from "./ticks"
 
 /** The lessons done in a course, by id. */
-export function loadDone(path: string): string[] {
-  try {
-    const list: unknown = JSON.parse(localStorage.getItem(KEY + deckPath(path)) ?? "[]")
-    return Array.isArray(list) ? list.filter((x): x is string => typeof x === "string") : []
-  } catch {
-    // unreadable or blocked storage: nothing done yet
-    return []
-  }
-}
+export const loadDone = (path: string): string[] => loadTicks("syllabus", path) ?? []
 
-export function saveDone(path: string, done: string[]): void {
-  try {
-    if (done.length) localStorage.setItem(KEY + deckPath(path), JSON.stringify(done))
-    else localStorage.removeItem(KEY + deckPath(path))
-  } catch {
-    // private mode: the ticks last for this visit only
-  }
-}
+export const saveDone = (path: string, done: string[]): void => saveTicks("syllabus", path, done.length ? done : null)
 
 /** Tick the lessons done before, keep each new tick, and show how far the reader is. */
 export function setupSyllabus(): void {

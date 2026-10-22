@@ -114,8 +114,9 @@ const tended =
     </div>
   )
 }
+{/* The wiki style and lore box the properties beside the text instead. */}
 {
-  props.length > 0 && baseStyle(look) !== "wiki" && (
+  props.length > 0 && baseStyle(look) !== "wiki" && note.layout !== "lore" && (
     <details class="properties">
       <summary>{s.properties}</summary>
       <dl>

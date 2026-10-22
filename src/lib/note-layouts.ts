@@ -1,7 +1,7 @@
 import { site, type Lang } from "../site.config"
 import { getVault, listed, type Layout, type Note } from "./vault"
 import { slugTag } from "./slug"
-import { formatDate, t, type StringKey } from "./i18n"
+import { formatDate, langMeta, t, type StringKey } from "./i18n"
 import { currentPage, engineFor } from "./dataview-render"
 import { parseBase, runView, type BaseFile } from "./bases"
 import { parseLocation, type Place } from "./places"
@@ -18,7 +18,8 @@ import { absUrl } from "./base"
  * Page layouts a note asks for with its `layout` property. Some reshape the
  * note's own text (a résumé, a gallery, a timeline, links, uses, a FAQ,
  * quotes, a paper, a decision record, a changelog, a dialogue, reading
- * highlights, a glossary, a trip, a syllabus); collections list other notes,
+ * highlights, a glossary, a trip, a syllabus, a poem, a letter, a comparison,
+ * a checklist, a recipe card, a hub, lore); collections list other notes,
  * grouped by status, year or any property. A collection whose note embeds a base lists what the base finds,
  * in its order and groups.
  */
@@ -1603,8 +1604,494 @@ export function syllabusHtml(intro: string, lessons: Lesson[], lang: Lang): stri
   )
 }
 
-/** A note's rendered text reshaped by its layout; a recipe of a collection gets its two columns. */
-export function layoutHtml(note: Note, html: string): string {
+// ---------- a poem ----------
+
+/** Block elements a poem, a letter or a comparison is made of. */
+const BLOCKS = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "ul", "ol", "div", "section", "figure", "pre", "table", "details", "dl"]
+
+/** The top-level blocks of some HTML, and whatever stands between them (an <hr>), each trimmed; blank text left out. */
+const blocksOf = (html: string) =>
+  topLevel(html, BLOCKS)
+    .map((b) => b.html.trim())
+    .filter(Boolean)
+
+/** A paragraph is a stanza. */
+const stanza = (block: string) => block.replace(/^<p>/, '<p class="stanza">')
+
+/** The translation a poem is shown beside: its HTML, its language, and whether it is the original, to go first. */
+export interface PoemPair {
+  html: string
+  lang: Lang
+  ownLang: Lang
+  first: boolean
+}
+
+/**
+ * A poem: its stanzas centred on the page, their lines and indentation kept,
+ * numbered when `numbered`. With a translation, the two go side by side,
+ * stanza by stanza: a block both languages share spans the two.
+ */
+export function poemHtml(html: string, numbered: boolean, pair?: PoemPair): string {
+  const cls = `poem${numbered ? " is-numbered" : ""}`
+  if (!pair) return `<div class="${cls}">${blocksOf(html).map(stanza).join("")}</div>`
+  const own = blocksOf(html)
+  const other = blocksOf(pair.html)
+  const [left, right] = pair.first ? [other, own] : [own, other]
+  const [l, r] = pair.first ? [pair.lang, pair.ownLang] : [pair.ownLang, pair.lang]
+  const col = (lang: Lang, block = "") => `<div class="poem-col" lang="${escapeAttr(lang)}">${stanza(block)}</div>`
+  const rows = Array.from({ length: Math.max(left.length, right.length) }, (_, i) =>
+    left[i] === right[i] ? `<div class="poem-pair is-shared">${stanza(left[i])}</div>` : `<div class="poem-pair">${col(l, left[i])}${col(r, right[i])}</div>`,
+  )
+  const head = `<div class="poem-pair poem-langs">${[l, r].map((x) => `<p lang="${escapeAttr(x)}">${escapeAttr(langMeta(x).name)}</p>`).join("")}</div>`
+  return `<div class="${cls} is-bilingual">${head}${rows.join("")}</div>`
+}
+
+// ---------- a letter ----------
+
+/** How a letter is signed: a picture of the signature, or the name in words. */
+export interface Signature {
+  image?: string
+  text?: string
+  alt: string
+}
+
+const wordCount = (html: string) => wordsIn(textOf(html))
+
+/**
+ * A letter: the place and date on a line of their own, the first paragraph
+ * as the salutation, and the closing and signature at the foot. The
+ * signature is `signature`, after the last paragraph as the closing; else the
+ * last line of the last paragraph, the lines before it the closing; a last
+ * paragraph of one line follows a short paragraph (six words at most) as the closing. A body paragraph always stays.
+ */
+export function letterHtml(html: string, dateline: { place?: string; date?: string; datetime?: string }, signature?: Signature): string {
+  const blocks = topLevel(html, BLOCKS).filter((b) => b.tag || b.html.trim())
+  const paras = blocks.flatMap((b, i) => (b.tag === "p" ? [i] : []))
+  const salutation = paras.length > 1 ? paras[0] : undefined
+  // Past the salutation and the first paragraph of the body.
+  const tail = paras.slice(salutation === undefined ? 1 : 2)
+  let closing: number | undefined
+  let sign = ""
+  let signedAt: number | undefined
+  if (signature) {
+    closing = tail.at(-1)
+    sign = signature.image
+      ? `<img class="letter-signature-image" src="${escapeAttr(signature.image)}" alt="${escapeAttr(signature.alt)}" loading="lazy">`
+      : `<p class="letter-signature">${escapeAttr(signature.text ?? "")}</p>`
+  } else if (tail.length) {
+    signedAt = tail.at(-1)!
+    const lines = innerOf(blocks[signedAt].html).trim().split(/<br>\n?|\n/)
+    sign = `<p class="letter-signature">${lines.pop()!.trim()}</p>`
+    if (lines.length) {
+      blocks[signedAt].html = `<p>${lines.join("<br>\n")}</p>`
+      closing = signedAt
+      signedAt = undefined
+    } else {
+      const before = tail.at(-2)
+      if (before !== undefined && wordCount(blocks[before].html) <= 6) closing = before
+    }
+  }
+  const out = blocks.map((b, i) => {
+    if (i === salutation) return b.html.replace(/^<p>/, '<p class="letter-salutation">')
+    if (i === signedAt) return closing === undefined ? `<div class="letter-sign">${sign}</div>` : ""
+    if (i === closing) return `<div class="letter-sign">${b.html.replace(/^<p>/, '<p class="letter-closing">')}${sign}</div>`
+    return b.html
+  })
+  // A signature with no closing paragraph to stand under ends the letter on its own.
+  if (signature && closing === undefined) out.push(`<div class="letter-sign">${sign}</div>`)
+  const { place, date, datetime } = dateline
+  const when = date ? (datetime ? `<time datetime="${escapeAttr(datetime)}">${escapeAttr(date)}</time>` : escapeAttr(date)) : ""
+  const line = place || date ? `<p class="letter-dateline">${escapeAttr(place ?? "")}${place && date ? ", " : ""}${when}</p>` : ""
+  return `<div class="letter">${line}${out.join("")}</div>`
+}
+
+/** A letter's place, its date written out, and how it is signed. */
+function letterFacts(note: Note): { dateline: { place?: string; date?: string; datetime?: string }; signature?: Signature } {
+  const fm = note.source.fm
+  const s = t(note.lang)
+  const d = dateOf(fm.date)
+  const text = plain(fm.signature)
+  return {
+    dateline: {
+      place: plain(fm.place) || undefined,
+      date: d ? d.toLocaleDateString(note.lang, { dateStyle: "long", timeZone: "UTC" }) : plain(fm.date) || undefined,
+      datetime: d ? dayKey(d) : undefined,
+    },
+    signature: note.signature ? { image: note.signature, alt: s.signature } : text ? { text, alt: s.signature } : undefined,
+  }
+}
+
+// ---------- a comparison ----------
+
+/** An option of a comparison: its heading, what is said for and against it, and its facts. */
+export interface CompareOption {
+  heading: string
+  name: string
+  id?: string
+  pros: string[]
+  cons: string[]
+  /** `key: value` lines, in order. */
+  facts: [key: string, value: string][]
+  body: string
+}
+
+const PRO = /^(\s*(?:<p>)?\s*)(?:✅|✔️?|👍|➕)\s*/u
+const CON = /^(\s*(?:<p>)?\s*)(?:❌|✖️?|✗|👎|➖|⛔)\s*/u
+const PROS_HEADING = /^(pros|advantages|for|ưu điểm|điểm mạnh|vorteile|pro|avantages|ventajas|メリット|長所|优点|優點)$/i
+const CONS_HEADING = /^(cons|disadvantages|against|nhược điểm|điểm yếu|nachteile|contra|inconvénients|desventajas|デメリット|短所|缺点|缺點)$/i
+/** "Price: 10 €" or a Dataview field "Price:: 10 €", the key in plain words. */
+const FACT = /^\s*([^<>:\n]{1,40}?)\s*::?\s+(\S[\s\S]*?)\s*$/
+
+/** The facts a run of lines gives, when every line is one. */
+function factsOf(lines: string[]): [string, string][] | undefined {
+  const facts = lines.map((l) => l.match(FACT))
+  return facts.length && facts.every(Boolean) ? facts.map((m) => [m![1], m![2]]) : undefined
+}
+
+/** The options of a comparison, each H2, after the text that introduces them. */
+export function compareOf(html: string): { intro: string; options: CompareOption[] } {
+  const { intro, parts } = sections(html)
+  const options = parts.map((p): CompareOption => {
+    const option: CompareOption = { heading: p.heading, name: textOf(p.heading), id: idOf(p.heading), pros: [], cons: [], facts: [], body: "" }
+    let side: "pros" | "cons" | undefined
+    for (const b of topLevel(p.body, BLOCKS)) {
+      if (b.tag && /^h[3-6]$/.test(b.tag)) {
+        const name = textOf(b.html)
+        side = PROS_HEADING.test(name) ? "pros" : CONS_HEADING.test(name) ? "cons" : undefined
+        if (side) continue
+      } else if (b.tag === "ul" || b.tag === "ol") {
+        const items = topLevel(innerOf(b.html), ["li"])
+          .filter((x) => x.tag)
+          .map((x) => innerOf(x.html))
+        if (side) {
+          option[side].push(...items)
+          continue
+        }
+        if (items.every((li) => PRO.test(li) || CON.test(li))) {
+          for (const li of items) {
+            if (PRO.test(li)) option.pros.push(li.replace(PRO, "$1"))
+            else option.cons.push(li.replace(CON, "$1"))
+          }
+          continue
+        }
+        const facts = factsOf(items.map((li) => li.replace(/^\s*<p>|<\/p>\s*$/g, "")))
+        if (facts) {
+          option.facts.push(...facts)
+          continue
+        }
+      } else if (b.tag === "p") {
+        const facts = factsOf(innerOf(b.html).split(/<br>\n?|\n/))
+        if (facts) {
+          option.facts.push(...facts)
+          continue
+        }
+      }
+      if (b.tag || b.html.trim()) option.body += b.html
+    }
+    return option
+  })
+  return { intro, options }
+}
+
+/**
+ * A comparison: each option a card, what speaks for and against it in two
+ * columns, and a table of their facts side by side; `pick` (an option's
+ * name) is the one chosen.
+ */
+export function compareHtml(
+  intro: string,
+  options: CompareOption[],
+  pick: string,
+  labels: { pros: string; cons: string; summary: string; picked: string },
+): string {
+  if (!options.length) return intro
+  const picked = (o: CompareOption) => !!pick && o.name.toLocaleLowerCase() === pick.trim().toLocaleLowerCase()
+  const badge = `<p class="compare-badge">${escapeAttr(labels.picked)}</p>`
+  // Facts by key, whatever its case, in the order they first come.
+  const keys = new Map<string, string>()
+  for (const o of options) for (const [k] of o.facts) if (!keys.has(k.toLowerCase())) keys.set(k.toLowerCase(), k)
+  const cell = (o: CompareOption, key: string) => o.facts.find(([k]) => k.toLowerCase() === key)?.[1] ?? "—"
+  const table = keys.size
+    ? `<div class="table-wrap compare-table" role="region" aria-label="${escapeAttr(labels.summary)}" tabindex="0"><table><caption>${escapeAttr(labels.summary)}</caption>` +
+      `<thead><tr><td></td>${options.map((o) => `<th scope="col"${picked(o) ? ' class="is-picked"' : ""}>${escapeAttr(o.name)}</th>`).join("")}</tr></thead><tbody>` +
+      [...keys]
+        .map(([key, label]) => `<tr><th scope="row">${escapeAttr(label)}</th>${options.map((o) => `<td${picked(o) ? ' class="is-picked"' : ""}>${cell(o, key)}</td>`).join("")}</tr>`)
+        .join("") +
+      `</tbody></table></div>`
+    : ""
+  const side = (cls: string, label: string, items: string[]) =>
+    items.length ? `<div class="compare-${cls}"><p class="compare-label">${escapeAttr(label)}</p><ul>${items.map((li) => `<li>${li}</li>`).join("")}</ul></div>` : ""
+  const cards = options.map(
+    (o) =>
+      `<section class="compare-option${picked(o) ? " is-picked" : ""}">${o.heading}${picked(o) ? badge : ""}${o.body}` +
+      (o.pros.length || o.cons.length ? `<div class="compare-procon">${side("pros", labels.pros, o.pros)}${side("cons", labels.cons, o.cons)}</div>` : "") +
+      `</section>`,
+  )
+  return `${intro}${table}<div class="compare-options">${cards.join("")}</div>`
+}
+
+// ---------- a checklist ----------
+
+/** A task's checkbox, as the markdown renders it: read only. */
+const TASK_BOX = /<input type="checkbox"([^>]*)>/g
+
+/**
+ * A checklist: every task of the note, outside task queries, a box the
+ * reader ticks, the browser keeping the ticks; each section counts its own,
+ * and a bar the whole, with a button back to the list as written.
+ */
+export function checklistHtml(html: string, labels: { progress: string; reset: string }): string {
+  const used = new Set<string>()
+  let total = 0
+  // Tasks a query gathers from other notes stay as they are.
+  const marked = topLevel(html, ["div"])
+    .map((b) =>
+      b.tag && b.html.startsWith('<div class="dataview dv-tasks')
+        ? b.html
+        : b.html.replace(TASK_BOX, (_m, attrs: string) => {
+            const label = unescape(attrs.match(/aria-label="([^"]*)"/)?.[1] ?? "")
+            const base = label.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 60) || "item"
+            let id = base
+            for (let n = 2; used.has(id); n++) id = `${base}-${n}`
+            used.add(id)
+            total++
+            return `<input type="checkbox"${attrs.replace(/\sdisabled(="")?/, "")} data-check="${escapeAttr(id)}">`
+          }),
+    )
+    .join("")
+  if (!total) return html
+  const { intro, parts } = sections(marked)
+  const body = parts
+    .map((p) =>
+      p.body.includes("data-check=")
+        ? `<section class="checklist-section" data-checklist-section>${p.heading}<p class="checklist-count" data-checklist-count hidden></p>${p.body}</section>`
+        : p.heading + p.body,
+    )
+    .join("")
+  const bar =
+    `<div class="checklist-progress" data-checklist-progress data-template="${escapeAttr(labels.progress)}" hidden><progress max="${total}" value="0" aria-hidden="true"></progress>` +
+    `<span>${escapeAttr(labels.progress.replace("{done}", "0").replace("{total}", String(total)))}</span><button type="button" class="checklist-reset" data-checklist-reset>${escapeAttr(labels.reset)}</button></div>`
+  return `<div class="checklist" data-checklist>${bar}${intro}${body}</div>`
+}
+
+// ---------- a recipe card ----------
+
+/** A recipe on a card: its picture, how long it takes and how many it feeds, its ingredients beside its steps, and a button to print it. */
+export function recipeCardHtml(note: Note, html: string, print: string): string {
+  const facts = recipeFacts(note)
+  return (
+    `<div class="recipe-card">` +
+    (note.cover ? `<img class="recipe-card-cover" src="${escapeAttr(note.cover)}" alt="" loading="lazy">` : "") +
+    (facts.length ? `<p class="recipe-card-facts">${facts.map(escapeAttr).join(" · ")}</p>` : "") +
+    recipeHtml(html) +
+    `</div><p class="recipe-card-tools"><button type="button" class="recipe-card-print" data-print>${escapeAttr(print)}</button></p>`
+  )
+}
+
+// ---------- a hub ----------
+
+/** A section of a hub, a spoke of its map: its heading and the links it holds, its leaves. */
+export interface Spoke {
+  label: string
+  id?: string
+  leaves: { label: string; href: string }[]
+}
+
+/** Links of some HTML that lead somewhere else: not a heading's anchor, a footnote or a place on the page. */
+function linksIn(html: string): { label: string; href: string }[] {
+  const out: { label: string; href: string }[] = []
+  for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)) {
+    const href = unescape(m[1].match(/\shref="([^"]*)"/)?.[1] ?? "")
+    const label = textOf(m[2])
+    if (!href || href.startsWith("#") || /heading-anchor|data-footnote/.test(m[1]) || !label || out.some((l) => l.href === href)) continue
+    out.push({ label, href })
+  }
+  return out
+}
+
+/** The spokes of a hub: its H2 sections and their links. */
+export function spokesOf(parts: { heading: string; body: string }[]): Spoke[] {
+  return parts.map((p) => ({ label: textOf(p.heading), id: idOf(p.heading), leaves: linksIn(p.body) }))
+}
+
+/** At most this many leaves are drawn on a spoke; a last one counts the others. */
+const LEAVES = 8
+const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
+const at = (r: number, deg: number) => {
+  const a = (deg * Math.PI) / 180
+  return [+(r * Math.cos(a)).toFixed(1), +(r * Math.sin(a)).toFixed(1)] as const
+}
+
+/** A label beside a point, away from the centre. */
+function label(x: number, y: number, deg: number, text: string, cls: string): string {
+  const cos = Math.cos((deg * Math.PI) / 180)
+  const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle"
+  const [dx, dy] = anchor === "middle" ? [0, y < 0 ? -14 : 22] : [anchor === "start" ? 12 : -12, 5]
+  return `<text class="${cls}" x="${+(x + dx).toFixed(1)}" y="${+(y + dy).toFixed(1)}" text-anchor="${anchor}">${escapeAttr(text)}</text>`
+}
+
+/**
+ * A hub's map, drawn here as an SVG: the note in the centre, its sections as
+ * spokes around it, each section's links as leaves around its spoke. The map
+ * is a picture for the eye: the sections below say the same to everyone else.
+ */
+export function hubSvg(title: string, spokes: Spoke[]): string {
+  const lines: string[] = []
+  const nodes: string[] = []
+  // How far the drawing reaches, for its frame: the centre's box, then every point drawn.
+  const box = { x0: -60, x1: 60, y0: -30, y1: 30 }
+  const reach = (x: number, y: number) => {
+    box.x0 = Math.min(box.x0, x)
+    box.x1 = Math.max(box.x1, x)
+    box.y0 = Math.min(box.y0, y)
+    box.y1 = Math.max(box.y1, y)
+  }
+  const n = spokes.length
+  spokes.forEach((spoke, i) => {
+    const deg = -90 + (360 / n) * i
+    const [sx, sy] = at(150, deg)
+    reach(sx, sy)
+    lines.push(`<line class="hub-spoke-line" x1="0" y1="0" x2="${sx}" y2="${sy}"/>`)
+    const shown = spoke.leaves.length > LEAVES ? [...spoke.leaves.slice(0, LEAVES - 1), { label: `+${spoke.leaves.length - LEAVES + 1}`, href: "" }] : spoke.leaves
+    // The leaves of a spoke fan out across its share of the circle.
+    const spread = Math.min((360 / n) * 0.8, 22 * (shown.length - 1))
+    shown.forEach((leaf, j) => {
+      const ldeg = shown.length > 1 ? deg - spread / 2 + (spread * j) / (shown.length - 1) : deg
+      const [lx, ly] = at(shown.length > 4 && j % 2 ? 330 : 290, ldeg)
+      reach(lx, ly)
+      lines.push(`<line class="hub-leaf-line" x1="${sx}" y1="${sy}" x2="${lx}" y2="${ly}"/>`)
+      const dot = `<circle class="hub-leaf" cx="${lx}" cy="${ly}" r="5"/>${label(lx, ly, ldeg, clip(leaf.label, 22), "hub-leaf-label")}`
+      nodes.push(leaf.href ? `<a href="${escapeAttr(leaf.href)}" tabindex="-1"><title>${escapeAttr(leaf.label)}</title>${dot}</a>` : `<g>${dot}</g>`)
+    })
+    const node = `<circle class="hub-spoke hub-c${i % 6}" cx="${sx}" cy="${sy}" r="11"/>${label(sx, sy, deg, clip(spoke.label, 20), "hub-spoke-label")}`
+    nodes.push(spoke.id ? `<a href="#${escapeAttr(spoke.id)}" tabindex="-1"><title>${escapeAttr(spoke.label)}</title>${node}</a>` : `<g>${node}</g>`)
+  })
+  // The centre is as wide as the note's title, roughly 9 units a letter.
+  const name = clip(title, 24)
+  const w = Math.max(80, name.length * 9 + 28)
+  const centre = `<rect class="hub-centre" x="${-w / 2}" y="-20" width="${w}" height="40" rx="20"/><text class="hub-centre-label" y="6" text-anchor="middle">${escapeAttr(name)}</text>`
+  // Room around the points for their labels: wide beside them, a line above and below.
+  const view = [box.x0 - 190, box.y0 - 40, box.x1 - box.x0 + 380, box.y1 - box.y0 + 80].map((v) => Math.round(v)).join(" ")
+  return `<svg class="hub-svg" viewBox="${view}" aria-hidden="true" focusable="false"><g>${lines.join("")}</g>${nodes.join("")}${centre}</svg>`
+}
+
+/** A hub, a map of content: its map, then its sections as a list, the map's words for readers, keyboards and paper. */
+export function hubHtml(title: string, html: string): string {
+  const { intro, parts } = sections(html)
+  if (!parts.length) return html
+  const list = parts.map((p) => `<li class="hub-section">${p.heading}${p.body}</li>`).join("")
+  return `${intro}<figure class="hub-map" aria-hidden="true">${hubSvg(title, spokesOf(parts))}</figure><ul class="hub-sections">${list}</ul>`
+}
+
+// ---------- lore ----------
+
+/** A relation of a worldbuilding entity: its name (ally, parent…) and who it is with. */
+export interface Relation {
+  name: string
+  refs: (Ref & { key?: string })[]
+}
+
+/** `[[X]]` written without quotes reads in YAML as a list in a list: it is a link all the same. */
+const asLink = (v: unknown): unknown => (Array.isArray(v) && v.length === 1 && Array.isArray(v[0]) && v[0].length === 1 ? `[[${String(v[0][0])}]]` : v)
+
+/**
+ * The relations a lore note names in `relations`: a map of names to notes
+ * (`ally: "[[X]]"`, a list for several), or a list of "ally: [[X]]".
+ */
+export function relationsOf(note: Note): Relation[] {
+  const raw = note.source.fm.relations
+  const vault = getVault()
+  const pairs: [string, unknown][] = Array.isArray(raw)
+    ? raw.flatMap((item): [string, unknown][] => {
+        if (item && typeof item === "object" && !Array.isArray(item)) return Object.entries(item as Record<string, unknown>)
+        const m = typeof item === "string" ? item.match(/^\s*([^:[]+?)\s*:\s*(.+)$/) : null
+        return m ? [[m[1], m[2]]] : []
+      })
+    : raw && typeof raw === "object"
+      ? Object.entries(raw as Record<string, unknown>)
+      : []
+  return pairs.flatMap(([name, v]) => {
+    const list = asLink(v)
+    const items = (Array.isArray(list) ? list.map(asLink) : [list]).flatMap((x) => (typeof x === "string" ? x.split(/\s*,\s*(?![^[]*\]\])/) : [x]))
+    const refs = items.flatMap((x) =>
+      refsOf(note, [x]).map((r) => {
+        const target = typeof x === "string" ? x.match(/^\[\[([^\]|#]+)/)?.[1] : undefined
+        const s = target ? vault.resolveNote(target, note.dir) : undefined
+        return { ...r, key: s && r.href ? s.key : undefined }
+      }),
+    )
+    return refs.length ? [{ name: name.trim(), refs }] : []
+  })
+}
+
+/** Relations that place others above, beside or below an entity in its family. */
+const KIN: [row: "up" | "side" | "down", name: RegExp][] = [
+  ["up", /^(parents?|father|mother|cha|bố|mẹ|eltern|vater|mutter|père|mère|padres?|madre|父|母|父母|親)$/i],
+  ["side", /^(spouse|partner|wife|husband|siblings?|brothers?|sisters?|twin|vợ|chồng|anh|chị|em|anh chị em|ehepartner|geschwister|bruder|schwester|époux|épouse|frère|sœur|esposa?|esposo|hermanos?|hermana|配偶者|兄弟|姉妹|配偶|兄弟姐妹)$/i],
+  ["down", /^(child|children|sons?|daughters?|con|con cái|kinder|kind|sohn|tochter|enfants?|fils|fille|hij[oa]s?|子|子供|子女|孩子)$/i],
+]
+
+const refHtml = (r: Ref, attrs = "") => (r.href ? `<a class="internal" href="${escapeAttr(r.href)}"${attrs}>${escapeAttr(r.text)}</a>` : escapeAttr(r.text))
+
+/** A family tree of the relations that make one: parents above, partners and siblings beside, children below. */
+export function loreTree(title: string, relations: Relation[]): string {
+  const rows = { up: [] as string[], side: [] as string[], down: [] as string[] }
+  for (const rel of relations) {
+    const row = KIN.find(([, re]) => re.test(rel.name))?.[0]
+    if (row) rows[row].push(...rel.refs.map((r) => `<li>${refHtml(r, ' tabindex="-1"')}<small>${escapeAttr(rel.name)}</small></li>`))
+  }
+  if (!rows.up.length && !rows.side.length && !rows.down.length) return ""
+  const row = (cls: string, items: string[]) => (items.length ? `<ul class="lore-tree-row ${cls}">${items.join("")}</ul>` : "")
+  return (
+    `<figure class="lore-tree" aria-hidden="true">${row("is-up", rows.up)}` +
+    `<ul class="lore-tree-row is-self"><li class="lore-self">${escapeAttr(title)}</li>${rows.side.join("")}</ul>${row("is-down", rows.down)}</figure>`
+  )
+}
+
+/** Other lore that names a note: by the relation it names it with, then the lore that only links to it. */
+export function loreLinksOf(note: Note): { relations: { name: string; notes: Note[] }[]; mentions: Note[] } {
+  const groups = new Map<string, { name: string; notes: Note[] }>()
+  const named = new Set<string>()
+  // A protected note's relations are part of what its password guards.
+  const lore = listed(note.lang).filter((n) => n.layout === "lore" && n.key !== note.key && !n.protected)
+  for (const n of lore) {
+    for (const rel of relationsOf(n)) {
+      if (!rel.refs.some((r) => r.key === note.key)) continue
+      const id = rel.name.toLowerCase()
+      if (!groups.has(id)) groups.set(id, { name: rel.name, notes: [] })
+      groups.get(id)!.notes.push(n)
+      named.add(n.key)
+    }
+  }
+  const back = new Set((getVault().backlinks[note.lang].get(note.key) ?? []).map((b) => b.note.key))
+  return { relations: [...groups.values()], mentions: lore.filter((n) => back.has(n.key) && !named.has(n.key)) }
+}
+
+/**
+ * A worldbuilding entity: after its text, its relations (and their family
+ * tree), then the other lore that names it, by relation.
+ */
+export function loreHtml(note: Note, html: string): string {
+  const s = t(note.lang)
+  const relations = relationsOf(note)
+  const links = loreLinksOf(note)
+  const row = (dt: string, dd: string) => `<div><dt>${escapeAttr(dt)}</dt><dd>${dd}</dd></div>`
+  const notes = (list: Note[]) => list.map((n) => refHtml({ text: n.title, href: n.url })).join(", ")
+  const own = relations.length
+    ? `<section class="lore-relations"><h2>${escapeAttr(s.loreRelations)}</h2>` +
+      `<dl>${relations.map((r) => row(r.name, r.refs.map((x) => refHtml(x)).join(", "))).join("")}</dl>${loreTree(note.title, relations)}</section>`
+    : ""
+  const others = [...links.relations.map((g) => row(s.relationOf.replace("{relation}", g.name), notes(g.notes))), ...(links.mentions.length ? [row(s.loreMentions, notes(links.mentions))] : [])]
+  const named = others.length ? `<section class="lore-links"><h2>${escapeAttr(s.loreLinks)}</h2><dl>${others.join("")}</dl></section>` : ""
+  return html + own + named
+}
+
+/**
+ * A note's rendered text reshaped by its layout; a recipe of a collection gets
+ * its two columns. `translation` is the rendered text a poem goes beside.
+ */
+export function layoutHtml(note: Note, html: string, translation?: string): string {
+  const s = t(note.lang)
   switch (note.layout) {
     case "cv":
       return cvHtml(html)
@@ -1632,7 +2119,7 @@ export function layoutHtml(note: Note, html: string): string {
     case "quotes":
       return quotesHtml(html)
     case "paper":
-      return note.protected ? html : paperHtml(html, t(note.lang).abstract, citeHtml(paperOf(note).entry, t(note.lang).citeThis))
+      return note.protected ? html : paperHtml(html, s.abstract, citeHtml(paperOf(note).entry, s.citeThis))
     case "decision":
       return decisionHtml(html)
     case "changelog": {
@@ -1657,6 +2144,31 @@ export function layoutHtml(note: Note, html: string): string {
       const { intro, parts } = sections(html)
       return syllabusHtml(intro, lessonsOf(note, parts), note.lang)
     }
+    case "poem": {
+      if (note.protected) return html
+      const pair = note.translation && translation !== undefined ? note.translation : undefined
+      const numbered = note.source.fm.numbered === true || String(note.source.fm.numbered).toLowerCase() === "true"
+      // The original, the language the note says it is in, goes first.
+      const original = typeof note.source.fm.lang === "string" ? note.source.fm.lang : note.sourceLang
+      return poemHtml(html, numbered, pair && { html: translation!, lang: pair.lang, ownLang: note.contentLang, first: pair.lang === original })
+    }
+    case "letter": {
+      if (note.protected) return html
+      const { dateline, signature } = letterFacts(note)
+      return letterHtml(html, dateline, signature)
+    }
+    case "compare": {
+      const { intro, options } = compareOf(html)
+      return compareHtml(intro, options, plain(note.source.fm.pick), { pros: s.comparePros, cons: s.compareCons, summary: s.compareSummary, picked: s.comparePicked })
+    }
+    case "checklist":
+      return checklistHtml(html, { progress: s.checklistProgress, reset: s.checklistReset })
+    case "recipe-card":
+      return note.protected ? html : recipeCardHtml(note, html, s.printCard)
+    case "hub":
+      return hubHtml(note.title, html)
+    case "lore":
+      return note.protected ? html : loreHtml(note, html)
     case undefined:
       return collectionKindOf(note) === "recipes" ? recipeHtml(html) : html
     default:

@@ -12,6 +12,7 @@ import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
 import { fenceAfter, resolvePassword, splitLocked } from "./locked"
 import { isSlides, isTheme, slideDirectives } from "./slides"
+import { keepIndent, markProsCons } from "./layout-source"
 import { cite, parseBibtex, type BibEntry } from "./citations"
 import katex from "katex"
 import crypto from "node:crypto"
@@ -53,6 +54,13 @@ export const LAYOUTS = [
   "glossary",
   "trip",
   "syllabus",
+  "poem",
+  "letter",
+  "compare",
+  "checklist",
+  "recipe-card",
+  "hub",
+  "lore",
   "projects",
   "books",
   "movies",
@@ -98,6 +106,10 @@ export interface Note {
   layout?: Layout
   /** Pictures of the speakers of a dialogue, by name (its `speakers` property). */
   speakers?: Record<string, string>
+  /** A letter's signature as a picture (its `signature` property naming an image). */
+  signature?: string
+  /** The other language a poem is shown beside (its `bilingual` property): its preprocessed markdown. */
+  translation?: { lang: Lang; md: string }
   /** Style this page is drawn in (`style` property), instead of its folder's. */
   style?: StyleName
   /** Navigation frame of this page (`chrome` property), instead of the usual one. */
@@ -837,6 +849,10 @@ function buildVault(version: number): Vault {
               }),
             )
           : undefined
+      // A letter signed with a picture publishes it like a cover; a protected letter keeps it. A signature in words stays a property.
+      const sig = typeof s.fm.signature === "string" ? s.fm.signature.trim() : ""
+      const signature =
+        layout === "letter" && !s.password && (/^!?\[\[/.test(sig) || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(sig)) ? fileProp("signature", sig)?.href : undefined
       const { value: style, invalid: badStyle } = pickOption(s.fm.style, site.styles)
       if (badStyle && lang === site.defaultLang) {
         report("warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`)
@@ -860,6 +876,9 @@ function buildVault(version: number): Vault {
       const board = isKanban(s.fm)
       const slides = isSlides(s.fm)
       let body = deck ? flashcards(filtered, t(lang).showAnswer) : board ? kanban(filtered, t(lang).kanbanBoard) : filtered
+      // A poem keeps the indentation of its lines; a comparison reads pros and cons from + and - items.
+      if (layout === "poem") body = keepIndent(body)
+      if (layout === "compare") body = markProsCons(body)
       if (body.includes("@")) {
         const cited = cite(body, bib, t(lang).references)
         body = cited.md
@@ -869,18 +888,19 @@ function buildVault(version: number): Vault {
           report("error", relFile, `citation @${key} is not in the bibliography`)
         }
       }
-      const pre = preprocess(body, {
+      // How every piece of the note's markdown is made ready: its text, its locked parts, a poem's translation.
+      const prepare = {
         lang,
         dir: s.dir,
         resolveNote,
         resolveAsset,
         drawDrawing,
         drawingPage: resolveDrawing,
-        slides,
         readText,
-        privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
-        gardenLink: (name, target) => gardenLink(name, target, lang),
-      })
+        privateLink: (target: string, fromDir: string, alias: string | undefined) => privateLink(target, fromDir, alias, lang),
+        gardenLink: (name: string, target: string) => gardenLink(name, target, lang),
+      }
+      const pre = preprocess(body, { ...prepare, slides })
       // A protected note's files travel inside its ciphertext, and the canvases and bases it links stay unpublished.
       if (!s.password) {
         pre.assets.forEach((a) => assets.add(a))
@@ -895,17 +915,7 @@ function buildVault(version: number): Vault {
           }
           return { md: "" }
         }
-        const p = preprocess(part.md, {
-          lang,
-          dir: s.dir,
-          resolveNote,
-          resolveAsset,
-          drawDrawing,
-          drawingPage: resolveDrawing,
-          readText,
-          privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
-          gardenLink: (name, target) => gardenLink(name, target, lang),
-        })
+        const p = preprocess(part.md, prepare)
         for (const problem of p.problems) linkProblem(relFile, problem)
         return { password, md: p.md }
       })
@@ -917,6 +927,22 @@ function buildVault(version: number): Vault {
           })
         : undefined
       for (const p of pre.problems) linkProblem(relFile, p)
+      // A poem beside its translation: the blocks of its `bilingual` language (the original's, on that language's
+      // own page), made ready like the note's text. A protected poem keeps them.
+      const asked = layout === "poem" && typeof s.fm.bilingual === "string" ? s.fm.bilingual.trim() : ""
+      // The original is the language the note says it is in, served on this site or not.
+      const original = typeof s.fm.lang === "string" ? s.fm.lang : sourceLang
+      const pairLang = asked && (asked !== contentLang ? asked : original !== contentLang ? original : "")
+      if (asked && !texts.includes(asked) && lang === site.defaultLang) {
+        report("warning", relFile, `bilingual "${asked}" has no <!--lang:${asked}--> block holding text, so the poem is shown alone`)
+      }
+      let translation: Note["translation"]
+      if (pairLang && texts.includes(pairLang) && !s.password) {
+        const other = preprocess(keepIndent(splitLocked(filterLanguage(s.raw, pairLang)).md), prepare)
+        for (const a of other.assets) assets.add(a)
+        // A locked part of the translation stays out, as it does of the note.
+        translation = { lang: pairLang, md: other.md.replace(/<div class="locked-part" data-lock="\d+"><\/div>/g, "") }
+      }
 
       const { typePrefix, blogTags, mapTags } = site.conventions
       const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
@@ -938,6 +964,8 @@ function buildVault(version: number): Vault {
         certificate,
         layout,
         speakers,
+        signature,
+        translation,
         style,
         chrome,
         // A board or a deck needs the width of the page.
@@ -960,10 +988,12 @@ function buildVault(version: number): Vault {
         sourceLang,
         translated: lang === sourceLang || texts.includes(lang),
         contentLang,
+        // A poem keeps its line breaks unless it says otherwise.
         hardBreaks:
           typeof s.fm.lineBreaks === "boolean"
             ? s.fm.lineBreaks
-            : site.lineBreaks.all ||
+            : layout === "poem" ||
+              site.lineBreaks.all ||
               types.some((ty) => site.lineBreaks.types.includes(ty)) ||
               site.lineBreaks.folders.some((f) => s.dir === f || s.dir.startsWith(f + "/")),
         isHome: s.isHome,
@@ -1060,6 +1090,7 @@ function buildVault(version: number): Vault {
     for (const n of notes[lang]) {
       n.md = fillUrls(n.md, lang)
       for (const part of n.lockedParts) part.md = fillUrls(part.md, lang)
+      if (n.translation) n.translation.md = fillUrls(n.translation.md, lang)
     }
     for (const d of docs.values()) {
       for (const id of Object.keys(d.texts[lang] ?? {})) d.texts[lang][id] = fillUrls(d.texts[lang][id], lang)

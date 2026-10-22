@@ -309,5 +309,17 @@
   "pages": "Pages",
   "pageOf": "Page {n} of {total}",
   "previousPage": "Previous page",
-  "nextPage": "Next page"
+  "nextPage": "Next page",
+  "signature": "Signature",
+  "comparePros": "Pros",
+  "compareCons": "Cons",
+  "compareSummary": "At a glance",
+  "comparePicked": "Our pick",
+  "checklistProgress": "{done} of {total} done",
+  "checklistReset": "Reset",
+  "printCard": "Print card",
+  "loreRelations": "Relations",
+  "relationOf": "{relation} of",
+  "loreMentions": "Mentioned in",
+  "loreLinks": "In the lore"
 }

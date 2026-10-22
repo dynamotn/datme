@@ -186,7 +186,7 @@ Each layout also picks a look and a frame for its page:
 | `cv` | `resume` | `minimal` |
 | `links` | `classic` | `minimal` |
 | `gallery` | `darkroom` | `minimal` |
-| `faq`, `decision` | the site's | `full` |
+| `faq`, `decision`, `lore` | the site's | `full` |
 | all others | the site's | `full`, without the table of contents, the graph and stacked pages |
 
 The `resume` style is an A4 sheet on a grey desk, in two columns, and prints
@@ -194,7 +194,7 @@ as a clean white page even in dark mode. The `darkroom` style is a near-black
 gallery wall with pictures in rows of equal height; it starts dark unless the
 reader chose a theme, plain captions always show and cover captions appear on
 hover or focus on wide screens with a pointer. The `minimal` frame keeps a thin bar with the site's name and
-a light/dark toggle, and a one-line footer. The remaining layouts (all but `faq` and `decision`) keep the header but
+a light/dark toggle, and a one-line footer. The remaining layouts (all but `faq`, `decision` and `lore`) keep the header but
 lose the right rail (table of contents and graph) and stacked pages.
 
 Any note can also take one of the site styles for itself, `style: manuscript`
@@ -322,6 +322,60 @@ written, and the lines to copy start with `layout:` and `group:`.
   instead (the notes whose `series` links to it, or the series it names).
   Readers tick lessons as done and see their progress; the ticks stay in
   their browser.
+- **`poem`**: verse, centred on the page, each line and its indentation
+  kept as written (the line breaks of `lineBreaks: true` come with the
+  layout; `lineBreaks: false` turns them off). `numbered: true` numbers the
+  stanzas in the margin. With [language blocks](#multilingual-notes),
+  `bilingual: vi-VN` shows the page's own text beside that language's,
+  stanza by stanza, in two columns (one under the other on a phone); the
+  original, the note's `lang`, goes first, and a block both share spans the
+  two. On the page of that language itself, the original goes beside it.
+- **`letter`**: a letter on a sheet of paper in the site's colours. `place`
+  and `date` make the line at the top right; the first paragraph is the
+  salutation. `signature` signs it, in words or as a picture of the vault
+  (`signature: "[[signature.png]]"`, published like a cover, its ink turned
+  light in dark mode), under the last paragraph as the closing. Without it,
+  the last line of the last paragraph is the signature and the lines before
+  it the closing (`Yours,` then `Ada`); a last paragraph of one line follows
+  a short one, six words at most, as the closing. A letter always keeps a
+  paragraph of body.
+- **`compare`**: options side by side. Each `##` heading is an option, a
+  card of its own. Items marked `✅` or `❌` (also `👍`, `👎`, `✔`, `✗`),
+  items written with a `+` marker (and `-` ones in the same list), and the
+  lists under `### Pros` and `### Cons` (*Advantages*, *Ưu điểm*,
+  *Nachteile*…) become two columns, for and against. Lines of `key: value`
+  (a paragraph or a list of them, `key:: value` too) fill a table of every
+  option at the top, a dash where one says nothing. `pick: Obsidian` (an
+  option's name) marks the one chosen, in its card and its column.
+- **`checklist`**: every task of the note (`- [ ] …`) becomes a box the
+  reader ticks: a packing list, a routine, a launch plan. The ticks stay in
+  their browser for that page; each `##` section counts its own, a bar the
+  whole, and *Reset* goes back to the boxes as the note ticks them. Tasks a
+  query gathers from other notes stay as they are, and so do the tasks of
+  every other page.
+- **`recipe-card`**: one recipe as an index card the size of A6, lying
+  down: its `cover`, `time` and `servings`, and its ingredients (a section
+  named so) beside the steps, to tick off. *Print card* prints it alone on
+  one A6 card.
+- **`hub`**: a map of content drawn round the note: its title in the
+  centre, each `##` section a spoke, and the links of each section leaves
+  around it (eight at most, the last counting the others). The map is
+  drawn when the site is built, as a picture for the eye; the sections
+  follow as a list, which is what screen readers, keyboards and paper get.
+  A phone shows the list only.
+- **`lore`**: a character, place or faction of a world you are building.
+  Its properties are boxed beside its text, as in the `wiki` style, with its
+  `cover`. `relations` names who it stands with, by relation:
+  `relations: { parent: "[[Borin]]", ally: ["[[Cael]]", Mira] }`, or a list
+  of `"ally: [[Cael]]"`. They are listed after the text, and parents,
+  partners, siblings and children (`parent`, `mother`, `spouse`, `sibling`,
+  `child`, `cha`, `mẹ`, `vợ`, `con`…) also make a small family tree. Then
+  come the other `lore` notes that name it, by relation (*child of Borin*
+  when Borin says `child: [[Aria]]`), and those that only link to it.
+
+A protected note keeps all of this inside its ciphertext: a poem's
+translation, a letter's place and signature picture, the relations of lore
+(on its own page and on the pages it names) are not published.
 
 ### Collections
 
@@ -465,6 +519,8 @@ projects page.
 Markdown joins lines that have no blank line between them. To keep single line
 breaks, as Obsidian does, set `lineBreaks: true` in a note's frontmatter, or
 turn it on for whole note types or folders with `lineBreaks` in `datme.yaml`.
+The [`poem` layout](#layouts-of-a-notes-own-text) keeps them on its own, with
+the indentation of each line, and can show a translation beside the poem.
 
 ## Multilingual notes
 
