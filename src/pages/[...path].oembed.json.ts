@@ -9,7 +9,14 @@ export const getStaticPaths = (() =>
   site.langs.flatMap((lang: Lang) =>
     listed(lang)
       .filter(embeddable)
-      .map((note) => ({ params: { path: decodeURI(stripBase(oembedUrl(note))).replace(/^\//, "").replace(/\.oembed\.json$/, "") }, props: { note } })),
+      .map((note) => ({
+        params: {
+          path: decodeURI(stripBase(oembedUrl(note)))
+            .replace(/^\//, "")
+            .replace(/\.oembed\.json$/, ""),
+        },
+        props: { note },
+      })),
   )) satisfies GetStaticPaths
 
 export const GET: APIRoute<{ note: Note }> = async ({ props }) =>

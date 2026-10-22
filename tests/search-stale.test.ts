@@ -5,7 +5,13 @@ import { quantize } from "../src/lib/vectors"
 // The search dialog on a note page; the vectors arrive late, the index at once.
 mock.module("astro:transitions/client", () => ({ navigate: () => {} }))
 const happy = new Window({ url: "https://garden.example/notes/a" })
-const saved = { window: globalThis.window, document: globalThis.document, location: globalThis.location, HTMLElement: globalThis.HTMLElement, fetch: globalThis.fetch }
+const saved = {
+  window: globalThis.window,
+  document: globalThis.document,
+  location: globalThis.location,
+  HTMLElement: globalThis.HTMLElement,
+  fetch: globalThis.fetch,
+}
 afterAll(() => Object.assign(globalThis, saved))
 Object.assign(globalThis, { window: happy, document: happy.document, location: happy.location, HTMLElement: happy.HTMLElement })
 

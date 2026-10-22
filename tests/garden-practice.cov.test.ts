@@ -50,8 +50,24 @@ describe("practising the whole garden", () => {
 
   test("the garden queue puts the most overdue first, then new cards, and filters by deck or tag", async () => {
     const decks: Deck[] = [
-      { u: "/a", t: "A", g: ["lang/en"], cards: [{ id: "a1", legacy: "", question: "", answer: "" }, { id: "a2", legacy: "", question: "", answer: "" }] },
-      { u: "/b", t: "B", g: ["math"], cards: [{ id: "b1", legacy: "", question: "", answer: "" }, { id: "b2", legacy: "", question: "", answer: "" }] },
+      {
+        u: "/a",
+        t: "A",
+        g: ["lang/en"],
+        cards: [
+          { id: "a1", legacy: "", question: "", answer: "" },
+          { id: "a2", legacy: "", question: "", answer: "" },
+        ],
+      },
+      {
+        u: "/b",
+        t: "B",
+        g: ["math"],
+        cards: [
+          { id: "b1", legacy: "", question: "", answer: "" },
+          { id: "b2", legacy: "", question: "", answer: "" },
+        ],
+      },
     ]
     const states: Record<string, Record<string, { box: number; due: number }>> = {
       "/a": { a1: { box: 1, due: 50 } },

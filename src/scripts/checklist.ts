@@ -39,7 +39,11 @@ export function setupChecklist(): void {
   apply(loadTicks(KIND, path))
   for (const b of boxes) {
     b.addEventListener("change", () => {
-      saveTicks(KIND, path, boxes.filter((x) => x.checked).map((x) => x.dataset.check!))
+      saveTicks(
+        KIND,
+        path,
+        boxes.filter((x) => x.checked).map((x) => x.dataset.check!),
+      )
       update()
     })
   }

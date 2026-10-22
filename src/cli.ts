@@ -117,7 +117,21 @@ Options:
   -h, --help     show this help
   -v, --version  show the version`
 
-export type Command = "dev" | "build" | "preview" | "check" | "init" | "doctor" | "deploy" | "export" | "url" | "related" | "migrate" | "mcp" | "help" | "version"
+export type Command =
+  | "dev"
+  | "build"
+  | "preview"
+  | "check"
+  | "init"
+  | "doctor"
+  | "deploy"
+  | "export"
+  | "url"
+  | "related"
+  | "migrate"
+  | "mcp"
+  | "help"
+  | "version"
 
 export interface Args {
   command: Command
@@ -575,7 +589,9 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     const vaultData = getVault()
     const rel = notePath(args.note!)
     const url = /\.(canvas|base|excalidraw(\.md)?)$/i.test(rel)
-      ? vaultData.docs.has(rel) ? docUrl(rel, lang) : undefined
+      ? vaultData.docs.has(rel)
+        ? docUrl(rel, lang)
+        : undefined
       : vaultData.byKey[lang].get(rel.replace(/\.md$/i, ""))?.url
     if (!url) throw new CliError(`"${rel}" is not published.`)
     return void console.log(url)
@@ -596,8 +612,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
           return false
         }
       },
-      which: (cmd) =>
-        (env.PATH ?? "").split(path.delimiter).some((dir) => dir && [cmd, `${cmd}.exe`].some((name) => fs.existsSync(path.join(dir, name)))),
+      which: (cmd) => (env.PATH ?? "").split(path.delimiter).some((dir) => dir && [cmd, `${cmd}.exe`].some((name) => fs.existsSync(path.join(dir, name)))),
       git: () => {
         try {
           return execFileSync("git", ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
@@ -662,7 +677,10 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       if (cacheDir) {
         claimCache(cacheDir)
         const { writeDeadLinks } = await import("./lib/dead-links.ts")
-        writeDeadLinks(cacheDir, found.filter((p) => p.level === "warning" && p.url).map((p) => p.url!))
+        writeDeadLinks(
+          cacheDir,
+          found.filter((p) => p.level === "warning" && p.url).map((p) => p.url!),
+        )
       }
     }
     const counts = countProblems(problems)

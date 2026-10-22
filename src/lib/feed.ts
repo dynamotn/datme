@@ -32,12 +32,7 @@ function notesOf(lang: Lang, scope: FeedScope): Note[] {
 
 export async function feed(lang: Lang, scope: FeedScope = { kind: "site" }): Promise<Response> {
   const notes = byRecent(notesOf(lang, scope), "created").slice(0, 40)
-  const name =
-    scope.kind === "folder"
-      ? getVault().folders[lang].get(scope.dir)?.name
-      : scope.kind === "tag"
-        ? `#${scope.tag}`
-        : undefined
+  const name = scope.kind === "folder" ? getVault().folders[lang].get(scope.dir)?.name : scope.kind === "tag" ? `#${scope.tag}` : undefined
   return rss({
     title: name ? `${name} · ${site.title[lang]}` : site.title[lang],
     description: site.tagline[lang],
@@ -65,8 +60,7 @@ export const changesPath = (lang: Lang, scope: FeedScope) => feedPath(lang, scop
 /** RSS of the changes to notes, not only new ones: each item a version, with what grew and what was cut. */
 export function changesFeed(lang: Lang, scope: FeedScope = { kind: "site" }): Promise<Response> {
   const s = t(lang)
-  const name =
-    scope.kind === "folder" ? getVault().folders[lang].get(scope.dir)?.name : scope.kind === "tag" ? `#${scope.tag}` : undefined
+  const name = scope.kind === "folder" ? getVault().folders[lang].get(scope.dir)?.name : scope.kind === "tag" ? `#${scope.tag}` : undefined
   return rss({
     title: `${s.changes} · ${name ? `${name} · ` : ""}${site.title[lang]}`,
     description: s.changesLead,
@@ -127,8 +121,7 @@ export async function episodesFeed(note: Note): Promise<Response> {
             type: audioType(n.audio.href),
           },
           customData:
-            (duration ? `<itunes:duration>${escapeAttr(duration)}</itunes:duration>` : "") +
-            (number ? `<itunes:episode>${number}</itunes:episode>` : ""),
+            (duration ? `<itunes:duration>${escapeAttr(duration)}</itunes:duration>` : "") + (number ? `<itunes:episode>${number}</itunes:episode>` : ""),
         }
       }),
     ),
@@ -163,7 +156,10 @@ export function digestPath(note: Note): string {
 /** RSS of a digest: each week an item, at its anchor on the page, with the notes planted and tended in it. */
 export function digestFeed(note: Note): Promise<Response> {
   const s = t(note.lang)
-  const weeks = digestOf(note, collectionOf(note, specOf(note, "digest")).flatMap((g) => g.notes))
+  const weeks = digestOf(
+    note,
+    collectionOf(note, specOf(note, "digest")).flatMap((g) => g.notes),
+  )
   const titles = (list: { note: Note }[]) => list.map((e) => e.note.title).join(", ")
   return rss({
     title: `${note.title} · ${site.title[note.lang]}`,

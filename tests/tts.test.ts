@@ -144,12 +144,7 @@ describe("audio index", () => {
       expect(first.get("/Podcast/Episode")).toBe([...cache.store.values()][0])
       const episode = getVault().byKey["vi-VN"].get("Podcast/Episode")!
       const sha = (d: string | Buffer) => createHash("sha256").update(d).digest("hex")
-      expect(JSON.parse([...cache.store.keys()][0])).toEqual([
-        "vieneu",
-        engineId(),
-        sha(fs.readFileSync(VOICE)),
-        sha(JSON.stringify(noteChunks(episode))),
-      ])
+      expect(JSON.parse([...cache.store.keys()][0])).toEqual(["vieneu", engineId(), sha(fs.readFileSync(VOICE)), sha(JSON.stringify(noteChunks(episode)))])
       process.env.FAKE_TTS_NO_START = "1"
       expect(await build({ cache, notes })).toEqual(first)
       await expect(build({ notes })).rejects.toBeInstanceOf(TtsUnavailable)

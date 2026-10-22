@@ -20,7 +20,10 @@ export function quantize(v: number[]): string {
 /** Vectors of the listed notes of a language, from the embeddings related notes already compute; never protected ones. */
 export async function noteVectors(lang: Lang, model: string): Promise<NoteVectors> {
   const notes = listed(lang).filter((n) => !n.protected)
-  const vectors = await embed(notes.map((n) => ({ id: n.key, text: aboutText(n) })), model)
+  const vectors = await embed(
+    notes.map((n) => ({ id: n.key, text: aboutText(n) })),
+    model,
+  )
   const out = notes.flatMap((n) => {
     const v = vectors.get(n.key)
     return v ? [{ u: n.url, v: quantize(v) }] : []

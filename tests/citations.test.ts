@@ -45,9 +45,7 @@ describe("BibTeX", () => {
 describe("cite", () => {
   test("bracketed citations become author–date links, with the references appended", () => {
     const { md, keys } = cite("As shown [see @luhmann1992, p. 53; -@ahrens2017].", bib, "References")
-    expect(md).toContain(
-      '(see <a href="#ref-luhmann1992" class="citation">Luhmann 1992, p. 53</a>; <a href="#ref-ahrens2017" class="citation">2017</a>)',
-    )
+    expect(md).toContain('(see <a href="#ref-luhmann1992" class="citation">Luhmann 1992, p. 53</a>; <a href="#ref-ahrens2017" class="citation">2017</a>)')
     expect(keys).toEqual(["luhmann1992", "ahrens2017"])
     expect(md).toMatch(/<h2 id="cited-references">References<\/h2><ol><li id="ref-ahrens2017">Ahrens.*<li id="ref-luhmann1992">/)
   })

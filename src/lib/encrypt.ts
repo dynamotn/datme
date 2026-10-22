@@ -11,13 +11,7 @@ export async function encrypt(plaintext: string, password: string, iterations: n
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const base = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"])
-  const key = await crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
-    base,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt"],
-  )
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt"])
   const data = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext)))
   const out = new Uint8Array(salt.length + iv.length + data.length)
   out.set(salt)

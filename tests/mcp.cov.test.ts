@@ -5,7 +5,7 @@ import { findNote, handle, PROTOCOL_VERSION, serveStdio } from "../src/lib/mcp"
 
 const call = async (method: string, params?: Record<string, unknown>) =>
   (await handle({ jsonrpc: "2.0", id: 7, method, ...(params ? { params } : {}) })) as { id: unknown; result?: any; error?: { code: number; message: string } }
-const tool = async (name: string, args?: Record<string, unknown>) => (await call("tools/call", { name, ...(args ? { arguments: args } : {}) }))
+const tool = async (name: string, args?: Record<string, unknown>) => await call("tools/call", { name, ...(args ? { arguments: args } : {}) })
 
 const savedUrl = site.url
 const savedTagline = { ...site.tagline }
@@ -113,7 +113,10 @@ describe("mcp resources without a site URL", () => {
     expect((await call("resources/read", { uri: en.uri })).result.contents[0].uri).toBe(en.uri)
     // read_note gives a relative source then.
     expect((await tool("read_note", { note: "Zettelkasten" })).result.content[0].text).toStartWith("Source: /03_Atomic/Zettelkasten\n")
-    expect((await call("resources/read", { uri: "datme://vi-VN/nowhere" })).error).toEqual({ code: -32002, message: "Resource not found: datme://vi-VN/nowhere" })
+    expect((await call("resources/read", { uri: "datme://vi-VN/nowhere" })).error).toEqual({
+      code: -32002,
+      message: "Resource not found: datme://vi-VN/nowhere",
+    })
   }, 60_000)
 })
 

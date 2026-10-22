@@ -134,7 +134,10 @@
   font-size: 13px;
   text-transform: uppercase;
   box-shadow: 3px 3px 0 var(--ink);
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s;
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    background 0.15s;
 }
 @media (hover: hover) {
   [data-look="notebook"] .main-nav a:hover {
@@ -292,7 +295,9 @@
   border: var(--bw) solid var(--ink);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
 }
 /* The red margin line of a ruled notebook page. */
 [data-look="notebook"] .index-card::before,
@@ -700,8 +705,7 @@
   bottom: 28px;
   left: 12px;
   width: 16px;
-  background: radial-gradient(circle at 8px 8px, var(--bg) 6px, var(--ink) 6.5px, var(--ink) 8px, transparent 8.5px) top /
-    16px 120px repeat-y;
+  background: radial-gradient(circle at 8px 8px, var(--bg) 6px, var(--ink) 6.5px, var(--ink) 8px, transparent 8.5px) top / 16px 120px repeat-y;
   pointer-events: none;
 }
 [data-look="notebook"] .banner {

@@ -104,7 +104,11 @@ function normalize(html: string): string {
       node.children = [{ type: "element", tagName: "code", properties: {}, children: [{ type: "text", value: code }] }]
       return SKIP
     }
-    node.properties = Object.fromEntries(Object.entries(node.properties).filter(([k]) => MEANING.has(k)).sort(([a], [b]) => a.localeCompare(b)))
+    node.properties = Object.fromEntries(
+      Object.entries(node.properties)
+        .filter(([k]) => MEANING.has(k))
+        .sort(([a], [b]) => a.localeCompare(b)),
+    )
   })
   // A raw tag left open is closed again after its paragraph by the HTML parser: an empty copy, not content.
   tree.children = tree.children.filter((c) => !(c.type === "element" && c.tagName === "a" && !c.children.length))

@@ -55,9 +55,7 @@ describe("layout transforms", () => {
   })
 
   test("a gallery picture with a known size carries its aspect ratio", () => {
-    expect(galleryHtml(`<p><img src="a.jpg" width="300" height="200"></p>`)).toContain(
-      `<figure class="gallery-item" style="--ar: 1.5"><img`,
-    )
+    expect(galleryHtml(`<p><img src="a.jpg" width="300" height="200"></p>`)).toContain(`<figure class="gallery-item" style="--ar: 1.5"><img`)
     expect(galleryHtml(`<p><img src="a.jpg" width="1000" height="3000"></p>`)).toContain(`style="--ar: 0.3333"`)
     expect(galleryHtml(`<p><img src="a.jpg"></p>`)).not.toContain("style=")
   })
@@ -132,7 +130,10 @@ describe("layout transforms", () => {
   })
 
   test("the cite box gives the reference and its BibTeX, escaped", () => {
-    const html = citeHtml({ key: "k", type: "misc", fields: { author: "Ada Lovelace", title: "Notes & <tags>", journal: "J", year: "1843", pages: "1--2" } }, "Cite this")
+    const html = citeHtml(
+      { key: "k", type: "misc", fields: { author: "Ada Lovelace", title: "Notes & <tags>", journal: "J", year: "1843", pages: "1--2" } },
+      "Cite this",
+    )
     expect(html).toContain("<summary>Cite this</summary>")
     expect(html).toContain("Lovelace, A. (1843).")
     expect(html).toContain("<em>J</em>, 1–2.")
@@ -141,7 +142,9 @@ describe("layout transforms", () => {
   })
 
   test("a decision record: each known section gets a look of its own", () => {
-    const html = decisionHtml(`<p>Intro</p><h2>Context</h2><p>a</p><h2>Decision outcome</h2><p>b</p><h2>Hệ quả</h2><p>c</p><h2>Status</h2><p>d</p><h2>Phương án</h2>`)
+    const html = decisionHtml(
+      `<p>Intro</p><h2>Context</h2><p>a</p><h2>Decision outcome</h2><p>b</p><h2>Hệ quả</h2><p>c</p><h2>Status</h2><p>d</p><h2>Phương án</h2>`,
+    )
     expect(html).toBe(
       `<p>Intro</p><section class="adr-section adr-context"><h2>Context</h2><p>a</p></section>` +
         `<section class="adr-section adr-decision"><h2>Decision outcome</h2><p>b</p></section>` +
@@ -151,7 +154,8 @@ describe("layout transforms", () => {
   })
 
   test("a changelog: versions with their dates and anchors, kinds of change as tags", () => {
-    const html = `<p>Hi</p><h2 id="unreleased">[Unreleased]</h2><h3 id="added">Added</h3><ul><li>x</li></ul>` +
+    const html =
+      `<p>Hi</p><h2 id="unreleased">[Unreleased]</h2><h3 id="added">Added</h3><ul><li>x</li></ul>` +
       `<h2 id="v">[<a href="https://x/compare">1.2.0</a>] - 2026-10-01<a class="heading-anchor" href="#120---2026-10-01">#</a></h2><h3>Fixed</h3><h3>Thanks</h3>` +
       `<h2>v1.1.0 (2026-09-01)</h2><h3>Bảo mật</h3><h2>1.0.0 — 2026-13-45</h2>`
     const { releases } = releasesOf(html)
@@ -162,7 +166,9 @@ describe("layout transforms", () => {
       ["1.0.0", undefined, "v1.0.0"],
     ])
     const out = changelogHtml(html, "en-US", "<feed>")
-    expect(out).toStartWith(`<p>Hi</p><feed><section class="release"><h2 id="unreleased">Unreleased</h2><h3 id="added" class="change-tag change-added">Added</h3>`)
+    expect(out).toStartWith(
+      `<p>Hi</p><feed><section class="release"><h2 id="unreleased">Unreleased</h2><h3 id="added" class="change-tag change-added">Added</h3>`,
+    )
     expect(out).toContain(
       `<section class="release" id="v1.2.0"><h2 id="v"><a href="https://x/compare">1.2.0</a><a class="heading-anchor" href="#120---2026-10-01">#</a></h2><p class="release-date"><time datetime="2026-10-01">Oct 1, 2026</time></p><h3 class="change-tag change-fixed">Fixed</h3><h3>Thanks</h3>`,
     )
@@ -177,11 +183,17 @@ describe("layout transforms", () => {
       { Cy: "/cy.png", Ada: undefined },
     )
     expect(html.match(/<div class="dialogue">/g)).toHaveLength(2)
-    expect(html).toContain(`<div class="dialogue-line voice-0"><p class="dialogue-who"><span>Ada</span></p><div class="dialogue-bubble"><p>One.</p></div></div>`)
-    expect(html).toContain(`<div class="dialogue-line voice-0 is-more"><p class="dialogue-who"><span>Ada</span></p><div class="dialogue-bubble"><p>Two.</p></div></div>`)
+    expect(html).toContain(
+      `<div class="dialogue-line voice-0"><p class="dialogue-who"><span>Ada</span></p><div class="dialogue-bubble"><p>One.</p></div></div>`,
+    )
+    expect(html).toContain(
+      `<div class="dialogue-line voice-0 is-more"><p class="dialogue-who"><span>Ada</span></p><div class="dialogue-bubble"><p>Two.</p></div></div>`,
+    )
     expect(html).toContain(`<div class="dialogue-line voice-1 is-end"><p class="dialogue-who"><span>Bob</span></p>`)
     expect(html).toContain(`<p>Note: four.</p>`)
-    expect(html).toContain(`<div class="dialogue-line voice-2"><p class="dialogue-who"><img class="dialogue-avatar" src="/cy.png" alt="" loading="lazy"><span>Cy</span></p>`)
+    expect(html).toContain(
+      `<div class="dialogue-line voice-2"><p class="dialogue-who"><img class="dialogue-avatar" src="/cy.png" alt="" loading="lazy"><span>Cy</span></p>`,
+    )
     expect(html).toContain(`<p><strong>Bold</strong> text.</p>`)
     expect(dialogueHtml(`<p>Plain text.</p>`)).toBe(`<p>Plain text.</p>`)
   })
@@ -197,7 +209,9 @@ describe("layout transforms", () => {
     )
     expect(html).toContain(`<blockquote><p>Two</p></blockquote><figcaption>p. xiv</figcaption>`)
     expect(html).toContain(`<blockquote><p>Three.</p></blockquote></figure>`)
-    expect(html).toContain(`<blockquote><p>Four</p></blockquote><div class="highlight-note"><ul><li>why</li><li>also</li></ul></div><figcaption>Location 10-12</figcaption>`)
+    expect(html).toContain(
+      `<blockquote><p>Four</p></blockquote><div class="highlight-note"><ul><li>why</li><li>also</li></ul></div><figcaption>Location 10-12</figcaption>`,
+    )
     expect(html).toContain(`<blockquote><p>Five</p></blockquote><figcaption>Page 3</figcaption>`)
     expect(html).toContain(`<blockquote><p>Seven</p></blockquote><div class="highlight-note">one</div></figure>`)
     expect(html).toContain(`<h2>Metadata</h2><ul><li>Author: X</li></ul>`)
@@ -217,21 +231,36 @@ describe("layout transforms", () => {
       ["2FA", undefined, ""],
     ])
     const html = glossaryHtml(intro, [...entries, { term: "Atom", definition: "" }, { term: "!", definition: "" }], "en-US", "Letters")
-    expect(html).toStartWith(`<p>Intro</p><nav class="glossary-letters" aria-label="Letters"><a href="#letter-a">A</a><a href="#letter-b">B</a><span aria-hidden="true">C</span>`)
+    expect(html).toStartWith(
+      `<p>Intro</p><nav class="glossary-letters" aria-label="Letters"><a href="#letter-a">A</a><a href="#letter-b">B</a><span aria-hidden="true">C</span>`,
+    )
     expect(html).toContain(`<a href="#letter-other">#</a></nav>`)
-    expect(html).toContain(`<div class="glossary-entry" id="atom"><dt>Atom<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#atom">#</a></dt><dd><p>small.</p></dd></div><div class="glossary-entry" id="atom-2">`)
-    expect(html).toContain(`<section class="glossary-group" id="letter-other"><h2 class="glossary-letter">#</h2><dl><div class="glossary-entry" id="term"><dt>!<a`)
+    expect(html).toContain(
+      `<div class="glossary-entry" id="atom"><dt>Atom<a class="heading-anchor" aria-hidden="true" tabindex="-1" href="#atom">#</a></dt><dd><p>small.</p></dd></div><div class="glossary-entry" id="atom-2">`,
+    )
+    expect(html).toContain(
+      `<section class="glossary-group" id="letter-other"><h2 class="glossary-letter">#</h2><dl><div class="glossary-entry" id="term"><dt>!<a`,
+    )
     expect(html).toMatch(/id="letter-b"[\s\S]*id="letter-other"/)
     expect(html).toContain(`<div class="glossary-entry" id="term">`)
     expect(glossaryHtml("<p>x</p>", [], "en-US", "L")).toBe("<p>x</p>")
     // Terms in other scripts get their own letters, without A–Z.
-    expect(glossaryHtml("", [{ term: "ねこ", definition: "" }], "ja-JP", "L")).toContain(`<nav class="glossary-letters" aria-label="L"><a href="#letter-ね">ね</a></nav>`)
+    expect(glossaryHtml("", [{ term: "ねこ", definition: "" }], "ja-JP", "L")).toContain(
+      `<nav class="glossary-letters" aria-label="L"><a href="#letter-ね">ね</a></nav>`,
+    )
     expect(letterOf("Évergreen", "en-US")).toBe("E")
     expect(letterOf("", "en-US")).toBe("#")
   })
 
   test("a syllabus: numbered lessons with their time and a box to tick, the progress hidden until the browser counts", () => {
-    const html = syllabusHtml("<p>Intro</p>", [{ id: "a", heading: "<h2>One</h2>", minutes: 3, body: "<p>x</p>" }, { id: "b", heading: "<h2>Two</h2>", body: " " }], "en-US")
+    const html = syllabusHtml(
+      "<p>Intro</p>",
+      [
+        { id: "a", heading: "<h2>One</h2>", minutes: 3, body: "<p>x</p>" },
+        { id: "b", heading: "<h2>Two</h2>", body: " " },
+      ],
+      "en-US",
+    )
     expect(html).toBe(
       `<p>Intro</p><div class="syllabus-progress" data-syllabus-progress data-template="{done} of {total} lessons done" hidden><progress max="2" value="0" aria-hidden="true"></progress><span>0 of 2 lessons done</span></div>` +
         `<ol class="syllabus"><li class="lesson" data-lesson="a"><div class="lesson-head"><h2>One</h2><span class="lesson-time">3 min read</span><label class="lesson-done"><input type="checkbox" data-lesson-done><span class="sr-only">One: </span>Done</label></div><div class="lesson-body"><p>x</p></div></li>` +
@@ -245,7 +274,9 @@ describe("layout transforms", () => {
   })
 
   test("a poem: its stanzas centred, numbered on demand; beside a translation, stanza by stanza", () => {
-    expect(poemHtml("<p>One<br>\ntwo</p>\n<hr>\n<p>Three</p>", false)).toBe(`<div class="poem"><p class="stanza">One<br>\ntwo</p><hr><p class="stanza">Three</p></div>`)
+    expect(poemHtml("<p>One<br>\ntwo</p>\n<hr>\n<p>Three</p>", false)).toBe(
+      `<div class="poem"><p class="stanza">One<br>\ntwo</p><hr><p class="stanza">Three</p></div>`,
+    )
     expect(poemHtml("<p>A</p>", true)).toStartWith(`<div class="poem is-numbered">`)
     const html = poemHtml("<h2>T</h2><p>Own</p><p>More</p>", false, { html: "<h2>T</h2><p>Khác</p>", lang: "vi-VN", ownLang: "en-US", first: false })
     expect(html).toBe(
@@ -274,18 +305,26 @@ describe("layout transforms", () => {
       `<p>This paragraph says far more than any closing would.</p><div class="letter-sign"><p class="letter-signature">Ada</p></div>`,
     )
     // Too short to sign: a salutation and a body.
-    expect(letterHtml("<p>Hi,</p><p>Body.</p>", { place: "Hà Nội" })).toBe(`<div class="letter"><p class="letter-dateline">Hà Nội</p><p class="letter-salutation">Hi,</p><p>Body.</p></div>`)
-    expect(letterHtml("<h2>No paragraphs</h2>", { date: "someday" })).toBe(`<div class="letter"><p class="letter-dateline">someday</p><h2>No paragraphs</h2></div>`)
+    expect(letterHtml("<p>Hi,</p><p>Body.</p>", { place: "Hà Nội" })).toBe(
+      `<div class="letter"><p class="letter-dateline">Hà Nội</p><p class="letter-salutation">Hi,</p><p>Body.</p></div>`,
+    )
+    expect(letterHtml("<h2>No paragraphs</h2>", { date: "someday" })).toBe(
+      `<div class="letter"><p class="letter-dateline">someday</p><h2>No paragraphs</h2></div>`,
+    )
     // The signature property: after the last paragraph as the closing, or alone.
     expect(letterHtml("<p>Hi,</p><p>Body.</p><p>Love,</p>", {}, { image: "/sig.png", alt: "Signature" })).toContain(
       `<div class="letter-sign"><p class="letter-closing">Love,</p><img class="letter-signature-image" src="/sig.png" alt="Signature" loading="lazy"></div>`,
     )
-    expect(letterHtml("<p>Body.</p>", {}, { text: "Ada & co", alt: "Signature" })).toBe(`<div class="letter"><p>Body.</p><div class="letter-sign"><p class="letter-signature">Ada &amp; co</p></div></div>`)
+    expect(letterHtml("<p>Body.</p>", {}, { text: "Ada & co", alt: "Signature" })).toBe(
+      `<div class="letter"><p>Body.</p><div class="letter-sign"><p class="letter-signature">Ada &amp; co</p></div></div>`,
+    )
     expect(letterHtml("<p>Body.</p>", {}, { alt: "Signature" })).toContain(`<p class="letter-signature"></p>`)
   })
 
   test("pros and cons written with + and -: a list of their own, outside code, in lists that have a +", () => {
-    expect(markProsCons("+ Fast\n- Slow\n+ ✅ Marked\n\n- plain\n- list\n```\n+ code\n```")).toBe("* ✅ Fast\n* ❌ Slow\n+ ✅ Marked\n\n- plain\n- list\n```\n+ code\n```")
+    expect(markProsCons("+ Fast\n- Slow\n+ ✅ Marked\n\n- plain\n- list\n```\n+ code\n```")).toBe(
+      "* ✅ Fast\n* ❌ Slow\n+ ✅ Marked\n\n- plain\n- list\n```\n+ code\n```",
+    )
   })
 
   test("a comparison: pros and cons from marks or subheadings, facts from key: value lines", () => {
@@ -295,7 +334,17 @@ describe("layout transforms", () => {
     )
     expect(intro).toBe("<p>Intro</p>")
     expect(options.map((o) => [o.name, o.id, o.pros, o.cons, o.facts])).toEqual([
-      ["A", "a", ["Good"], ["<p>Bad</p>"], [["price", "10"], ["speed", "fast"], ["Weight", "2 kg"]]],
+      [
+        "A",
+        "a",
+        ["Good"],
+        ["<p>Bad</p>"],
+        [
+          ["price", "10"],
+          ["speed", "fast"],
+          ["Weight", "2 kg"],
+        ],
+      ],
       ["B", undefined, ["Cheap"], ["Loud"], []],
     ])
     expect(options[0].body).toBe("<ul><li>Plain item</li></ul><p>Note it.</p>")
@@ -334,7 +383,9 @@ describe("layout transforms", () => {
     expect(html).toContain(`data-check="socks-2"`)
     expect(html).toContain(`<input type="checkbox" data-check="item">`)
     // A section without tasks stays as it is, and so do the tasks a query gathers.
-    expect(html).toContain(`<h2>Notes</h2><p>No tasks.</p><div class="dataview dv-tasks tasks-query"><ul><li class="task-list-item"><input type="checkbox" disabled aria-label="Elsewhere">`)
+    expect(html).toContain(
+      `<h2>Notes</h2><p>No tasks.</p><div class="dataview dv-tasks tasks-query"><ul><li class="task-list-item"><input type="checkbox" disabled aria-label="Elsewhere">`,
+    )
     expect(checklistHtml("<ul><li>No tasks</li></ul>", labels)).toBe("<ul><li>No tasks</li></ul>")
   })
 
@@ -344,7 +395,9 @@ describe("layout transforms", () => {
       `<p>Intro</p><h2 id="w">Writing<a class="heading-anchor" href="#w">#</a></h2><ul><li><a class="internal" href="/a">A</a></li><li><a href="/a">A again</a></li><li><a href="#top">Top</a></li><li><a href="/e"><img alt=""></a></li><sup><a href="#fn-1" data-footnote-ref>1</a></sup></ul>`,
     )
     expect(html).toStartWith(`<p>Intro</p><figure class="hub-map" aria-hidden="true"><svg class="hub-svg" viewBox="`)
-    expect(html).toContain(`<a href="/a" tabindex="-1"><title>A</title><circle class="hub-leaf" cx="0" cy="-290" r="5"/><text class="hub-leaf-label" x="0" y="-304" text-anchor="middle">A</text></a>`)
+    expect(html).toContain(
+      `<a href="/a" tabindex="-1"><title>A</title><circle class="hub-leaf" cx="0" cy="-290" r="5"/><text class="hub-leaf-label" x="0" y="-304" text-anchor="middle">A</text></a>`,
+    )
     expect(html).toContain(`<a href="#w" tabindex="-1"><title>Writing</title><circle class="hub-spoke hub-c0" cx="0" cy="-150" r="11"/>`)
     expect(html.match(/class="hub-leaf"/g)).toHaveLength(1)
     expect(html).toContain(`<ul class="hub-sections"><li class="hub-section"><h2 id="w">Writing`)
@@ -366,7 +419,10 @@ describe("layout transforms", () => {
     expect(svg).toContain(`text-anchor="end"`)
     expect(svg).toContain(`<g><circle class="hub-spoke hub-c0"`)
     // The frame holds every point and its label.
-    const [x, y, w, h] = svg.match(/viewBox="([^"]+)"/)![1].split(" ").map(Number)
+    const [x, y, w, h] = svg
+      .match(/viewBox="([^"]+)"/)![1]
+      .split(" ")
+      .map(Number)
     expect(x < -330 && y < -330 && x + w > 330 && y + h > 150).toBe(true)
   })
 
@@ -546,7 +602,10 @@ describe("page layouts", () => {
   })
 
   test("a résumé and a link page stand alone", () => {
-    for (const [page, look] of [["CV/index.html", "resume"], ["Links/index.html", "classic"]] as const) {
+    for (const [page, look] of [
+      ["CV/index.html", "resume"],
+      ["Links/index.html", "classic"],
+    ] as const) {
       const html = read(page)
       expect(html).toContain(`data-look="${look}"`)
       expect(html).toContain('data-chrome="minimal"')
@@ -635,9 +694,14 @@ describe("page layouts", () => {
     expect(html).toContain('<section class="release" id="v1.2.0"><h2 id="120---2026-10-01">1.2.0<a')
     expect(html).toContain('<p class="release-date"><time datetime="2026-10-01">Oct 1, 2026</time></p>')
     expect(html).toContain('class="change-tag change-fixed">Fixed')
-    expect(read("Changelog/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Changelog · Layouts" href="/Changelog/releases.xml">')
+    expect(read("Changelog/index.html")).toContain(
+      '<link rel="alternate" type="application/rss+xml" title="Changelog · Layouts" href="/Changelog/releases.xml">',
+    )
     const xml = read("Changelog/releases.xml")
-    expect([...xml.matchAll(/<link>([^<]+)<\/link>/g)].map((m) => m[1]).slice(1)).toEqual(["http://localhost:4321/Changelog#v1.2.0", "http://localhost:4321/Changelog#v1.1.0"])
+    expect([...xml.matchAll(/<link>([^<]+)<\/link>/g)].map((m) => m[1]).slice(1)).toEqual([
+      "http://localhost:4321/Changelog#v1.2.0",
+      "http://localhost:4321/Changelog#v1.1.0",
+    ])
   })
 
   test("a dialogue: bubbles per speaker, a picture for a speaker that has one", () => {
@@ -660,7 +724,13 @@ describe("page layouts", () => {
   test("a glossary: letters to jump to, terms A–Z, and the garden's own terms", () => {
     const html = article("Terms/index.html")
     expect(html).toContain('<nav class="glossary-letters" aria-label="Jump to a letter"><a href="#letter-a">A</a>')
-    expect([...html.matchAll(/<div class="glossary-entry" id="([^"]+)"/g)].map((m) => m[1])).toEqual(["atomic-note", "backlink", "évergreen", "zettel", "zettelkasten"])
+    expect([...html.matchAll(/<div class="glossary-entry" id="([^"]+)"/g)].map((m) => m[1])).toEqual([
+      "atomic-note",
+      "backlink",
+      "évergreen",
+      "zettel",
+      "zettelkasten",
+    ])
     expect(html).toContain('<dt><a class="internal" href="/Zettelkasten" data-key="Zettelkasten">Zettelkasten</a>')
   })
 
@@ -709,11 +779,17 @@ describe("page layouts", () => {
 
   test("a letter: its place and date, salutation, closing and a signature published like a picture", () => {
     const html = article("Letter/index.html")
-    expect(html).toContain('<p class="letter-dateline">Hà Nội, <time datetime="2026-10-01">October 1, 2026</time></p><p class="letter-salutation">Dear Ann,</p>')
-    expect(html).toContain('<div class="letter-sign"><p class="letter-closing">Warm regards,</p><img class="letter-signature-image" src="/assets/_assets/signature.png" alt="Signature"')
+    expect(html).toContain(
+      '<p class="letter-dateline">Hà Nội, <time datetime="2026-10-01">October 1, 2026</time></p><p class="letter-salutation">Dear Ann,</p>',
+    )
+    expect(html).toContain(
+      '<div class="letter-sign"><p class="letter-closing">Warm regards,</p><img class="letter-signature-image" src="/assets/_assets/signature.png" alt="Signature"',
+    )
     expect(read("assets/_assets/signature.png").length).toBeGreaterThan(0)
     expect(html).not.toContain('class="properties')
-    expect(article("Short-letter/index.html")).toContain('<div class="letter-sign"><p class="letter-closing">Yours,</p><p class="letter-signature">Ada</p></div>')
+    expect(article("Short-letter/index.html")).toContain(
+      '<div class="letter-sign"><p class="letter-closing">Yours,</p><p class="letter-signature">Ada</p></div>',
+    )
   })
 
   test("a comparison: a table of facts, pros and cons from marks, + and - and subheadings, the pick", () => {
@@ -721,13 +797,17 @@ describe("page layouts", () => {
     expect(html).toContain('<th scope="col" class="is-picked">Obsidian</th><th scope="col">Notion</th><th scope="col">Paper</th>')
     expect(html).toContain('<tr><th scope="row">price</th><td class="is-picked">free</td><td>from $10</td><td>—</td></tr>')
     expect(html).toContain('<section class="compare-option is-picked"><h2 id="obsidian">')
-    expect(html).toContain('<div class="compare-pros"><p class="compare-label">Pros</p><ul><li>Databases</li></ul></div><div class="compare-cons"><p class="compare-label">Cons</p><ul><li>Slow offline</li><li>Lock-in</li></ul></div>')
-    expect(html).toContain('<ul><li>Nothing to install</li></ul>')
+    expect(html).toContain(
+      '<div class="compare-pros"><p class="compare-label">Pros</p><ul><li>Databases</li></ul></div><div class="compare-cons"><p class="compare-label">Cons</p><ul><li>Slow offline</li><li>Lock-in</li></ul></div>',
+    )
+    expect(html).toContain("<ul><li>Nothing to install</li></ul>")
   })
 
   test("a checklist: tasks to tick with their progress; tasks elsewhere stay read only", () => {
     const html = article("Packing/index.html")
-    expect(html).toContain('<div class="checklist" data-checklist><div class="checklist-progress" data-checklist-progress data-template="{done} of {total} done" hidden><progress max="7"')
+    expect(html).toContain(
+      '<div class="checklist" data-checklist><div class="checklist-progress" data-checklist-progress data-template="{done} of {total} done" hidden><progress max="7"',
+    )
     expect(html.match(/data-check="/g)).toHaveLength(7)
     expect(html).not.toMatch(/<input type="checkbox"[^>]*disabled/)
     expect(html.match(/data-checklist-section/g)).toHaveLength(2)
@@ -744,7 +824,11 @@ describe("page layouts", () => {
     expect(read("Pancakes/index.html")).toContain('<aside class="recipe-ingredients">')
     expect(read("Pancakes/index.html")).toContain('<button type="button" class="recipe-card-print" data-print>Print card</button>')
     expect(html).not.toContain('class="properties')
-    const css = fs.readdirSync(path.join(out, "_astro")).filter((f) => f.endsWith(".css")).map((f) => read(`_astro/${f}`)).join("")
+    const css = fs
+      .readdirSync(path.join(out, "_astro"))
+      .filter((f) => f.endsWith(".css"))
+      .map((f) => read(`_astro/${f}`))
+      .join("")
     expect(css).toContain("@page recipe-card{size:148mm 105mm")
   })
 
@@ -762,9 +846,13 @@ describe("page layouts", () => {
     expect(html).toContain('<div class="infobox">')
     expect(html).toMatch(/<th scope="row">species<\/th>\s*<td>/)
     expect(html).not.toContain('class="properties')
-    expect(html).toContain('<div><dt>parent</dt><dd><a class="internal" href="/Lore/Borin">Borin</a></dd></div><div><dt>ally</dt><dd><a class="internal" href="/Lore/Cael">Cael</a></dd></div>')
+    expect(html).toContain(
+      '<div><dt>parent</dt><dd><a class="internal" href="/Lore/Borin">Borin</a></dd></div><div><dt>ally</dt><dd><a class="internal" href="/Lore/Cael">Cael</a></dd></div>',
+    )
     expect(html).toContain('<ul class="lore-tree-row is-up"><li><a class="internal" href="/Lore/Borin" tabindex="-1">Borin</a><small>parent</small></li></ul>')
-    expect(html).toContain('<div><dt>child of</dt><dd><a class="internal" href="/Lore/Borin">Borin</a></dd></div><div><dt>Mentioned in</dt><dd><a class="internal" href="/Lore/Cael">Cael</a></dd></div>')
+    expect(html).toContain(
+      '<div><dt>child of</dt><dd><a class="internal" href="/Lore/Borin">Borin</a></dd></div><div><dt>Mentioned in</dt><dd><a class="internal" href="/Lore/Cael">Cael</a></dd></div>',
+    )
     expect(read("Lore/Aria/index.html")).toContain('data-chrome="full"')
   })
 
@@ -787,7 +875,11 @@ describe("page layouts", () => {
       const window = new Window({ url: "https://garden.example/", settings: { disableJavaScriptEvaluation: false } })
       window.document.write(read(`${page}/index.html`).replace(/<script\b[\s\S]*?<\/script>/g, ""))
       window.eval(axe)
-      const run = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; nodes: { target: string[] }[] }[] }> } }).axe
+      const run = (
+        window as unknown as {
+          axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; nodes: { target: string[] }[] }[] }> }
+        }
+      ).axe
       const res = await run.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
       await window.happyDOM.close()
       const serious = res.violations.filter((v) => v.impact === "serious" || v.impact === "critical")
@@ -822,7 +914,9 @@ describe("page layouts", () => {
     expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["unread", "read"])
     expect(html).toMatch(/<span class="bookmark-icon" aria-hidden="true"><svg viewBox="0 0 24 24"/)
     expect(html).toContain('<span class="bookmark-icon" aria-hidden="true">E</span>')
-    expect(html).toContain('<a class="bookmark-site" href="https://github.com/example/garden" rel="noopener">github.com ↗</a><span>Ann</span><time datetime="2024-05-01T00:00:00.000Z">May 1, 2024</time>')
+    expect(html).toContain(
+      '<a class="bookmark-site" href="https://github.com/example/garden" rel="noopener">github.com ↗</a><span>Ann</span><time datetime="2024-05-01T00:00:00.000Z">May 1, 2024</time>',
+    )
     expect(html).toContain('<p class="bookmark-comment">Worth a second look for the build.</p>')
   })
 
@@ -831,7 +925,9 @@ describe("page layouts", () => {
     expect(html).toContain('<img class="person-avatar" src="/assets/_assets/portrait.png" alt=""')
     expect(html).toContain('<span class="person-avatar person-initials" aria-hidden="true">GH</span>')
     expect(html).toContain('<span class="person-meta">Mathematician</span><span class="person-meta">Analytical Engine</span>')
-    expect(html).toContain('<canvas data-graph="set" data-lang="en-US" data-urls="[&quot;/People/Ada-Lovelace&quot;,&quot;/People/Alan-Turing&quot;,&quot;/People/Grace-Hopper&quot;]"')
+    expect(html).toContain(
+      '<canvas data-graph="set" data-lang="en-US" data-urls="[&quot;/People/Ada-Lovelace&quot;,&quot;/People/Alan-Turing&quot;,&quot;/People/Grace-Hopper&quot;]"',
+    )
     expect(html.match(/<ul class="people-ties"><li>/g)).toHaveLength(1)
     expect(read("People/Ada-Lovelace/index.html")).toContain('<div class="item-head is-round"><img class="item-cover" src="/assets/_assets/portrait.png"')
   })
@@ -850,11 +946,15 @@ describe("page layouts", () => {
     expect([...html.matchAll(/<span class="episode-number">(#\d+)<\/span>/g)].map((m) => m[1])).toEqual(["#2", "#1"])
     expect(html).toContain('<audio src="/assets/_assets/pilot.mp3" controls preload="none" aria-label="Pilot"></audio>')
     expect(html).toContain("<span>with Ada Lovelace</span>")
-    expect(read("Podcast/Podcast/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Podcast · Layouts" href="/Podcast/Podcast/episodes.xml">')
+    expect(read("Podcast/Podcast/index.html")).toContain(
+      '<link rel="alternate" type="application/rss+xml" title="Podcast · Layouts" href="/Podcast/Podcast/episodes.xml">',
+    )
     const feed = read("Podcast/Podcast/episodes.xml")
     expect(feed).toContain('<enclosure url="http://localhost:4321/assets/_assets/pilot.mp3" length="12" type="audio/mpeg"/>')
     expect(read("assets/_assets/pilot.mp3")).toBe("ID3fakeaudio")
-    expect(read("Podcast/Pilot/index.html")).toContain('<audio class="item-audio" src="/assets/_assets/pilot.mp3" controls preload="none" aria-label="Pilot"></audio>')
+    expect(read("Podcast/Pilot/index.html")).toContain(
+      '<audio class="item-audio" src="/assets/_assets/pilot.mp3" controls preload="none" aria-label="Pilot"></audio>',
+    )
   })
 
   test("a protected note's sound stays out of the site", () => {
@@ -875,7 +975,9 @@ describe("page layouts", () => {
     expect(html).toContain('<a class="course-cert" href="/assets/_assets/cert.pdf" rel="noopener">Certificate ↗</a>')
     expect(read("assets/_assets/cert.pdf")).toStartWith("%PDF")
     const course = article("Courses/Distributed-systems/index.html")
-    expect(course).toContain('<div class="course-progress item-progress"><progress max="100" value="100" aria-label="Progress"></progress><span>100%</span></div>')
+    expect(course).toContain(
+      '<div class="course-progress item-progress"><progress max="100" value="100" aria-label="Progress"></progress><span>100%</span></div>',
+    )
     expect(course).toContain('<a href="/assets/_assets/cert.pdf" rel="noopener">Certificate ↗</a>')
   })
 
@@ -918,7 +1020,10 @@ describe("page layouts", () => {
 
   test("questions: open ones first, oldest first, then the answered with what answers them", () => {
     const html = article("Questions/Questions/index.html")
-    const groups = [...html.matchAll(/data-group="([^"]+)"[\s\S]*?<\/section>/g)].map((m) => [m[1], [...m[0].matchAll(/class="talk-title internal" href="([^"]+)"/g)].map((x) => x[1])])
+    const groups = [...html.matchAll(/data-group="([^"]+)"[\s\S]*?<\/section>/g)].map((m) => [
+      m[1],
+      [...m[0].matchAll(/class="talk-title internal" href="([^"]+)"/g)].map((x) => x[1]),
+    ])
     expect(groups).toEqual([
       ["open", ["/Questions/Old-question", "/Questions/Why-gardens"]],
       ["answered", ["/Questions/How-to-link", "/Questions/What-is-a-stub", "/Questions/Secret-answer"]],
@@ -939,11 +1044,15 @@ describe("page layouts", () => {
   test("a digest: each ISO week what was planted and tended, newest first, with a feed of the weeks", () => {
     const html = article("Digest/Digest/index.html")
     expect([...html.matchAll(/<section class="collection-group digest-week" id="([^"]+)"/g)].map((m) => m[1])).toEqual(["2024-w10", "2024-w09", "2024-w07"])
-    expect(html).toContain('<h2 class="collection-title">Week 10, 2024 <span class="count">1</span></h2><p class="digest-range"><time datetime="2024-03-04">Mar 4, 2024</time> – <time datetime="2024-03-10">Mar 10, 2024</time></p>')
+    expect(html).toContain(
+      '<h2 class="collection-title">Week 10, 2024 <span class="count">1</span></h2><p class="digest-range"><time datetime="2024-03-04">Mar 4, 2024</time> – <time datetime="2024-03-10">Mar 10, 2024</time></p>',
+    )
     expect(html).toMatch(/<div class="digest-part is-tended">[\s\S]*?href="\/Questions\/How-to-link"/)
     expect(html).toContain('<a href="/Digest/Digest/digest.xml" type="application/rss+xml">Weekly digest (RSS)</a>')
     for (const hidden of ["HIDDEN ANSWER TITLE", "LOCKED QUESTION TITLE", "Hidden-answer", "Locked-question"]) expect(html).not.toContain(hidden)
-    expect(read("Digest/Digest/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Digest · Layouts" href="/Digest/Digest/digest.xml">')
+    expect(read("Digest/Digest/index.html")).toContain(
+      '<link rel="alternate" type="application/rss+xml" title="Digest · Layouts" href="/Digest/Digest/digest.xml">',
+    )
     const xml = read("Digest/Digest/digest.xml")
     expect([...xml.matchAll(/<link>([^<]+)<\/link>/g)].map((m) => m[1]).slice(1)).toEqual([
       "http://localhost:4321/Digest/Digest#2024-w10",
@@ -976,7 +1085,11 @@ describe("page layouts", () => {
       const window = new Window({ url: "https://garden.example/", settings: { disableJavaScriptEvaluation: false } })
       window.document.write(read(page).replace(/<script\b[\s\S]*?<\/script>/g, ""))
       window.eval(axeSource)
-      const axe = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; nodes: { target: string[] }[] }[] }> } }).axe
+      const axe = (
+        window as unknown as {
+          axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; nodes: { target: string[] }[] }[] }> }
+        }
+      ).axe
       const res = await axe.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
       await window.happyDOM.close()
       const serious = res.violations.filter((v) => v.impact === "serious" || v.impact === "critical")

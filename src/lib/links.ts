@@ -5,9 +5,7 @@ export const CODE_SPAN = /(`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])*?[^`]\1(?!`)/g
 
 /** Code blocks and spans are examples, not links. */
 function withoutCode(md: string): string {
-  return md
-    .replace(/^(\s*)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\s*\2[^\S\n]*$/gm, "")
-    .replace(CODE_SPAN, "")
+  return md.replace(/^(\s*)(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n\s*\2[^\S\n]*$/gm, "").replace(CODE_SPAN, "")
 }
 
 const count = (s: string, c: string) => s.split(c).length - 1
@@ -83,10 +81,7 @@ export async function probe(url: string, { timeoutMs = 10_000, fetch: get = fetc
 }
 
 /** Probe every URL, a few at a time, and report the dead ones against the files linking them. */
-export async function checkExternal(
-  urls: Map<string, string[]>,
-  { concurrency = 8, ...opts }: ProbeOpts & { concurrency?: number } = {},
-): Promise<Problem[]> {
+export async function checkExternal(urls: Map<string, string[]>, { concurrency = 8, ...opts }: ProbeOpts & { concurrency?: number } = {}): Promise<Problem[]> {
   const queue = [...urls.keys()]
   const problems: Problem[] = []
   const worker = async () => {

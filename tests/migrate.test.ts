@@ -90,7 +90,9 @@ describe("Obsidian Publish", () => {
     const plan = planMigration(dir, "publish")
     expect(plan.notes[0].changes).toEqual(["cover → banner"])
     expect(plan.config).toEqual({ theme: { css: "publish.css" } })
-    expect(describePlan(dir, plan, false)).toContain('Already set in datme.yaml, left as they are (change them by hand if needed):\n  theme: {"css":"publish.css"}')
+    expect(describePlan(dir, plan, false)).toContain(
+      'Already set in datme.yaml, left as they are (change them by hand if needed):\n  theme: {"css":"publish.css"}',
+    )
     applyMigration(dir, plan)
     expect(read(dir, "datme.yaml")).toBe("# my settings\ntheme:\n  accent: '#123456'\nlanguages: [en-US]\n")
     expect(read(dir, "Note.md")).toBe("---\npublish: true\nbanner: img/c.png\n---\nText.")

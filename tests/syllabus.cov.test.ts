@@ -14,9 +14,7 @@ describe("a syllabus's ticks", () => {
 
   const page = (progress = true) => {
     dom.document.body.innerHTML =
-      (progress
-        ? `<div data-syllabus-progress data-template="{done} of {total} done" hidden><progress max="3" value="0"></progress><span></span></div>`
-        : "") +
+      (progress ? `<div data-syllabus-progress data-template="{done} of {total} done" hidden><progress max="3" value="0"></progress><span></span></div>` : "") +
       `<ol class="syllabus">` +
       ["a", "b", "c"].map((id) => `<li data-lesson="${id}"><input type="checkbox" data-lesson-done></li>`).join("") +
       `</ol>`

@@ -71,9 +71,7 @@ describe("blocks", () => {
   test("an inline query shows its value, a dash for nothing, and an error as code", () => {
     expect(renderInlineQuery("this.rating * 2", LANG, QUERIES)).toBe('<span class="dataview dv-inline">8</span>')
     expect(renderInlineQuery("this.nothing", LANG, QUERIES)).toBe('<span class="dataview dv-inline">-</span>')
-    expect(renderInlineQuery("nope(1)", LANG, QUERIES)).toBe(
-      '<code class="dataview dv-error" title="Dataview: unknown function nope()">= nope(1)</code>',
-    )
+    expect(renderInlineQuery("nope(1)", LANG, QUERIES)).toBe('<code class="dataview dv-error" title="Dataview: unknown function nope()">= nope(1)</code>')
     expect(renderInlineQuery("1 1", LANG, QUERIES)).toContain('class="dataview dv-error"')
   })
 
@@ -91,7 +89,9 @@ describe("blocks", () => {
     expect(tasks.markdown).toContain("- [ ] Ask")
     expect(tasks.markdown).toContain("- [x] **Read** the paper")
     const table = renderDataview('TABLE file.folder AS "Where" FROM "06_Reference"', LANG, QUERIES) as string
-    expect(table).toMatch(/^<table class="dataview dv-table"><thead><tr><th>[^<]+<\/th><th>Where<\/th><\/tr><\/thead><tbody><tr><td><a [^>]+>Niklas Luhmann \(sociologist\)<\/a><\/td><td>06_Reference<\/td><\/tr><\/tbody><\/table>$/)
+    expect(table).toMatch(
+      /^<table class="dataview dv-table"><thead><tr><th>[^<]+<\/th><th>Where<\/th><\/tr><\/thead><tbody><tr><td><a [^>]+>Niklas Luhmann \(sociologist\)<\/a><\/td><td>06_Reference<\/td><\/tr><\/tbody><\/table>$/,
+    )
   })
 
   test("TASK with nothing found is empty; unsupported and broken queries say so", () => {

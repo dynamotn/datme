@@ -54,8 +54,6 @@ describe("the fixture vault", () => {
   })
 
   test("a note with a location is on the map", () => {
-    expect(places("vi-VN")).toEqual([
-      expect.objectContaining({ lat: 52.0302, lng: 8.5325, title: "Niklas Luhmann", url: "/06_Reference/Niklas-Luhmann" }),
-    ])
+    expect(places("vi-VN")).toEqual([expect.objectContaining({ lat: 52.0302, lng: 8.5325, title: "Niklas Luhmann", url: "/06_Reference/Niklas-Luhmann" })])
   })
 })

@@ -81,9 +81,7 @@ const dayOf = (v: unknown): string | undefined => {
 export function graphCounts(o: GraphOptions, engine: Engine): Map<string, { count: number; titles: string[] }> {
   let pages: Page[] = engine.pages
   if (o.source) {
-    const keys = new Set(
-      runQuery(parseQuery(`LIST FROM ${o.source}`), engine).rows.map((r) => (r[0] as { key?: string }).key),
-    )
+    const keys = new Set(runQuery(parseQuery(`LIST FROM ${o.source}`), engine).rows.map((r) => (r[0] as { key?: string }).key))
     pages = pages.filter((p) => keys.has(p.key))
   }
   const out = new Map<string, { count: number; titles: string[] }>()
@@ -100,8 +98,7 @@ export function graphCounts(o: GraphOptions, engine: Engine): Map<string, { coun
       for (const task of p.tasks ?? []) if (task.status.toLowerCase() === "x") add(task.fields.completion, 1, p.title)
       continue
     }
-    const day =
-      o.date.type === "FILE_MTIME" ? dayOf(p.updated) : o.date.type === "PAGE_PROPERTY" ? dayOf(p.fields[o.date.value ?? ""]) : dayOf(p.created)
+    const day = o.date.type === "FILE_MTIME" ? dayOf(p.updated) : o.date.type === "PAGE_PROPERTY" ? dayOf(p.fields[o.date.value ?? ""]) : dayOf(p.created)
     const n = o.count.type === "PAGE_PROPERTY" ? Number(p.fields[o.count.value ?? ""]) : 1
     add(day, n, p.title)
   }

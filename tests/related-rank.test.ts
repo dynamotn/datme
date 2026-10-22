@@ -27,7 +27,7 @@ function allPairs(notes: RankedNote[], out: Map<string, Set<string>>, typePrefix
 
 /** A seeded vault: few titles so ties are common, repeated and type tags, links to notes outside the list. */
 function vault(n: number, seed: number) {
-  const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31)
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31
   const pick = <T>(xs: T[]) => xs[Math.floor(rnd() * xs.length)]
   const tags = [...Array.from({ length: 12 }, (_, i) => `topic${i}`), "type/paper", "type/book"]
   const notes: RankedNote[] = Array.from({ length: n }, (_, i) => ({
@@ -36,7 +36,10 @@ function vault(n: number, seed: number) {
     tags: Array.from({ length: Math.floor(rnd() * 4) }, () => pick(tags)),
   }))
   const out = new Map(
-    notes.map((x) => [x.key, new Set(Array.from({ length: Math.floor(rnd() * 5) }, () => (rnd() < 0.1 ? `hidden${Math.floor(rnd() * 5)}` : `k${Math.floor(rnd() * n)}`)))]),
+    notes.map((x) => [
+      x.key,
+      new Set(Array.from({ length: Math.floor(rnd() * 5) }, () => (rnd() < 0.1 ? `hidden${Math.floor(rnd() * 5)}` : `k${Math.floor(rnd() * n)}`))),
+    ]),
   )
   return { notes, out }
 }

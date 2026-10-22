@@ -61,7 +61,9 @@ describe("link previews", () => {
         headers: { "content-type": "text/html" },
       })
     const html = await renderMarkdown(`${url}\n\nRead ${url} later.`, "en-US", "x")
-    expect(html).toContain(`<a class="link-card external" href="${url}" target="_blank" rel="noopener noreferrer"><span class="link-card-text"><strong>A post</strong>`)
+    expect(html).toContain(
+      `<a class="link-card external" href="${url}" target="_blank" rel="noopener noreferrer"><span class="link-card-text"><strong>A post</strong>`,
+    )
     expect(html).toContain('<span class="link-card-desc">About it</span>')
     expect(html).toMatch(/Read <a href="[^"]+" target="_blank" rel="noopener noreferrer" class="external">/)
   })

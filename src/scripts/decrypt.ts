@@ -6,13 +6,7 @@ export async function decrypt(payload: string, password: string, iterations: num
     const iv = bytes.slice(16, 28)
     const data = bytes.slice(28)
     const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"])
-    const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
-      base,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["decrypt"],
-    )
+    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"])
     return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data))
   } catch {
     return null

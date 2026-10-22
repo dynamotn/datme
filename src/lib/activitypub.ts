@@ -60,7 +60,6 @@ export function actor(site: SiteConfig, username: string): object {
   }
 }
 
-
 /** The newest notes as Create activities, newest first. */
 export function outbox(site: SiteConfig, items: OutboxItem[]): object {
   const by = abs(site, ACTOR_PATH)

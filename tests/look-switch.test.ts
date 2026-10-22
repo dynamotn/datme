@@ -53,7 +53,11 @@ describe("readerLooks", () => {
   const sheets: Record<string, string[]> = { notebook: ["/n.css"], garden: ["/g.css"] }
   const draw = (st: string) => [st === "ink" ? "classic" : st, ...(sheets[st] ?? [])]
   test("the page's own style, then the choices, each with the look it sets and its stylesheet", () => {
-    expect(readerLooks("classic", draw, ["notebook", "garden"])).toEqual({ classic: ["classic"], notebook: ["notebook", "/n.css"], garden: ["garden", "/g.css"] })
+    expect(readerLooks("classic", draw, ["notebook", "garden"])).toEqual({
+      classic: ["classic"],
+      notebook: ["notebook", "/n.css"],
+      garden: ["garden", "/g.css"],
+    })
   })
   test("none when the switch is off or the page is a résumé or a gallery", () => {
     expect(readerLooks("classic", draw, [])).toBeUndefined()
@@ -160,7 +164,15 @@ describe("the <head> script", () => {
     run()
     expect(hrefs(document)).toEqual(["/print.css", "/g.css"])
     const real = globalThis.localStorage
-    Object.defineProperty(globalThis, "localStorage", { value: { getItem: () => { throw new Error("blocked") } }, configurable: true, writable: true })
+    Object.defineProperty(globalThis, "localStorage", {
+      value: {
+        getItem: () => {
+          throw new Error("blocked")
+        },
+      },
+      configurable: true,
+      writable: true,
+    })
     try {
       page(document, "notebook")
       run()

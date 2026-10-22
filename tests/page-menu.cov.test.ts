@@ -15,8 +15,7 @@ describe("the markdown menu", () => {
     writeText: async (t: string) => void written.push(t),
     write: withWrite ? async (list: { blob: Promise<Blob> }[]) => void items.push(await (await list[0].blob).text()) : undefined,
   })
-  const setClipboard = (value: unknown) =>
-    Object.defineProperty(navigator, "clipboard", { configurable: true, value })
+  const setClipboard = (value: unknown) => Object.defineProperty(navigator, "clipboard", { configurable: true, value })
 
   beforeAll(async () => {
     dom = installDom("https://garden.example/en-US/note")

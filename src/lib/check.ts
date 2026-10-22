@@ -123,7 +123,10 @@ export function accentProblems(accent: SiteConfig["theme"]["accent"], styles: re
     })
     if (failing.length) {
       const on = failing.map((f) => `${f.style} (${ratioText(f.ratio)} on ${f.ground})`).join(", ")
-      const better = readableAccent(color, failing.map((f) => f.ground))
+      const better = readableAccent(
+        color,
+        failing.map((f) => f.ground),
+      )
       problems.push({
         level: "warning",
         file,
@@ -182,7 +185,10 @@ export function checkVault(): Problem[] {
     ...accentProblems(site.theme.accent, stylesInUse(), accentFile),
     ...queryProblems(),
   ]
-  for (const [list, items] of [["nav", site.nav], ["sidebar", site.sidebar]] as const) {
+  for (const [list, items] of [
+    ["nav", site.nav],
+    ["sidebar", site.sidebar],
+  ] as const) {
     for (const item of items) {
       if (item.kind !== "note") continue
       const source = vault.resolveNote(item.target!, "")
@@ -283,9 +289,7 @@ export function privacyReport(): PrivacyReport {
   }
   const hasMap = notes.some((n) => !n.protected && parseLocation(n.source.fm.location ?? n.source.fm.coordinates))
   return {
-    notes: notes
-      .map((n) => ({ file: n.key + ".md", url: n.url, protected: n.protected, unlisted: n.unlisted }))
-      .sort((a, b) => a.file.localeCompare(b.file)),
+    notes: notes.map((n) => ({ file: n.key + ".md", url: n.url, protected: n.protected, unlisted: n.unlisted })).sort((a, b) => a.file.localeCompare(b.file)),
     docs: [...vault.docs.keys()].sort().map((file) => ({ file, url: docUrl(file, lang) })),
     files: [...vault.assets].sort(),
     properties: [...byKey].map(([key, files]) => ({ key, files })).sort((a, b) => a.key.localeCompare(b.key)),
@@ -306,7 +310,10 @@ export function formatPrivacy(r: PrivacyReport): string {
     "Published notes",
     r.notes.map((n) => `${n.file}  ${n.url}${n.protected ? "  [password]" : ""}${n.unlisted ? "  [unlisted]" : ""}`),
   )
-  section("Canvases, bases and drawings", r.docs.map((d) => `${d.file}  ${d.url}`))
+  section(
+    "Canvases, bases and drawings",
+    r.docs.map((d) => `${d.file}  ${d.url}`),
+  )
   section("Files copied", r.files)
   section(
     "Properties shown",
@@ -317,6 +324,9 @@ export function formatPrivacy(r: PrivacyReport): string {
     "Links to private notes",
     r.privateLinks.map((l) => `${l.file}  "${l.target}" ${l.shown ? `shows "${l.shown}"` : "shows nothing"}`),
   )
-  section("Outside hosts", r.hosts.map((h) => `${h.host}  ${h.why}`))
+  section(
+    "Outside hosts",
+    r.hosts.map((h) => `${h.host}  ${h.why}`),
+  )
   return out.join("\n").replace(/^\n/, "")
 }

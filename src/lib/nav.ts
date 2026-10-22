@@ -27,9 +27,7 @@ export function sidebarLinks(lang: Lang): NavLink[] {
 
 /** The footer's columns of links, resolved like the main menu; a column left empty is dropped. */
 export function footerColumns(lang: Lang): { title?: string; links: NavLink[] }[] {
-  return site.footer
-    .map((g) => ({ title: g.title, links: resolveLinks(lang, g.items, "footer") }))
-    .filter((g) => g.links.length)
+  return site.footer.map((g) => ({ title: g.title, links: resolveLinks(lang, g.items, "footer") })).filter((g) => g.links.length)
 }
 
 function resolveLinks(lang: Lang, items: NavItem[], list: "nav" | "sidebar" | "footer"): NavLink[] {
@@ -52,8 +50,7 @@ function resolveLinks(lang: Lang, items: NavItem[], list: "nav" | "sidebar" | "f
       if (hasChanges(lang)) out.push({ label: t(lang).changes, url: slugToUrl(langPrefix(lang) + "changes") })
     } else if (item.kind === "practice") {
       if (hasDecks(lang)) out.push({ label: t(lang).practice, url: slugToUrl(langPrefix(lang) + "practice") })
-    }
-    else if (item.kind === "url") out.push({ label: item.label![lang], url: withBase(item.target!) })
+    } else if (item.kind === "url") out.push({ label: item.label![lang], url: withBase(item.target!) })
     else {
       const source = vault.resolveNote(item.target!, "")
       const note = source && vault.byKey[lang].get(source.key)

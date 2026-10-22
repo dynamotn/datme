@@ -70,7 +70,9 @@ export function mapMarkers(res: ViewResult, base: BaseFile, engine: Engine, lang
     const at = (id: string | undefined) => (id ? property(id, row.page, engine, base.formulas) : null)
     const color = textOf(at(colorProp), lang).trim()
     const icon = textOf(at(iconProp), lang).trim()
-    const props = shown.filter((c) => row.cells[c.i] != null && row.cells[c.i] !== "" && !(Array.isArray(row.cells[c.i]) && !(row.cells[c.i] as unknown[]).length)).slice(0, 20)
+    const props = shown
+      .filter((c) => row.cells[c.i] != null && row.cells[c.i] !== "" && !(Array.isArray(row.cells[c.i]) && !(row.cells[c.i] as unknown[]).length))
+      .slice(0, 20)
     const [first, ...rest] = props
     const titleText = first ? textOf(row.cells[first.i], lang) || row.page.title : row.page.title
     const popup =
@@ -115,7 +117,13 @@ export function renderMapView(res: ViewResult, base: BaseFile, engine: Engine, l
     `<div class="map-canvas" role="region" aria-label="${escapeAttr(s.map)}"${height ? ` style="height:${height}"` : ""}` +
     ` data-map="${escapeAttr(JSON.stringify(markers))}"` +
     ` data-tiles="${escapeAttr(own ? light.join(" ") : site.map.tiles)}"` +
-    (own ? (dark.length ? ` data-tiles-dark="${escapeAttr(dark.join(" "))}"` : "") : site.map.darkTiles ? ` data-tiles-dark="${escapeAttr(site.map.darkTiles)}"` : "") +
+    (own
+      ? dark.length
+        ? ` data-tiles-dark="${escapeAttr(dark.join(" "))}"`
+        : ""
+      : site.map.darkTiles
+        ? ` data-tiles-dark="${escapeAttr(site.map.darkTiles)}"`
+        : "") +
     ` data-attribution="${escapeAttr(own ? "" : site.map.attribution)}"` +
     ` data-min-zoom="${minZoom}" data-max-zoom="${maxZoom}"` +
     (center ? ` data-center="${center.join(",")}" data-zoom="${zoom ?? (markers.length ? 4 : 1)}"` : zoom != null ? ` data-zoom="${zoom}"` : "") +

@@ -58,7 +58,8 @@ describe("the content index", () => {
   test("a failed load is not kept: the next call tries again", async () => {
     const real = globalThis.fetch
     let calls = 0
-    globalThis.fetch = (async () => (++calls === 1 ? new Response("", { status: 503 }) : new Response(JSON.stringify({ notes: [], links: [] })))) as unknown as typeof fetch
+    globalThis.fetch = (async () =>
+      ++calls === 1 ? new Response("", { status: 503 }) : new Response(JSON.stringify({ notes: [], links: [] }))) as unknown as typeof fetch
     try {
       await expect(data.loadIndex("cov-data-flaky")).rejects.toThrow("503 /static/contentIndex.cov-data-flaky.json")
       await settle()

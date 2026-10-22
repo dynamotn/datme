@@ -113,7 +113,10 @@ describe("a site served under a path", () => {
   })
 
   test("the scripts fetch the site's files through its path", () => {
-    const js = [...files(out)].filter((f) => f.startsWith("_astro/") && f.endsWith(".js")).map(read).join("\n")
+    const js = [...files(out)]
+      .filter((f) => f.startsWith("_astro/") && f.endsWith(".js"))
+      .map(read)
+      .join("\n")
     expect(js).toContain("`/garden/`")
     // Every file the scripts ask for by name goes through the helper, never as a bare root path.
     expect(js).not.toMatch(/fetch\([`"']\/|register\([`"']\/|origin\}\/pagefind|[`"']\/static\/[^`"']*[`"']\)\.then/)

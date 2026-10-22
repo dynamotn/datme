@@ -33,7 +33,14 @@ export interface Near {
 }
 
 /** Notes closest to a vector, best first, above a threshold and without `skip`. */
-export function nearest(target: ArrayLike<number>, notes: { url: string; v: Int8Array }[], k: number, threshold: number, skip?: (url: string) => boolean, scale = 127 * 127): Near[] {
+export function nearest(
+  target: ArrayLike<number>,
+  notes: { url: string; v: Int8Array }[],
+  k: number,
+  threshold: number,
+  skip?: (url: string) => boolean,
+  scale = 127 * 127,
+): Near[] {
   return notes
     .filter((n) => !skip?.(n.url))
     .map((n) => ({ url: n.url, sim: similarity(n.v, target, scale) }))
@@ -81,8 +88,8 @@ let extractor: Promise<Extract> | undefined
 
 /** Embed a query with the model the build used; the first call downloads it. */
 export async function embedQuery(model: string, text: string): Promise<number[]> {
-  extractor ??= (import(/* @vite-ignore */ TRANSFORMERS) as Promise<{ pipeline(task: string, model: string, o: { dtype: string }): Promise<Extract> }>).then((tf) =>
-    tf.pipeline("feature-extraction", model, { dtype: "q8" }),
+  extractor ??= (import(/* @vite-ignore */ TRANSFORMERS) as Promise<{ pipeline(task: string, model: string, o: { dtype: string }): Promise<Extract> }>).then(
+    (tf) => tf.pipeline("feature-extraction", model, { dtype: "q8" }),
   )
   // A failed download can be tried again.
   extractor.catch(() => (extractor = undefined))

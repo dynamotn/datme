@@ -79,7 +79,11 @@ export function diagnose(m: Machine): Finding[] {
   if (site.tts && m.env.DATME_TTS === "off") ok("tts is off (DATME_TTS=off): builds publish no audio")
   else if (site.tts) {
     if (m.which("uv")) ok("uv is installed, for tts")
-    else fail("uv is not installed, and tts runs its models through it", "install it from https://docs.astral.sh/uv/   (curl -LsSf https://astral.sh/uv/install.sh | sh)")
+    else
+      fail(
+        "uv is not installed, and tts runs its models through it",
+        "install it from https://docs.astral.sh/uv/   (curl -LsSf https://astral.sh/uv/install.sh | sh)",
+      )
     if (m.env.DATME_TTS_VOICE) ok("DATME_TTS_VOICE is set, for tts")
     else {
       fail(
@@ -96,7 +100,10 @@ export function diagnose(m: Machine): Finding[] {
     need("git is not installed: dates come from the file system" + (site.history ? ", and history: true needs it" : ""), "install git")
   } else if (!top) {
     const need = site.history ? fail : warn
-    need(`the vault is not in a git repository: dates come from the file system${site.history ? ", and history: true needs one" : ""}`, `git -C "${site.vault}" init`)
+    need(
+      `the vault is not in a git repository: dates come from the file system${site.history ? ", and history: true needs one" : ""}`,
+      `git -C "${site.vault}" init`,
+    )
   } else ok(`${git}, and the vault is in the repository at ${top}`)
 
   // Group passwords live in the environment; only the names of their variables are ever shown.

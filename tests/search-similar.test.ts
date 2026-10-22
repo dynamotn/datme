@@ -5,7 +5,13 @@ import { quantize } from "../src/lib/vectors"
 // The search dialog on a note page, with a fake index and vectors served by fetch.
 mock.module("astro:transitions/client", () => ({ navigate: () => {} }))
 const happy = new Window({ url: "https://garden.example/notes/a" })
-const saved = { window: globalThis.window, document: globalThis.document, location: globalThis.location, HTMLElement: globalThis.HTMLElement, fetch: globalThis.fetch }
+const saved = {
+  window: globalThis.window,
+  document: globalThis.document,
+  location: globalThis.location,
+  HTMLElement: globalThis.HTMLElement,
+  fetch: globalThis.fetch,
+}
 afterAll(() => Object.assign(globalThis, saved))
 Object.assign(globalThis, { window: happy, document: happy.document, location: happy.location, HTMLElement: happy.HTMLElement })
 
@@ -21,8 +27,7 @@ const vectors = {
     { u: "/notes/c", v: quantize(unit([0, 1])) },
   ],
 }
-globalThis.fetch = (async (url: string) =>
-  new Response(JSON.stringify(String(url).includes("vectors") ? vectors : index))) as unknown as typeof fetch
+globalThis.fetch = (async (url: string) => new Response(JSON.stringify(String(url).includes("vectors") ? vectors : index))) as unknown as typeof fetch
 
 describe("the search dialog with nothing typed", () => {
   test("lists the notes closest in meaning to the page's note, under a heading", async () => {

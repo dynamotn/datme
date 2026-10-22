@@ -1,7 +1,18 @@
 import { afterAll, describe, expect, test } from "bun:test"
 import * as d3 from "d3-force"
 import * as d3x from "d3-force-3d"
-import { applyForces, packPositions, paced, runLayout, serveLayout, unpackPositions, type LayoutLib, type LayoutRequest, type LayoutScope, type SimNode } from "../src/scripts/graph-sim"
+import {
+  applyForces,
+  packPositions,
+  paced,
+  runLayout,
+  serveLayout,
+  unpackPositions,
+  type LayoutLib,
+  type LayoutRequest,
+  type LayoutScope,
+  type SimNode,
+} from "../src/scripts/graph-sim"
 import { LARGE_GRAPH } from "../src/scripts/graph-settle"
 
 const RADII = [5, 4, 4, 3, 3, 3]
@@ -19,7 +30,12 @@ const linksOf = (pairs = LINKS) => pairs.map(([source, target]) => ({ source, ta
 function runAll(sim: ReturnType<typeof d3.forceSimulation<SimNode>>, dims: 2 | 3) {
   const posted: Float32Array[] = []
   const queue: (() => void)[] = []
-  runLayout(sim, dims, (p) => posted.push(p), (next) => void queue.push(next))
+  runLayout(
+    sim,
+    dims,
+    (p) => posted.push(p),
+    (next) => void queue.push(next),
+  )
   while (queue.length) queue.shift()!()
   return posted
 }
@@ -31,7 +47,7 @@ describe("the graph's layout", () => {
     const ref = applyForces(d3.forceSimulation(nodesOf()), d3, linksOf(), "local")
     ref.stop()
     let ticks = 0
-    while (ref.alpha() >= ref.alphaMin()) (ref.tick(), ticks++)
+    while (ref.alpha() >= ref.alphaMin()) ref.tick(), ticks++
     expect(posted).toHaveLength(ticks)
     expect([...posted.at(-1)!]).toEqual([...packPositions(ref.nodes(), 2)])
     // Notes linked together end nearer than notes far apart.
@@ -56,7 +72,12 @@ describe("the graph's layout", () => {
     const sim = applyForces(d3.forceSimulation(nodesOf()), d3, linksOf(), "global")
     const posted: Float32Array[] = []
     const queue: (() => void)[] = []
-    const stop = runLayout(sim, 2, (p) => posted.push(p), (next) => void queue.push(next))
+    const stop = runLayout(
+      sim,
+      2,
+      (p) => posted.push(p),
+      (next) => void queue.push(next),
+    )
     queue.shift()!()
     queue.shift()!()
     stop()

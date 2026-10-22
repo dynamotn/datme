@@ -2,10 +2,7 @@ import { site } from "../site.config"
 import { getVault, type Layout, type Note } from "./vault"
 import { GLOBAL as MARP_DIRECTIVES } from "./slides"
 
-export type PropValue =
-  | { kind: "text"; text: string; href?: string }
-  | { kind: "list"; items: PropValue[] }
-  | { kind: "map"; entries: [string, PropValue][] }
+export type PropValue = { kind: "text"; text: string; href?: string } | { kind: "list"; items: PropValue[] } | { kind: "map"; entries: [string, PropValue][] }
 
 /** Keys shown elsewhere on the page or meaningful only inside Obsidian. */
 export const HIDDEN_PROPERTIES = [

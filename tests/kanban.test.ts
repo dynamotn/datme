@@ -37,7 +37,7 @@ describe("kanban", () => {
   })
 
   test("the board scrolls sideways, so it is a named region the keyboard can reach", () => {
-    expect(kanban("## A\n- [ ] x", "Tableau \"<1>\"")).toContain('<div class="kanban" tabindex="0" role="region" aria-label="Tableau &quot;&lt;1>&quot;">')
+    expect(kanban("## A\n- [ ] x", 'Tableau "<1>"')).toContain('<div class="kanban" tabindex="0" role="region" aria-label="Tableau &quot;&lt;1>&quot;">')
   })
 
   test("a note without headings stays as it is", () => {

@@ -7,7 +7,24 @@ const photo = (): FileView => ({ kind: "image", href: "/assets/p&q.png" })
 describe("freehand strokes", () => {
   test("a stroke is filled as one closed outline in its stroke colour", () => {
     const svg = renderScene(
-      scene([{ id: "f", type: "freedraw", x: 0, y: 0, width: 40, height: 10, strokeColor: "#e03131", points: [[0, 0], [10, 5], [40, 10]], pressures: [0.2, 0.9, 0.4], simulatePressure: false }]),
+      scene([
+        {
+          id: "f",
+          type: "freedraw",
+          x: 0,
+          y: 0,
+          width: 40,
+          height: 10,
+          strokeColor: "#e03131",
+          points: [
+            [0, 0],
+            [10, 5],
+            [40, 10],
+          ],
+          pressures: [0.2, 0.9, 0.4],
+          simulatePressure: false,
+        },
+      ]),
     )
     const path = svg.match(/<path d="(M [^"]+ Z)" fill="#e03131"\/>/)
     expect(path).not.toBeNull()
@@ -18,7 +35,18 @@ describe("freehand strokes", () => {
   test("a stroke without pressures or colour takes the defaults, and one without points draws nothing", () => {
     const svg = renderScene(
       scene([
-        { id: "f", type: "freedraw", x: 0, y: 0, width: 20, height: 20, points: [[0, 0], [20, 20]] },
+        {
+          id: "f",
+          type: "freedraw",
+          x: 0,
+          y: 0,
+          width: 20,
+          height: 20,
+          points: [
+            [0, 0],
+            [20, 20],
+          ],
+        },
         { id: "g", type: "freedraw", x: 50, y: 50, width: 0, height: 0 },
       ]),
     )
@@ -29,18 +57,51 @@ describe("freehand strokes", () => {
 describe("images", () => {
   test("a cropped image shows only its window of the picture", () => {
     const svg = renderScene(
-      scene([{ id: "i", type: "image", x: 0, y: 0, width: 50, height: 25, fileId: "f1", crop: { x: 10, y: 20, width: 100, height: 50, naturalWidth: 400, naturalHeight: 300 } }]),
+      scene([
+        {
+          id: "i",
+          type: "image",
+          x: 0,
+          y: 0,
+          width: 50,
+          height: 25,
+          fileId: "f1",
+          crop: { x: 10, y: 20, width: 100, height: 50, naturalWidth: 400, naturalHeight: 300 },
+        },
+      ]),
       { resolveFile: photo },
     )
-    expect(svg).toContain('<svg viewBox="10 20 100 50" width="50" height="25" preserveAspectRatio="none"><image href="/assets/p&amp;q.png" width="400" height="300"/></svg>')
+    expect(svg).toContain(
+      '<svg viewBox="10 20 100 50" width="50" height="25" preserveAspectRatio="none"><image href="/assets/p&amp;q.png" width="400" height="300"/></svg>',
+    )
   })
 
   test("a flipped image is mirrored in place, a crop of no size is ignored", () => {
     const svg = renderScene(
       scene([
-        { id: "h", type: "image", x: 0, y: 0, width: 50, height: 25, fileId: "f1", scale: [-1, 1], crop: { x: 0, y: 0, width: 0, height: 10, naturalWidth: 1, naturalHeight: 1 } },
+        {
+          id: "h",
+          type: "image",
+          x: 0,
+          y: 0,
+          width: 50,
+          height: 25,
+          fileId: "f1",
+          scale: [-1, 1],
+          crop: { x: 0, y: 0, width: 0, height: 10, naturalWidth: 1, naturalHeight: 1 },
+        },
         { id: "v", type: "image", x: 100, y: 0, width: 50, height: 25, fileId: "f1", scale: [1, -1] },
-        { id: "c", type: "image", x: 200, y: 0, width: 50, height: 25, fileId: "f1", scale: [-1, -1], crop: { x: 1, y: 2, width: 3, height: 4, naturalWidth: 5, naturalHeight: 6 } },
+        {
+          id: "c",
+          type: "image",
+          x: 200,
+          y: 0,
+          width: 50,
+          height: 25,
+          fileId: "f1",
+          scale: [-1, -1],
+          crop: { x: 1, y: 2, width: 3, height: 4, naturalWidth: 5, naturalHeight: 6 },
+        },
       ]),
       { resolveFile: photo },
     )
@@ -54,7 +115,9 @@ describe("images", () => {
       resolveFile: photo,
       idPrefix: "d1",
     })
-    expect(svg).toContain('<clipPath id="d1-r-r"><rect width="50" height="20" rx="2"/></clipPath><image href="/assets/p&amp;q.png" width="50" height="20" preserveAspectRatio="none" clip-path="url(#d1-r-r)"/>')
+    expect(svg).toContain(
+      '<clipPath id="d1-r-r"><rect width="50" height="20" rx="2"/></clipPath><image href="/assets/p&amp;q.png" width="50" height="20" preserveAspectRatio="none" clip-path="url(#d1-r-r)"/>',
+    )
   })
 })
 
@@ -63,11 +126,7 @@ describe("elements with nothing to show", () => {
     const rect: ExElement = { id: "r", type: "rectangle", x: 0, y: 0, width: 50, height: 50, seed: 1 }
     const alone = renderScene(scene([rect]))
     const svg = renderScene(
-      scene([
-        rect,
-        { id: "e", type: "embeddable", x: 10, y: 10, width: 20, height: 20 },
-        { id: "w", type: "laser", x: 5, y: 5, width: 20, height: 20 },
-      ]),
+      scene([rect, { id: "e", type: "embeddable", x: 10, y: 10, width: 20, height: 20 }, { id: "w", type: "laser", x: 5, y: 5, width: 20, height: 20 }]),
     )
     expect(svg).toBe(alone)
   })

@@ -32,8 +32,7 @@ const plain = (s: string) =>
     .trim()
 
 // A point between digits, as in 3.14, does not end a sentence.
-const sentences = (text: string) =>
-  text.match(/(?:[^.!?…。！？]|\.(?=\d))+[.!?…。！？]+(?!\d)["')\]」』]*\s*|(?:[^.!?…。！？]|\.(?=\d))+$/g) ?? [text]
+const sentences = (text: string) => text.match(/(?:[^.!?…。！？]|\.(?=\d))+[.!?…。！？]+(?!\d)["')\]」』]*\s*|(?:[^.!?…。！？]|\.(?=\d))+$/g) ?? [text]
 
 /** Text longer than max cut at its last comma within max, else its last space, else mid-word. */
 function breakLong(text: string, max: number): string[] {

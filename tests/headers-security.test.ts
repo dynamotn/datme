@@ -14,11 +14,10 @@ describe("_headers hardening", () => {
   })
 
   test("the CSP lets Giscus load its stylesheet", () => {
-    const site = resolveConfig(
-      { headers: { csp: true }, comments: { provider: "giscus", repo: "a/b", repoId: "R", category: "C", categoryId: "D" } },
-      "/v",
-    )
-    const style = contentSecurityPolicy(site, []).split("; ").find((d) => d.startsWith("style-src "))
+    const site = resolveConfig({ headers: { csp: true }, comments: { provider: "giscus", repo: "a/b", repoId: "R", category: "C", categoryId: "D" } }, "/v")
+    const style = contentSecurityPolicy(site, [])
+      .split("; ")
+      .find((d) => d.startsWith("style-src "))
     expect(style).toContain("https://giscus.app")
   })
 

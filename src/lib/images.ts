@@ -112,7 +112,9 @@ export async function publicOriginal(rel: string): Promise<Buffer> {
   const cached = readCache("img-orig", import.meta.url, key)
   if (cached) return cached
   const refuse = (why: string) =>
-    new Error(`${rel} holds metadata (EXIF, XMP or IPTC, such as where it was taken) that datme could not remove: ${why}. Convert it to JPEG, PNG or WebP, or set images.keepMetadata: true to publish it as it is`)
+    new Error(
+      `${rel} holds metadata (EXIF, XMP or IPTC, such as where it was taken) that datme could not remove: ${why}. Convert it to JPEG, PNG or WebP, or set images.keepMetadata: true to publish it as it is`,
+    )
   let meta: Metadata
   try {
     meta = await sharp(file).metadata()
@@ -130,7 +132,10 @@ export async function publicOriginal(rel: string): Promise<Buffer> {
       // An animation keeps its frames; a still picture is turned upright, since its orientation goes with the EXIF.
       const animated = (meta.pages ?? 1) > 1
       const image = animated ? sharp(file, { animated }) : sharp(file).rotate()
-      out = await image.keepIccProfile().toFormat(meta.format as keyof FormatEnum, { quality: 95 }).toBuffer()
+      out = await image
+        .keepIccProfile()
+        .toFormat(meta.format as keyof FormatEnum, { quality: 95 })
+        .toBuffer()
     } catch (e) {
       throw refuse((e as Error).message)
     }

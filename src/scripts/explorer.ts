@@ -105,8 +105,7 @@ export async function ensureExplorer(): Promise<void> {
 
 let observer: IntersectionObserver | undefined
 
-const idle = (fn: () => void) =>
-  "requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 200)
+const idle = (fn: () => void) => ("requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 200))
 
 function setup() {
   observer?.disconnect()

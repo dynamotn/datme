@@ -50,7 +50,9 @@ describe("Marp decks", () => {
   test("slides are inline SVGs in a shadow root, theme fonts loaded outside it", () => {
     const deck = renderSlides("# One\n\n---\n\n## Two", { theme: "gaia" }, [], labels)
     expect(deck.count).toBe(2)
-    expect(deck.html).toMatch(/^<style>@import [^<]+<\/style><div class="marp-deck" role="group" aria-label="Deck of 2 slides" data-present="Present"><template shadowrootmode="open">/)
+    expect(deck.html).toMatch(
+      /^<style>@import [^<]+<\/style><div class="marp-deck" role="group" aria-label="Deck of 2 slides" data-present="Present"><template shadowrootmode="open">/,
+    )
     expect(deck.html.match(/<svg data-marpit-svg/g)).toHaveLength(2)
     expect(deck.html).toMatch(/<\/template><\/div>$/)
   })

@@ -29,7 +29,9 @@ async function violations(page: string): Promise<string[]> {
   const window = new Window({ url: "https://looks.example/", settings: { disableJavaScriptEvaluation: false } })
   window.document.write(read(page).replace(/<script\b[\s\S]*?<\/script>/g, ""))
   window.eval(axeSource)
-  const axe = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; help: string }[] }> } }).axe
+  const axe = (
+    window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string | null; help: string }[] }> } }
+  ).axe
   const res = await axe.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
   await window.happyDOM.close()
   return res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.help}`)
@@ -99,7 +101,9 @@ describe("a theme pack", () => {
 describe("templates of a theme pack", () => {
   test("its style's row draws the notes of the Ink folder, sanitised", () => {
     const row = read("Ink/index.html").split('<li class="pack-slot pack-note-row" data-slot="note-row">')[1].split("</ul></li>")[0]
-    expect(row).toContain('<a class="note-row internal" href="/Ink/Letter"><span class="title">Letter</span> <time datetime="2026-02-05T00:00:00.000Z">Feb 5, 2026</time></a>')
+    expect(row).toContain(
+      '<a class="note-row internal" href="/Ink/Letter"><span class="title">Letter</span> <time datetime="2026-02-05T00:00:00.000Z">Feb 5, 2026</time></a>',
+    )
     expect(row).toContain('<li><a href="/tags/letter">letter</a></li>')
     expect(read("Ink/index.html")).toContain('<img src="x.png" alt="">')
     expect(read("Ink/index.html")).not.toMatch(/<script>alert|onerror|Sealed/)
@@ -108,7 +112,9 @@ describe("templates of a theme pack", () => {
   })
   test("the pack's band and note footer draw on every page; a page in its templated style has no reader switch", () => {
     const page = read("Notes/Plain/index.html")
-    expect(page).toContain('<div class="pack-slot pack-footer-band" data-slot="footer-band"><p class="ink-band">Set in ink for Looks test · <a href="/index.xml">feed</a></p>')
+    expect(page).toContain(
+      '<div class="pack-slot pack-footer-band" data-slot="footer-band"><p class="ink-band">Set in ink for Looks test · <a href="/index.xml">feed</a></p>',
+    )
     expect(page).toMatch(/<footer class="pack-slot pack-note-footer" data-slot="note-footer"><p class="ink-foot">Plain · [^<]+ · <\/p><\/footer>/)
     expect(read("Ink/Letter/index.html")).toContain('<p class="ink-foot">Letter · Feb 5, 2026 · </p>')
     expect(read("Ink/Letter/index.html")).not.toContain("data-reader-looks")
@@ -138,7 +144,19 @@ describe("the reader's style", () => {
     expect(looks.garden[0]).toBe("garden")
     expect(looks.garden[1]).toMatch(/\.css$/)
     const menu = page.split("data-look-switch")[1].split("</div>")[0]
-    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine", "eink", "paddy"])
+    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual([
+      "",
+      "notebook",
+      "classic",
+      "garden",
+      "terminal",
+      "blueprint",
+      "manuscript",
+      "lacquer",
+      "zine",
+      "eink",
+      "paddy",
+    ])
     // The script that applies the choice before the first paint, and only the page's own sheet linked.
     expect(page).toContain('localStorage.getItem("look")')
     expect(page.match(/<link[^>]*data-look-css/g)).toBeNull()

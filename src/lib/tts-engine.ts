@@ -41,9 +41,18 @@ interface Pending {
 export function defaultCommand(): string[] {
   // --no-project: the vault or datme's own pyproject, if any, never joins the helper's environment.
   return [
-    "uv", "run", "--quiet", "--no-project",
-    "--with", `vieneu==${VIENEU_VERSION}`, "--with", `lameenc==${LAMEENC_VERSION}`,
-    "--exclude-newer", EXCLUDE_NEWER, "python", HELPER,
+    "uv",
+    "run",
+    "--quiet",
+    "--no-project",
+    "--with",
+    `vieneu==${VIENEU_VERSION}`,
+    "--with",
+    `lameenc==${LAMEENC_VERSION}`,
+    "--exclude-newer",
+    EXCLUDE_NEWER,
+    "python",
+    HELPER,
   ]
 }
 

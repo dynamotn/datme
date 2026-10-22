@@ -37,18 +37,12 @@ describe("defaults", () => {
 
 describe("resolveConfig", () => {
   test("localised values fall back to the same base language, then to the first one", () => {
-    const c = resolveConfig(
-      { site: { title: { "en-GB": "Garden", "vi-VN": "Vườn" } }, languages: ["en-US", "vi-VN", "fr-FR"] },
-      "/v",
-    )
+    const c = resolveConfig({ site: { title: { "en-GB": "Garden", "vi-VN": "Vườn" } }, languages: ["en-US", "vi-VN", "fr-FR"] }, "/v")
     expect(c.title).toEqual({ "en-US": "Garden", "vi-VN": "Vườn", "fr-FR": "Garden" })
   })
 
   test("stages accept presets and custom definitions, in config order", () => {
-    const c = resolveConfig(
-      { languages: ["vi-VN"], stages: { "10_Inbox": "fleeting", Lab: { icon: "🧪", label: "Lab" } } },
-      "/v",
-    )
+    const c = resolveConfig({ languages: ["vi-VN"], stages: { "10_Inbox": "fleeting", Lab: { icon: "🧪", label: "Lab" } } }, "/v")
     expect(c.stages["10_Inbox"]).toEqual({ icon: "🌱", label: { "vi-VN": "Thoáng qua" }, order: 0 })
     expect(c.stages.Lab).toEqual({ icon: "🧪", label: { "vi-VN": "Lab" }, order: 1 })
   })
@@ -97,7 +91,15 @@ describe("resolveConfig", () => {
     const c = resolveConfig(
       {
         languages: ["en-US"],
-        stages: { Inbox: "Fleeting", Sources: "literature", Notes: "permanent", "03_Atomic": "atomic", Maps: "Maps of content", "06_Lab": { icon: "🧪" }, Bare: null },
+        stages: {
+          Inbox: "Fleeting",
+          Sources: "literature",
+          Notes: "permanent",
+          "03_Atomic": "atomic",
+          Maps: "Maps of content",
+          "06_Lab": { icon: "🧪" },
+          Bare: null,
+        },
       },
       "/v",
     )
@@ -203,7 +205,18 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, schedule: [], stream: [], seasons: false, readerSwitch: [] })
+    expect(c.appearance).toEqual({
+      style: "notebook",
+      classic: [],
+      folders: {},
+      tags: {},
+      stages: {},
+      languages: {},
+      schedule: [],
+      stream: [],
+      seasons: false,
+      readerSwitch: [],
+    })
   })
 
   test("the garden style and a style per folder", () => {
@@ -222,7 +235,8 @@ describe("menu and appearance", () => {
   })
 
   test("the herbarium, manuscript, lacquer, eink and paddy styles", () => {
-    for (const style of ["herbarium", "manuscript", "lacquer", "eink", "paddy"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
+    for (const style of ["herbarium", "manuscript", "lacquer", "eink", "paddy"] as const)
+      expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
   })
   test("the zine, atlas and catalog styles", () => {
     for (const style of ["zine", "atlas", "catalog"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
@@ -242,14 +256,22 @@ describe("menu and appearance", () => {
   })
 
   test("a style per language, by its full tag or its base", () => {
-    const c = resolveConfig({ languages: ["vi-VN", "en-US", "en-GB"], appearance: { languages: { vi: "lacquer", en: "classic", "en-GB": "manuscript" } } }, "/v")
+    const c = resolveConfig(
+      { languages: ["vi-VN", "en-US", "en-GB"], appearance: { languages: { vi: "lacquer", en: "classic", "en-GB": "manuscript" } } },
+      "/v",
+    )
     expect(c.appearance.languages).toEqual({ "vi-VN": "lacquer", "en-US": "classic", "en-GB": "manuscript" })
-    expect(resolveConfig({ languages: ["vi-VN", "en-US"], appearance: { languages: { "vi-VN": "lacquer" } } }, "/v").appearance.languages).toEqual({ "vi-VN": "lacquer" })
+    expect(resolveConfig({ languages: ["vi-VN", "en-US"], appearance: { languages: { "vi-VN": "lacquer" } } }, "/v").appearance.languages).toEqual({
+      "vi-VN": "lacquer",
+    })
     expect(() => resolveConfig({ appearance: { languages: { fr: "classic" } } }, "/v")).toThrow("appearance.languages.fr: matches none of the languages en-US")
   })
 
   test("a schedule of styles by day of the year", () => {
-    const schedule = [{ style: "lacquer", from: "01-20", to: "02-20" }, { style: "garden", from: "12-24", to: "01-02" }]
+    const schedule = [
+      { style: "lacquer", from: "01-20", to: "02-20" },
+      { style: "garden", from: "12-24", to: "01-02" },
+    ]
     expect(resolveConfig({ appearance: { schedule } }, "/v").appearance.schedule).toEqual(schedule)
     expect(resolveConfig({ appearance: { schedule: [{ style: "classic", from: "02-29", to: "02-29" }] } }, "/v").appearance.schedule).toHaveLength(1)
     for (const day of ["1-20", "13-01", "00-10", "04-31", "02-30", "01-00"]) {
@@ -267,7 +289,10 @@ describe("menu and appearance", () => {
     const c = resolveConfig(
       {
         languages: ["vi-VN", "en-US"],
-        nav: [{ note: "About me", label: { "vi-VN": "Về tôi", "en-US": "About" } }, { url: "/cv.pdf", label: "CV" }],
+        nav: [
+          { note: "About me", label: { "vi-VN": "Về tôi", "en-US": "About" } },
+          { url: "/cv.pdf", label: "CV" },
+        ],
         appearance: { classic: ["/Writing/"], stream: ["Notes/"] },
       },
       "/v",
@@ -296,7 +321,14 @@ describe("menu and appearance", () => {
       { items: [{ kind: "url", target: "https://github.com/me", label: { "en-US": "GitHub" } }] },
     ])
     const c = resolveConfig(
-      { footer: { Explore: ["home", { note: "About me", label: "About" }], npm: "https://npmjs.com/x", Empty: [], Elsewhere: [{ url: "/index.xml", label: "RSS" }] } },
+      {
+        footer: {
+          Explore: ["home", { note: "About me", label: "About" }],
+          npm: "https://npmjs.com/x",
+          Empty: [],
+          Elsewhere: [{ url: "/index.xml", label: "RSS" }],
+        },
+      },
       "/v",
     )
     expect(c.footer).toEqual([
@@ -365,16 +397,13 @@ describe("analytics, comments and CNAME", () => {
     expect(resolveConfig({ analytics: { provider: "plausible" } }, "/v").analytics).toEqual({ provider: "plausible" })
     expect(() => resolveConfig({ analytics: { provider: "google" } }, "/v")).toThrow(ConfigError)
     expect(() => resolveConfig({ analytics: { provider: "matomo", id: "1" } }, "/v")).toThrow(ConfigError)
-    expect(() =>
-      resolveConfig({ comments: { provider: "giscus", repo: "nope", repoId: "a", category: "b", categoryId: "c" } }, "/v"),
-    ).toThrow("expected owner/name")
+    expect(() => resolveConfig({ comments: { provider: "giscus", repo: "nope", repoId: "a", category: "b", categoryId: "c" } }, "/v")).toThrow(
+      "expected owner/name",
+    )
   })
 
   test("giscus maps by pathname and commento uses the hosted service unless told otherwise", () => {
-    const g = resolveConfig(
-      { comments: { provider: "giscus", repo: "a/b", repoId: "r", category: "c", categoryId: "i" } },
-      "/v",
-    ).comments
+    const g = resolveConfig({ comments: { provider: "giscus", repo: "a/b", repoId: "r", category: "c", categoryId: "i" } }, "/v").comments
     expect(g).toMatchObject({ mapping: "pathname", reactions: true })
     expect(resolveConfig({ comments: { provider: "commento" } }, "/v").comments).toEqual({
       provider: "commento",
@@ -415,13 +444,16 @@ describe("theme", () => {
   })
 
   test("tools take a theme per colour scheme, or one for both, checked against what they know", () => {
-    const theme = resolveConfig({ theme: { code: "dracula", comments: { light: "noborder_light", dark: "https://example.com/g.css" }, mermaid: "forest", d2: { light: 1, dark: 201 } } }, "/v").theme
+    const theme = resolveConfig(
+      { theme: { code: "dracula", comments: { light: "noborder_light", dark: "https://example.com/g.css" }, mermaid: "forest", d2: { light: 1, dark: 201 } } },
+      "/v",
+    ).theme
     expect(theme.code).toEqual({ light: "dracula", dark: "dracula" })
     expect(theme.comments).toEqual({ light: "noborder_light", dark: "https://example.com/g.css" })
     expect(theme.mermaid).toEqual({ light: "forest", dark: "forest" })
     expect(theme.d2).toEqual({ light: 1, dark: 201 })
     expect(() => resolveConfig({ theme: { code: "nope" } }, "/v")).toThrow("expected a Shiki theme")
-    expect(() => resolveConfig({ theme: { comments: "x\" onload=\"y" } }, "/v")).toThrow("expected a giscus theme")
+    expect(() => resolveConfig({ theme: { comments: 'x" onload="y' } }, "/v")).toThrow("expected a giscus theme")
     expect(() => resolveConfig({ theme: { mermaid: "pink" } }, "/v")).toThrow()
     expect(() => resolveConfig({ theme: { code: { light: "github-light" } } }, "/v")).toThrow()
   })

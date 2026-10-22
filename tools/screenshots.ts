@@ -131,7 +131,10 @@ async function styleShots(browser: Browser) {
   fs.mkdirSync(dir, { recursive: true })
   try {
     for (let tries = 0; ; tries++) {
-      const ok = await fetch(base + STYLE_PAGE).then(async (r) => r.ok && (await r.text()).includes("data-look="), () => false)
+      const ok = await fetch(base + STYLE_PAGE).then(
+        async (r) => r.ok && (await r.text()).includes("data-look="),
+        () => false,
+      )
       if (ok) break
       if (tries > 120) throw new Error("datme dev did not answer")
       await Bun.sleep(1000)
@@ -142,7 +145,9 @@ async function styleShots(browser: Browser) {
         await page.addStyleTag({ content: ".dev-look, .dev-problems, astro-dev-toolbar { display: none !important }" })
         await page.waitForTimeout(300)
         const file = path.join(dir, `${style}-${theme}.webp`)
-        await sharp(await page.screenshot()).webp({ quality: 72 }).toFile(file)
+        await sharp(await page.screenshot())
+          .webp({ quality: 72 })
+          .toFile(file)
         console.log(`📸 ${path.relative(root, file)} (${Math.round(fs.statSync(file).size / 1024)} KB)`)
         await page.close()
       }

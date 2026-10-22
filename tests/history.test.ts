@@ -9,16 +9,15 @@ import { getVault } from "../src/lib/vault"
 
 describe("what a version showed", () => {
   test("the public text only: no frontmatter, comments, locked parts or other languages", () => {
-    const raw = "---\npublish: true\nsecret: x\n---\nSeen.\n\n%%hidden%%\n<!-- note to self -->\n<!--lock:pw-->\nLocked.\n<!--lock:*-->\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:en-US-->\nEnglish.\n<!--lang:*-->\nEnd."
+    const raw =
+      "---\npublish: true\nsecret: x\n---\nSeen.\n\n%%hidden%%\n<!-- note to self -->\n<!--lock:pw-->\nLocked.\n<!--lock:*-->\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:en-US-->\nEnglish.\n<!--lang:*-->\nEnd."
     expect(publicText(raw, "en-US")).toBe("Seen.\n\nEnglish.\nEnd.")
   })
 
   test("comment marks inside code and math are text, as on the page", () => {
     const raw =
       "---\npublish: true\n---\nRun `echo %%x%%` and $a %% b$.\n\n```\n%% kept %%\n<!-- kept -->\n```\n\n    %% indented %%\n\n%%gone%%<!-- gone -->\nEnd."
-    expect(publicText(raw, "en-US")).toBe(
-      "Run `echo %%x%%` and $a %% b$.\n\n```\n%% kept %%\n<!-- kept -->\n```\n\n    %% indented %%\n\nEnd.",
-    )
+    expect(publicText(raw, "en-US")).toBe("Run `echo %%x%%` and $a %% b$.\n\n```\n%% kept %%\n<!-- kept -->\n```\n\n    %% indented %%\n\nEnd.")
   })
 
   test("a tabs block is markdown, not code: its comments go, its own code keeps them", () => {
@@ -174,8 +173,8 @@ describe("history pages", () => {
       const p = path.join(out, file)
       if (!fs.statSync(p).isFile() || !/\.(html|json|xml|md|txt)$/.test(file)) continue
       const text = fs.readFileSync(p, "utf8")
-      const leaked = ["secret draft", "private aside", "Locked leaf", "hunter2", "SECRET MESSAGE", "Vault Secrets", "TRASH FOLDER", "TEMPLATES FOLDER"].find((x) =>
-        text.includes(x),
+      const leaked = ["secret draft", "private aside", "Locked leaf", "hunter2", "SECRET MESSAGE", "Vault Secrets", "TRASH FOLDER", "TEMPLATES FOLDER"].find(
+        (x) => text.includes(x),
       )
       expect(leaked ? `${file}: ${leaked}` : "").toBe("")
     }

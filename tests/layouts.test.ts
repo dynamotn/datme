@@ -32,7 +32,9 @@ describe("tabs", () => {
     const { md, links } = run("````tabs\n--- First\nSee [[Target]]\n\n```js\nlet a = 1\n```\n--- Second\n> [!tip] Tip\n> body\n````")
     expect(links.map((l) => l.key)).toEqual(["06_Reference/Target"])
     const html = await renderMarkdown(md, "en-US", "x")
-    expect(html).toMatch(/<div class="tab-list" role="tablist"><button type="button" role="tab" id="(tabs-\w+)-0" aria-controls="\1-0-panel" aria-selected="true" tabindex="0">First<\/button><button [^>]*aria-selected="false" tabindex="-1">Second<\/button><\/div>/)
+    expect(html).toMatch(
+      /<div class="tab-list" role="tablist"><button type="button" role="tab" id="(tabs-\w+)-0" aria-controls="\1-0-panel" aria-selected="true" tabindex="0">First<\/button><button [^>]*aria-selected="false" tabindex="-1">Second<\/button><\/div>/,
+    )
     expect(html).toMatch(/<div class="tab-panel" role="tabpanel" id="tabs-\w+-0-panel" aria-labelledby="tabs-\w+-0" data-title="First">\n<p>See <a href/)
     expect(html).toContain('class="language-js"')
     expect(html).toMatch(/data-title="Second" hidden>\n<div class="callout" data-callout="tip">/)

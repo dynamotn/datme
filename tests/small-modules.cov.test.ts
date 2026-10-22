@@ -58,7 +58,12 @@ describe("leaflet maps of the vault", () => {
     // Notes without a location are left out.
     expect(places.every((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))).toBe(true)
     const parent = tag.includes("/") ? tag.split("/")[0] : undefined
-    if (parent) expect(vaultResolver("en-US").tagged(parent).map((p) => p.url)).toContain(luhmann.url)
+    if (parent)
+      expect(
+        vaultResolver("en-US")
+          .tagged(parent)
+          .map((p) => p.url),
+      ).toContain(luhmann.url)
     expect(vaultResolver("en-US").tagged("no-such-tag-anywhere")).toEqual([])
   })
 
@@ -106,4 +111,3 @@ describe("inlining assets", () => {
     expect(mediaType("A.JPG")).toBe("image/jpeg")
   })
 })
-

@@ -117,7 +117,11 @@ export function parseBibtex(src: string): BibEntry[] {
 }
 
 /** A BibTeX value: LaTeX's special characters escaped, braced so capitals stay as written. */
-const bibValue = (v: string) => `{${v.replace(/[\\&%$#_{}]/g, (c) => (c === "\\" ? "\\textbackslash{}" : `\\${c}`)).replace(/\s+/g, " ").trim()}}`
+const bibValue = (v: string) =>
+  `{${v
+    .replace(/[\\&%$#_{}]/g, (c) => (c === "\\" ? "\\textbackslash{}" : `\\${c}`))
+    .replace(/\s+/g, " ")
+    .trim()}}`
 
 /** An entry written back as BibTeX, its fields in the order given; parseBibtex reads it back. */
 export function toBibtex(e: BibEntry): string {
@@ -247,9 +251,7 @@ export function cite(md: string, bib: Map<string, BibEntry>, heading: string): C
   })
   let result = out.join("\n")
   if (keys.length) {
-    const sorted = keys
-      .map((k) => bib.get(k)!)
-      .sort((a, b) => shortAuthors(a).localeCompare(shortAuthors(b)) || year(a).localeCompare(year(b)))
+    const sorted = keys.map((k) => bib.get(k)!).sort((a, b) => shortAuthors(a).localeCompare(shortAuthors(b)) || year(a).localeCompare(year(b)))
     const items = sorted.map((e) => `<li id="ref-${escapeAttr(encodeURIComponent(e.key))}">${formatReference(e)}</li>`).join("")
     result += `\n\n<section class="references"><h2 id="cited-references">${escapeAttr(heading)}</h2><ol>${items}</ol></section>\n`
   }

@@ -123,7 +123,7 @@ beforeAll(() => {
     ].join("\n"),
     "Beta.md": "---\naliases: [Alpha]\n---\nBeta links [[Hidden]].",
     "Hidden.md": "---\npublish: false\n---\nPrivate.",
-    "Deck.md": ['---', "marp: true", 'style: "section { background: url(pic.png) }"', 'backgroundImage: "url(nowhere.png)"', "---", "# Slide"].join("\n"),
+    "Deck.md": ["---", "marp: true", 'style: "section { background: url(pic.png) }"', 'backgroundImage: "url(nowhere.png)"', "---", "# Slide"].join("\n"),
     "Bad.excalidraw.md": "---\npublish: false\n---\nno drawing here",
     "Outer.excalidraw.md": OUTER_DRAWING,
     "Board.canvas": "this is not a canvas",
@@ -150,7 +150,10 @@ beforeAll(() => {
     "Y/Z/Twin.excalidraw.md": TWIN_DRAWING,
     "X/twin.png": "png",
     "Y/Z/twin.png": "png",
-    "Map.canvas": JSON.stringify({ nodes: [{ id: "t1", type: "text", text: "See [[Hidden]] and [[friend:Known]] ![[pic.png]]", x: 0, y: 0, width: 100, height: 50 }], edges: [] }),
+    "Map.canvas": JSON.stringify({
+      nodes: [{ id: "t1", type: "text", text: "See [[Hidden]] and [[friend:Known]] ![[pic.png]]", x: 0, y: 0, width: 100, height: 50 }],
+      edges: [],
+    }),
     "theme.css": "/* @theme mine */\nsection { color: red }",
     "plain.css": "body { color: blue }",
     "neighbours.json": JSON.stringify({
@@ -340,7 +343,9 @@ describe("vaults with nothing to publish", () => {
   test("explicit publishing without any `publish: true` says how to publish", () => {
     const { vault, warned } = build("explicit")
     expect(vault.sources.size).toBe(0)
-    expect(warned).toEqual([`[datme] no note in ${path.join(ROOT, "explicit")} has \`publish: true\`; add it to the notes to share, or set \`publish: all\` in datme.yaml`])
+    expect(warned).toEqual([
+      `[datme] no note in ${path.join(ROOT, "explicit")} has \`publish: true\`; add it to the notes to share, or set \`publish: all\` in datme.yaml`,
+    ])
   })
 
   test("a vault without notes says so", () => {

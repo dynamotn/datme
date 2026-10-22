@@ -22,7 +22,9 @@ export function setupSyllabus(): void {
     for (const l of lessons) l.classList.toggle("is-done", done.has(l.dataset.lesson!))
     if (!bar) return
     bar.querySelector("progress")!.value = n
-    bar.querySelector("span")!.textContent = (bar.dataset.template ?? "{done} / {total}").replace("{done}", String(n)).replace("{total}", String(lessons.length))
+    bar.querySelector("span")!.textContent = (bar.dataset.template ?? "{done} / {total}")
+      .replace("{done}", String(n))
+      .replace("{total}", String(lessons.length))
     bar.hidden = false
   }
   for (const lesson of lessons) {
@@ -32,7 +34,10 @@ export function setupSyllabus(): void {
       if (box.checked) done.add(lesson.dataset.lesson!)
       else done.delete(lesson.dataset.lesson!)
       // Only lessons the course still has are kept.
-      saveDone(path, lessons.map((l) => l.dataset.lesson!).filter((id) => done.has(id)))
+      saveDone(
+        path,
+        lessons.map((l) => l.dataset.lesson!).filter((id) => done.has(id)),
+      )
       update()
     })
   }

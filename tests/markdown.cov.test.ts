@@ -78,12 +78,9 @@ describe("with the vault's own plugins and a warm disk cache", () => {
 `,
     )
     fs.writeFileSync(path.join(vault, "Cached.md"), "---\npublish: true\n---\nText with ![[wide.png]] inside. CACHE-ME\n")
-    fs.writeFileSync(path.join(vault, "Typst.md"), "---\npublish: true\n---\nA figure.\n\n```typst\n#image(\"img/wide.png\")\n```\n")
+    fs.writeFileSync(path.join(vault, "Typst.md"), '---\npublish: true\n---\nA figure.\n\n```typst\n#image("img/wide.png")\n```\n')
     fs.writeFileSync(path.join(vault, "Plain typst.md"), "---\npublish: true\n---\nA sum.\n\n```typst\n$1 + 1$\n```\n")
-    fs.writeFileSync(
-      path.join(vault, "Foot.md"),
-      "---\npublish: true\n---\nA claim.[^1] See [below](#tail) and [odd](#%E0%A4%A).\n\n[^1]: The source.\n",
-    )
+    fs.writeFileSync(path.join(vault, "Foot.md"), "---\npublish: true\n---\nA claim.[^1] See [below](#tail) and [odd](#%E0%A4%A).\n\n[^1]: The source.\n")
     site.vault = vault
     g.__vaultVersion = 7_300_001
     // Every note read from the disk cache comes back as this; other kinds go to the real cache.

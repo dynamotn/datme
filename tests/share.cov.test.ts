@@ -109,7 +109,9 @@ describe("sharing a selection", () => {
   })
 
   test("a copy of a note (a stacked column) offers no highlight; without a clipboard there is nothing to offer", async () => {
-    page(`<div data-stack-col></div><div data-stack-col><article class="note"><div class="prose"><p id="p">A stacked note with some text.</p></div></article></div>`)
+    page(
+      `<div data-stack-col></div><div data-stack-col><article class="note"><div class="prose"><p id="p">A stacked note with some text.</p></div></article></div>`,
+    )
     select(dom.document.getElementById("p")!.firstChild!)
     await mouseup()
     expect(buttons()).toEqual(["Chép liên kết"])
@@ -120,7 +122,9 @@ describe("sharing a selection", () => {
   })
 
   test("text outside a note, too short, or no selection at all shows no bar", async () => {
-    page(`<div class="prose"><p id="p">ab</p></div><p id="out">Outside the prose</p><article class="note"><div class="prose"><p id="ok">Long enough</p></div></article>`)
+    page(
+      `<div class="prose"><p id="p">ab</p></div><p id="out">Outside the prose</p><article class="note"><div class="prose"><p id="ok">Long enough</p></div></article>`,
+    )
     select(dom.document.getElementById("out")!.firstChild!)
     await mouseup()
     expect(!!bar()).toBe(false)

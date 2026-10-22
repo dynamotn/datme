@@ -46,7 +46,23 @@ export interface CardSpec {
   onAccent: string
 }
 
-const DESIGNS: readonly CardDesign[] = ["notebook", "classic", "garden", "herbarium", "paddy", "terminal", "blueprint", "lacquer", "broadsheet", "manuscript", "darkroom", "eink", "zine", "atlas", "catalog"]
+const DESIGNS: readonly CardDesign[] = [
+  "notebook",
+  "classic",
+  "garden",
+  "herbarium",
+  "paddy",
+  "terminal",
+  "blueprint",
+  "lacquer",
+  "broadsheet",
+  "manuscript",
+  "darkroom",
+  "eink",
+  "zine",
+  "atlas",
+  "catalog",
+]
 /** The accent of the styles drawn plain, as their own stylesheets set it. */
 const PLAIN_ACCENT: Partial<Record<Style, string>> = { wiki: "#0645ad", resume: "#1f5f8b" }
 const DEFAULT_ACCENT = "#2d6a4f"
@@ -56,7 +72,17 @@ const SCREEN = "#090c09"
 /** A configured accent as the hex Satori reads, or undefined when it is no colour Satori could draw. */
 function hexOf(color: string | undefined): string | undefined {
   const rgb = color ? parseColor(color) : undefined
-  return rgb && "#" + rgb.map((c) => Math.round(Math.min(255, Math.max(0, c))).toString(16).padStart(2, "0")).join("")
+  return (
+    rgb &&
+    "#" +
+      rgb
+        .map((c) =>
+          Math.round(Math.min(255, Math.max(0, c)))
+            .toString(16)
+            .padStart(2, "0"),
+        )
+        .join("")
+  )
 }
 
 /**
@@ -154,7 +180,10 @@ const titleBlock = (t: Text, style: Record<string, unknown>) =>
 /** A row of tags as chips of `style`. */
 const tagRow = (t: Text, style: (i: number) => Record<string, unknown>, prefix = "") =>
   t.tags.length > 0 &&
-  div({ gap: 14, marginTop: 18 }, ...t.tags.map((tag, i) => div({ padding: "4px 12px", fontFamily: MONO, fontSize: 20, fontWeight: 700, ...style(i) }, prefix + tag)))
+  div(
+    { gap: 14, marginTop: 18 },
+    ...t.tags.map((tag, i) => div({ padding: "4px 12px", fontFamily: MONO, fontSize: 20, fontWeight: 700, ...style(i) }, prefix + tag)),
+  )
 
 const NOTEBOOK_INK = "#050505"
 const CHIPS = ["#00ff85", "#ffa3e5", "#ffe800"]
@@ -162,7 +191,15 @@ const CHIPS = ["#00ff85", "#ffa3e5", "#ffe800"]
 /** A notebook index card on dotted paper. */
 function notebook(t: Text): Node {
   return div(
-    { width: "100%", height: "100%", padding: 48, backgroundColor: "#f5f5f0", backgroundImage: "radial-gradient(#cfcfc8 2px, transparent 2px)", backgroundSize: "32px 32px", fontFamily: SANS },
+    {
+      width: "100%",
+      height: "100%",
+      padding: 48,
+      backgroundColor: "#f5f5f0",
+      backgroundImage: "radial-gradient(#cfcfc8 2px, transparent 2px)",
+      backgroundSize: "32px 32px",
+      fontFamily: SANS,
+    },
     div(
       {
         flex: 1,
@@ -179,14 +216,43 @@ function notebook(t: Text): Node {
       div(
         { alignItems: "center", gap: 18 },
         div(
-          { width: 64, height: 64, alignItems: "center", justifyContent: "center", backgroundColor: NOTEBOOK_INK, color: "#ffe800", borderRadius: 10, fontSize: 38, fontWeight: 800, boxShadow: "5px 5px 0 #ff3b28" },
+          {
+            width: 64,
+            height: 64,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: NOTEBOOK_INK,
+            color: "#ffe800",
+            borderRadius: 10,
+            fontSize: 38,
+            fontWeight: 800,
+            boxShadow: "5px 5px 0 #ff3b28",
+          },
           t.logo,
         ),
-        div({ padding: "6px 14px", backgroundColor: NOTEBOOK_INK, color: "#fff", borderRadius: 6, fontFamily: MONO, fontSize: 22, fontWeight: 700, textTransform: "uppercase" }, t.kicker),
+        div(
+          {
+            padding: "6px 14px",
+            backgroundColor: NOTEBOOK_INK,
+            color: "#fff",
+            borderRadius: 6,
+            fontFamily: MONO,
+            fontSize: 22,
+            fontWeight: 700,
+            textTransform: "uppercase",
+          },
+          t.kicker,
+        ),
       ),
       titleBlock(t, { fontSize: t.size(), letterSpacing: "-0.03em", color: NOTEBOOK_INK }),
       t.meta && div({ paddingTop: 14, borderTop: `3px dashed ${NOTEBOOK_INK}`, fontFamily: MONO, fontSize: 24, fontWeight: 700, color: "#4a4a4a" }, t.meta),
-      tagRow(t, (i) => ({ border: `3px solid ${NOTEBOOK_INK}`, borderRadius: 6, backgroundColor: CHIPS[i % CHIPS.length], textTransform: "uppercase", boxShadow: `3px 3px 0 ${NOTEBOOK_INK}` })),
+      tagRow(t, (i) => ({
+        border: `3px solid ${NOTEBOOK_INK}`,
+        borderRadius: 6,
+        backgroundColor: CHIPS[i % CHIPS.length],
+        textTransform: "uppercase",
+        boxShadow: `3px 3px 0 ${NOTEBOOK_INK}`,
+      })),
     ),
   )
 }
@@ -236,12 +302,16 @@ function garden(t: Text): Node {
 /** A specimen sheet taped to the cabinet, its label card in the corner. */
 function herbarium(t: Text): Node {
   const ink = "#2a2619"
-  const tape = (style: Record<string, unknown>) => div({ position: "absolute", top: 34, width: 150, height: 34, backgroundColor: "rgba(214,199,158,0.85)", ...style })
+  const tape = (style: Record<string, unknown>) =>
+    div({ position: "absolute", top: 34, width: 150, height: 34, backgroundColor: "rgba(214,199,158,0.85)", ...style })
   return div(
     { width: "100%", height: "100%", padding: "52px 64px", backgroundColor: "#e7e0cd", fontFamily: SANS, color: ink, position: "relative" },
     div(
       { flex: 1, flexDirection: "column", padding: "52px 60px 40px", backgroundColor: "#f8f3e3", border: "2px solid #d9cfb5" },
-      div({ fontFamily: MONO, fontSize: 20, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#40632b" }, t.tags.join(" · ") || " "),
+      div(
+        { fontFamily: MONO, fontSize: 20, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#40632b" },
+        t.tags.join(" · ") || " ",
+      ),
       titleBlock(t, { fontSize: t.size(0.92), fontWeight: 400, letterSpacing: "-0.01em", maxWidth: 760 }),
       div(
         { alignSelf: "flex-end", flexDirection: "column", width: 400, padding: "14px 20px", backgroundColor: "#fffdf5", border: "2px solid #bfb291" },
@@ -259,9 +329,24 @@ function paddy(t: Text): Node {
   const ink = "#1d2719"
   const rice = ["#dcae32", "#a9ad35", "#5c9e3c", "#a6d36a"]
   const terrace = (color: string, i: number) =>
-    div({ height: 46, marginLeft: -40 + i * 30, marginRight: -40 + i * 18, marginTop: -14, backgroundColor: color, borderRadius: "50% 50% 0 0 / 40px 40px 0 0" })
+    div({
+      height: 46,
+      marginLeft: -40 + i * 30,
+      marginRight: -40 + i * 18,
+      marginTop: -14,
+      backgroundColor: color,
+      borderRadius: "50% 50% 0 0 / 40px 40px 0 0",
+    })
   return div(
-    { width: "100%", height: "100%", flexDirection: "column", backgroundColor: "#eef3e6", backgroundImage: "linear-gradient(180deg, #eef3e6 0%, #dbe9e0 100%)", fontFamily: SANS, color: ink },
+    {
+      width: "100%",
+      height: "100%",
+      flexDirection: "column",
+      backgroundColor: "#eef3e6",
+      backgroundImage: "linear-gradient(180deg, #eef3e6 0%, #dbe9e0 100%)",
+      fontFamily: SANS,
+      color: ink,
+    },
     div(
       { flex: 1, flexDirection: "column", padding: "56px 72px 30px" },
       div({ fontSize: 26, fontWeight: 800, color: "#2f6328" }, t.kicker),
@@ -273,7 +358,15 @@ function paddy(t: Text): Node {
     div(
       { flexDirection: "column", position: "relative", backgroundColor: "#c9dfe0" },
       ...[...rice].reverse().map((color) => div({ height: 16, backgroundColor: color, opacity: 0.45 })),
-      div({ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 6px, rgba(255,255,255,0.75) 6px, rgba(255,255,255,0.75) 8px)" }),
+      div({
+        position: "absolute",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        backgroundImage:
+          "repeating-linear-gradient(0deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 6px, rgba(255,255,255,0.75) 6px, rgba(255,255,255,0.75) 8px)",
+      }),
     ),
   )
 }
@@ -288,7 +381,8 @@ function terminal(t: Text, spec: CardSpec): Node {
       flexDirection: "column",
       padding: "56px 72px",
       backgroundColor: SCREEN,
-      backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 3px, rgba(255,255,255,0.04) 3px, rgba(255,255,255,0.04) 4px)",
+      backgroundImage:
+        "repeating-linear-gradient(0deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 3px, rgba(255,255,255,0.04) 3px, rgba(255,255,255,0.04) 4px)",
       fontFamily: MONO,
       fontWeight: 700,
       color: glow,
@@ -296,7 +390,11 @@ function terminal(t: Text, spec: CardSpec): Node {
     div({ fontSize: 26, opacity: 0.75 }, `${t.kicker.toLowerCase().replace(/\s+/g, "-")}:~$ cat note.md`),
     div(
       { flex: 1, alignItems: "center" },
-      div({ flexWrap: "wrap", alignItems: "flex-end", fontSize: t.size(0.78), lineHeight: 1.15 }, `$ ${t.title}`, div({ width: t.size(0.42), height: t.size(0.78), marginLeft: 12, backgroundColor: glow })),
+      div(
+        { flexWrap: "wrap", alignItems: "flex-end", fontSize: t.size(0.78), lineHeight: 1.15 },
+        `$ ${t.title}`,
+        div({ width: t.size(0.42), height: t.size(0.78), marginLeft: 12, backgroundColor: glow }),
+      ),
     ),
     t.meta && div({ fontSize: 24, opacity: 0.75 }, `# ${t.meta}`),
     tagRow(t, () => ({ padding: "2px 10px", border: `2px dashed ${glow}`, fontSize: 20 }), "#"),
@@ -369,14 +467,28 @@ function broadsheet(t: Text): Node {
     { width: "100%", height: "100%", flexDirection: "column", padding: "40px 64px", backgroundColor: "#f4f1ea", fontFamily: SANS, color: ink },
     div({ justifyContent: "center", paddingBottom: 10, borderBottom: `6px solid ${ink}`, fontSize: 64, fontWeight: 800, letterSpacing: "-0.02em" }, t.kicker),
     div(
-      { justifyContent: "space-between", padding: "8px 0", borderBottom: `2px solid ${ink}`, fontFamily: MONO, fontSize: 18, fontWeight: 700, textTransform: "uppercase" },
+      {
+        justifyContent: "space-between",
+        padding: "8px 0",
+        borderBottom: `2px solid ${ink}`,
+        fontFamily: MONO,
+        fontSize: 18,
+        fontWeight: 700,
+        textTransform: "uppercase",
+      },
       div({}, t.meta || " "),
       div({}, t.tags.join(" · ")),
     ),
     titleBlock(t, { fontSize: t.size(0.95), letterSpacing: "-0.025em" }),
     div(
       { gap: 28, height: 70 },
-      ...[0, 1, 2].map(() => div({ flex: 1, flexDirection: "column", gap: 12, borderTop: `2px solid ${ink}`, paddingTop: 14 }, div({ height: 8, backgroundColor: "#c9c3b5" }), div({ height: 8, width: "70%", backgroundColor: "#c9c3b5" }))),
+      ...[0, 1, 2].map(() =>
+        div(
+          { flex: 1, flexDirection: "column", gap: 12, borderTop: `2px solid ${ink}`, paddingTop: 14 },
+          div({ height: 8, backgroundColor: "#c9c3b5" }),
+          div({ height: 8, width: "70%", backgroundColor: "#c9c3b5" }),
+        ),
+      ),
     ),
   )
 }
@@ -456,13 +568,32 @@ function zine(t: Text): Node {
       color: ink,
     },
     div(
-      { alignSelf: "flex-start", padding: "6px 18px", backgroundColor: "#b8174a", color: "#fff", fontFamily: MONO, fontSize: 24, fontWeight: 700, textTransform: "uppercase", transform: "rotate(-2deg)" },
+      {
+        alignSelf: "flex-start",
+        padding: "6px 18px",
+        backgroundColor: "#b8174a",
+        color: "#fff",
+        fontFamily: MONO,
+        fontSize: 24,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        transform: "rotate(-2deg)",
+      },
       t.kicker,
     ),
     div(
       { flex: 1, alignItems: "center", position: "relative" },
       div(
-        { maxWidth: 980, padding: "18px 30px", backgroundColor: "#fff0a0", boxShadow: `6px 7px 0 ${ink}`, fontSize: t.size(0.9), fontWeight: 800, lineHeight: 1.08, transform: "rotate(-1.5deg)" },
+        {
+          maxWidth: 980,
+          padding: "18px 30px",
+          backgroundColor: "#fff0a0",
+          boxShadow: `6px 7px 0 ${ink}`,
+          fontSize: t.size(0.9),
+          fontWeight: 800,
+          lineHeight: 1.08,
+          transform: "rotate(-1.5deg)",
+        },
         t.title,
       ),
       div({ position: "absolute", top: 46, left: -24, width: 130, height: 34, backgroundColor: "rgba(236,226,178,0.85)", transform: "rotate(-24deg)" }),
@@ -470,7 +601,19 @@ function zine(t: Text): Node {
     div(
       { gap: 16, alignItems: "center" },
       t.meta && div({ padding: "6px 14px", backgroundColor: "#d3e4ff", fontFamily: MONO, fontSize: 20, fontWeight: 700, transform: "rotate(1deg)" }, t.meta),
-      ...t.tags.map((tag, i) => div({ padding: "4px 10px", backgroundColor: ["#ffd6e4", "#d8f0d0"][i % 2], fontFamily: MONO, fontSize: 18, fontWeight: 700, transform: `rotate(${i % 2 ? 2 : -2}deg)` }, tag)),
+      ...t.tags.map((tag, i) =>
+        div(
+          {
+            padding: "4px 10px",
+            backgroundColor: ["#ffd6e4", "#d8f0d0"][i % 2],
+            fontFamily: MONO,
+            fontSize: 18,
+            fontWeight: 700,
+            transform: `rotate(${i % 2 ? 2 : -2}deg)`,
+          },
+          tag,
+        ),
+      ),
     ),
   )
 }
@@ -479,17 +622,46 @@ function zine(t: Text): Node {
 function atlas(t: Text): Node {
   const brown = "#7a5a24"
   const contour = (size: number, top: number, left: number) =>
-    div({ position: "absolute", top: top - size / 2, left: left - size * 0.65, width: size * 1.3, height: size, borderRadius: "50%", border: `2px solid rgba(122,90,36,0.22)` })
+    div({
+      position: "absolute",
+      top: top - size / 2,
+      left: left - size * 0.65,
+      width: size * 1.3,
+      height: size,
+      borderRadius: "50%",
+      border: `2px solid rgba(122,90,36,0.22)`,
+    })
   return div(
     { width: "100%", height: "100%", position: "relative", padding: "64px 80px", backgroundColor: "#eadcb8", fontFamily: SANS, color: "#2b2214" },
     ...[340, 260, 180, 100].map((size) => contour(size, 470, 980)),
     ...[300, 210, 120].map((size) => contour(size, 90, 160)),
     // The compass rose: a ring, its needle and the north it points to.
     div(
-      { position: "absolute", top: 48, right: 64, width: 120, height: 150, flexDirection: "column", alignItems: "center", color: brown, fontFamily: MONO, fontSize: 22, fontWeight: 700 },
+      {
+        position: "absolute",
+        top: 48,
+        right: 64,
+        width: 120,
+        height: 150,
+        flexDirection: "column",
+        alignItems: "center",
+        color: brown,
+        fontFamily: MONO,
+        fontSize: 22,
+        fontWeight: 700,
+      },
       "N",
       div(
-        { position: "relative", width: 110, height: 110, marginTop: 6, alignItems: "center", justifyContent: "center", borderRadius: 999, border: `3px solid ${brown}` },
+        {
+          position: "relative",
+          width: 110,
+          height: 110,
+          marginTop: 6,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 999,
+          border: `3px solid ${brown}`,
+        },
         div({ position: "absolute", width: 12, height: 96, borderRadius: 999, backgroundColor: "#8c3410" }),
         div({ position: "absolute", width: 8, height: 70, borderRadius: 999, backgroundColor: brown, transform: "rotate(90deg)" }),
       ),
@@ -520,7 +692,8 @@ function catalog(t: Text): Node {
         border: "1px solid #d9ceb6",
         boxShadow: "0 10px 24px rgba(60,40,10,0.25)",
         // The faint ruled lines of a printed card.
-        backgroundImage: "repeating-linear-gradient(180deg, rgba(43,88,133,0) 0px, rgba(43,88,133,0) 43px, rgba(43,88,133,0.14) 43px, rgba(43,88,133,0.14) 44px)",
+        backgroundImage:
+          "repeating-linear-gradient(180deg, rgba(43,88,133,0) 0px, rgba(43,88,133,0) 43px, rgba(43,88,133,0.14) 43px, rgba(43,88,133,0.14) 44px)",
       },
       div(
         { justifyContent: "space-between", fontSize: 24, paddingBottom: 10, borderBottom: "4px solid #c0392b" },
@@ -546,7 +719,20 @@ function plain(t: Text, spec: CardSpec): Node {
       { flex: 1, flexDirection: "column", padding: "56px 72px" },
       div(
         { alignItems: "center", gap: 18 },
-        div({ width: 60, height: 60, alignItems: "center", justifyContent: "center", borderRadius: 12, backgroundColor: spec.accent, color: spec.onAccent, fontSize: 34, fontWeight: 800 }, t.logo),
+        div(
+          {
+            width: 60,
+            height: 60,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 12,
+            backgroundColor: spec.accent,
+            color: spec.onAccent,
+            fontSize: 34,
+            fontWeight: 800,
+          },
+          t.logo,
+        ),
         div({ fontSize: 28, fontWeight: 800, color: spec.accent }, t.kicker),
       ),
       titleBlock(t, { fontSize: t.size() }),

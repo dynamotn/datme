@@ -69,8 +69,7 @@ export function shownLayout(own: Layout | undefined, preview: Preview): Layout |
 }
 
 /** What a collection groups by: its note's `group:`, else its layout's default. */
-export const groupOf = (layout: Layout, group: string | undefined): string | undefined =>
-  isCollection(layout) ? (group ?? presetGroup(layout)) : undefined
+export const groupOf = (layout: Layout, group: string | undefined): string | undefined => (isCollection(layout) ? (group ?? presetGroup(layout)) : undefined)
 
 /** The groupings worth offering a collection: its default, the usual ones (or those of its kind), and the one it has. */
 export function groupChoices(layout: Layout, own: string | undefined): string[] {
@@ -144,9 +143,7 @@ export function previewUrl(url: URL, key: keyof typeof PREVIEW_KEYS, value: stri
 /** What the page's style and frame come from: a note (its source file), a folder, or neither. */
 export type LookTarget =
   /** `tag`: the tag `appearance.tags` would give the note its style by, when it has one; `stage`: its growth stage. */
-  | { kind: "note"; file: string; dir: string; tag?: string; stage?: string }
-  | { kind: "folder"; dir: string; file?: string }
-  | { kind: "site" }
+  { kind: "note"; file: string; dir: string; tag?: string; stage?: string } | { kind: "folder"; dir: string; file?: string } | { kind: "site" }
 
 /** The rule behind a style, in words. */
 export function describeLookRule(rule: LookRule, target: LookTarget): string {

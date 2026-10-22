@@ -24,7 +24,11 @@ describe("activityWeeks", () => {
     expect(may14.created).toEqual(["A", "B"])
     expect(may14.updated).toEqual([])
     expect(may14.level).toBe(2)
-    expect(activityWeeks(notes, 2025).flat().find((x) => x.key === "2025-06-01")!.updated).toEqual(["B"])
+    expect(
+      activityWeeks(notes, 2025)
+        .flat()
+        .find((x) => x.key === "2025-06-01")!.updated,
+    ).toEqual(["B"])
   })
 
   test("other years stay out", () => {

@@ -38,7 +38,12 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
  * Whole words of a text, folded as a case-insensitive regex compares letters:
  * upper then lower maps ϐ to β and ſ to s, and final sigma is one letter.
  */
-const words = (s: string) => s.toUpperCase().toLowerCase().replaceAll("ς", "σ").match(/[\p{L}\p{N}]+/gu) ?? []
+const words = (s: string) =>
+  s
+    .toUpperCase()
+    .toLowerCase()
+    .replaceAll("ς", "σ")
+    .match(/[\p{L}\p{N}]+/gu) ?? []
 
 /** What a note is about, for its embedding: title, description and the start of its text. */
 export const aboutText = (n: Note) => [n.title, n.description ?? "", plain(n.md)].join("\n").slice(0, 2000)
@@ -125,7 +130,10 @@ export async function computeRelated(lang: Lang) {
   const semantic = site.related.semantic
   // Protected notes have no text to compare, and must not reveal any.
   const vectors = semantic
-    ? await embed(notes.filter((n) => !n.protected).map((n) => ({ id: n.key, text: aboutText(n) })), semantic.model)
+    ? await embed(
+        notes.filter((n) => !n.protected).map((n) => ({ id: n.key, text: aboutText(n) })),
+        semantic.model,
+      )
     : new Map<string, number[]>()
   const linksOf = (n: Note) => new Set(n.protected ? [] : n.links.map((l) => l.key))
   const out = new Map(notes.map((n) => [n.key, linksOf(n)]))
@@ -152,7 +160,12 @@ export async function computeRelated(lang: Lang) {
     if (!names.length) continue
     // Whole words only, so "Git" does not match inside "GitLab" and diacritics count as letters.
     const re = new RegExp(`(?<![\\p{L}\\p{N}])(${names.map(escapeRe).join("|")})(?![\\p{L}\\p{N}])`, "iu")
-    const rarest = names.map((n) => words(n).map((w) => holders.get(w) ?? new Set<string>()).sort((a, b) => a.size - b.size)[0])
+    const rarest = names.map(
+      (n) =>
+        words(n)
+          .map((w) => holders.get(w) ?? new Set<string>())
+          .sort((a, b) => a.size - b.size)[0],
+    )
     const candidates = rarest.every(Boolean) ? new Set(rarest.flatMap((s) => [...s])) : undefined
     const found: Mention[] = []
     for (const source of notes) {
@@ -165,7 +178,10 @@ export async function computeRelated(lang: Lang) {
       const end = Math.min(text.length, m.index + m[0].length + 70)
       found.push({ note: source, context: (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "") })
     }
-    mentions.set(target.key, found.sort((x, y) => x.note.title.localeCompare(y.note.title, lang)))
+    mentions.set(
+      target.key,
+      found.sort((x, y) => x.note.title.localeCompare(y.note.title, lang)),
+    )
   }
   return { related, mentions }
 }

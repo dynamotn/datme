@@ -11,8 +11,6 @@ export const getStaticPaths = (() => site.langs.filter(hasDecks).map((lang) => (
  * their ids, and the reader's progress, are the same on both.
  */
 export const GET: APIRoute = async ({ params }) => {
-  const list = await Promise.all(
-    decks(params.lang as Lang).map(async (n) => ({ u: n.url, t: n.title, g: n.tags, h: (await renderNote(n)).html })),
-  )
+  const list = await Promise.all(decks(params.lang as Lang).map(async (n) => ({ u: n.url, t: n.title, g: n.tags, h: (await renderNote(n)).html })))
   return new Response(JSON.stringify({ decks: list }), { headers: { "content-type": "application/json; charset=utf-8" } })
 }

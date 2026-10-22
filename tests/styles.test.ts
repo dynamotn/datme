@@ -202,7 +202,9 @@ describe("zine, atlas and catalog looks", () => {
   })
 
   test("a zine's cards and a catalogue's drawers stop moving for readers who ask for less motion", () => {
-    expect(css("zine.css")).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\[data-look="zine"\] \.backlink,\s*\[data-look="zine"\] \.folder-card \{\s*transition: none;/)
+    expect(css("zine.css")).toMatch(
+      /@media \(prefers-reduced-motion: reduce\) \{\s*\[data-look="zine"\] \.backlink,\s*\[data-look="zine"\] \.folder-card \{\s*transition: none;/,
+    )
     expect(css("catalog.css")).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\[data-look="catalog"\] \.folder-card \{\s*transition: none;/)
   })
 

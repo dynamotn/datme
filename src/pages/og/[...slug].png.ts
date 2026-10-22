@@ -39,7 +39,13 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
       logo: site.logo,
       // An atlas letters the note's region, a catalogue card its call number; other cards leave them out of the cache key.
       region: spec.design === "atlas" && note.dir ? getVault().folders[lang].get(note.dir.split("/")[0])?.name : undefined,
-      callNumber: spec.design === "catalog" ? callNumber(note.dir, getVault().trees[lang].folders.map((f) => f.dir)) : undefined,
+      callNumber:
+        spec.design === "catalog"
+          ? callNumber(
+              note.dir,
+              getVault().trees[lang].folders.map((f) => f.dir),
+            )
+          : undefined,
     }
   }
   // Drawing a card is the slowest step of a build; an unchanged card in an unchanged style is reused.

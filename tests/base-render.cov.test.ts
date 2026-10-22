@@ -53,7 +53,9 @@ describe("renderBaseView", () => {
     // Notes without image or banner have no media; a view of names only has no field list.
     const plain = renderBaseView(d, "View 2", "en-US")
     expect(plain).not.toContain("base-fields")
-    expect(plain).toMatch(/<article class="index-card base-card"><h3 class="index-card-title"><a class="internal" href="[^"]+" data-key="07_Project\/Talk">Talk<\/a><\/h3><\/article>/)
+    expect(plain).toMatch(
+      /<article class="index-card base-card"><h3 class="index-card-title"><a class="internal" href="[^"]+" data-key="07_Project\/Talk">Talk<\/a><\/h3><\/article>/,
+    )
   })
 
   test("a map on the base's own page fills the screen", () => {

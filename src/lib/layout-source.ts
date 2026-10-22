@@ -41,7 +41,9 @@ const MARKED = /^([+-])[ \t]+(?![✅❌✔✖✗👍👎➕➖])(?=\S)/u
 export function markProsCons(md: string): string {
   const lines = md.split("\n")
   // Runs of top-level items, each marked + or -, outside code fences.
-  const marked: boolean[] = eachLine(md, (line) => (MARKED.test(line) ? "\u0000" : "")).split("\n").map((l) => l === "\u0000")
+  const marked: boolean[] = eachLine(md, (line) => (MARKED.test(line) ? "\u0000" : ""))
+    .split("\n")
+    .map((l) => l === "\u0000")
   for (let i = 0; i < lines.length; ) {
     if (!marked[i]) {
       i++

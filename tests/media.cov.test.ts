@@ -33,9 +33,7 @@ describe("embedExternal", () => {
 
   test("a sized image or extensionless URL becomes an img; an unsized one stays markdown", () => {
     expect(embedExternal("Cat|200", "https://cdn.example/cat.png")).toBe('<img src="https://cdn.example/cat.png" alt="Cat" width="200" loading="lazy">')
-    expect(embedExternal("200x100", "https://cdn.example/image")).toBe(
-      '<img src="https://cdn.example/image" alt="" width="200" height="100" loading="lazy">',
-    )
+    expect(embedExternal("200x100", "https://cdn.example/image")).toBe('<img src="https://cdn.example/image" alt="" width="200" height="100" loading="lazy">')
     expect(embedExternal("Cat", "https://cdn.example/cat.png")).toBeUndefined()
     expect(embedExternal("|200", "https://cdn.example/doc.pdf")).toBeUndefined()
   })

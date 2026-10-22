@@ -230,10 +230,7 @@ function inlineFootnotes(md: string): string {
  * Convert Obsidian-only syntax into CommonMark + inline HTML, so the rest of
  * the pipeline only has to deal with standard markdown. Code is masked first.
  */
-export function preprocess(
-  src: string,
-  ctx: Ctx,
-): { md: string; links: LinkRef[]; assets: string[]; docs: string[]; problems: LinkProblem[] } {
+export function preprocess(src: string, ctx: Ctx): { md: string; links: LinkRef[]; assets: string[]; docs: string[]; problems: LinkProblem[] } {
   const masks: string[] = []
   const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
 
@@ -243,9 +240,7 @@ export function preprocess(
   let md = maskCode(src, mask, fence).replace(OBSIDIAN_COMMENT, "")
   // A deck keeps its comments (directives, speaker notes) and styles, untouched by tags and highlights.
   // Elsewhere a comment loses its words but stays, empty: like any comment it may end a list or start a block of HTML.
-  md = ctx.slides
-    ? md.replace(/<!--[\s\S]*?-->|<style\b[\s\S]*?<\/style>/gi, (m) => mask(m))
-    : md.replace(COMMENT, "<!---->")
+  md = ctx.slides ? md.replace(/<!--[\s\S]*?-->|<style\b[\s\S]*?<\/style>/gi, (m) => mask(m)) : md.replace(COMMENT, "<!---->")
 
   // Multi-Column Markdown regions; their settings block is masked like any code by now.
   if (!ctx.slides) md = columnsHtml(md, (text) => masks[Number(text.match(/^\u0000(\d+)\u0000$/)?.[1] ?? NaN)])
@@ -301,9 +296,7 @@ export function preprocess(
     const src = assetUrl(rel) + mediaFragment(fragment)
     const wanted = sidecars(rel, ctx.lang)
     // Only a file right next to the media: another file of that name elsewhere is not its transcript.
-    const sidecar = ctx.readText
-      ? wanted.map((c) => ctx.resolveAsset(c, "")).find((found, i) => found?.toLowerCase() === wanted[i].toLowerCase())
-      : undefined
+    const sidecar = ctx.readText ? wanted.map((c) => ctx.resolveAsset(c, "")).find((found, i) => found?.toLowerCase() === wanted[i].toLowerCase()) : undefined
     const cues = sidecar ? parseCues(ctx.readText?.(sidecar) ?? "") : []
     const tag = video ? "video" : "audio"
     if (!cues.length) return `<${tag} src="${src}" controls></${tag}>`
@@ -317,8 +310,8 @@ export function preprocess(
     const fromCues = video && !track ? " data-captions-from-cues" : ""
     return blockEmbed(
       `<figure class="media-transcript"><${tag} src="${src}" controls preload="metadata"${fromCues} data-captions-label="${escapeAttr(s.captions)}" data-captions-lang="${escapeAttr(ctx.lang)}">${track}</${tag}>` +
-      transcriptHtml(cues, s.transcript) +
-      `</figure>`
+        transcriptHtml(cues, s.transcript) +
+        `</figure>`,
     )
   }
 
@@ -462,7 +455,17 @@ export function preprocess(
   // A target in angle brackets, [a](<My note.md>), may hold spaces.
   md = md.replace(
     /(!?)\[([^\]\n]*)\]\((?:<(?!https?:|mailto:|#|\/)([^<>#\n]+?)(#[^<>\n]*)?>|(?!https?:|mailto:|#|\/|<)([^)\s]+?)(#[^)\s]*)?)\)/g,
-    (m, bang: string, text: string, angled: string | undefined, angledFrag: string | undefined, bare: string | undefined, bareFrag: string | undefined, offset: number, whole: string) => {
+    (
+      m,
+      bang: string,
+      text: string,
+      angled: string | undefined,
+      angledFrag: string | undefined,
+      bare: string | undefined,
+      bareFrag: string | undefined,
+      offset: number,
+      whole: string,
+    ) => {
       const target = angled ?? bare!
       let frag = angledFrag ?? bareFrag
       let decoded = target

@@ -16,8 +16,8 @@ export function neighbourhood(links: [number, number][], start: number, depth: n
   for (let d = 1; d <= depth && frontier.size; d++) {
     const next = new Set<number>()
     for (const [a, b] of links) {
-      if (frontier.has(a) && !hops.has(b)) (hops.set(b, d), next.add(b))
-      if (frontier.has(b) && !hops.has(a)) (hops.set(a, d), next.add(a))
+      if (frontier.has(a) && !hops.has(b)) hops.set(b, d), next.add(b)
+      if (frontier.has(b) && !hops.has(a)) hops.set(a, d), next.add(a)
     }
     frontier = next
   }

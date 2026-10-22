@@ -59,7 +59,10 @@ function palette() {
     ink: v("--ink"),
     bg: v("--surface"),
     // A look can draw links as dashed roads: `--graph-dash: 2 4`, the dash and gap lengths.
-    dash: v("--graph-dash").split(/[\s,]+/).filter(Boolean).map(Number),
+    dash: v("--graph-dash")
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number),
   }
 }
 
@@ -95,11 +98,11 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
           ? (n.st ?? "")
           : colorBy === "topic"
             ? (n.tp ?? "")
-          : colorBy === "fresh" && n.m != null
-            ? (freshLabels[freshness(n.m)] ?? "")
-            : footprints && hasVisited(footprints, n.u)
-              ? (canvas.dataset.visitedLabel ?? "")
-              : ""
+            : colorBy === "fresh" && n.m != null
+              ? (freshLabels[freshness(n.m)] ?? "")
+              : footprints && hasVisited(footprints, n.u)
+                ? (canvas.dataset.visitedLabel ?? "")
+                : ""
   const all = data.notes.map(
     (n, i) =>
       ({
@@ -117,7 +120,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
         near: 1,
       }) as GNode,
   )
-  for (const [a, b] of data.links) (all[a].deg++, all[b].deg++)
+  for (const [a, b] of data.links) all[a].deg++, all[b].deg++
   const cur = all.find((n) => samePath(n.u, current))
 
   let keep = new Set(all.filter((n) => matchesFilter(data.notes[n.i], filter)).map((n) => n.i))
@@ -128,9 +131,7 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   }
   const nodes = all.filter((n) => keep.has(n.i))
   nodes.forEach((n) => (n.r = 3 + Math.sqrt(n.deg) * 1.6))
-  const links: GLink[] = data.links
-    .filter(([a, b]) => keep.has(a) && keep.has(b))
-    .map(([a, b]) => ({ source: all[a], target: all[b] }))
+  const links: GLink[] = data.links.filter(([a, b]) => keep.has(a) && keep.has(b)).map(([a, b]) => ({ source: all[a], target: all[b] }))
   const neighbours = new Map<GNode, Set<GNode>>()
   for (const l of links) {
     neighbours.set(l.source, (neighbours.get(l.source) ?? new Set()).add(l.target))
@@ -161,7 +162,10 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const padY = mode === "local" ? 30 : 40
   const fit = () => {
     if (!autoFit || !nodes.length || !width) return
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    let x0 = Infinity,
+      y0 = Infinity,
+      x1 = -Infinity,
+      y1 = -Infinity
     for (const n of nodes) {
       x0 = Math.min(x0, n.x! - n.r)
       y0 = Math.min(y0, n.y! - n.r)

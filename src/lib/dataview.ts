@@ -279,8 +279,7 @@ class Parser {
         const e = this.expr()
         const as = this.eatKw("AS") ? String(this.next("id").v) : describe(e)
         q.steps.push({ k: "group", e, as })
-      }
-      else throw new DataviewError(`unexpected "${String(this.peek()!.v)}"`)
+      } else throw new DataviewError(`unexpected "${String(this.peek()!.v)}"`)
     }
     return q
   }
@@ -314,7 +313,7 @@ class Parser {
     if (t?.t === "tag") return { k: "tag", tag: t.v }
     if (t?.t === "str") return { k: "folder", path: t.v }
     if (t?.t === "link") return { k: "link", target: t.v }
-    throw new DataviewError("FROM expects #tags, \"folders\" or [[links]]")
+    throw new DataviewError('FROM expects #tags, "folders" or [[links]]')
   }
 
   expr(): Expr {
@@ -493,7 +492,10 @@ function buildRow(page: Page, engine: Engine): Row {
     fields[k.toLowerCase()] ??= fields[k]
   }
   const byKey = (keys: string[]) =>
-    keys.map((k) => pageOf(engine, k)).filter((p): p is Page => !!p).map(linkTo)
+    keys
+      .map((k) => pageOf(engine, k))
+      .filter((p): p is Page => !!p)
+      .map(linkTo)
   fields.file = {
     name: page.stem,
     path: page.key + ".md",
@@ -623,7 +625,11 @@ function evaluate(e: Expr, row: Row, engine: Engine): Value {
       if (e.fn === "date" && first?.k === "var" && DATE_WORDS.includes(first.name.toLowerCase())) {
         return call("date", [first.name.toLowerCase()], engine)
       }
-      return call(e.fn, e.args.map((a) => evaluate(a, row, engine)), engine)
+      return call(
+        e.fn,
+        e.args.map((a) => evaluate(a, row, engine)),
+        engine,
+      )
     }
   }
 }
@@ -801,8 +807,7 @@ export function inlineFields(md: string): Record<string, string | number | boole
 
 export function runQuery(q: Query, engine: Engine): Result {
   const pages = q.from ? engine.pages.filter((p) => inSource(p, q.from!, engine)) : engine.pages
-  let rows: Row[] =
-    q.type === "task" ? pages.flatMap((p) => (p.tasks ?? []).map((t) => taskRow(p, t, engine))) : pages.map((p) => rowOf(p, engine))
+  let rows: Row[] = q.type === "task" ? pages.flatMap((p) => (p.tasks ?? []).map((t) => taskRow(p, t, engine))) : pages.map((p) => rowOf(p, engine))
   let group: string | undefined
   for (const step of q.steps) {
     if (step.k === "where") rows = rows.filter((r) => truthy(evaluate(step.e, r, engine)))
@@ -816,12 +821,9 @@ export function runQuery(q: Query, engine: Engine): Result {
         g.rows.push(r)
         groups.set(id, g)
       }
-      rows = [...groups.values()]
-        .sort((a, b) => compare(a.key, b.key))
-        .map((g) => ({ key: g.key, [step.as]: g.key, rows: g.rows as Value }))
+      rows = [...groups.values()].sort((a, b) => compare(a.key, b.key)).map((g) => ({ key: g.key, [step.as]: g.key, rows: g.rows as Value }))
       group = step.as
-    }
-    else if (step.k === "flatten") {
+    } else if (step.k === "flatten") {
       rows = rows.flatMap((r) => {
         const v = evaluate(step.e, r, engine)
         return (Array.isArray(v) ? v : [v]).map((x) => ({ ...r, [step.as]: x }))

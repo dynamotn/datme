@@ -86,9 +86,7 @@
 
 /* The hillside at dawn: mist over the slope, water catching the sky at its foot. */
 [data-look="paddy"] body {
-  background:
-    radial-gradient(70rem 26rem at 50% -8%, color-mix(in srgb, var(--water) 55%, transparent), transparent 70%),
-    var(--bg);
+  background: radial-gradient(70rem 26rem at 50% -8%, color-mix(in srgb, var(--water) 55%, transparent), transparent 70%), var(--bg);
   background-attachment: fixed;
   font-family: var(--font-read);
 }
@@ -171,12 +169,12 @@
   background:
     repeating-linear-gradient(0deg, transparent 0 3px, var(--water-line) 3px 4px) bottom / 100% 50% no-repeat,
     linear-gradient(
-        color-mix(in srgb, var(--rice-0) 45%, var(--water)) 0 25%,
-        color-mix(in srgb, var(--rice-1) 45%, var(--water)) 0 50%,
-        color-mix(in srgb, var(--rice-2) 45%, var(--water)) 0 75%,
-        color-mix(in srgb, var(--rice-3) 45%, var(--water)) 0
-      )
-      bottom / 100% 50% no-repeat,
+      color-mix(in srgb, var(--rice-0) 45%, var(--water)) 0 25%,
+      color-mix(in srgb, var(--rice-1) 45%, var(--water)) 0 50%,
+      color-mix(in srgb, var(--rice-2) 45%, var(--water)) 0 75%,
+      color-mix(in srgb, var(--rice-3) 45%, var(--water)) 0
+    )
+    bottom / 100% 50% no-repeat,
     linear-gradient(var(--rice-3) 0 25%, var(--rice-2) 0 50%, var(--rice-1) 0 75%, var(--rice-0) 0) top / 100% 50% no-repeat;
 }
 [data-look="paddy"] .garden-tagline {
@@ -280,9 +278,7 @@
   inset: auto 10px 6px;
   height: 12px;
   border-radius: 6px;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 3px, var(--water-line) 3px 4px),
-    var(--water);
+  background: repeating-linear-gradient(0deg, transparent 0 3px, var(--water-line) 3px 4px), var(--water);
   pointer-events: none;
 }
 /* Rows of rice standing in it, taller as the stage grows. */

@@ -32,7 +32,11 @@ afterAll(() => {
 })
 
 const column = (url: string, body: string) => () =>
-  Promise.resolve(new Response(`<html><body><div data-stack-col data-url="${url}"><h1 id="title" data-astro-transition-scope="x">${body}</h1><a class="internal" href="/notes/c">C</a></div></body></html>`))
+  Promise.resolve(
+    new Response(
+      `<html><body><div data-stack-col data-url="${url}"><h1 id="title" data-astro-transition-scope="x">${body}</h1><a class="internal" href="/notes/c">C</a></div></body></html>`,
+    ),
+  )
 served.set("/notes/b", column("/notes/b", "B"))
 served.set("/notes/c", column("/notes/c", "C"))
 served.set("/notes/d", column("/notes/d", "D"))
@@ -111,7 +115,8 @@ describe("stacked notes", () => {
     const row = page()
     stack.setupStack(() => {})
     const b = row.querySelector('a[href="/notes/b"]')!
-    for (const init of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { button: 1 }]) expect([init, click(b, init).defaultPrevented]).toEqual([init, false])
+    for (const init of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { button: 1 }])
+      expect([init, click(b, init).defaultPrevented]).toEqual([init, false])
     expect(click(row.querySelector('a[href="/notes/a#x"]')!).defaultPrevented).toBe(false)
     expect(click(row.querySelector('a[href^="https://elsewhere"]')!).defaultPrevented).toBe(false)
     expect(click(row.querySelector("span")!).defaultPrevented).toBe(false)

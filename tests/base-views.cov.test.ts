@@ -144,7 +144,10 @@ describe("Notion views", () => {
     expect(html).toContain('<section class="ntn-col is-tinted" style="--col-bg:')
     expect(html).toContain('<details class="ntn-col is-hidden is-tinted" style="--col-bg:')
     expect(html).toMatch(/<span class="ntn-prop"><span class="ntn-col-icon"[\s\S]*?<\/span><span class="ntn-prop-name">status<\/span>/)
-    const bg = renderNotionBoard(run("views: [{ type: notion-board, groupBy: note.status, groupColorDisplay: background, propertyLabelDisplay: name }]").res, "en")
+    const bg = renderNotionBoard(
+      run("views: [{ type: notion-board, groupBy: note.status, groupColorDisplay: background, propertyLabelDisplay: name }]").res,
+      "en",
+    )
     expect(bg).toContain("ntn-col is-tinted")
     expect(bg).toContain('<span class="ntn-col-name">done</span>')
     const icons = renderNotionBoard(run("views: [{ type: notion-board, order: [file.name, status], propertyLabelDisplay: icon }]").res, "en")

@@ -43,7 +43,11 @@ const dir = (name: string) => {
   fs.mkdirSync(d, { recursive: true })
   return d
 }
-const failure = (p: Promise<unknown>) => p.then(() => undefined, (e: Error) => e)
+const failure = (p: Promise<unknown>) =>
+  p.then(
+    () => undefined,
+    (e: Error) => e,
+  )
 
 describe("parseArgs, every command", () => {
   test("deploy takes a known host and a branch", () => {
@@ -174,7 +178,10 @@ describe("deploy", () => {
     const vault = dir("deploy-repo/notes")
     await run({ command: "deploy", target: "github", vault }, {}, tmp)
     expect(warned()).toBe("")
-    const workflow = fs.readdirSync(path.join(repo, ".github/workflows")).map((f) => fs.readFileSync(path.join(repo, ".github/workflows", f), "utf8")).join("")
+    const workflow = fs
+      .readdirSync(path.join(repo, ".github/workflows"))
+      .map((f) => fs.readFileSync(path.join(repo, ".github/workflows", f), "utf8"))
+      .join("")
     expect(workflow).toContain("trunk")
     expect(workflow).toContain("notes")
     expect(workflow).not.toContain("UV_CACHE_DIR")

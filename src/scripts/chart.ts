@@ -30,7 +30,11 @@ function draw(fig: HTMLElement) {
         label: s.title,
         data: s.data,
         // Round charts colour each slice; the others colour each series.
-        backgroundColor: round ? spec.labels.map((_, j) => colors[j % colors.length]) : spec.fill || spec.type === "bar" ? translucent(colors[i % colors.length]) : colors[i % colors.length],
+        backgroundColor: round
+          ? spec.labels.map((_, j) => colors[j % colors.length])
+          : spec.fill || spec.type === "bar"
+            ? translucent(colors[i % colors.length])
+            : colors[i % colors.length],
         borderColor: round ? "transparent" : colors[i % colors.length],
         fill: spec.fill,
         tension: spec.tension,

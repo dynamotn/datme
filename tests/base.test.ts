@@ -97,7 +97,12 @@ describe("files of a site under a path", () => {
     try {
       const m = JSON.parse(manifest())
       expect([m.start_url, m.scope]).toEqual(["/garden/", "/garden/"])
-      expect(m.icons.map((i: { src: string }) => i.src)).toEqual(["/garden/favicon.svg", "/garden/icon-192.png", "/garden/icon-512.png", "/garden/icon-512.png"])
+      expect(m.icons.map((i: { src: string }) => i.src)).toEqual([
+        "/garden/favicon.svg",
+        "/garden/icon-192.png",
+        "/garden/icon-512.png",
+        "/garden/icon-512.png",
+      ])
       const sw = serviceWorker("v1")
       expect(sw).toContain('const PRECACHE = ["/garden/","/garden/en-US"]')
       expect(sw).toContain('url.pathname === "/garden/sw.js"')
@@ -133,7 +138,12 @@ describe("files of a site under a path", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-base-"))
     try {
       const file = path.join(dir, "neighbours.json")
-      const notes = { "en-US": [{ u: "/friend/New", t: "New" }, { u: "/Old", t: "Old" }] }
+      const notes = {
+        "en-US": [
+          { u: "/friend/New", t: "New" },
+          { u: "/Old", t: "Old" },
+        ],
+      }
       fs.writeFileSync(file, JSON.stringify({ friend: { url: "https://y.dev/friend", fetchedAt: 1, notes } }))
       expect(findInGarden("friend", "New", "en-US", file)).toEqual({ url: "https://y.dev/friend/New", title: "New" })
       expect(findInGarden("friend", "Old", "en-US", file)).toEqual({ url: "https://y.dev/friend/Old", title: "Old" })

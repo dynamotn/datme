@@ -6,7 +6,7 @@ const slipBox = { file: "Notes/Slip box.md", title: "Slip box", names: ["Slip bo
 
 describe("prose", () => {
   test("blanks code, links, tags, comments and HTML, keeping every offset", () => {
-    const src = "---\ntitle: Slip box\n---\nA `slip box` [[Slip box]] [slip box](x.md) #slipbox %%slip box%% <b title=\"slip box\">x</b> slip box"
+    const src = '---\ntitle: Slip box\n---\nA `slip box` [[Slip box]] [slip box](x.md) #slipbox %%slip box%% <b title="slip box">x</b> slip box'
     const out = prose(src)
     expect(out).toHaveLength(src.length)
     expect(out.match(/slip box/gi)).toEqual(["slip box"])

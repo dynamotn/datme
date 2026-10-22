@@ -25,7 +25,10 @@ describe("deployFiles", () => {
   test("GitHub Pages: full history for dates, a build cache, and the Pages deploy", () => {
     const [file] = deployFiles("github", opts)
     expect(file.path).toBe(".github/workflows/datme.yml")
-    const wf = loadYaml(file.content) as { on: { push: { branches: string[] } }; jobs: Record<string, { steps: { uses?: string; with?: Record<string, unknown> }[] }> }
+    const wf = loadYaml(file.content) as {
+      on: { push: { branches: string[] } }
+      jobs: Record<string, { steps: { uses?: string; with?: Record<string, unknown> }[] }>
+    }
     expect(wf.on.push.branches).toEqual(["trunk"])
     const steps = wf.jobs.build.steps
     expect(steps[0].with).toEqual({ "fetch-depth": 0 })

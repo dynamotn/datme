@@ -185,9 +185,7 @@
 
 /* Paper with a little morning light in one corner, not a flat page. */
 [data-look="garden"] body {
-  background:
-    radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
-    var(--bg);
+  background: radial-gradient(60rem 30rem at 85% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%), var(--bg);
   background-attachment: fixed;
   font-family: var(--font-read);
 }

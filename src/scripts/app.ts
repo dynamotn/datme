@@ -64,8 +64,7 @@ document.addEventListener("click", (e) => {
     const btn = target.closest<HTMLElement>("[data-graph-zoom]")!
     const canvas = btn.closest(".graph-box, .graph-modal")?.querySelector("canvas")
     canvas?.dispatchEvent(new CustomEvent("graphzoom", { detail: Number(btn.dataset.graphZoom) }))
-  }
-  else if (target.closest("[data-theme-toggle]")) {
+  } else if (target.closest("[data-theme-toggle]")) {
     const next = root.dataset.theme === "dark" ? "light" : "dark"
     root.dataset.theme = next
     store("theme", next)
@@ -107,9 +106,9 @@ document.addEventListener("keydown", (e) => {
   // Minimal pages have no search or graph dialog, so the browser's own shortcut stays.
   const hasSearch = !!document.querySelector("[data-search-dialog]")
   const hasGraph = !!document.querySelector("[data-graph-dialog]")
-  if (mod && e.key.toLowerCase() === "k" && hasSearch) (e.preventDefault(), openSearch())
-  else if (mod && e.key.toLowerCase() === "g" && hasGraph) (e.preventDefault(), openGraph())
-  else if (!typing && e.key === "/" && hasSearch) (e.preventDefault(), openSearch())
+  if (mod && e.key.toLowerCase() === "k" && hasSearch) e.preventDefault(), openSearch()
+  else if (mod && e.key.toLowerCase() === "g" && hasGraph) e.preventDefault(), openGraph()
+  else if (!typing && e.key === "/" && hasSearch) e.preventDefault(), openSearch()
   // Single-key shortcuts only without modifiers, so browser shortcuts keep working.
   else if (!typing && !mod && !e.altKey && !document.querySelector("dialog[open]")) {
     if (e.key === "j") step(1)
@@ -121,15 +120,11 @@ document.addEventListener("keydown", (e) => {
 })
 
 function syncToggles() {
-  document
-    .querySelectorAll("[data-stack-toggle]")
-    .forEach((b) => b.setAttribute("aria-pressed", String(root.classList.contains("stack-mode"))))
+  document.querySelectorAll("[data-stack-toggle]").forEach((b) => b.setAttribute("aria-pressed", String(root.classList.contains("stack-mode"))))
   document
     .querySelectorAll<HTMLElement>("[data-sidebar-toggle]")
     .forEach((b) => b.setAttribute("aria-pressed", String(!root.classList.contains(`hide-${b.dataset.sidebarToggle}`))))
-  document
-    .querySelectorAll("[data-reader-toggle]")
-    .forEach((b) => b.setAttribute("aria-pressed", String(root.classList.contains("reader"))))
+  document.querySelectorAll("[data-reader-toggle]").forEach((b) => b.setAttribute("aria-pressed", String(root.classList.contains("reader"))))
 }
 
 // ---- explorer: highlight the current page, remember open folders ----
@@ -302,9 +297,7 @@ export function setupOffline(): void {
     window.addEventListener("load", () => void navigator.serviceWorker.register(withBase("/sw.js")).catch(() => {}))
   } else {
     // Only this site's: sites under other paths of the host keep theirs.
-    void navigator.serviceWorker
-      .getRegistrations()
-      .then((regs) => regs.filter((r) => new URL(r.scope).pathname === base()).forEach((r) => r.unregister()))
+    void navigator.serviceWorker.getRegistrations().then((regs) => regs.filter((r) => new URL(r.scope).pathname === base()).forEach((r) => r.unregister()))
   }
 }
 setupOffline()

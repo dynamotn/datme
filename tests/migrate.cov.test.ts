@@ -89,7 +89,10 @@ describe("datme.yaml", () => {
   })
 
   test("an empty or comment-only datme.yaml takes every setting", () => {
-    for (const [name, text] of [["empty-config", ""], ["comment-config", "# settings later\n"]]) {
+    for (const [name, text] of [
+      ["empty-config", ""],
+      ["comment-config", "# settings later\n"],
+    ]) {
       const dir = vault(name, { "datme.yaml": text })
       expect(configAddition(dir, { publish: "all" })).toEqual({ add: { publish: "all" }, skipped: [] })
     }
@@ -104,7 +107,13 @@ describe("datme.yaml", () => {
     applyMigration(dir, plan)
     expect(fs.readFileSync(path.join(dir, "datme.yaml"), "utf8")).toBe("# Added by datme migrate\npublish: all\n")
     expect(describePlan(dir, plan, true)).toBe(
-      ["No note needs changing.", "Already set in datme.yaml, left as they are (change them by hand if needed):", '  publish: "all"', "Note: Check it.", "Done."].join("\n"),
+      [
+        "No note needs changing.",
+        "Already set in datme.yaml, left as they are (change them by hand if needed):",
+        '  publish: "all"',
+        "Note: Check it.",
+        "Done.",
+      ].join("\n"),
     )
   })
 })

@@ -118,7 +118,9 @@ describe("a quotebook", () => {
     expect(quoteOf("<p>Be kind.</p>\n<p>— Ann</p>\n")).toEqual({ text: "<p>Be kind.</p>", who: "Ann" })
     expect(quoteOf("<p>Go.\n— Bob</p>")).toEqual({ text: "<p>Go.</p>", who: "Bob" })
     expect(quoteOf("<p>Anon.</p>")).toEqual({ text: "<p>Anon.</p>", who: undefined })
-    expect(quotesHtml("<blockquote><p>A.</p><p>— B</p></blockquote>")).toBe('<div class="quote-wall"><figure class="quote-card"><blockquote><p>A.</p></blockquote><figcaption>B</figcaption></figure></div>')
+    expect(quotesHtml("<blockquote><p>A.</p><p>— B</p></blockquote>")).toBe(
+      '<div class="quote-wall"><figure class="quote-card"><blockquote><p>A.</p></blockquote><figcaption>B</figcaption></figure></div>',
+    )
   })
 
   test("the quotes of a note: signed ones only, with their block ids, not those it embeds", () => {
@@ -126,7 +128,7 @@ describe("a quotebook", () => {
       `<blockquote id="^a&amp;b"><p>One.</p><p>— Ann</p></blockquote><blockquote><p>Unsigned.</p></blockquote>` +
       `<div class="transclude" data-url="/x"><blockquote><p>Embedded.</p><p>— Eve</p></blockquote></div><p>after</p>`
     expect(quotesOf(html)).toEqual([{ text: "<p>One.</p>", who: "Ann", id: "^a&b" }])
-    expect(replaceDivs("<div class=\"x\"><div></div></div><p>y</p>", /<div class="x">/g, (i) => `[${i}]`)).toBe("[0]<p>y</p>")
+    expect(replaceDivs('<div class="x"><div></div></div><p>y</p>', /<div class="x">/g, (i) => `[${i}]`)).toBe("[0]<p>y</p>")
   })
 
   test("every quote of the notes, grouped by who said it, by note, or not at all", async () => {

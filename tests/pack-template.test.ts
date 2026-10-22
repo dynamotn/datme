@@ -15,14 +15,32 @@ const XSS = `"><script>alert(1)</script><img src=x onerror=alert(1)>`
 
 describe("placeholders and blocks", () => {
   test("fields are filled in text and attributes, a flag or nothing prints as nothing", () => {
-    const { html, warnings } = draw(`<a class="card {{ stage }}" href="{{url}}">{{title}}</a> <small>{{locked}}{{date}}</small> {{year}}`, { title: "Hi", url: "/Hi", stage: "seed", locked: true, year: 2026 }, "footer-band")
-    expect(warnings).toEqual(["stage", "url", "title", "locked", "date"].map((f) => `{{${f}}} is not a field of footer-band (siteTitle, home, lang, author, year, rss), so it is left out`))
+    const { html, warnings } = draw(
+      `<a class="card {{ stage }}" href="{{url}}">{{title}}</a> <small>{{locked}}{{date}}</small> {{year}}`,
+      { title: "Hi", url: "/Hi", stage: "seed", locked: true, year: 2026 },
+      "footer-band",
+    )
+    expect(warnings).toEqual(
+      ["stage", "url", "title", "locked", "date"].map(
+        (f) => `{{${f}}} is not a field of footer-band (siteTitle, home, lang, author, year, rss), so it is left out`,
+      ),
+    )
     expect(html).toBe('<a class="card "></a> <small></small> 2026')
-    expect(draw(`<a class="card {{ stage }}" href="{{url}}">{{title}}</a> <small>{{locked}}</small>`, { title: "Hi", url: "/Hi", stage: "seed", locked: true }).html).toBe('<a class="card seed" href="/Hi">Hi</a> <small></small>')
+    expect(
+      draw(`<a class="card {{ stage }}" href="{{url}}">{{title}}</a> <small>{{locked}}</small>`, { title: "Hi", url: "/Hi", stage: "seed", locked: true }).html,
+    ).toBe('<a class="card seed" href="/Hi">Hi</a> <small></small>')
   })
   test("#if, #unless and #each, whose items see their own fields and the slot's", () => {
     const src = `{{#if cover}}<img src="{{cover}}" alt="">{{/if}}{{#unless excerpt}}<p>none</p>{{/unless}}<ul>{{#each tags}}<li><a href="{{url}}" title="{{title}}">{{name}}</a></li>{{/each}}</ul>{{#if tags}}T{{/if}}`
-    const fields = { cover: "/c.png", excerpt: "", title: "Note", tags: [{ name: "a", url: "/tags/a" }, { name: "b", url: "/tags/b" }] }
+    const fields = {
+      cover: "/c.png",
+      excerpt: "",
+      title: "Note",
+      tags: [
+        { name: "a", url: "/tags/a" },
+        { name: "b", url: "/tags/b" },
+      ],
+    }
     expect(draw(src, fields)).toEqual({
       html: '<img src="/c.png" alt=""><p>none</p><ul><li><a href="/tags/a" title="Note">a</a></li><li><a href="/tags/b" title="Note">b</a></li></ul>T',
       warnings: [],
@@ -92,7 +110,20 @@ describe("values are escaped wherever they land", () => {
     for (const ok of ["/a", "a/b:c", "#top", "?q", "//cdn.example/x", "http://x", "HTTPS://x", "mailto:me@x", ""]) expect(safeUrl(ok)).toBe(true)
     for (const bad of ["javascript:x", "JAVASCRIPT:x", "\njavascript:x", "data:x", "file:///etc/passwd", "blob:x"]) expect(safeUrl(bad)).toBe(false)
     expect(safeStyle("color: red; margin: calc(1rem + 2px)")).toBe(true)
-    for (const bad of ["background:url(x)", "background: URL (x)", "width: expression(alert(1))", "background:u\\72l(x)", "behavior:url(x.htc)", "-moz-binding:x", "background:image-set(x 1x)", "x:'a'", 'x:"a"', "ur/**/l(x)", "x</style>", "@import x"]) {
+    for (const bad of [
+      "background:url(x)",
+      "background: URL (x)",
+      "width: expression(alert(1))",
+      "background:u\\72l(x)",
+      "behavior:url(x.htc)",
+      "-moz-binding:x",
+      "background:image-set(x 1x)",
+      "x:'a'",
+      'x:"a"',
+      "ur/**/l(x)",
+      "x</style>",
+      "@import x",
+    ]) {
       expect(safeStyle(bad)).toBe(false)
     }
   })
@@ -104,16 +135,34 @@ describe("a template is sanitised when it is loaded", () => {
       `<ScRiPt>alert(1)</sCrIpT><iframe srcdoc="<script>alert(1)</script>"></iframe><object data="x"></object><embed src="x"><form action="//evil"><input name="password"></form><style>*{display:none}</style><base href="//evil/"><meta http-equiv="refresh" content="0;url=//evil"><link rel="stylesheet" href="//evil"><template><script>1</script></template><noscript><img src=x onerror=alert(1)></noscript><p>kept</p>`,
     )
     expect(html).toBe("<p>kept</p>")
-    expect(warnings.map((w) => w.split(" ")[0])).toEqual(["<script>", "<iframe>", "<object>", "<embed>", "<form>", "<style>", "<base>", "<meta>", "<link>", "<template>", "<noscript>"])
+    expect(warnings.map((w) => w.split(" ")[0])).toEqual([
+      "<script>",
+      "<iframe>",
+      "<object>",
+      "<embed>",
+      "<form>",
+      "<style>",
+      "<base>",
+      "<meta>",
+      "<link>",
+      "<template>",
+      "<noscript>",
+    ])
   })
   test("SVG and MathML, which can carry scripts, go with what they hold", () => {
-    expect(draw(`<svg onload="alert(1)"><script>alert(1)</script><a href="javascript:alert(1)"><text>x</text></a></svg><math><mi xlink:href="javascript:alert(1)">x</mi></math>`).html).toBe("")
+    expect(
+      draw(
+        `<svg onload="alert(1)"><script>alert(1)</script><a href="javascript:alert(1)"><text>x</text></a></svg><math><mi xlink:href="javascript:alert(1)">x</mi></math>`,
+      ).html,
+    ).toBe("")
   })
   test("event handlers, srcdoc, ids, data attributes and unsafe styles go; allowed attributes stay", () => {
     const { html, warnings } = draw(
       `<img src="x" onerror="alert(1)" ONLOAD="alert(1)" alt="a" width="10" loading="lazy"><div id="location" data-nav-toggle style="background:url(//evil)" class="a b" aria-label="L" role="note" hidden>d</div><p style="color: red" title="t">p</p><a href="/x" target="_blank" rel="noopener" ping="//evil">a</a><details open><summary>s</summary></details>`,
     )
-    expect(html).toBe('<img src="x" alt="a" width="10" loading="lazy"><div class="a b" aria-label="L" role="note" hidden="">d</div><p style="color: red" title="t">p</p><a href="/x" rel="noopener">a</a><details open=""><summary>s</summary></details>')
+    expect(html).toBe(
+      '<img src="x" alt="a" width="10" loading="lazy"><div class="a b" aria-label="L" role="note" hidden="">d</div><p style="color: red" title="t">p</p><a href="/x" rel="noopener">a</a><details open=""><summary>s</summary></details>',
+    )
     expect(warnings).toEqual([
       "<img>: the attribute onerror is not one a template can set, so it is left out",
       "<img>: the attribute onload is not one a template can set, so it is left out",
@@ -137,15 +186,22 @@ describe("a template is sanitised when it is loaded", () => {
     ])
   })
   test("comments, CDATA and broken markup cannot smuggle a tag or a placeholder", () => {
-    const { html, warnings } = draw(`<!-- {{excerpt}} --><!--><script>alert(1)</script>--><![CDATA[<script>alert(1)</script>]]><p>a<b>b</p>c<img src=x/onerror=alert(1)><`, { excerpt: "secret" })
+    const { html, warnings } = draw(
+      `<!-- {{excerpt}} --><!--><script>alert(1)</script>--><![CDATA[<script>alert(1)</script>]]><p>a<b>b</p>c<img src=x/onerror=alert(1)><`,
+      { excerpt: "secret" },
+    )
     expect(html).not.toMatch(/<script|secret| onerror=/i)
-    expect(html).toBe("--&gt;alert(1)]]&gt;<p>a<b>b</b></p><b>c<img src=\"x/onerror=alert(1)\">&lt;</b>")
+    expect(html).toBe('--&gt;alert(1)]]&gt;<p>a<b>b</b></p><b>c<img src="x/onerror=alert(1)">&lt;</b>')
     expect(warnings).toEqual(["<script> is not an element a template can hold, so it is left out with what it holds"])
     // Doctypes and stray end tags are dropped too.
     expect(draw(`<!doctype html></div><p>x</p>`).html).toBe("<p>x</p>")
   })
   test("a slot drawn in a link cannot hold another", () => {
-    const { html, warnings } = draw(`<a href="/x">{{siteTitle}}</a><details><summary>m</summary></details><b>{{siteTitle}}</b>`, { siteTitle: "Site" }, "header-brand")
+    const { html, warnings } = draw(
+      `<a href="/x">{{siteTitle}}</a><details><summary>m</summary></details><b>{{siteTitle}}</b>`,
+      { siteTitle: "Site" },
+      "header-brand",
+    )
     expect(html).toBe("<b>Site</b>")
     expect(warnings).toEqual([
       "<a> cannot sit in header-brand, which is drawn inside a link, so it is left out with what it holds",
@@ -153,7 +209,9 @@ describe("a template is sanitised when it is loaded", () => {
     ])
   })
   test("void elements take no children, and tables keep their parts", () => {
-    expect(draw(`<br>x<hr><table><tr><td colspan="2">{{title}}</td></tr></table>`, { title: "t" }).html).toBe('<br>x<hr><table><tbody><tr><td colspan="2">t</td></tr></tbody></table>')
+    expect(draw(`<br>x<hr><table><tr><td colspan="2">{{title}}</td></tr></table>`, { title: "t" }).html).toBe(
+      '<br>x<hr><table><tbody><tr><td colspan="2">t</td></tr></tbody></table>',
+    )
   })
 })
 
@@ -170,7 +228,15 @@ afterEach(() => {
 describe("slots on the site", () => {
   const card = compileTemplate(`<h3><a href="{{url}}">{{title}}</a></h3><p>{{excerpt}}</p><small>{{siteTitle}} {{home}} {{lang}}</small>`, "note-card").nodes
   const own = compileTemplate(`<p class="own">{{title}}</p>`, "note-card").nodes
-  const pack = { dir: "/p", css: [], fonts: [], file: "theme.yaml", accent: false, templates: { "note-card": card }, styles: { ink: { base: "classic", css: [], templates: { "note-card": own } }, plain: { base: "classic", css: [] } } }
+  const pack = {
+    dir: "/p",
+    css: [],
+    fonts: [],
+    file: "theme.yaml",
+    accent: false,
+    templates: { "note-card": card },
+    styles: { ink: { base: "classic", css: [], templates: { "note-card": own } }, plain: { base: "classic", css: [] } },
+  }
 
   test("nothing without a pack or a template for the slot", () => {
     expect(drawSlot("note-card", "classic", "en-US")).toBeUndefined()
@@ -179,8 +245,10 @@ describe("slots on the site", () => {
   })
   test("the pack's template on every page, a style's own on its pages", () => {
     setSite({ pack })
-    expect(drawSlot("note-card", "classic", "en-US", { title: "A", url: "/en-US/A", excerpt: "e" })).toBe('<h3><a href="/en-US/A">A</a></h3><p>e</p><small>Test garden /en-US en-US</small>')
-    expect(drawSlot("note-card", "plain", "vi-VN", { title: "A" })).toStartWith('<h3><a>A</a></h3><p></p><small>Khu vườn thử nghiệm / vi-VN</small>')
+    expect(drawSlot("note-card", "classic", "en-US", { title: "A", url: "/en-US/A", excerpt: "e" })).toBe(
+      '<h3><a href="/en-US/A">A</a></h3><p>e</p><small>Test garden /en-US en-US</small>',
+    )
+    expect(drawSlot("note-card", "plain", "vi-VN", { title: "A" })).toStartWith("<h3><a>A</a></h3><p></p><small>Khu vườn thử nghiệm / vi-VN</small>")
     expect(drawSlot("note-card", "ink", "en-US", { title: "A" })).toBe('<p class="own">A</p>')
   })
   test("a style with templates of its own keeps the page out of the reader switch", () => {
@@ -193,7 +261,15 @@ describe("slots on the site", () => {
   const note = (patch: Partial<Note> = {}) =>
     ({ url: "/en-US/Notes/A", lang: "en-US", protected: false, stage: "03_Atomic", types: ["book"], banner: "/b.png", ...patch }) as Note
   test("a note's fields: what its card shows", () => {
-    const f = noteFields(note(), { title: "A", date: new Date("2026-02-04"), excerpt: "About A", cover: "/b.png", words: 900, tags: ["poem", "type/book"], featured: true })
+    const f = noteFields(note(), {
+      title: "A",
+      date: new Date("2026-02-04"),
+      excerpt: "About A",
+      cover: "/b.png",
+      words: 900,
+      tags: ["poem", "type/book"],
+      featured: true,
+    })
     expect(f).toEqual({
       title: "A",
       url: "/en-US/Notes/A",
@@ -217,7 +293,19 @@ describe("slots on the site", () => {
   })
   test("a protected note gives no excerpt, whatever it is handed; a bare one gives empty fields", () => {
     const f = noteFields(note({ protected: true, stage: undefined, types: [] }), { title: "Locked", excerpt: "the secret", words: 0, tags: [] })
-    expect(f).toMatchObject({ excerpt: "", locked: true, date: "", datetime: "", cover: "", stage: "", stageIcon: "", type: "", typeIcon: "", featured: false, tags: [] })
+    expect(f).toMatchObject({
+      excerpt: "",
+      locked: true,
+      date: "",
+      datetime: "",
+      cover: "",
+      stage: "",
+      stageIcon: "",
+      type: "",
+      typeIcon: "",
+      featured: false,
+      tags: [],
+    })
     expect(noteFields(note(), { title: "A", words: 1, tags: [] }).excerpt).toBe("")
   })
 })

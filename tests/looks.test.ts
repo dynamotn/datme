@@ -162,7 +162,9 @@ describe("catalog look", () => {
   test("a folder page is a drawer: its label, and a call number on each drawer inside", () => {
     const html = read("03-Atoms/index.html")
     expect(html).toContain('<p class="catalog-drawer"><span>Drawer</span> <span class="catalog-call-no">03.ATO</span></p>')
-    expect(html).toMatch(/<a class="folder-card" href="\/03-Atoms\/Code\/">[\s\S]*?Code<small class="catalog-call-no">03.ATO · Code<\/small><span>1<\/span><\/a>/)
+    expect(html).toMatch(
+      /<a class="folder-card" href="\/03-Atoms\/Code\/">[\s\S]*?Code<small class="catalog-call-no">03.ATO · Code<\/small><span>1<\/span><\/a>/,
+    )
     expect(read("Atlas/index.html")).not.toContain("catalog-")
   })
 })
@@ -195,7 +197,22 @@ describe("eink look", () => {
 describe("accessibility of the looks", () => {
   const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
   // As tests/a11y.test.ts: serious and critical axe violations of the markup, scripts not run.
-  const PAGES = ["index.html", "Essays/index.html", "Essays/On-walking/index.html", "News/index.html", "Wiki/Zettelkasten/index.html", "Shell/Uptime/index.html", "Plans/Pump/index.html", "Zine/Cut-and-paste/index.html", "Atlas/index.html", "Atlas/North/Harbour-town/index.html", "03-Atoms/index.html", "03-Atoms/Code/Hash-map/index.html", "Reader/Long-read/index.html", "Reader/index.html"]
+  const PAGES = [
+    "index.html",
+    "Essays/index.html",
+    "Essays/On-walking/index.html",
+    "News/index.html",
+    "Wiki/Zettelkasten/index.html",
+    "Shell/Uptime/index.html",
+    "Plans/Pump/index.html",
+    "Zine/Cut-and-paste/index.html",
+    "Atlas/index.html",
+    "Atlas/North/Harbour-town/index.html",
+    "03-Atoms/index.html",
+    "03-Atoms/Code/Hash-map/index.html",
+    "Reader/Long-read/index.html",
+    "Reader/index.html",
+  ]
   for (const page of PAGES) {
     test(`${page} has no serious or critical axe violations`, async () => {
       const window = new Window({ url: "https://example.com/", settings: { disableJavaScriptEvaluation: false } })

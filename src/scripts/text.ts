@@ -3,8 +3,7 @@
 import { escapeAttr } from "../lib/html"
 
 /** Lowercase and strip diacritics, so "ghi chu" matches "ghi chú". */
-export const fold = (s: string) =>
-  s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
+export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
 
 /** Highlight query terms, matching without diacritics. Each char folds to one char. */
 export function highlight(text: string, terms: string[]): string {

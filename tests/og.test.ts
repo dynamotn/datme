@@ -58,11 +58,41 @@ describe("a card in the page's style", () => {
     expect(cardSpec("terminal", "#0047ff").accent).toBe("#33ff66")
   })
 
-  const DESIGNS: CardDesign[] = ["notebook", "classic", "garden", "herbarium", "paddy", "terminal", "blueprint", "lacquer", "broadsheet", "manuscript", "darkroom", "eink", "zine", "atlas", "catalog", "plain"]
+  const DESIGNS: CardDesign[] = [
+    "notebook",
+    "classic",
+    "garden",
+    "herbarium",
+    "paddy",
+    "terminal",
+    "blueprint",
+    "lacquer",
+    "broadsheet",
+    "manuscript",
+    "darkroom",
+    "eink",
+    "zine",
+    "atlas",
+    "catalog",
+    "plain",
+  ]
   for (const design of DESIGNS) {
     test(`the ${design} card renders, with every part and with none`, async () => {
       const spec = { ...cardSpec("notebook"), design }
-      expect(size(await renderOg({ ...card, title: "A title long enough to need a second line of the card, and a third", tags: ["a", "b", "c", "d", "e"], region: "Bắc Bộ", callNumber: "03.ATO · Code" }, spec))).toEqual([1200, 630])
+      expect(
+        size(
+          await renderOg(
+            {
+              ...card,
+              title: "A title long enough to need a second line of the card, and a third",
+              tags: ["a", "b", "c", "d", "e"],
+              region: "Bắc Bộ",
+              callNumber: "03.ATO · Code",
+            },
+            spec,
+          ),
+        ),
+      ).toEqual([1200, 630])
       expect(size(await renderOg({ title: "Short", kicker: "Site", logo: "🌱" }, spec))).toEqual([1200, 630])
     })
   }

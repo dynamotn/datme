@@ -2,8 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { embedExternal, parseTime, youtube } from "../src/lib/media"
 import { preprocess } from "../src/lib/obsidian"
 
-const run = (src: string) =>
-  preprocess(src, { lang: "en-US", dir: "", resolveNote: () => undefined, resolveAsset: () => undefined }).md
+const run = (src: string) => preprocess(src, { lang: "en-US", dir: "", resolveNote: () => undefined, resolveAsset: () => undefined }).md
 
 describe("YouTube", () => {
   test("every URL form gives the video id and start time", () => {
@@ -45,9 +44,7 @@ describe("other embeds", () => {
   })
 
   test("Obsidian sizes: alt|640 and |640x360", () => {
-    expect(embedExternal("Cat|300", "https://img.example/cat.png")).toBe(
-      '<img src="https://img.example/cat.png" alt="Cat" width="300" loading="lazy">',
-    )
+    expect(embedExternal("Cat|300", "https://img.example/cat.png")).toBe('<img src="https://img.example/cat.png" alt="Cat" width="300" loading="lazy">')
     expect(embedExternal("|640x360", "https://youtu.be/dQw4w9WgXcQ")).toContain('style="max-width:640px;aspect-ratio:640/360"')
   })
 

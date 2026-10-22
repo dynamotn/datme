@@ -171,7 +171,10 @@ describe("previews of notes of neighbour gardens", () => {
     leave(empty)
     // Bound once, and never inside a preview.
     pop.setupPopovers()
-    dom.document.body.insertAdjacentHTML("beforeend", `<div class="popover"><div class="prose"><a class="garden-link" href="https://friend.example/x">x</a></div></div>`)
+    dom.document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div class="popover"><div class="prose"><a class="garden-link" href="https://friend.example/x">x</a></div></div>`,
+    )
     pop.setupPopovers()
     expect(dom.document.querySelector<HTMLElement>(".popover .garden-link")!.dataset.popover).toBeUndefined()
   })

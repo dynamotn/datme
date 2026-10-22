@@ -63,7 +63,12 @@ export function unpackPositions(nodes: SimNode[], data: Float32Array, dims: 2 | 
  * Ticks the layout until it comes to rest, as d3's own timer would, handing
  * positions after each tick; `wait` decides when the next tick comes. Returns a stop.
  */
-export function runLayout<N extends SimNode>(sim: Simulation<N, undefined>, dims: 2 | 3, post: (positions: Float32Array) => void, wait: (next: () => void) => void): () => void {
+export function runLayout<N extends SimNode>(
+  sim: Simulation<N, undefined>,
+  dims: 2 | 3,
+  post: (positions: Float32Array) => void,
+  wait: (next: () => void) => void,
+): () => void {
   let stopped = false
   sim.stop()
   const step = () => {
@@ -104,7 +109,12 @@ export function serveLayout(scope: LayoutScope, load: (space: boolean) => Promis
     const dims = data.space ? 3 : 2
     const nodes: SimNode[] = data.r.map((r) => ({ r }))
     const sim = d3.forceSimulation(nodes, dims)
-    applyForces(sim, d3, data.links.map(([source, target]) => ({ source, target })), data.mode)
+    applyForces(
+      sim,
+      d3,
+      data.links.map(([source, target]) => ({ source, target })),
+      data.mode,
+    )
     stop = runLayout(sim, dims, (p) => scope.postMessage(p, [p.buffer]), wait)
   }
 }

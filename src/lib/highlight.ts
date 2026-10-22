@@ -36,8 +36,7 @@ function injectorsByScope(): Promise<Map<string, BundledLanguage[]>> {
     const by = new Map<string, BundledLanguage[]>()
     for (const { id } of bundledLanguagesInfo) {
       if (!known(id)) continue
-      for (const reg of await registrations(id))
-        for (const scope of reg.injectTo ?? []) by.set(scope, [...(by.get(scope) ?? []), id])
+      for (const reg of await registrations(id)) for (const scope of reg.injectTo ?? []) by.set(scope, [...(by.get(scope) ?? []), id])
     }
     return by
   })()

@@ -65,8 +65,12 @@ describe("parsePreview", () => {
   })
 
   test("an image that is no URL, or not on the web, is left out; meta tags without content are ignored", () => {
-    expect(lp.parsePreview('<meta property="og:title" content="T"><meta property="og:image" content="http://[bad">', "https://x.example")!.image).toBeUndefined()
-    expect(lp.parsePreview('<meta property="og:title" content="T"><meta property="og:image:url" content="data:image/png;base64,AA">', "https://x.example")!.image).toBeUndefined()
+    expect(
+      lp.parsePreview('<meta property="og:title" content="T"><meta property="og:image" content="http://[bad">', "https://x.example")!.image,
+    ).toBeUndefined()
+    expect(
+      lp.parsePreview('<meta property="og:title" content="T"><meta property="og:image:url" content="data:image/png;base64,AA">', "https://x.example")!.image,
+    ).toBeUndefined()
     expect(lp.parsePreview('<meta property="og:title"><meta name="description" content="">', "https://x.example")).toBeUndefined()
   })
 })
@@ -169,7 +173,10 @@ describe("previewCard", () => {
     const parts = (card.children[0] as Element).children as Element[]
     expect(parts.map((c) => c.tagName)).toEqual(["strong", "small"])
     expect((parts[1].children[0] as Text).value).toBe("host.example")
-    expect(card.children[1]).toMatchObject({ tagName: "img", properties: { src: "https://host.example/i.png", loading: "lazy", referrerPolicy: "no-referrer" } })
+    expect(card.children[1]).toMatchObject({
+      tagName: "img",
+      properties: { src: "https://host.example/i.png", loading: "lazy", referrerPolicy: "no-referrer" },
+    })
     const withDesc = lp.previewCard("https://host.example/a", { title: "T", description: "D", site: "Host" })
     expect(withDesc.children).toHaveLength(1)
     expect(JSON.stringify(withDesc)).toContain('"link-card-desc"')

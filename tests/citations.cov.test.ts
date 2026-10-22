@@ -16,7 +16,7 @@ describe("BibTeX edge cases", () => {
       '@string{pub = "Suhrkamp"}',
       "@string(place {Frankfurt})",
       "@comment{ignored}",
-      "@preamble{\"\\newcommand\"}",
+      '@preamble{"\\newcommand"}',
       '@book{k1, publisher = pub # ", " # place, title = "A {"quoted"} title", year = 1992}',
     ].join("\n")
     const [e] = parseBibtex(src)
@@ -49,9 +49,11 @@ describe("formatting edge cases", () => {
 
   test("anonymous works, dates instead of years, books in collections and plain URLs", () => {
     expect(formatReference(entry("a", { title: "Beowulf" }))).toBe("Beowulf (n.d.).")
-    expect(formatReference(entry("b", { author: "Plato", title: "Republic", date: "2001-05-01", booktitle: "Dialogues", volume: "4", url: "https://example.org/r" }))).toBe(
-      'Plato (2001). Republic. <em>Dialogues</em>, <em>4</em>. <a href="https://example.org/r">https://example.org/r</a>',
-    )
+    expect(
+      formatReference(
+        entry("b", { author: "Plato", title: "Republic", date: "2001-05-01", booktitle: "Dialogues", volume: "4", url: "https://example.org/r" }),
+      ),
+    ).toBe('Plato (2001). Republic. <em>Dialogues</em>, <em>4</em>. <a href="https://example.org/r">https://example.org/r</a>')
     expect(formatReference(entry("c", { author: "Jean-Luc Picard", url: "ftp://nope" }))).toBe("Picard, J. L. (n.d.).")
     expect(formatReference(entry("d", { author: "X", doi: "https://dx.doi.org/10.1/abc" }))).toBe(
       'X (n.d.). <a href="https://doi.org/10.1/abc">https://doi.org/10.1/abc</a>',
@@ -63,6 +65,8 @@ describe("formatting edge cases", () => {
     expect(cite("[@k; @gone; @gone]", bib, "Refs").missing).toEqual(["gone"])
     expect(cite("[@k; not one]", bib, "Refs").md).toBe("[@k; not one]")
     expect(cite("[@k]: https://x", bib, "Refs").md).toBe("[@k]: https://x")
-    expect(cite("~~~\n[@k]\n~~~\n[@k]", bib, "Refs").md).toStartWith("~~~\n[@k]\n~~~\n<cite class=\"citations\">(<a href=\"#ref-k\" class=\"citation\">A 2000</a>)</cite>")
+    expect(cite("~~~\n[@k]\n~~~\n[@k]", bib, "Refs").md).toStartWith(
+      '~~~\n[@k]\n~~~\n<cite class="citations">(<a href="#ref-k" class="citation">A 2000</a>)</cite>',
+    )
   })
 })

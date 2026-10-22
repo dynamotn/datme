@@ -96,7 +96,10 @@ export function topics(lang: Lang): Promise<Topic<NoteItem>[]> {
   if (!hit) {
     hit = (async () => {
       const notes = listed(lang).filter((n) => !n.isHome && !n.protected)
-      const vectors = await embed(notes.map((n) => ({ id: n.key, text: aboutText(n) })), semantic.model)
+      const vectors = await embed(
+        notes.map((n) => ({ id: n.key, text: aboutText(n) })),
+        semantic.model,
+      )
       const items = notes.flatMap((n) => {
         const v = vectors.get(n.key)
         return v ? [{ key: n.key, title: n.title, tags: n.tags, vector: v, note: n }] : []

@@ -71,9 +71,7 @@ export function gardenOrder<T extends Pick<Note, "stage" | "updated">>(notes: T[
   const time = (n: T) => n.updated?.getTime() ?? -Infinity
   const groups = new Map<number, T[]>()
   for (const n of notes) groups.set(rank(n), [...(groups.get(rank(n)) ?? []), n])
-  const rows = [...groups.entries()]
-    .sort(([a], [b]) => b - a)
-    .map(([, g]) => g.sort((a, b) => (time(a) === time(b) ? 0 : time(a) < time(b) ? 1 : -1)))
+  const rows = [...groups.entries()].sort(([a], [b]) => b - a).map(([, g]) => g.sort((a, b) => (time(a) === time(b) ? 0 : time(a) < time(b) ? 1 : -1)))
   const out: T[] = []
   for (let i = 0; out.length < notes.length; i++) for (const g of rows) if (i < g.length) out.push(g[i])
   return out

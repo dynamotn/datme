@@ -103,7 +103,15 @@ export function contrastOf(a: string, b: string): number | undefined {
 }
 
 /** A colour as #rrggbb. */
-const toHex = (rgb: Rgb) => "#" + rgb.map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0")).join("")
+const toHex = (rgb: Rgb) =>
+  "#" +
+  rgb
+    .map((v) =>
+      Math.round(Math.min(255, Math.max(0, v)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")
 
 /**
  * The accent nearest to `accent`, darkened towards black or lightened towards white (whichever moves it away
@@ -111,7 +119,10 @@ const toHex = (rgb: Rgb) => "#" + rgb.map((v) => Math.round(Math.min(255, Math.m
  */
 export function readableAccent(accent: string, grounds: readonly string[], min = AA_TEXT): string | undefined {
   const rgb = parseColor(accent)
-  const lums = grounds.map(parseColor).filter((g): g is Rgb => !!g).map(luminance)
+  const lums = grounds
+    .map(parseColor)
+    .filter((g): g is Rgb => !!g)
+    .map(luminance)
   if (!rgb || !lums.length) return undefined
   const passes = (c: Rgb) => lums.every((l) => contrastRatio(luminance(c), l) >= min)
   if (passes(rgb)) return undefined

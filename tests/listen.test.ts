@@ -85,7 +85,10 @@ describe("the Listen button", () => {
     FakeAudio.all.length = 0
     const button = page()
     button.click()
-    document.body.insertAdjacentHTML("beforeend", `<button type="button" class="listen" data-audio="/Other.mp3" data-label="Listen" data-pause="Pause">▶ Listen</button>`)
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<button type="button" class="listen" data-audio="/Other.mp3" data-label="Listen" data-pause="Pause">▶ Listen</button>`,
+    )
     bindListen()
     expect(FakeAudio.all[0].paused).toBe(false)
     document.querySelectorAll<HTMLButtonElement>("button.listen")[1].click()

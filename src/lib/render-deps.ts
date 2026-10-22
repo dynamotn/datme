@@ -88,7 +88,9 @@ function showsFeed(md: string, fences: RegExpMatchArray[]): boolean {
   const feed = /\bnotion-feed\b/
   if (fences.some((m) => m[2].toLowerCase() === "base" && feed.test(m[3]))) return true
   const docs = getVault().docs
-  return [...md.matchAll(/class="base-ph" data-rel="([^"]*)"/g)].some((m) => feed.test(docs.get(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))?.src ?? ""))
+  return [...md.matchAll(/class="base-ph" data-rel="([^"]*)"/g)].some((m) =>
+    feed.test(docs.get(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))?.src ?? ""),
+  )
 }
 
 /**
@@ -132,11 +134,7 @@ export function dependencies(note: Note, depth = 0, seen = new Set<string>()): s
     if (target.lockedParts.length) return undefined
     const inner = dependencies(target, depth + 1, new Set(seen))
     if (!inner) return undefined
-    parts.push(
-      `embed:${key}:${target.title}:${target.url}:${target.hardBreaks}:${sha(target.md)}`,
-      ...target.assets.map((a) => `${a}@${stamp(a)}`),
-      ...inner,
-    )
+    parts.push(`embed:${key}:${target.title}:${target.url}:${target.hardBreaks}:${sha(target.md)}`, ...target.assets.map((a) => `${a}@${stamp(a)}`), ...inner)
   }
   return parts
 }

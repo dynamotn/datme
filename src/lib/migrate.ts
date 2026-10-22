@@ -70,11 +70,7 @@ const TOP_KEY = /^([A-Za-z0-9_-][\w-]*)\s*:(.*)$/
  * A note's frontmatter migrated: renamed keys, and keys whose values carry a
  * setting, handed to `onKey` and removed when it returns true.
  */
-export function migrateNote(
-  text: string,
-  source: Source,
-  onKey: (key: string, value: unknown) => boolean = () => false,
-): { text: string; changes: string[] } {
+export function migrateNote(text: string, source: Source, onKey: (key: string, value: unknown) => boolean = () => false): { text: string; changes: string[] } {
   const fm = frontmatter(text)
   if (!fm) return { text, changes: [] }
   const renames = RENAMES[source]
@@ -216,7 +212,12 @@ export function describePlan(vault: string, plan: Plan, written: boolean): strin
   const { add, skipped } = configAddition(vault, plan.config)
   if (Object.keys(add).length) {
     lines.push(`${path.basename(configFile(vault) ?? "datme.yaml")}:`)
-    lines.push(...dumpYaml(add, { lineWidth: -1 }).trimEnd().split("\n").map((l) => `  + ${l}`))
+    lines.push(
+      ...dumpYaml(add, { lineWidth: -1 })
+        .trimEnd()
+        .split("\n")
+        .map((l) => `  + ${l}`),
+    )
   }
   if (skipped.length) lines.push("Already set in datme.yaml, left as they are (change them by hand if needed):", ...skipped.map((s) => `  ${s}`))
   for (const n of plan.notices) lines.push(`Note: ${n}`)

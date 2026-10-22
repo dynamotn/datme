@@ -23,9 +23,13 @@ const url = urlPlaceholder("06_Reference/Target")
 const opened = (md: string) => {
   const m = md.match(/^<span class="block-embed" data-html="([^"]*)"><\/span>$/)
   expect(m).not.toBeNull()
-  return m![1].replace(/&#10;/g, "\n").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&")
+  return m![1]
+    .replace(/&#10;/g, "\n")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
 }
-
 
 describe("wikilinks", () => {
   test("resolve to an internal link with the note key", () => {

@@ -63,7 +63,11 @@ export function splitLocked(src: string): { md: string; parts: LockedPart[] } {
 }
 
 /** The environment variable holding the password of a group: `@close-friends` → DATME_LOCK_CLOSE_FRIENDS. */
-export const groupVariable = (group: string) => `DATME_LOCK_${group.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_|_$/g, "")}`
+export const groupVariable = (group: string) =>
+  `DATME_LOCK_${group
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")}`
 
 /**
  * The password a note or part names: written out, or `@group` for one kept in

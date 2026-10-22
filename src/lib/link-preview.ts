@@ -51,7 +51,10 @@ const isPrivate = (ip: string) => PRIVATE.check(ip, net.isIPv6(ip) ? "ipv6" : "i
  */
 async function reachable(url: URL): Promise<boolean> {
   if (url.protocol !== "https:" && url.protocol !== "http:") return false
-  const host = url.hostname.replace(/^\[|\]$/g, "").replace(/\.$/, "").toLowerCase()
+  const host = url.hostname
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.$/, "")
+    .toLowerCase()
   if (host === "localhost" || host.endsWith(".localhost")) return false
   if (net.isIP(host)) return !isPrivate(host)
   let addresses: { address: string }[]
@@ -186,7 +189,9 @@ export function previewCard(url: string, p: Preview): Element {
     properties: { className: ["link-card-text"] },
     children: [
       { type: "element", tagName: "strong", properties: {}, children: [text(p.title)] },
-      ...(p.description ? [{ type: "element", tagName: "span", properties: { className: ["link-card-desc"] }, children: [text(p.description)] } as Element] : []),
+      ...(p.description
+        ? [{ type: "element", tagName: "span", properties: { className: ["link-card-desc"] }, children: [text(p.description)] } as Element]
+        : []),
       { type: "element", tagName: "small", properties: {}, children: [text(p.site ?? new URL(url).hostname)] },
     ],
   }

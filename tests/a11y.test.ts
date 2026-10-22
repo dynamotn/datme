@@ -63,7 +63,10 @@ const PAGES = [
 describe("accessibility", () => {
   test("the check catches what it should", async () => {
     // A page with an unlabelled image and button, so a silent axe cannot pass for a clean site.
-    fs.writeFileSync(path.join(out, "broken.html"), '<!doctype html><html lang="en"><head><title>x</title></head><body><main><img src="x.png"><button></button></main></body></html>')
+    fs.writeFileSync(
+      path.join(out, "broken.html"),
+      '<!doctype html><html lang="en"><head><title>x</title></head><body><main><img src="x.png"><button></button></main></body></html>',
+    )
     expect((await violations("broken.html")).map((v) => v.id).sort()).toEqual(["button-name", "image-alt"])
   }, 30_000)
 

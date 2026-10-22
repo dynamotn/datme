@@ -50,7 +50,8 @@ export function locate(text: string, h: Pick<Highlight, "text" | "prefix" | "suf
   let best = -1
   let bestScore = -1
   for (let at = text.indexOf(h.text); at >= 0; at = text.indexOf(h.text, at + 1)) {
-    const score = sharedEnd(text.slice(Math.max(0, at - CONTEXT), at), h.prefix) + sharedStart(text.slice(at + h.text.length, at + h.text.length + CONTEXT), h.suffix)
+    const score =
+      sharedEnd(text.slice(Math.max(0, at - CONTEXT), at), h.prefix) + sharedStart(text.slice(at + h.text.length, at + h.text.length + CONTEXT), h.suffix)
     if (score > bestScore) (best = at), (bestScore = score)
   }
   return best
@@ -69,7 +70,12 @@ export function makeHighlight(text: string, start: number, end: number, now: num
 }
 
 /** Every highlighted page as Markdown: a section per note, each passage quoted, the reader's words under it, a link back. */
-export function toMarkdown(pages: { url: string; page: PageHighlights }[], heading: string, lostLabel: string, found?: (url: string, h: Highlight) => boolean): string {
+export function toMarkdown(
+  pages: { url: string; page: PageHighlights }[],
+  heading: string,
+  lostLabel: string,
+  found?: (url: string, h: Highlight) => boolean,
+): string {
   const out = [`# ${heading}`, ""]
   for (const { url, page } of pages) {
     if (!page.items.length) continue

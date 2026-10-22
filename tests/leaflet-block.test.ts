@@ -38,7 +38,9 @@ describe("leaflet blocks", () => {
 
   test("renders a map with a plain list of its places, from the vault's notes", async () => {
     const html = await renderMarkdown("```leaflet\nid: m\nmarkerFile: [[Niklas Luhmann]]\ndefaultZoom: 9\n```", "en-US", "x")
-    expect(html).toMatch(/<figure class="leaflet-block"><div class="map-canvas" role="region" aria-label="Map" style="height:500px" data-map="\[\{(&quot;|&#x22;)lat(&quot;|&#x22;):52\.0302/)
+    expect(html).toMatch(
+      /<figure class="leaflet-block"><div class="map-canvas" role="region" aria-label="Map" style="height:500px" data-map="\[\{(&quot;|&#x22;)lat(&quot;|&#x22;):52\.0302/,
+    )
     expect(html).toContain('data-zoom="9"')
     expect(html).toMatch(/<ul class="map-list"><li><a href="\/en-US\/06_Reference\/[^"]+" class="internal">/)
     expect(await renderMarkdown("```leaflet\nimage: [[floor.png]]\n```", "en-US", "x")).toContain("leaflet: image")

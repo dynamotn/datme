@@ -31,7 +31,19 @@ type Search = typeof import("../src/scripts/search")
 let dom: Dom
 let search: Search
 const realFetch = globalThis.fetch
-const note = (u: string, t: string, more: Record<string, unknown> = {}) => ({ u, t, a: [], g: [], p: "", y: [], s: null, f: "", d: `About ${t}`, c: "", ...more })
+const note = (u: string, t: string, more: Record<string, unknown> = {}) => ({
+  u,
+  t,
+  a: [],
+  g: [],
+  p: "",
+  y: [],
+  s: null,
+  f: "",
+  d: `About ${t}`,
+  c: "",
+  ...more,
+})
 const index = {
   notes: [
     note("/notes/a", "Slip box", { g: ["pkm/zettel", "method"], p: "Notes", f: "Notes", s: "🌱", a: ["Zettelkasten"] }),

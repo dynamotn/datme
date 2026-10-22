@@ -47,11 +47,10 @@ describe("files of encrypted content", () => {
   test("private files become data URIs without their resized copies; public ones stay links", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "datme-inline-"))
     fs.writeFileSync(path.join(dir, "a.png"), "PNG")
-    const html = '<img src="/assets/a.png" srcset="/assets/a.png.w480.webp 480w" sizes="100vw"><img src="/assets/b.png" srcset="x"><a href="/assets/a.png">a</a>'
+    const html =
+      '<img src="/assets/a.png" srcset="/assets/a.png.w480.webp 480w" sizes="100vw"><img src="/assets/b.png" srcset="x"><a href="/assets/a.png">a</a>'
     const out = inlineAssets(html, dir, (rel) => rel === "b.png")
-    expect(out.html).toBe(
-      '<img src="data:image/png;base64,UE5H"><img src="/assets/b.png" srcset="x"><a href="data:image/png;base64,UE5H">a</a>',
-    )
+    expect(out.html).toBe('<img src="data:image/png;base64,UE5H"><img src="/assets/b.png" srcset="x"><a href="data:image/png;base64,UE5H">a</a>')
     expect(out.inlined).toEqual(["a.png"])
   })
 

@@ -129,7 +129,10 @@ describe("installable app", () => {
     const sw = await call(pwa.GET, { pwa: "sw.js" })
     expect(type(sw)).toBe("text/javascript; charset=utf-8")
     expect((await sw.text()).length).toBeGreaterThan(0)
-    for (const [name, size] of [["icon-192.png", 192], ["icon-512.png", 512]] as const) {
+    for (const [name, size] of [
+      ["icon-192.png", 192],
+      ["icon-512.png", 512],
+    ] as const) {
       const icon = await call(pwa.GET, { pwa: name })
       expect(type(icon)).toBe("image/png")
       const png = new Uint8Array(await icon.arrayBuffer())
@@ -171,7 +174,11 @@ describe("assets", () => {
     const variant = (await assets.getStaticPaths()).map((p) => p.params.path).find((p) => p.endsWith(".webp"))!
     const webp = await call(assets.GET, { path: variant })
     expect(type(webp)).toBe("image/webp")
-    expect(Buffer.from(await webp.arrayBuffer()).subarray(8, 12).toString()).toBe("WEBP")
+    expect(
+      Buffer.from(await webp.arrayBuffer())
+        .subarray(8, 12)
+        .toString(),
+    ).toBe("WEBP")
     expect((await call(assets.GET, { path: "_assets/images/wide.png.w7.webp" })).status).toBe(404)
     expect((await call(assets.GET, { path: "_assets/images/nope.png.w480.webp" })).status).toBe(404)
     expect((await call(assets.GET, { path: "06_Reference/Secret.md" })).status).toBe(404)
@@ -231,7 +238,11 @@ describe("social cards", () => {
     for (const p of [paths.find((x) => x.params.slug === "index")!, paths.find((x) => x.params.slug === "07_Project/Talk")!]) {
       const r = await call(og.GET, p.params, p.props)
       expect(type(r)).toBe("image/png")
-      expect(Buffer.from(await r.arrayBuffer()).subarray(1, 4).toString()).toBe("PNG")
+      expect(
+        Buffer.from(await r.arrayBuffer())
+          .subarray(1, 4)
+          .toString(),
+      ).toBe("PNG")
     }
     // A note outside the stages, without words, on a site without a tagline.
     setSite({ tagline: { "vi-VN": "", "en-US": "" } })

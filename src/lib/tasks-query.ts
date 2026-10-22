@@ -76,7 +76,7 @@ export function parseTasksQuery(src: string, today = new Date()): TasksQuery {
     else if ((m = lower.match(/^(no|has) (due|scheduled|start|done) date$/))) {
       const field = FIELD[m[2]]
       const want = m[1] === "has"
-      q.filters.push(({ task }) => (field in task.fields) === want)
+      q.filters.push(({ task }) => field in task.fields === want)
     } else if ((m = lower.match(/^(due|scheduled|starts|done|created) (before|after|on) (.+)$/))) {
       const field = FIELD[m[1]]
       const when = day(m[3], today)
@@ -140,7 +140,13 @@ export function groupOf(item: TaskItem, group: string): string {
 /** Matching tasks in query order; the default order is by status, then due date, then path. */
 export function runTasksQuery(q: TasksQuery, items: TaskItem[]): TaskItem[] {
   let out = items.filter((i) => q.filters.every((f) => f(i)))
-  const keys = q.sort.length ? q.sort : [{ key: "status", reverse: false }, { key: "due", reverse: false }, { key: "path", reverse: false }]
+  const keys = q.sort.length
+    ? q.sort
+    : [
+        { key: "status", reverse: false },
+        { key: "due", reverse: false },
+        { key: "path", reverse: false },
+      ]
   out = out
     .map((item, idx) => ({ item, idx }))
     .sort((a, b) => {

@@ -31,13 +31,7 @@ export class SearchQueryError extends Error {
 }
 
 /** Lowercase without accents: "Việt" matches "viet", as in Obsidian. */
-export const fold = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
+export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
 
 function tokenize(src: string): string[] {
   const out: string[] = []

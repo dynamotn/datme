@@ -46,12 +46,7 @@ export function allSeries(lang: Lang): Map<string, Series> {
   }
   const collator = new Intl.Collator(lang, { numeric: true })
   for (const s of hit.values()) {
-    s.parts.sort(
-      (a, b) =>
-        order(a) - order(b) ||
-        (a.created?.getTime() ?? 0) - (b.created?.getTime() ?? 0) ||
-        collator.compare(a.title, b.title),
-    )
+    s.parts.sort((a, b) => order(a) - order(b) || (a.created?.getTime() ?? 0) - (b.created?.getTime() ?? 0) || collator.compare(a.title, b.title))
   }
   cache.set(id, hit)
   return hit

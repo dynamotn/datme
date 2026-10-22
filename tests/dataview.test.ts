@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test"
-import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "../src/lib/dataview"
+import {
+  parseQuery,
+  runQuery,
+  extractTasks,
+  evaluateInline,
+  inlineFields,
+  DataviewError,
+  Unsupported,
+  type Engine,
+  type Page,
+  type Value,
+} from "../src/lib/dataview"
 
 const page = (key: string, over: Partial<Page> = {}): Page => ({
   key,
@@ -40,7 +51,7 @@ describe("FROM", () => {
   })
 
   test("negation, AND, OR and parentheses", () => {
-    expect(titles('LIST FROM #type/book AND -#classic')).toEqual(["Dune"])
+    expect(titles("LIST FROM #type/book AND -#classic")).toEqual(["Dune"])
     expect(titles('LIST FROM !"Books" AND (#type/person OR "Inbox")')).toEqual(["Herbert", "Idea"])
   })
 
@@ -105,10 +116,7 @@ describe("output", () => {
   })
 
   test("LIST with an expression shows the value next to the link", () => {
-    expect(run("LIST book.author FROM #type/book SORT file.name").rows[0]).toEqual([
-      expect.objectContaining({ title: "Dune" }),
-      "Herbert",
-    ])
+    expect(run("LIST book.author FROM #type/book SORT file.name").rows[0]).toEqual([expect.objectContaining({ title: "Dune" }), "Herbert"])
   })
 })
 
@@ -215,8 +223,11 @@ describe("inline queries", () => {
   })
 
   test("inline fields of a note's text, outside code and comments", () => {
-    expect(
-      inlineFields("rating:: 5\n**author**:: [[Herbert]]\nRead it [mood:: happy] and (pages:: 412).\n```\nhidden:: no\n```\n%% secret:: no %%"),
-    ).toEqual({ rating: 5, author: "[[Herbert]]", mood: "happy", pages: 412 })
+    expect(inlineFields("rating:: 5\n**author**:: [[Herbert]]\nRead it [mood:: happy] and (pages:: 412).\n```\nhidden:: no\n```\n%% secret:: no %%")).toEqual({
+      rating: 5,
+      author: "[[Herbert]]",
+      mood: "happy",
+      pages: 412,
+    })
   })
 })

@@ -8,7 +8,11 @@ describe("dev watcher", () => {
   test("watches the vault itself, so a top-level folder made after start is seen", () => {
     const added: string[] = []
     const used: unknown[] = []
-    const server = { watcher: { add: (p: string) => void added.push(p), on: () => {} }, hot: { send: () => {} }, middlewares: { use: (m: unknown) => void used.push(m) } }
+    const server = {
+      watcher: { add: (p: string) => void added.push(p), on: () => {} },
+      hot: { send: () => {} },
+      middlewares: { use: (m: unknown) => void used.push(m) },
+    }
     const hooks = vaultWatcher().hooks as Record<string, (o: unknown) => void>
     hooks["astro:server:setup"]({ server })
     expect(added).toEqual([site.vault])

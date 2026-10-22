@@ -32,9 +32,7 @@ describe("spokenChunks", () => {
   })
 
   test("links and emphasis lose their markup", () => {
-    expect(spokenChunks("[[Note|words]] and [[Note]] and [text](https://x.y) **b** _i_ `c` *d* ~~e~~ ==f==")).toEqual([
-      "words and Note and text b i c d e f",
-    ])
+    expect(spokenChunks("[[Note|words]] and [[Note]] and [text](https://x.y) **b** _i_ `c` *d* ~~e~~ ==f==")).toEqual(["words and Note and text b i c d e f"])
   })
 
   test("list markers, quotes and rules are not spoken", () => {
@@ -63,7 +61,7 @@ describe("spokenChunks", () => {
   })
 
   test("bare URLs, HTML tags, tags and block ids are not spoken", () => {
-    expect(spokenChunks("See https://x.y/a?b=1 now. <span class=\"k\">Word</span><br> #topic/sub end #1 ^block-1")).toEqual(["See now. Word end #1"])
+    expect(spokenChunks('See https://x.y/a?b=1 now. <span class="k">Word</span><br> #topic/sub end #1 ^block-1')).toEqual(["See now. Word end #1"])
   })
 
   test("HTML with URLs inside, autolinks, linked images and inline footnotes leave nothing behind", () => {

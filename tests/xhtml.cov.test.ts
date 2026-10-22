@@ -7,9 +7,19 @@ describe("toXhtml", () => {
     const tree: Root = {
       type: "root",
       children: [
-        { type: "element", tagName: "p", properties: { className: ["a", "b"], title: 'say "hi" & <go>' }, children: [{ type: "text", value: "1 < 2 & 3 > 2" }] },
+        {
+          type: "element",
+          tagName: "p",
+          properties: { className: ["a", "b"], title: 'say "hi" & <go>' },
+          children: [{ type: "text", value: "1 < 2 & 3 > 2" }],
+        },
         { type: "element", tagName: "br", properties: {}, children: [] },
-        { type: "element", tagName: "input", properties: { type: "checkbox", checked: true, disabled: false, value: undefined, accept: ["image/png", "image/jpeg"] }, children: [] },
+        {
+          type: "element",
+          tagName: "input",
+          properties: { type: "checkbox", checked: true, disabled: false, value: undefined, accept: ["image/png", "image/jpeg"] },
+          children: [],
+        },
         { type: "element", tagName: "img", properties: { src: "a.png", srcSet: "a.png 1x, b.png 2x", width: 10 }, children: [] },
       ],
     }
@@ -35,12 +45,7 @@ describe("toXhtml", () => {
     expect(toXhtml({ type: "element", tagName: "template", properties: {}, children: [{ type: "text", value: "hidden" }] })).toBe("<template></template>")
     const tree: Root = {
       type: "root",
-      children: [
-        { type: "doctype" },
-        { type: "comment", value: "note" },
-        { type: "raw", value: "<b>raw</b>" } as never,
-        { type: "text", value: "kept" },
-      ],
+      children: [{ type: "doctype" }, { type: "comment", value: "note" }, { type: "raw", value: "<b>raw</b>" } as never, { type: "text", value: "kept" }],
     }
     expect(toXhtml(tree)).toBe("kept")
   })

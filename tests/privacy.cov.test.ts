@@ -13,7 +13,9 @@ describe("outsideHosts", () => {
 
   test("each analytics provider names its host", () => {
     const of = (analytics: { provider: string; host?: string; id?: string }) =>
-      hostsOf({ ...base, analytics }).filter((h) => h.why === "analytics").map((h) => h.host)
+      hostsOf({ ...base, analytics })
+        .filter((h) => h.why === "analytics")
+        .map((h) => h.host)
     expect(of({ provider: "google" })).toEqual(["www.googletagmanager.com"])
     expect(of({ provider: "plausible" })).toEqual(["plausible.io"])
     expect(of({ provider: "plausible", host: "stats.example" })).toEqual(["stats.example"])
@@ -33,7 +35,12 @@ describe("outsideHosts", () => {
 
   test("map tiles in both themes, search by meaning, link previews last", () => {
     const hosts = hostsOf(
-      { ...base, map: { tiles: "https://{s}.light.example/{z}.png", darkTiles: "https://dark.example/{z}.png" }, search: { meaning: true }, linkPreviews: true },
+      {
+        ...base,
+        map: { tiles: "https://{s}.light.example/{z}.png", darkTiles: "https://dark.example/{z}.png" },
+        search: { meaning: true },
+        linkPreviews: true,
+      },
       [],
       true,
     )

@@ -39,10 +39,7 @@ export const GLOBAL = [
  * The Marp directives of a deck's frontmatter, with vault paths in images and
  * `url(...)` turned into asset URLs by `resolve`.
  */
-export function slideDirectives(
-  fm: Record<string, unknown>,
-  resolve: (target: string) => string | undefined,
-): Record<string, unknown> {
+export function slideDirectives(fm: Record<string, unknown>, resolve: (target: string) => string | undefined): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   const local = (s: string) =>
     s

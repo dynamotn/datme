@@ -25,7 +25,10 @@ describe("Iconize data", () => {
 
   test("after a second, an unchanged data.json keeps the same map", () => {
     fs.mkdirSync(path.dirname(data), { recursive: true })
-    fs.writeFileSync(data, JSON.stringify({ settings: {}, Books: "📚", "Books/Dune.md": { iconName: "LiBook", iconColor: "red" }, Empty: "", Odd: { iconName: 3 } }))
+    fs.writeFileSync(
+      data,
+      JSON.stringify({ settings: {}, Books: "📚", "Books/Dune.md": { iconName: "LiBook", iconColor: "red" }, Empty: "", Odd: { iconName: 3 } }),
+    )
     const now = Date.now()
     const clock = spyOn(Date, "now")
     try {
@@ -60,7 +63,9 @@ describe("icon packs", () => {
   })
 
   test("the pack holding the icon gives it, sized to the text", () => {
-    expect(iconHtml("BxStar", undefined, vault)).toBe('<span class="iconize"><svg width="1em" height="1em" aria-hidden="true" focusable="false"><path d="b"/></svg></span>')
+    expect(iconHtml("BxStar", undefined, vault)).toBe(
+      '<span class="iconize"><svg width="1em" height="1em" aria-hidden="true" focusable="false"><path d="b"/></svg></span>',
+    )
     // Asked again, it comes from memory.
     fs.rmSync(path.join(vault, ".obsidian/icons/bbb-pack/Star.svg"))
     expect(iconHtml("BxStar", undefined, vault)).toContain('d="b"')
@@ -93,7 +98,9 @@ describe("images", () => {
     fs.mkdirSync(vault, { recursive: true })
     const raw = Buffer.alloc(200 * 100 * 3)
     for (let i = 0; i < raw.length; i++) raw[i] = (i * 7919) % 251
-    noise = await sharp(raw, { raw: { width: 200, height: 100, channels: 3 } }).png().toBuffer()
+    noise = await sharp(raw, { raw: { width: 200, height: 100, channels: 3 } })
+      .png()
+      .toBuffer()
     fs.writeFileSync(path.join(vault, "opaque.png"), noise)
     fs.writeFileSync(path.join(vault, "cut.png"), noise.subarray(0, Math.floor(noise.length / 2)))
     await sharp({ create: { width: 40, height: 20, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0.5 } } })

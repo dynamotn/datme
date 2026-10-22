@@ -302,9 +302,7 @@ describe("theme", () => {
   test("Google Fonts for each configured family, once", () => {
     expect(fontsHref()).toBe("https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;800&display=swap")
     setSite({ theme: { ...site.theme, fonts: { heading: "Source Serif", body: "Source Serif", code: "Iosevka" } } })
-    expect(fontsHref()).toBe(
-      "https://fonts.googleapis.com/css2?family=Source+Serif:wght@400;600;700;800&family=Iosevka:wght@400;600;700;800&display=swap",
-    )
+    expect(fontsHref()).toBe("https://fonts.googleapis.com/css2?family=Source+Serif:wght@400;600;700;800&family=Iosevka:wght@400;600;700;800&display=swap")
     setSite({ theme: { ...site.theme, fonts: {} } })
     expect(fontsHref()).toBeUndefined()
   })
@@ -347,7 +345,11 @@ describe("the Astro integration", () => {
   test("in dev, a file of a sibling folder with the same prefix reloads nothing", () => {
     const handlers: Record<string, (file: string) => void> = {}
     const sent: unknown[] = []
-    const server = { watcher: { add: () => {}, on: (ev: string, fn: (file: string) => void) => void (handlers[ev] = fn) }, hot: { send: (m: unknown) => void sent.push(m) }, middlewares: { use: () => {} } }
+    const server = {
+      watcher: { add: () => {}, on: (ev: string, fn: (file: string) => void) => void (handlers[ev] = fn) },
+      hot: { send: (m: unknown) => void sent.push(m) },
+      middlewares: { use: () => {} },
+    }
     hooks["astro:server:setup"]!({ server } as unknown as Parameters<ServerSetup>[0])
     const g = globalThis as { __vaultVersion?: number }
     const before = g.__vaultVersion
@@ -385,7 +387,7 @@ describe("the Astro integration", () => {
     // A space and an accent, which a file URL percent-encodes: every file must still land in the folder itself.
     const out = path.join(tmp, "build all ở đây")
     fs.mkdirSync(path.join(out, "a"), { recursive: true })
-    fs.writeFileSync(path.join(out, "a", "index.html"), '<html><body data-pagefind-body><h1>Hi</h1><script>console.log(1)</script></body></html>')
+    fs.writeFileSync(path.join(out, "a", "index.html"), "<html><body data-pagefind-body><h1>Hi</h1><script>console.log(1)</script></body></html>")
     fs.writeFileSync(path.join(out, "plain.txt"), "not a page")
     setSite({
       cname: true,

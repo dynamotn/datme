@@ -28,10 +28,17 @@ beforeAll(async () => {
     const u = String(url)
     fetched.push(u)
     if (u.includes("/static/contentIndex.") || u.includes("/static/graph.")) return new Response(JSON.stringify({ notes: NOTES, links: [] }))
-    if (u.endsWith("/en-US/b")) return new Response(`<div data-stack-col data-url="/en-US/b"><div class="prose"><pre><code>column code</code></pre></div></div>`)
+    if (u.endsWith("/en-US/b"))
+      return new Response(`<div data-stack-col data-url="/en-US/b"><div class="prose"><pre><code>column code</code></pre></div></div>`)
     return new Response("", { status: 404 })
   }) as unknown as typeof fetch
-  dom.set("matchMedia", (q: string) => ({ matches: q.includes("min-width"), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+  dom.set("matchMedia", (q: string) => ({
+    matches: q.includes("min-width"),
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+  }))
   dom.set(
     "IntersectionObserver",
     class {
@@ -46,10 +53,13 @@ beforeAll(async () => {
       disconnect() {}
     },
   )
-  dom.set("ResizeObserver", class {
-    observe() {}
-    disconnect() {}
-  })
+  dom.set(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  )
   // Offline reading in a production build: the service worker registers once the page has loaded.
   root.dataset.offline = ""
   Object.defineProperty(navigator, "serviceWorker", {
@@ -134,7 +144,10 @@ describe("the explorer", () => {
     const throws = () => {
       throw new Error("blocked")
     }
-    Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: throws, setItem: throws, removeItem: throws, key: throws, length: 0 } })
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: { getItem: throws, setItem: throws, removeItem: throws, key: throws, length: 0 },
+    })
     try {
       document.body.innerHTML = `<nav class="explorer" data-explorer><details data-dir="Z"><summary>Z</summary></details></nav>`
       pageLoad()
@@ -299,7 +312,10 @@ describe("the page script", () => {
       <iframe class="giscus-frame"></iframe>
       <div class="prose"><pre class="mermaid">graph TD; A; B</pre></div>`
     const messages: [unknown, string][] = []
-    Object.defineProperty(document.querySelector("iframe")!, "contentWindow", { configurable: true, value: { postMessage: (m: unknown, o: string) => void messages.push([m, o]) } })
+    Object.defineProperty(document.querySelector("iframe")!, "contentWindow", {
+      configurable: true,
+      value: { postMessage: (m: unknown, o: string) => void messages.push([m, o]) },
+    })
     let changes = 0
     const onChange = () => changes++
     document.addEventListener("themechange", onChange)

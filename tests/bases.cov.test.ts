@@ -138,7 +138,9 @@ describe("variables and members", () => {
     expect(ev("file.mtime", p)).toEqual(new Date("2024-02-01"))
     expect(ev("file.ctime")).toBeNull()
     // Links to notes outside the engine are dropped.
-    expect(ev("file.links", page("Notes/L", { outlinks: ["Books/Dune", "Gone"] }))).toEqual([{ kind: "link", key: "Books/Dune", title: "Dune", url: "/Books/Dune" }])
+    expect(ev("file.links", page("Notes/L", { outlinks: ["Books/Dune", "Gone"] }))).toEqual([
+      { kind: "link", key: "Books/Dune", title: "Dune", url: "/Books/Dune" },
+    ])
   })
 })
 
@@ -244,7 +246,14 @@ describe("parsing a base", () => {
     )
     expect(base.displayNames).toEqual({ "note.a": "A" })
     expect(base.formulas).toEqual({ n: "1" })
-    expect(base.views[0]).toMatchObject({ type: "cards", name: "View 1", image: "note.cover", limit: 2, order: ["file.name"], groupBy: { property: "note.genre", direction: "ASC" } })
+    expect(base.views[0]).toMatchObject({
+      type: "cards",
+      name: "View 1",
+      image: "note.cover",
+      limit: 2,
+      order: ["file.name"],
+      groupBy: { property: "note.genre", direction: "ASC" },
+    })
     expect(base.views[1].groupBy).toEqual({ property: "note.genre", direction: "ASC" })
     expect(base.views[1].type).toBe("table")
     expect(base.views[2].groupBy!.direction).toBe("DESC")
@@ -259,7 +268,19 @@ describe("parsing a base", () => {
 
   test("a null document is one table of every note", () => {
     const base = parseBase("~")
-    expect(base.views).toEqual([{ type: "table", name: "Table", filters: undefined, order: ["file.name"], sort: [], limit: undefined, image: undefined, groupBy: undefined, options: { type: "table", name: "Table" } }])
+    expect(base.views).toEqual([
+      {
+        type: "table",
+        name: "Table",
+        filters: undefined,
+        order: ["file.name"],
+        sort: [],
+        limit: undefined,
+        image: undefined,
+        groupBy: undefined,
+        options: { type: "table", name: "Table" },
+      },
+    ])
   })
 
   test("column names", () => {
@@ -284,7 +305,9 @@ describe("running a view", () => {
   })
 
   test("ties on the first sort key fall to the next, and full ties keep their order", () => {
-    const base = parseBase("views: [{ sort: [{ property: note.rating, direction: DESC }, { property: file.name, direction: DESC }] }, { sort: [{ property: note.genre }, { property: note.rating }] }]")
+    const base = parseBase(
+      "views: [{ sort: [{ property: note.rating, direction: DESC }, { property: file.name, direction: DESC }] }, { sort: [{ property: note.genre }, { property: note.rating }] }]",
+    )
     expect(runView(base, base.views[0], engine).rows.map((r) => r.page.stem)).toEqual(["Idea", "Dune", "Emma"])
     const twins = [page("A/One", { fields: { genre: "x", rating: 1 } }), page("A/Two", { fields: { genre: "x", rating: 1 } })]
     expect(runView(base, base.views[1], { pages: twins, resolve: () => undefined }).rows.map((r) => r.page.stem)).toEqual(["One", "Two"])

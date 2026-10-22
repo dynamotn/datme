@@ -9,7 +9,7 @@ let result: { problems: { level: string; file: string; message: string }[]; all:
 beforeAll(() => {
   result = probeVault(
     {
-      "Good.md": `---\npublish: true\nrating: 3\n---\n${fence("LIST FROM \"\"")}\n\nRated \`= this.rating\`.\n`,
+      "Good.md": `---\npublish: true\nrating: 3\n---\n${fence('LIST FROM ""')}\n\nRated \`= this.rating\`.\n`,
       "Broken.md": `---\npublish: true\n---\n${fence("TABLE rating FROM WHERE")}\n`,
       "Calendar.md": `---\npublish: true\n---\n${fence("CALENDAR file.ctime")}\n`,
       "Inline.md": "---\npublish: true\n---\nTotal `= (this.a +`.\n\nNot a query: `=x`, and `code`.\n",

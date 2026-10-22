@@ -15,9 +15,7 @@ export function loadDrawingFonts(): void {
     document.fonts.add(face)
     void face.load().catch(() => {})
   }
-  const used = Object.keys(GOOGLE_FONTS).filter((family) =>
-    document.querySelector(`.drawing.generated text[font-family*="${family}"]`),
-  )
+  const used = Object.keys(GOOGLE_FONTS).filter((family) => document.querySelector(`.drawing.generated text[font-family*="${family}"]`))
   if (!used.length || document.querySelector("link[data-drawing-fonts]")) return
   const link = document.createElement("link")
   link.rel = "stylesheet"

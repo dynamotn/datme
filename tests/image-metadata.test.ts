@@ -9,14 +9,17 @@ import { publicOriginal } from "../src/lib/images"
 const vault = fs.mkdtempSync(path.join(os.tmpdir(), "image-metadata-"))
 const saved = { vault: site.vault, keepMetadata: site.images.keepMetadata }
 const read = (rel: string) => fs.readFileSync(path.join(vault, rel))
-const picture = (format: "jpeg" | "png" | "webp") =>
-  sharp({ create: { width: 40, height: 20, channels: 3, background: "#808080" } })[format]()
+const picture = (format: "jpeg" | "png" | "webp") => sharp({ create: { width: 40, height: 20, channels: 3, background: "#808080" } })[format]()
 
 beforeAll(async () => {
   const exif = { IFD0: { Make: "SecretPhone", Model: "Pocket 9" }, IFD3: { GPSLatitudeRef: "N", GPSLongitudeRef: "E" } }
   await picture("jpeg").withExif(exif).withMetadata({ orientation: 6 }).toFile(path.join(vault, "phone.jpg"))
   await picture("webp").withExif(exif).toFile(path.join(vault, "phone.webp"))
-  await picture("png").withXmp('<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:creator>Secret Author</dc:creator></rdf:Description></rdf:RDF></x:xmpmeta>').toFile(path.join(vault, "tagged.png"))
+  await picture("png")
+    .withXmp(
+      '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:creator>Secret Author</dc:creator></rdf:Description></rdf:RDF></x:xmpmeta>',
+    )
+    .toFile(path.join(vault, "tagged.png"))
   await picture("png").toFile(path.join(vault, "plain.png"))
   fs.writeFileSync(path.join(vault, "broken.jpg"), "not a picture")
   // The same photo under a name that says otherwise, or in a format sharp cannot read.

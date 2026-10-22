@@ -32,11 +32,7 @@ export interface Filter {
 
 /** Whether a tile passes every filter that is set. */
 export function tileMatches(tile: Tile, filter: Filter): boolean {
-  return (
-    (!filter.stage || tile.stage === filter.stage) &&
-    (!filter.folder || tile.folder === filter.folder) &&
-    (!filter.tag || tile.tags.includes(filter.tag))
-  )
+  return (!filter.stage || tile.stage === filter.stage) && (!filter.folder || tile.folder === filter.folder) && (!filter.tag || tile.tags.includes(filter.tag))
 }
 
 function setupBed(root: HTMLElement): void {

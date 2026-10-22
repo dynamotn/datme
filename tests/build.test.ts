@@ -149,9 +149,7 @@ describe("static build", () => {
   test("canvas files are never copied raw, and unlinked ones are not published", () => {
     const all = (fs.readdirSync(out, { recursive: true }) as string[]).join("\n")
     expect(all).not.toContain("Unlinked")
-    const rawCanvas = (fs.readdirSync(out, { recursive: true }) as string[]).filter(
-      (f) => f.endsWith(".canvas") && fs.statSync(path.join(out, f)).isFile(),
-    )
+    const rawCanvas = (fs.readdirSync(out, { recursive: true }) as string[]).filter((f) => f.endsWith(".canvas") && fs.statSync(path.join(out, f)).isFile())
     expect(rawCanvas).toEqual([])
   })
 
@@ -233,9 +231,7 @@ describe("static build", () => {
     expect(html).toContain('class="backlink internal" href="/03_Atomic/Zettelkasten"')
     // The English Luhmann page has no text of its own, so it is not advertised.
     expect(html).not.toContain('<link rel="alternate" hreflang="en-US"')
-    expect(read("03_Atomic/Zettelkasten/index.html")).toContain(
-      'hreflang="en-US" href="https://notes.dynamotn.dev/en-US/03_Atomic/Zettelkasten-method"',
-    )
+    expect(read("03_Atomic/Zettelkasten/index.html")).toContain('hreflang="en-US" href="https://notes.dynamotn.dev/en-US/03_Atomic/Zettelkasten-method"')
   })
 
   test("note pages suggest related notes and list unlinked mentions", () => {
@@ -280,8 +276,12 @@ describe("static build", () => {
   })
 
   test("cards and rows of outdated notes carry a ⏳ that the browser keeps up to date", () => {
-    const card = read("03_Atomic/index.html").match(/<article class="index-card"[^>]*>(?:(?!<\/article>)[\s\S])*?href="\/03_Atomic\/Zettelkasten"[\s\S]*?<\/article>/)![0]
-    expect(card).toMatch(/<span class="wilt" title="Cập nhật lần cuối [^"]*2024: có thể một phần đã cũ\." data-outdated data-since="2024-05-0[12]T[^"]*" data-after="2">⏳/)
+    const card = read("03_Atomic/index.html").match(
+      /<article class="index-card"[^>]*>(?:(?!<\/article>)[\s\S])*?href="\/03_Atomic\/Zettelkasten"[\s\S]*?<\/article>/,
+    )![0]
+    expect(card).toMatch(
+      /<span class="wilt" title="Cập nhật lần cuối [^"]*2024: có thể một phần đã cũ\." data-outdated data-since="2024-05-0[12]T[^"]*" data-after="2">⏳/,
+    )
     expect(read("08_Journal/index.html")).not.toContain('class="wilt"')
   })
 
@@ -409,7 +409,9 @@ describe("static build", () => {
   test("notes with a banner keep it, other pages share the home card", () => {
     expect(read("07_Project/Blog-post/index.html")).toContain('content="https://notes.dynamotn.dev/assets/_assets/images/diagram.png"')
     // The banner is the page's largest paint: fetched first, decoded off the main thread.
-    expect(read("07_Project/Blog-post/index.html")).toMatch(/<figure class="banner"[^>]*>\s*<img src="[^"]+" alt="" style="[^"]*" fetchpriority="high" decoding="async"/)
+    expect(read("07_Project/Blog-post/index.html")).toMatch(
+      /<figure class="banner"[^>]*>\s*<img src="[^"]+" alt="" style="[^"]*" fetchpriority="high" decoding="async"/,
+    )
     expect(exists("og/07_Project/Blog-post.png")).toBe(false)
     expect(read("tags/index.html")).toContain('content="https://notes.dynamotn.dev/og/index.png"')
     expect(exists("og/en-US/index.png")).toBe(true)
@@ -437,8 +439,7 @@ describe("static build", () => {
   })
 
   test("note pages describe themselves as JSON-LD articles, the home page as a website", () => {
-    const ld = (html: string) =>
-      [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]))
+    const ld = (html: string) => [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]))
     const [article, crumbs] = ld(read("03_Atomic/Zettelkasten/index.html"))
     expect(article).toMatchObject({ "@type": "Article", url: "https://notes.dynamotn.dev/03_Atomic/Zettelkasten" })
     expect(crumbs["@type"]).toBe("BreadcrumbList")
@@ -501,7 +502,9 @@ describe("static build", () => {
     expect(folder).not.toContain("Niklas-Luhmann")
     expect(read("tags/type/blog/index.xml")).toMatch(/\/07_Project\/Blog-post\/?<\/link>/)
     expect(exists("en-US/tags/theme/pkm/index.xml")).toBe(true)
-    expect(read("03_Atomic/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Atomic · Khu vườn thử nghiệm" href="/03_Atomic/index.xml">')
+    expect(read("03_Atomic/index.html")).toContain(
+      '<link rel="alternate" type="application/rss+xml" title="Atomic · Khu vườn thử nghiệm" href="/03_Atomic/index.xml">',
+    )
     expect(read("tags/type/blog/index.html")).toContain('href="/tags/type/blog/index.xml"')
   })
 
@@ -528,7 +531,9 @@ describe("static build", () => {
 
   test("a trail starts from its note, and each stop shows where it stands, hidden until walked", () => {
     const trail = read("05_Structure/First-walk/index.html")
-    expect(trail).toMatch(/<a class="internal trail-start-link" href="\/03_Atomic\/Zettelkasten\?trail=%2F05_Structure%2FFirst-walk" data-trail-start="\/05_Structure\/First-walk">/)
+    expect(trail).toMatch(
+      /<a class="internal trail-start-link" href="\/03_Atomic\/Zettelkasten\?trail=%2F05_Structure%2FFirst-walk" data-trail-start="\/05_Structure\/First-walk">/,
+    )
     expect(trail).toContain("4 bước")
     expect(trail).not.toContain("<dt>trail")
     // A stage set by property is a chip, not a link to its folder, and not a property.
@@ -549,7 +554,12 @@ describe("static build", () => {
     const tl = read("timeline/index.html")
     expect(tl).toMatch(/<span class="timeline-when">8 thg 12, 1927 – 6 thg 11, 1998<\/span><a class="internal" href="\/06_Reference\/Niklas-Luhmann">/)
     const map = read("en-US/map/index.html")
-    const data = JSON.parse(map.match(/data-map="([^"]+)"/)![1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"))
+    const data = JSON.parse(
+      map
+        .match(/data-map="([^"]+)"/)![1]
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, "&"),
+    )
     expect(data).toEqual([expect.objectContaining({ lat: 52.0302, url: "/en-US/06_Reference/Niklas-Luhmann-(sociologist)" })])
     expect(map).toContain('data-tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png"')
     expect(map).toContain('data-tiles-dark="https://tiles.example/dark/{z}/{x}/{y}.png"')
@@ -632,8 +642,10 @@ describe("static build", () => {
 
   test("/practice gathers every deck, whose cards it finds in their HTML, and the header counts cards due", () => {
     const page = read("practice/index.html")
-    expect(page).toContain('<h1>Ôn tập</h1>')
-    expect(page).toMatch(/<select data-practice-filter="deck" aria-label="Mọi bộ thẻ"><option value="">Mọi bộ thẻ<\/option><option value="\/07_Project\/Deck">Deck<\/option><\/select>/)
+    expect(page).toContain("<h1>Ôn tập</h1>")
+    expect(page).toMatch(
+      /<select data-practice-filter="deck" aria-label="Mọi bộ thẻ"><option value="">Mọi bộ thẻ<\/option><option value="\/07_Project\/Deck">Deck<\/option><\/select>/,
+    )
     expect(page).toContain('<option value="learning">#learning</option>')
     expect(page).toMatch(/<a class="icon-btn due-badge" href="\/practice" data-due-badge data-label="{n} thẻ đến hạn" hidden>/)
     const cards = JSON.parse(read("static/cards.vi-VN.json"))
@@ -646,7 +658,9 @@ describe("static build", () => {
 
   test("other sites can embed a card of a public note by oEmbed", () => {
     const page = read("03_Atomic/Zettelkasten/index.html")
-    expect(page).toContain('<link rel="alternate" type="application/json+oembed" href="https://notes.dynamotn.dev/03_Atomic/Zettelkasten.oembed.json" title="Zettelkasten">')
+    expect(page).toContain(
+      '<link rel="alternate" type="application/json+oembed" href="https://notes.dynamotn.dev/03_Atomic/Zettelkasten.oembed.json" title="Zettelkasten">',
+    )
     const json = JSON.parse(read("03_Atomic/Zettelkasten.oembed.json"))
     expect(json).toMatchObject({
       version: "1.0",

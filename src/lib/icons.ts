@@ -49,7 +49,11 @@ export function iconizeIcons(vault = site.vault): Map<string, { name: string; co
   return map
 }
 
-const kebab = (s: string) => s.replace(/([a-z0-9])([A-Z])/g, "$1-$2").replace(/([A-Z])([A-Z][a-z])/g, "$1-$2").toLowerCase()
+const kebab = (s: string) =>
+  s
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
+    .toLowerCase()
 
 /** The SVG of an icon name, from Lucide or a downloaded pack; undefined when unknown. */
 function svgOf(name: string, vault: string): string | undefined {
@@ -102,7 +106,10 @@ const lucides = new Map<string, string | undefined>()
 
 /** The SVG of a Lucide icon by its own name, `map-pin` or `lucide-map-pin`, as Obsidian names them; undefined when unknown. */
 export function lucideSvg(name: string): string | undefined {
-  const id = name.trim().toLowerCase().replace(/^lucide-/, "")
+  const id = name
+    .trim()
+    .toLowerCase()
+    .replace(/^lucide-/, "")
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) return undefined
   if (!lucides.has(id)) {
     const svg = lucideFile(id)

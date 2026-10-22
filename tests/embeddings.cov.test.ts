@@ -3,7 +3,7 @@ import { cosine, embed, EmbeddingsUnavailable, setEmbedder } from "../src/lib/em
 
 // transformers.js is an optional peer dependency, and the real one would download a model:
 // it is faked here, in a file of its own, since a module mock holds for the whole test process.
-const calls: { task: string; model: string; options: unknown; batches: string[][] } [] = []
+const calls: { task: string; model: string; options: unknown; batches: string[][] }[] = []
 
 afterAll(() => setEmbedder(undefined))
 

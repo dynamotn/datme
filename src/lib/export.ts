@@ -36,7 +36,6 @@ const MEDIA_TYPES: Record<string, string> = {
   ".avif": "image/avif",
 }
 
-
 /** The notes of a folder in reading order: its introduction, its notes, then each subfolder. */
 export function bookNotes(folder: FolderNode): Note[] {
   const out: Note[] = []

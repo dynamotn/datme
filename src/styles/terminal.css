@@ -172,10 +172,10 @@
   line-height: 1.65;
   overflow-wrap: anywhere;
 }
-[data-look="terminal"] .prose h1 ,
-[data-look="terminal"] .prose h2 ,
-[data-look="terminal"] .prose h3 ,
-[data-look="terminal"] .prose h4 ,
+[data-look="terminal"] .prose h1,
+[data-look="terminal"] .prose h2,
+[data-look="terminal"] .prose h3,
+[data-look="terminal"] .prose h4,
 [data-look="terminal"] .prose h5 {
   font-family: var(--term);
   font-size: 1em;
@@ -191,10 +191,10 @@
   font-size: 1.12em;
 }
 /* Markdown's own marks before each heading, quiet beside its text. */
-[data-look="terminal"] .prose h1::before ,
-[data-look="terminal"] .prose h2::before ,
-[data-look="terminal"] .prose h3::before ,
-[data-look="terminal"] .prose h4::before ,
+[data-look="terminal"] .prose h1::before,
+[data-look="terminal"] .prose h2::before,
+[data-look="terminal"] .prose h3::before,
+[data-look="terminal"] .prose h4::before,
 [data-look="terminal"] .prose h5::before {
   color: var(--muted);
   font-weight: 400;
@@ -212,7 +212,7 @@
   content: "### ";
   content: "### " / "";
 }
-[data-look="terminal"] .prose h4::before ,
+[data-look="terminal"] .prose h4::before,
 [data-look="terminal"] .prose h5::before {
   content: "#### ";
   content: "#### " / "";

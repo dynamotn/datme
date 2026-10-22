@@ -5,7 +5,6 @@
  */
 import { highlightSelection } from "./highlights"
 
-
 /** Percent-encode a fragment part; text fragments also reserve "-", "," and "&". */
 const encodePart = (s: string) => encodeURIComponent(s).replace(/-/g, "%2D").replace(/,/g, "%2C").replace(/&/g, "%26")
 

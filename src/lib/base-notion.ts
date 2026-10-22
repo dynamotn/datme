@@ -226,7 +226,8 @@ export function renderNotionBoard(res: ViewResult, lang: Lang): string {
     const c = colorFor(label)
     const tinted = key != null && (display === "background" || display === "both")
     const style = tinted ? ` style="--col-bg:${c.lightBg};--col-bg-dark:${c.darkBg}"` : ""
-    const name = key != null && (display === "label" || display === "both") ? pill(label, lang, ctx.pinned) : `<span class="ntn-col-name">${escapeAttr(label)}</span>`
+    const name =
+      key != null && (display === "label" || display === "both") ? pill(label, lang, ctx.pinned) : `<span class="ntn-col-name">${escapeAttr(label)}</span>`
     const cards = rows.map((r) => `<article class="ntn-card">${title(ctx, r)}<div class="ntn-props">${properties(ctx, r, { labels })}</div></article>`).join("")
     const head = `${name}<span class="ntn-count">${rows.length}</span>`
     // Groups hidden in Obsidian fold away, still there for a reader who looks.

@@ -27,9 +27,7 @@ export function kanban(md: string, label = "Board"): string {
   }
   if (!lanes.length) return md
   // Blank lines around the HTML keep the headings and lists inside it markdown.
-  const html = lanes
-    .map((lane) => `<section class="kanban-lane">\n\n## ${lane.title}\n\n${lane.lines.join("\n").trim()}\n\n</section>`)
-    .join("\n\n")
+  const html = lanes.map((lane) => `<section class="kanban-lane">\n\n## ${lane.title}\n\n${lane.lines.join("\n").trim()}\n\n</section>`).join("\n\n")
   const name = escapeAttrKeepGt(label)
   return `${before.join("\n").trim()}\n\n<div class="kanban" tabindex="0" role="region" aria-label="${name}">\n\n${html}\n\n</div>\n`
 }

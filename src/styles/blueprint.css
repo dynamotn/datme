@@ -59,10 +59,8 @@
 [data-look="blueprint"] body {
   background-color: var(--bg);
   background-image:
-    linear-gradient(var(--grid-major) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    linear-gradient(var(--grid-major) 1px, transparent 1px), linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size:
     100px 100px,
     100px 100px,
@@ -247,7 +245,7 @@
   margin: 12px 0 0 auto;
   padding: 4px 10px;
   border: 1px solid var(--line-strong);
-  font: 700 10.5px/1.4 var(--font-heading);
+  font: 700 10.5px / 1.4 var(--font-heading);
   letter-spacing: 0.08em;
   text-align: left;
   text-transform: uppercase;

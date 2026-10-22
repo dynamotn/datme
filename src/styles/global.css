@@ -252,7 +252,9 @@ kbd {
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 @media (hover: hover) {
   .search-trigger:hover {
@@ -308,7 +310,9 @@ kbd {
   background: transparent;
   color: var(--ink-2);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 @media (hover: hover) {
   .icon-btn:hover {
@@ -1006,8 +1010,12 @@ button.chip[hidden] {
   vertical-align: 0.45em;
   background: currentColor;
   opacity: 0.6;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 /* A link in a heading keeps the heading's ink and is marked by its underline alone. */
 .prose :is(h1, h2, h3, h4, h5) a:not(.heading-anchor, .tag-link) {
@@ -1366,7 +1374,9 @@ details.callout[open] > summary::after {
   border-left: 2px solid transparent;
   color: var(--muted);
   line-height: 1.4;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .toc li.d3 a {
   padding-left: 24px;
@@ -1505,7 +1515,10 @@ details.callout[open] > summary::after {
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
   background: var(--surface);
-  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 @media (hover: hover) {
   .backlink:hover {
@@ -1571,7 +1584,10 @@ details.callout[open] > summary::after {
   border: 1px solid var(--line);
   background: var(--surface);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 @media (hover: hover) {
   .card:hover {
@@ -1723,8 +1739,7 @@ details.callout[open] > summary::after {
   padding: clamp(28px, 5vw, 56px);
   border-radius: 22px;
   background:
-    radial-gradient(900px 300px at 0% 0%, var(--accent-soft), transparent 60%),
-    radial-gradient(700px 300px at 100% 100%, var(--clay-soft), transparent 60%),
+    radial-gradient(900px 300px at 0% 0%, var(--accent-soft), transparent 60%), radial-gradient(700px 300px at 100% 100%, var(--clay-soft), transparent 60%),
     var(--surface);
   border: 1px solid var(--line);
   overflow: hidden;
@@ -1807,7 +1822,9 @@ details.callout[open] > summary::after {
   border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--surface);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 @media (hover: hover) {
   .stage-card:hover {
@@ -1889,7 +1906,7 @@ details.callout[open] > summary::after {
 .bento-tile p {
   margin: 0;
   color: var(--ink-2);
-  font: 15px/1.5 var(--font-read);
+  font: 15px / 1.5 var(--font-read);
 }
 .bento-tile .note-list {
   margin: 0;
@@ -1909,7 +1926,7 @@ details.callout[open] > summary::after {
 }
 .bento-now-title {
   color: var(--ink);
-  font: 700 1.25rem/1.25 var(--font-heading, var(--font-ui));
+  font: 700 1.25rem / 1.25 var(--font-heading, var(--font-ui));
   text-decoration: none;
 }
 .bento-dice {
@@ -2286,7 +2303,7 @@ dialog.graph-modal {
   min-width: 0;
   margin-top: 48px;
   padding: 52px clamp(16px, 4vw, 56px) 36px;
-  border-image: linear-gradient(var(--footer-rule) 0 var(--footer-rule-w), var(--surface-2) 0) fill 0 // 0 100vmax;
+  border-image: linear-gradient(var(--footer-rule) 0 var(--footer-rule-w), var(--surface-2) 0) fill 0 / / 0 100vmax;
   font-size: 13px;
   color: var(--muted);
 }
@@ -2322,7 +2339,7 @@ dialog.graph-modal {
   height: 15px;
 }
 .footer-name {
-  font: 600 22px/1.2 var(--font-ui);
+  font: 600 22px / 1.2 var(--font-ui);
   letter-spacing: -0.03em;
   color: var(--ink);
   text-decoration: none;
@@ -2337,7 +2354,7 @@ dialog.graph-modal {
 }
 .footer-column h2 {
   margin: 0 0 13px;
-  font: 500 11px/1.4 var(--font-code);
+  font: 500 11px / 1.4 var(--font-code);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
@@ -2953,7 +2970,7 @@ dialog.graph-modal {
 }
 .lightbox figcaption {
   color: #eee;
-  font: 14px/1.4 var(--font-ui);
+  font: 14px / 1.4 var(--font-ui);
   text-align: center;
 }
 .prose .drawing.generated > svg {
@@ -3081,7 +3098,7 @@ dialog.graph-modal {
   border: 2px dashed var(--clay);
   border-radius: var(--radius-sm);
   background: var(--clay-soft);
-  font: 13px/1.5 var(--font-ui);
+  font: 13px / 1.5 var(--font-ui);
 }
 .dev-problems ul {
   margin: 4px 0 0;
@@ -3113,7 +3130,7 @@ dialog.graph-modal {
   background: var(--surface);
   color: var(--ink);
   box-shadow: var(--shadow-lg);
-  font: 13px/1.5 var(--font-ui);
+  font: 13px / 1.5 var(--font-ui);
 }
 .dev-look summary {
   padding: 6px 12px;
@@ -3651,7 +3668,9 @@ mark.reader-highlight[title]:not([title=""]) {
   background: var(--ink-2);
   color: transparent;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .prose .cloze:focus,
 .prose .cloze.revealed {
@@ -3685,7 +3704,8 @@ mark.reader-highlight[title]:not([title=""]) {
 }
 .practice-counts {
   color: var(--muted);
-}.practice-decks {
+}
+.practice-decks {
   margin-top: 24px;
 }
 .practice-start,
@@ -3972,7 +3992,9 @@ a.drawing-link tspan {
 .prose pre.has-focused .line:not(.focused) {
   opacity: 0.45;
   filter: blur(0.6px);
-  transition: opacity 0.2s, filter 0.2s;
+  transition:
+    opacity 0.2s,
+    filter 0.2s;
 }
 .prose pre.has-focused:hover .line {
   opacity: 1;
@@ -4984,7 +5006,7 @@ summary.ntn-col-head {
   --markmap-code-bg: var(--surface-2);
   --markmap-code-color: var(--ink);
   --markmap-circle-open-bg: var(--surface);
-  --markmap-font: 400 15px/20px var(--font-ui);
+  --markmap-font: 400 15px / 20px var(--font-ui);
   width: 100%;
   height: 100%;
 }
@@ -5423,7 +5445,9 @@ summary.ntn-col-head {
   overflow: hidden;
   border-radius: 3px 6px 6px 3px;
   background: var(--title-grad, var(--surface-2));
-  box-shadow: var(--shadow), inset 4px 0 0 rgb(0 0 0 / 0.12);
+  box-shadow:
+    var(--shadow),
+    inset 4px 0 0 rgb(0 0 0 / 0.12);
   transition: transform 0.2s;
 }
 .book-cover img {
@@ -5573,7 +5597,10 @@ summary.ntn-col-head {
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 @media (hover: hover) {
   .prose ul.link-hub > li > a:first-child:hover {

@@ -56,9 +56,7 @@
 
 /* Layers of lacquer catch the light: a faint red glow in the depth of the black. */
 [data-look="lacquer"] body {
-  background:
-    radial-gradient(70rem 36rem at 12% -12%, color-mix(in srgb, var(--vermilion) 10%, transparent), transparent 70%),
-    var(--bg);
+  background: radial-gradient(70rem 36rem at 12% -12%, color-mix(in srgb, var(--vermilion) 10%, transparent), transparent 70%), var(--bg);
   background-attachment: fixed;
   font-family: var(--font-read);
 }

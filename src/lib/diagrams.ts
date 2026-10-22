@@ -85,7 +85,13 @@ function d2Message(e: unknown): string {
   const raw = e instanceof Error ? e.message : String(e)
   try {
     const list = JSON.parse(raw) as { errmsg?: string }[]
-    if (Array.isArray(list)) return list.map((x) => x.errmsg ?? "").filter(Boolean).join("; ") || raw
+    if (Array.isArray(list))
+      return (
+        list
+          .map((x) => x.errmsg ?? "")
+          .filter(Boolean)
+          .join("; ") || raw
+      )
   } catch {
     // not JSON: the message as it is
   }
@@ -166,9 +172,7 @@ const TYPST_PAGE = "#set page(width: auto, height: auto, margin: 6pt, fill: none
  * of the page, so it reads in both themes; files are read from the vault.
  */
 export async function renderTypst(source: string): Promise<string> {
-  typst ??= optional<TypstModule>("@myriaddreamin/typst-ts-node-compiler").then((m) =>
-    m ? m.NodeCompiler.create({ workspace: site.vault }) : undefined,
-  )
+  typst ??= optional<TypstModule>("@myriaddreamin/typst-ts-node-compiler").then((m) => (m ? m.NodeCompiler.create({ workspace: site.vault }) : undefined))
   const compiler = await typst
   if (!compiler) throw new DiagramUnavailable("@myriaddreamin/typst-ts-node-compiler")
   const out = compiler.compile({ mainFileContent: TYPST_PAGE + source })

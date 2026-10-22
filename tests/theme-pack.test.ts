@@ -48,7 +48,9 @@ describe("where a preset is looked for", () => {
 describe("loadPack", () => {
   test("a missing pack says where it was looked for", () => {
     const vault = path.join(tmp, "missing")
-    expect(loadPack("ink", vault, []).warnings).toEqual(["theme.preset: no theme.yaml in .datme/themes/ink or a datme-theme-ink package, so the site keeps its own theme"])
+    expect(loadPack("ink", vault, []).warnings).toEqual([
+      "theme.preset: no theme.yaml in .datme/themes/ink or a datme-theme-ink package, so the site keeps its own theme",
+    ])
     expect(loadPack("@me/ink", vault, []).warnings[0]).toContain("no theme.yaml in a @me/ink package")
     expect(loadPack("themes/ink", vault, []).warnings[0]).toContain("no theme.yaml in themes/ink")
     expect(loadPack("../x", vault, []).warnings[0]).toContain("outside the vault")
@@ -115,13 +117,16 @@ describe("templates of a pack", () => {
     const vault = write(path.join(tmp, "templates"), {
       "outside.html": "<p>x</p>",
       "a/theme.yaml": "templates: [card.html]",
-      "b/theme.yaml": "templates: { note-card: card.htm, footer-band: missing.html, note-footer: link.html, header-brand: brand.html }\nstyles: { sea: { base: classic, templates: { note-card: card.html } }, dry: { base: classic, templates: {} } }",
+      "b/theme.yaml":
+        "templates: { note-card: card.htm, footer-band: missing.html, note-footer: link.html, header-brand: brand.html }\nstyles: { sea: { base: classic, templates: { note-card: card.html } }, dry: { base: classic, templates: {} } }",
       "b/card.htm": "",
       "b/card.html": "<p>{{title}}</p>",
       "b/brand.html": "<b>{{siteTitle}}</b>",
     })
     fs.symlinkSync(path.join(vault, "outside.html"), path.join(vault, "b/link.html"))
-    expect(loadPack("./a", vault, [])).toMatchObject({ warnings: ["theme ./a: templates must map a slot (header-brand, note-card, note-row, note-footer, footer-band) to an .html file, so it is left out"] })
+    expect(loadPack("./a", vault, [])).toMatchObject({
+      warnings: ["theme ./a: templates must map a slot (header-brand, note-card, note-row, note-footer, footer-band) to an .html file, so it is left out"],
+    })
     expect(loadPack("./a", vault, []).pack?.templates).toBeUndefined()
     const { pack, warnings } = loadPack("./b", vault, [])
     expect(warnings).toEqual([
@@ -130,7 +135,9 @@ describe("templates of a pack", () => {
       "theme ./b: templates.note-footer: link.html is outside the theme's folder, so it is left out",
     ])
     expect(Object.keys(pack!.templates!)).toEqual(["header-brand"])
-    expect(pack!.styles.sea.templates!["note-card"]).toEqual([{ kind: "element", tag: "p", attrs: [], children: [{ kind: "text", parts: [{ field: "title" }] }] }])
+    expect(pack!.styles.sea.templates!["note-card"]).toEqual([
+      { kind: "element", tag: "p", attrs: [], children: [{ kind: "text", parts: [{ field: "title" }] }] },
+    ])
     // A style whose templates are all left out has none.
     expect(pack!.styles.dry).toEqual({ base: "classic", css: [] })
     // Templates are read at build time, never published.
@@ -143,7 +150,9 @@ describe("templates of a pack", () => {
     })
     const c = resolveConfig({ theme: { preset: "t" }, appearance: { readerSwitch: ["sea", "sky", "garden"] } }, vault)
     expect(c.appearance.readerSwitch).toEqual(["sky", "garden"])
-    expect(c.warnings).toEqual([{ file: "datme.yaml", message: "appearance.readerSwitch: sea has templates of its own that reshape its pages, so readers cannot pick it" }])
+    expect(c.warnings).toEqual([
+      { file: "datme.yaml", message: "appearance.readerSwitch: sea has templates of its own that reshape its pages, so readers cannot pick it" },
+    ])
     expect(resolveConfig({ theme: { preset: "t" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch.at(-1)).toBe("sky")
   })
 })
@@ -177,7 +186,14 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.theme.fonts).toEqual({ heading: "Fraunces", body: "Ink Serif" })
     expect(c.theme.mermaid).toEqual({ light: "neutral", dark: "dark" })
     expect(c.styles).toEqual([...STYLES, "ink"])
-    expect(c.pack).toMatchObject({ dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], file: ".datme/themes/ink/theme.yaml", accent: false, styles: { ink: { base: "classic", css: ["paper.css"] } } })
+    expect(c.pack).toMatchObject({
+      dir: path.join(looks, ".datme/themes/ink"),
+      css: ["ink.css"],
+      fonts: ["Ink Serif"],
+      file: ".datme/themes/ink/theme.yaml",
+      accent: false,
+      styles: { ink: { base: "classic", css: ["paper.css"] } },
+    })
     expect(Object.keys(c.pack!.templates!)).toEqual(["footer-band", "note-footer"])
     expect(c.appearance.folders).toEqual({ Ink: "ink" })
     // The pack's style has templates of its own, so readers cannot pick it.
@@ -213,7 +229,18 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.appearance.style).toBe("notebook")
     expect(resolveConfig({ theme: { preset: "b" } }, vault).warnings[0].message).toContain("style 3 is no style")
     // A style built on a résumé is no style for a whole site.
-    expect(resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine", "eink", "paddy"])
+    expect(resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch).toEqual([
+      "notebook",
+      "classic",
+      "garden",
+      "terminal",
+      "blueprint",
+      "manuscript",
+      "lacquer",
+      "zine",
+      "eink",
+      "paddy",
+    ])
     expect(() => resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: ["cv"] } }, vault)).toThrow("cv is made for a single page")
   })
   test("a preset not found is a warning against datme.yaml; no preset reads nothing", () => {
@@ -237,7 +264,14 @@ afterEach(() => {
 })
 
 describe("a pack on the site", () => {
-  const pack = { dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], file: ".datme/themes/ink/theme.yaml", accent: true, styles: { ink: { base: "classic", css: ["paper.css"] } } }
+  const pack = {
+    dir: path.join(looks, ".datme/themes/ink"),
+    css: ["ink.css"],
+    fonts: ["Ink Serif"],
+    file: ".datme/themes/ink/theme.yaml",
+    accent: true,
+    styles: { ink: { base: "classic", css: ["paper.css"] } },
+  }
   test("a style draws as its base", () => {
     expect(baseStyle("ink", pack)).toBe("classic")
     expect(baseStyle("garden", pack)).toBe("garden")

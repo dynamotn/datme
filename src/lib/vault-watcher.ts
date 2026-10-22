@@ -32,9 +32,7 @@ export function ignoredInVault(file: string): boolean {
 
 /** Every HTML file under a directory, as text. */
 function htmlFiles(dir: string): string[] {
-  return (fs.readdirSync(dir, { recursive: true }) as string[])
-    .filter((f) => f.endsWith(".html"))
-    .map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
+  return (fs.readdirSync(dir, { recursive: true }) as string[]).filter((f) => f.endsWith(".html")).map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
 }
 
 /**
@@ -63,7 +61,10 @@ export default function vaultWatcher(): AstroIntegration {
             fs.mkdirSync(path.dirname(file), { recursive: true })
             fs.writeFileSync(file, JSON.stringify(data))
           }
-          const notes = byRecent(listed(site.defaultLang).filter((n) => !n.isHome && !n.protected && n.created), "created").slice(0, 20)
+          const notes = byRecent(
+            listed(site.defaultLang).filter((n) => !n.isHome && !n.protected && n.created),
+            "created",
+          ).slice(0, 20)
           const items = await Promise.all(
             notes.map(async (n) => ({ url: n.url, title: n.title, summary: (await renderNote(n)).description ?? "", published: n.created!, tags: n.tags })),
           )

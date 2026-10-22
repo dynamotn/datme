@@ -125,7 +125,12 @@ describe("datme check --privacy", () => {
 describe("outsideHosts", () => {
   const base = { theme: { fonts: {} }, map: { tiles: "https://tile.example/{z}/{x}/{y}.png" }, linkPreviews: false }
   test("only the hosts in use: no map tiles without a place, embeds named once", () => {
-    const hosts = outsideHosts(base, "https://font.example/a.css", ["https://www.youtube-nocookie.com/embed/x", "https://www.youtube-nocookie.com/embed/y"], false)
+    const hosts = outsideHosts(
+      base,
+      "https://font.example/a.css",
+      ["https://www.youtube-nocookie.com/embed/x", "https://www.youtube-nocookie.com/embed/y"],
+      false,
+    )
     expect(hosts).toEqual([
       { host: "font.example", why: "monospace font of every page" },
       { host: "www.youtube-nocookie.com", why: "embedded in a note" },

@@ -27,7 +27,13 @@ interface Resolver {
   tagged(tag: string): Place[]
 }
 
-const unlink = (s: string) => s.trim().replace(/^\[\[|\]\]$/g, "").split("|")[0].split("#")[0].trim()
+const unlink = (s: string) =>
+  s
+    .trim()
+    .replace(/^\[\[|\]\]$/g, "")
+    .split("|")[0]
+    .split("#")[0]
+    .trim()
 
 export function parseLeafletBlock(src: string, r: Resolver): LeafletMap {
   const out: LeafletMap = { height: "500px", markers: [], unsupported: [] }
@@ -75,7 +81,8 @@ export function parseLeafletBlock(src: string, r: Resolver): LeafletMap {
       case "markerFile":
         for (const target of value.split(/,(?![^[]*\]\])/)) {
           const note = r.note(unlink(target))
-          if (note?.location) out.markers.push({ lat: note.location[0], lng: note.location[1], title: note.title, url: note.url, description: note.description })
+          if (note?.location)
+            out.markers.push({ lat: note.location[0], lng: note.location[1], title: note.title, url: note.url, description: note.description })
         }
         break
       case "markerTag":
@@ -126,7 +133,10 @@ export function renderLeafletBlock(src: string, lang: Lang): string {
     return `<p class="dataview dv-note">🗺️ ${escapeAttr(s.dvUnsupported)} (leaflet: ${escapeAttr(map.unsupported.join(", ") || "no place")})</p>`
   }
   const list = map.markers
-    .map((p) => `<li>${p.url ? `<a href="${escapeAttr(p.url)}"${p.url.startsWith("/") ? ' class="internal"' : ""}>${escapeAttr(p.title)}</a>` : escapeAttr(p.title)}${p.description ? ` · ${escapeAttr(p.description)}` : ""}</li>`)
+    .map(
+      (p) =>
+        `<li>${p.url ? `<a href="${escapeAttr(p.url)}"${p.url.startsWith("/") ? ' class="internal"' : ""}>${escapeAttr(p.title)}</a>` : escapeAttr(p.title)}${p.description ? ` · ${escapeAttr(p.description)}` : ""}</li>`,
+    )
     .join("")
   return (
     `<figure class="leaflet-block">` +

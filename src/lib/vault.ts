@@ -296,7 +296,11 @@ export function parseFrontmatter(src: string): { fm: Record<string, unknown>; bo
 function toArray(v: unknown): string[] {
   if (v == null) return []
   if (Array.isArray(v)) return v.filter((x) => x != null).map(String)
-  if (typeof v === "string") return v.split(",").map((s) => s.trim()).filter(Boolean)
+  if (typeof v === "string")
+    return v
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
   return [String(v)]
 }
 
@@ -446,11 +450,11 @@ function gitDates(): Map<string, { created: Date; updated: Date }> {
     }).trim()
     // git names files with "/", on Windows too.
     const prefix = path.relative(top, site.vault).split(path.sep).join("/")
-    const log = execFileSync(
-      "git",
-      ["-C", site.vault, "-c", "core.quotepath=off", "log", "--format=%x00%ct", "--name-only", "--", "*.md"],
-      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] },
-    )
+    const log = execFileSync("git", ["-C", site.vault, "-c", "core.quotepath=off", "log", "--format=%x00%ct", "--name-only", "--", "*.md"], {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "ignore"],
+    })
     let ts = 0
     for (const line of log.split("\n")) {
       if (line.startsWith("\0")) {
@@ -747,9 +751,9 @@ function buildVault(version: number): Vault {
     const t = p.target.trim().replace(/^\/+/, "")
     const isNote = !/\.\w+$/.test(t) || MD_EXT.test(t)
     if (p.kind === "garden") {
-    const [name, note] = [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)]
-    report("warning", file, `link to "${note}" not found in the garden "${name}" (${site.neighbours[name]})`)
-  } else if (p.kind === "drawing") {
+      const [name, note] = [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)]
+      report("warning", file, `link to "${note}" not found in the garden "${name}" (${site.neighbours[name]})`)
+    } else if (p.kind === "drawing") {
       report("warning", file, `drawing "${t}" is not in the vault, so it is not shown`)
     } else if (isNote && isPrivateNote(t, path.posix.dirname(file))) {
       const shown = p.shown ?? t
@@ -792,8 +796,7 @@ function buildVault(version: number): Vault {
     byKey[lang] = new Map()
     for (const s of sources.values()) {
       const titleField = s.fm.title
-      const titleMap =
-        titleField && typeof titleField === "object" ? (titleField as Record<string, string>) : undefined
+      const titleMap = titleField && typeof titleField === "object" ? (titleField as Record<string, string>) : undefined
       const langTitle = titleMap?.[lang]
       // A title such as 2024 reads as a number in YAML.
       const title = langTitle ?? (typeof titleField === "string" || typeof titleField === "number" ? String(titleField) : s.stem)
@@ -813,8 +816,7 @@ function buildVault(version: number): Vault {
       const relFile = s.key + ".md"
       const stat = fs.statSync(s.file)
       const created = toDate(s.fm.created ?? s.fm.date) ?? git.get(relFile)?.created ?? stat.birthtime
-      const updated =
-        toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? git.get(relFile)?.updated ?? stat.mtime
+      const updated = toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? git.get(relFile)?.updated ?? stat.mtime
 
       // A picture or sound property: a URL, or a file of the vault that is then published.
       const fileProp = (field: string, v: unknown = s.fm[field]): { href: string; file?: string } | undefined => {
@@ -853,7 +855,9 @@ function buildVault(version: number): Vault {
       // A letter signed with a picture publishes it like a cover; a protected letter keeps it. A signature in words stays a property.
       const sig = typeof s.fm.signature === "string" ? s.fm.signature.trim() : ""
       const signature =
-        layout === "letter" && !s.password && (/^!?\[\[/.test(sig) || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(sig)) ? fileProp("signature", sig)?.href : undefined
+        layout === "letter" && !s.password && (/^!?\[\[/.test(sig) || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(sig))
+          ? fileProp("signature", sig)?.href
+          : undefined
       const { value: style, invalid: badStyle } = pickOption(s.fm.style, site.styles)
       if (badStyle && lang === site.defaultLang) {
         report("warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`)
@@ -868,9 +872,7 @@ function buildVault(version: number): Vault {
       const sourceLang = sourceLangOf(s.fm)
       const texts = textLanguages(s.raw)
       // A note without language blocks is all source-language text.
-      const contentLang = s.raw.includes("<!--lang:")
-        ? contentLanguage(s.raw, lang, fallbackOf(s.fm, sourceLang), texts)
-        : sourceLang
+      const contentLang = s.raw.includes("<!--lang:") ? contentLanguage(s.raw, lang, fallbackOf(s.fm, sourceLang), texts) : sourceLang
       // Locked parts leave the note first, so nothing below can read them.
       const { md: filtered, parts } = splitLocked(filterLanguage(s.raw, contentLang))
       const deck = isDeck(tags, filtered, site.conventions.flashcardTags)
@@ -970,19 +972,10 @@ function buildVault(version: number): Vault {
         style,
         chrome,
         // A board or a deck needs the width of the page.
-        cssclasses: [
-          ...toArray(s.fm.cssclasses ?? s.fm.cssclass),
-          ...(board ? ["kanban-board"] : []),
-          ...(slides ? ["slide-deck"] : []),
-        ],
+        cssclasses: [...toArray(s.fm.cssclasses ?? s.fm.cssclass), ...(board ? ["kanban-board"] : []), ...(slides ? ["slide-deck"] : [])],
         description: typeof s.fm.description === "string" ? s.fm.description : undefined,
         // A `stage` property naming a configured stage wins over the top-level folder.
-        stage:
-          typeof s.fm.stage === "string" && site.stages[s.fm.stage]
-            ? s.fm.stage
-            : site.stages[s.dir.split("/")[0]]
-              ? s.dir.split("/")[0]
-              : undefined,
+        stage: typeof s.fm.stage === "string" && site.stages[s.fm.stage] ? s.fm.stage : site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
         types,
         isBlog: tags.some((x) => blogTags.includes(x)),
         isMoc: tags.some((x) => mapTags.includes(x)),
@@ -1025,7 +1018,10 @@ function buildVault(version: number): Vault {
     const src = fs.readFileSync(path.join(site.vault, rel), "utf8")
     const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
     const kind = /\.excalidraw(\.md)?$/i.test(rel) ? "drawing" : rel.toLowerCase().endsWith(".canvas") ? "canvas" : "base"
-    const name = path.posix.basename(rel).replace(DOC, "").replace(/\.excalidraw(\.md)?$/i, "")
+    const name = path.posix
+      .basename(rel)
+      .replace(DOC, "")
+      .replace(/\.excalidraw(\.md)?$/i, "")
     const doc: Doc = { rel, kind, name, dir, src, texts: {} }
     if (kind === "drawing") {
       // The whole drawing; its links are URL placeholders, filled per language below.
@@ -1134,7 +1130,10 @@ function buildVault(version: number): Vault {
     }
     backlinks[lang] = bl
     tags[lang] = new Map([...tg].sort(([a], [b]) => a.localeCompare(b)))
-    const { root, all } = buildTree(notes[lang].filter((n) => !n.unlisted && !n.isHome), lang)
+    const { root, all } = buildTree(
+      notes[lang].filter((n) => !n.unlisted && !n.isHome),
+      lang,
+    )
     trees[lang] = root
     folders[lang] = all
   }
@@ -1149,10 +1148,12 @@ function buildVault(version: number): Vault {
 
   // Marp themes are CSS files anywhere in the vault, read only when a deck may use one.
   const slideThemes = Object.values(notes).some((ns) => ns.some((n) => n.slides))
-    ? found.files.filter((f) => /\.css$/i.test(f)).flatMap((f) => {
-        const css = fs.readFileSync(path.join(site.vault, f), "utf8")
-        return isTheme(css) ? [css] : []
-      })
+    ? found.files
+        .filter((f) => /\.css$/i.test(f))
+        .flatMap((f) => {
+          const css = fs.readFileSync(path.join(site.vault, f), "utf8")
+          return isTheme(css) ? [css] : []
+        })
     : []
 
   return {

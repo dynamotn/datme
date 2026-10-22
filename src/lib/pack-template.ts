@@ -18,7 +18,23 @@ const COMMON = ["siteTitle", "home", "lang"] as const
 /** The slots a pack can fill, each with the fields its template is given. */
 export const SLOT_FIELDS = {
   "header-brand": [...COMMON, "logo"],
-  "note-card": [...COMMON, "title", "url", "excerpt", "date", "datetime", "cover", "stage", "stageIcon", "type", "typeIcon", "readingTime", "locked", "featured", "tags"],
+  "note-card": [
+    ...COMMON,
+    "title",
+    "url",
+    "excerpt",
+    "date",
+    "datetime",
+    "cover",
+    "stage",
+    "stageIcon",
+    "type",
+    "typeIcon",
+    "readingTime",
+    "locked",
+    "featured",
+    "tags",
+  ],
   "note-row": [...COMMON, "title", "url", "date", "datetime", "stage", "stageIcon", "type", "typeIcon", "locked", "tags"],
   "note-footer": [...COMMON, "title", "url", "date", "datetime", "stage", "stageIcon", "author", "locked", "tags"],
   "footer-band": [...COMMON, "author", "year", "rss"],
@@ -176,7 +192,9 @@ function compileElement(node: Extract<RootContent, { type: "element" }>, ctx: Co
 /** Compiles siblings: a block opens and closes among the same siblings, around text and elements. */
 function compileChildren(children: (RootContent | ElementContent)[], ctx: Context): TemplateNode[] {
   const root: TemplateNode[] = []
-  const stack: { block?: Extract<TemplateNode, { kind: "block" }>; opened?: string; out: TemplateNode[]; fields: Set<string> }[] = [{ out: root, fields: ctx.fields }]
+  const stack: { block?: Extract<TemplateNode, { kind: "block" }>; opened?: string; out: TemplateNode[]; fields: Set<string> }[] = [
+    { out: root, fields: ctx.fields },
+  ]
   const top = () => stack[stack.length - 1]
   const at = (): Context => ({ ...ctx, fields: top().fields })
   const pushText = (part: Part) => {

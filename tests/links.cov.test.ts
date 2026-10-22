@@ -65,7 +65,11 @@ describe("probe", () => {
     const plain = async () => {
       throw "not an error"
     }
-    expect(await probe("https://x.example", { fetch: plain as unknown as typeof fetch })).toEqual({ ok: false, level: "warning", reason: "unreachable (error)" })
+    expect(await probe("https://x.example", { fetch: plain as unknown as typeof fetch })).toEqual({
+      ok: false,
+      level: "warning",
+      reason: "unreachable (error)",
+    })
   })
 
   test("a HEAD that throws is retried with GET, which may answer", async () => {

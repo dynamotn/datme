@@ -62,7 +62,7 @@ export function cumulativeByMonth(dates: Date[]): [string, number][] {
   let total = 0
   let [y, m] = months[0].split("-").map(Number)
   for (m--; ; m++) {
-    if (m > 11) (y++, (m = 0))
+    if (m > 11) y++, (m = 0)
     const k = `${y}-${String(m + 1).padStart(2, "0")}`
     total += counts.get(k) ?? 0
     out.push([k, total])
@@ -102,7 +102,11 @@ export async function gardenStats(lang: Lang): Promise<Stats> {
       deadEnds: shape.deadEnds.filter((n) => keys.has(n.key)).length,
     }
   }
-  if (!hide.has("freshness")) health.freshness = freshnessCounts(notes.map((n) => n.updated ?? n.created), [30, 90, 365])
+  if (!hide.has("freshness"))
+    health.freshness = freshnessCounts(
+      notes.map((n) => n.updated ?? n.created),
+      [30, 90, 365],
+    )
   if (!hide.has("hubs")) {
     const backlinks = vault.backlinks[lang]
     health.hubs = notes
@@ -135,7 +139,5 @@ export function growthPath(growth: [string, number][], width: number, height: nu
   if (!growth.length) return ""
   const max = Math.max(1, ...growth.map(([, n]) => n))
   const step = growth.length > 1 ? width / (growth.length - 1) : 0
-  return growth
-    .map(([, n], i) => `${i ? "L" : "M"}${(i * step).toFixed(1)},${(height - (n / max) * height).toFixed(1)}`)
-    .join(" ")
+  return growth.map(([, n], i) => `${i ? "L" : "M"}${(i * step).toFixed(1)},${(height - (n / max) * height).toFixed(1)}`).join(" ")
 }

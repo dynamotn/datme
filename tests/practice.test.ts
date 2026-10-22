@@ -73,7 +73,11 @@ describe("practice session", () => {
     click(dialog.querySelector(".practice-good"))
     expect(face()).toBe("Done 2")
     const saved = JSON.parse(window.localStorage.getItem("datme:cards:/deck")!)
-    expect(Object.values(saved).map((s) => (s as { box: number }).box).sort()).toEqual([1, 2])
+    expect(
+      Object.values(saved)
+        .map((s) => (s as { box: number }).box)
+        .sort(),
+    ).toEqual([1, 2])
   })
 })
 
@@ -94,9 +98,11 @@ describe("card ids", () => {
     const doc = happy.document as unknown as Document
     const { collect } = await import("../src/scripts/practice")
     const built = doc.createElement("div")
-    built.innerHTML = '<details class="flashcard"><summary><a class="internal" href="/x">X</a> <pre><code>x</code></pre></summary><div class="flashcard-answer">A</div></details>'
+    built.innerHTML =
+      '<details class="flashcard"><summary><a class="internal" href="/x">X</a> <pre><code>x</code></pre></summary><div class="flashcard-answer">A</div></details>'
     const onPage = doc.createElement("div")
-    onPage.innerHTML = '<details class="flashcard"><summary><a class="internal" href="/x" data-popover="1">X</a> <pre><code>x</code><button class="copy-btn">Copy</button></pre></summary><div class="flashcard-answer">A</div></details>'
+    onPage.innerHTML =
+      '<details class="flashcard"><summary><a class="internal" href="/x" data-popover="1">X</a> <pre><code>x</code><button class="copy-btn">Copy</button></pre></summary><div class="flashcard-answer">A</div></details>'
     expect(collect(built)[0].id).toBe(collect(onPage)[0].id)
   })
 

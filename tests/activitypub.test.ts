@@ -33,7 +33,9 @@ describe("the fediverse", () => {
   })
 
   test("the outbox holds each recent note as a public article, linking back", () => {
-    const box = outbox(site, [{ url: "/Roses", title: "Roses & <thorns>", summary: "Prune them.", published: new Date("2026-05-01T00:00:00Z"), tags: ["garden/flowers"] }]) as any
+    const box = outbox(site, [
+      { url: "/Roses", title: "Roses & <thorns>", summary: "Prune them.", published: new Date("2026-05-01T00:00:00Z"), tags: ["garden/flowers"] },
+    ]) as any
     expect(box.totalItems).toBe(1)
     const item = box.orderedItems[0]
     expect(item).toMatchObject({ id: "https://garden.example/Roses#create", type: "Create", published: "2026-05-01T00:00:00.000Z" })

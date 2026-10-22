@@ -19,7 +19,15 @@ describe("formatSuggestions", () => {
       mentions: [],
     }
     expect(formatSuggestions(s)).toBe(
-      ["Related to Draft.md (private)", "  A.md  #pkm #books, 1 shared link", "  B.md  2 shared links, ≈ 83%", "  C.md  ", "", "Named without a link", "  none"].join("\n"),
+      [
+        "Related to Draft.md (private)",
+        "  A.md  #pkm #books, 1 shared link",
+        "  B.md  2 shared links, ≈ 83%",
+        "  C.md  ",
+        "",
+        "Named without a link",
+        "  none",
+      ].join("\n"),
     )
     expect(formatSuggestions({ file: "P.md", published: true, related: [], mentions: [{ file: "X.md", title: "X", text: "x", offset: 0, line: 1 }] })).toBe(
       ["Related to P.md", "  none", "", "Named without a link", '  line 1: "x" → [[X]]'].join("\n"),
@@ -62,7 +70,10 @@ describe("suggestionsFor a private draft", () => {
   const draft = (name: string, text: string) => fs.writeFileSync(path.join(dir, name), text)
 
   test("tags written as a comma list, and links (one not valid URI encoding), make the related notes", async () => {
-    draft("03_Atomic/Draft.md", "---\ntags: \"#theme/pkm, type/notion\"\n---\nSee [[Zettelkasten]] and [[%E0%A4%A]] and [x](../06_Reference/Niklas%20Luhmann.md).\n")
+    draft(
+      "03_Atomic/Draft.md",
+      '---\ntags: "#theme/pkm, type/notion"\n---\nSee [[Zettelkasten]] and [[%E0%A4%A]] and [x](../06_Reference/Niklas%20Luhmann.md).\n',
+    )
     const s = await suggestionsFor("/03_Atomic\\Draft.md", "vi-VN")
     expect(s.file).toBe("03_Atomic/Draft.md")
     expect(s.published).toBe(false)

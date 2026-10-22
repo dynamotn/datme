@@ -97,7 +97,9 @@
 }
 [data-look="zine"] .brand-name {
   font-family: var(--font-heading);
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
   font-weight: 800;
 }
 
@@ -112,7 +114,9 @@
   background: var(--ink);
   color: var(--bg);
   font-family: var(--font-heading);
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
   font-weight: 900;
   line-height: 1.1;
   letter-spacing: -0.01em;
@@ -145,7 +149,9 @@
   padding: 0 0.3em;
   background: var(--box-2);
   font-family: var(--font-heading);
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
   font-style: italic;
   font-weight: 700;
   rotate: calc(-0.8deg * var(--tilt));
@@ -186,7 +192,9 @@
   background: var(--box-1);
   color: var(--ink);
   font-family: var(--font-heading);
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
   font-size: 1.2em;
   font-style: normal;
   font-weight: 600;
@@ -319,7 +327,9 @@
 }
 [data-look="zine"] .note-row .title {
   font-family: var(--font-heading);
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
   font-size: 1.05em;
 }
 [data-look="zine"] :focus-visible {
@@ -329,7 +339,9 @@
 @media (hover: hover) {
   [data-look="zine"] .backlink,
   [data-look="zine"] .folder-card {
-    transition: rotate 0.15s, translate 0.15s;
+    transition:
+      rotate 0.15s,
+      translate 0.15s;
   }
   [data-look="zine"] .backlink:hover,
   [data-look="zine"] .folder-card:hover {

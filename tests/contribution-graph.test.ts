@@ -27,7 +27,10 @@ const today = new Date("2026-10-07T12:00:00Z")
 describe("contribution graphs", () => {
   test("defaults: every page by creation, the last 180 days", () => {
     expect(parseGraph("title: x", today)).toMatchObject({ title: "x", from: "2026-04-11", to: "2026-10-07", type: "PAGE", source: "" })
-    expect(parseGraph("dateRangeType: FIXED_DATE_RANGE\nfromDate: 2026-01-01\ntoDate: 2026-03-31", today)).toMatchObject({ from: "2026-01-01", to: "2026-03-31" })
+    expect(parseGraph("dateRangeType: FIXED_DATE_RANGE\nfromDate: 2026-01-01\ntoDate: 2026-03-31", today)).toMatchObject({
+      from: "2026-01-01",
+      to: "2026-03-31",
+    })
   })
 
   test("a Dataview source picks the pages; one per page, or a property's number", () => {
@@ -37,7 +40,10 @@ describe("contribution graphs", () => {
       "dataSource:\n  value: '#run'\n  dateField: { type: PAGE_PROPERTY, value: ran }\n  countField: { type: PAGE_PROPERTY, value: km }",
       today,
     )
-    expect([...graphCounts(km, engine)].map(([d, c]) => [d, c.count])).toEqual([["2026-10-02", 5], ["2026-10-03", 10]])
+    expect([...graphCounts(km, engine)].map(([d, c]) => [d, c.count])).toEqual([
+      ["2026-10-02", 5],
+      ["2026-10-03", 10],
+    ])
   })
 
   test("a moment counts on its local day, as the activity calendar does; a date-only value on its own day", () => {

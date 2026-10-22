@@ -1,5 +1,23 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags, explainStage, explainDefault, defaultLook, inDays, monthDayOf } from "../src/lib/look"
+import {
+  resolveLook,
+  lookOf,
+  pickOption,
+  CHROMES,
+  frameOf,
+  startsDark,
+  isGarden,
+  LAYOUT_LOOKS,
+  explainDir,
+  explainLook,
+  explainFrame,
+  explainTags,
+  explainStage,
+  explainDefault,
+  defaultLook,
+  inDays,
+  monthDayOf,
+} from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 

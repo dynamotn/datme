@@ -55,7 +55,12 @@ export function findInGarden(name: string, target: string, lang: string, file?: 
   const garden = store(file)[name]
   if (!garden) return undefined
   const want = fold(target.replace(/\.md$/i, "").trim())
-  const lists = [garden.notes[lang] ?? [], ...Object.entries(garden.notes).filter(([l]) => l !== lang).map(([, n]) => n)]
+  const lists = [
+    garden.notes[lang] ?? [],
+    ...Object.entries(garden.notes)
+      .filter(([l]) => l !== lang)
+      .map(([, n]) => n),
+  ]
   for (const notes of lists) {
     const hit =
       notes.find((n) => fold(n.t) === want) ??

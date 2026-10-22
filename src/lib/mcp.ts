@@ -51,7 +51,11 @@ function searchIndex(lang: Lang): Promise<MiniSearch> {
   let hit = indexes.get(id)
   if (!hit) {
     hit = (async () => {
-      const ms = new MiniSearch({ fields: ["title", "aliases", "tags", "text"], storeFields: [], searchOptions: { boost: { title: 3, aliases: 2, tags: 2 }, prefix: true, fuzzy: 0.2 } })
+      const ms = new MiniSearch({
+        fields: ["title", "aliases", "tags", "text"],
+        storeFields: [],
+        searchOptions: { boost: { title: 3, aliases: 2, tags: 2 }, prefix: true, fuzzy: 0.2 },
+      })
       ms.addAll(notesOf(lang).map((n, id) => ({ id, title: n.title, aliases: n.aliases.join(" "), tags: n.tags.join(" "), text: noteMarkdown(n) })))
       return ms
     })()

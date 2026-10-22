@@ -81,7 +81,10 @@ describe("datme mcp", () => {
     proc.stdin.end()
     const out = await new Response(proc.stdout).text()
     await proc.exited
-    const answers = out.trim().split("\n").map((l) => JSON.parse(l))
+    const answers = out
+      .trim()
+      .split("\n")
+      .map((l) => JSON.parse(l))
     expect(answers.map((a) => a.id)).toEqual([1, 2])
     expect(answers[1].result.content[0].text).toContain("Source: https://notes.dynamotn.dev/03_Atomic/Zettelkasten")
   }, 60_000)

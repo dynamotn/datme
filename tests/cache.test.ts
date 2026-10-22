@@ -27,8 +27,7 @@ function build(out: string, ...flags: string[]): string {
 
 const files = (dir: string) => (fs.readdirSync(dir, { recursive: true }) as string[]).filter((f) => fs.statSync(path.join(dir, f)).isFile())
 // Locked parts are encrypted afresh on every build, with a new salt.
-const page = (out: string, p: string) =>
-  fs.readFileSync(path.join(tmp, out, p), "utf8").replace(/data-payload="[^"]+"/g, 'data-payload=""')
+const page = (out: string, p: string) => fs.readFileSync(path.join(tmp, out, p), "utf8").replace(/data-payload="[^"]+"/g, 'data-payload=""')
 
 describe("build cache", () => {
   test("a second build reuses rendered notes and social cards and gives the same pages", () => {

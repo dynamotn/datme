@@ -69,7 +69,12 @@ describe("findInGarden", () => {
         g: {
           url: "https://g.example",
           fetchedAt: 1,
-          notes: { "vi-VN": [{ u: "/Ghi-chú/%E0%A4%A", t: "Bad path" }, { u: "/Ghi-chú/Hoa-hồng/", t: "Hoa hồng" }] },
+          notes: {
+            "vi-VN": [
+              { u: "/Ghi-chú/%E0%A4%A", t: "Bad path" },
+              { u: "/Ghi-chú/Hoa-hồng/", t: "Hoa hồng" },
+            ],
+          },
         },
       }),
     )

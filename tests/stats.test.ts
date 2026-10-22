@@ -29,7 +29,16 @@ describe("stats", () => {
   })
 
   test("the curve fills the box, ending at the top", () => {
-    expect(growthPath([["2024-01", 1], ["2024-02", 2]], 100, 50)).toBe("M0.0,25.0 L100.0,0.0")
+    expect(
+      growthPath(
+        [
+          ["2024-01", 1],
+          ["2024-02", 2],
+        ],
+        100,
+        50,
+      ),
+    ).toBe("M0.0,25.0 L100.0,0.0")
   })
 
   test("the fixture garden in numbers", async () => {

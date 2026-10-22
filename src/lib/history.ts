@@ -9,17 +9,7 @@
  */
 import { execFileSync } from "node:child_process"
 import { site, type Lang } from "../site.config"
-import {
-  contentLanguage,
-  fallbackOf,
-  filterLanguage,
-  getVault,
-  isIgnored,
-  isPublished,
-  parseFrontmatter,
-  sourceLangOf,
-  type Note,
-} from "./vault"
+import { contentLanguage, fallbackOf, filterLanguage, getVault, isIgnored, isPublished, parseFrontmatter, sourceLangOf, type Note } from "./vault"
 import { publicMarkdown } from "./llms"
 
 export interface Version {
@@ -76,7 +66,10 @@ export function parseFileLog(log: string): Map<string, FileCommit[]> {
     const head = block.indexOf("\0")
     if (head < 0) continue
     const [, time] = block.slice(0, head).split(" ")
-    const fields = block.slice(head + 1).replace(/^\n/, "").split("\0")
+    const fields = block
+      .slice(head + 1)
+      .replace(/^\n/, "")
+      .split("\0")
     for (let i = 0; i < fields.length; i++) {
       if (!fields[i].startsWith(":")) continue
       const meta = fields[i].split(" ")
@@ -144,7 +137,10 @@ function gitHistory(): GitHistory {
   // The texts of every note's publishable versions, in one read.
   const vault = getVault()
   const rels = new Set(site.langs.flatMap((lang) => vault.notes[lang].map((n) => n.key + ".md")))
-  readBlobs(walked, [...rels].flatMap((rel) => commitsOf(walked!, rel)))
+  readBlobs(
+    walked,
+    [...rels].flatMap((rel) => commitsOf(walked!, rel)),
+  )
   return walked
 }
 

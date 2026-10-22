@@ -4,7 +4,10 @@ import { groupOf, parseTasksQuery, runTasksQuery, type TaskItem } from "../src/l
 
 const today = new Date(2024, 4, 10)
 const items: TaskItem[] = [
-  ...extractTasks("## Errands\n- [ ] buy milk 📅 2024-05-09 ⏳ 2024-05-08\n- [X] pay rent ✅ 2024-05-10 #home").map((task) => ({ task, path: "Home/Chores.md" })),
+  ...extractTasks("## Errands\n- [ ] buy milk 📅 2024-05-09 ⏳ 2024-05-08\n- [X] pay rent ✅ 2024-05-10 #home").map((task) => ({
+    task,
+    path: "Home/Chores.md",
+  })),
   ...extractTasks("- [ ] plan trip 🛫 2024-05-11 ➕ 2024-05-09 🔺\n- [ ] tidy desk ⏬").map((task) => ({ task, path: "Inbox.md" })),
 ]
 const first = (i: TaskItem) => i.task.text.split(" ").slice(0, 2).join(" ")

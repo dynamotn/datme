@@ -7,7 +7,11 @@ describe("transcripts of audio and video", () => {
   let dom: Dom
   let media: Media
   class FakeCue {
-    constructor(public startTime: number, public endTime: number, public text: string) {}
+    constructor(
+      public startTime: number,
+      public endTime: number,
+      public text: string,
+    ) {}
   }
   beforeAll(async () => {
     dom = installDom("https://garden.example/en-US/talk")
@@ -81,7 +85,9 @@ describe("transcripts of audio and video", () => {
     const videos = [...document.querySelectorAll("video")]
     const made: string[][] = []
     for (const v of videos)
-      v.addTextTrack = ((kind: string, label: string, lang: string) => (made.push([kind, label, lang]), { mode: "", addCue() {} })) as unknown as HTMLVideoElement["addTextTrack"]
+      v.addTextTrack = ((kind: string, label: string, lang: string) => (
+        made.push([kind, label, lang]), { mode: "", addCue() {} }
+      )) as unknown as HTMLVideoElement["addTextTrack"]
     media.setupMedia()
     // Only the video asking for captions gets a track.
     expect(made).toEqual([["captions", "Captions", ""]])

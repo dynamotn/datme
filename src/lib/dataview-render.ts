@@ -165,9 +165,7 @@ export function renderTasksBlock(source: string, lang: Lang): string | { markdow
   const s = t(lang)
   try {
     const engine = engineFor(lang)
-    const items: (TaskItem & { page: Page })[] = engine.pages.flatMap((page) =>
-      (page.tasks ?? []).map((task) => ({ task, path: page.key + ".md", page })),
-    )
+    const items: (TaskItem & { page: Page })[] = engine.pages.flatMap((page) => (page.tasks ?? []).map((task) => ({ task, path: page.key + ".md", page })))
     const query = parseTasksQuery(source)
     const found = runTasksQuery(query, items) as (TaskItem & { page: Page })[]
     if (!found.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
@@ -179,9 +177,7 @@ export function renderTasksBlock(source: string, lang: Lang): string | { markdow
       groups.set(key, [...(groups.get(key) ?? []), i])
     }
     // Blank lines around the HTML let the task lists in between parse as markdown.
-    const parts = [...groups].map(([key, list]) =>
-      `${query.group ? `<p class="dv-task-group">${escapeAttr(key)}</p>\n\n` : ""}${list.map(line).join("\n")}`,
-    )
+    const parts = [...groups].map(([key, list]) => `${query.group ? `<p class="dv-task-group">${escapeAttr(key)}</p>\n\n` : ""}${list.map(line).join("\n")}`)
     return { markdown: `<div class="dataview dv-tasks tasks-query">\n\n${parts.join("\n\n")}\n\n</div>` }
   } catch (e) {
     if (e instanceof TasksQueryError) return `<p class="dataview dv-error">Tasks: ${escapeAttr(e.message)}</p>`

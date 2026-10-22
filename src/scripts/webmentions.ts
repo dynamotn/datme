@@ -67,7 +67,11 @@ const loaded = new Map<string, Promise<Mention[]>>()
 function fetchMentions(target: string): Promise<Mention[]> {
   let hit = loaded.get(target)
   if (!hit) {
-    const q = new URLSearchParams([["target[]", target], ["target[]", target + "/"], ["per-page", "200"]])
+    const q = new URLSearchParams([
+      ["target[]", target],
+      ["target[]", target + "/"],
+      ["per-page", "200"],
+    ])
     hit = fetch(`https://webmention.io/api/mentions.jf2?${q}`)
       .then((r) => (r.ok ? r.json() : { children: [] }))
       .then((feed: { children?: Mention[] }) => feed.children ?? [])

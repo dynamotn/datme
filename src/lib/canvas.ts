@@ -64,7 +64,10 @@ export function parseCanvas(src: string): CanvasData {
  */
 export function linkHref(url: string | undefined): string | undefined {
   if (!url) return undefined
-  const scheme = url.replace(/[\u0000- ]/g, "").match(/^([a-z][a-z\d+.-]*):/i)?.[1].toLowerCase()
+  const scheme = url
+    .replace(/[\u0000- ]/g, "")
+    .match(/^([a-z][a-z\d+.-]*):/i)?.[1]
+    .toLowerCase()
   return !scheme || scheme === "http" || scheme === "https" || scheme === "mailto" ? url : undefined
 }
 

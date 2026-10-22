@@ -25,7 +25,9 @@ test("a vault memo keeps the values of the current version only", () => {
 test("datme dev keeps only the notes rendered for the current version of the vault", async () => {
   const notes = (version: number) => {
     g.__vaultVersion = version
-    return getVault().notes["en-US"].filter((n) => !n.protected).slice(0, 3)
+    return getVault()
+      .notes["en-US"].filter((n) => !n.protected)
+      .slice(0, 3)
   }
   for (const n of notes(9_000_011)) await renderNote(n)
   const first = renderedNotes()

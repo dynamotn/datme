@@ -128,9 +128,7 @@ function tokenize(src: string): Tok[] {
       continue
     }
     const m =
-      src.slice(i).match(/^\d+(\.\d+)?/) ??
-      src.slice(i).match(/^[\p{L}_$][\p{L}\p{N}_$-]*/u) ??
-      src.slice(i).match(/^(==|!=|<=|>=|&&|\|\||[<>+\-*/%!().,[\]])/)
+      src.slice(i).match(/^\d+(\.\d+)?/) ?? src.slice(i).match(/^[\p{L}_$][\p{L}\p{N}_$-]*/u) ?? src.slice(i).match(/^(==|!=|<=|>=|&&|\|\||[<>+\-*/%!().,[\]])/)
     if (!m) throw new BaseError(`unexpected "${c}"`)
     const v = m[0]
     out.push({ t: /^\d/.test(v) ? "num" : /^[\p{L}_$]/u.test(v) ? "id" : "op", v })
@@ -242,7 +240,8 @@ interface Ctx {
 
 const isLink = (v: unknown): v is Link => typeof v === "object" && v !== null && (v as Link).kind === "link"
 const truthy = (v: Value) => !(v == null || v === false || v === "" || v === 0 || (Array.isArray(v) && !v.length))
-const str = (v: Value): string => (v == null ? "" : isLink(v) ? v.title : v instanceof Date ? v.toISOString() : Array.isArray(v) ? v.map(str).join(", ") : String(v))
+const str = (v: Value): string =>
+  v == null ? "" : isLink(v) ? v.title : v instanceof Date ? v.toISOString() : Array.isArray(v) ? v.map(str).join(", ") : String(v)
 
 const files = new WeakMap<Page[], WeakMap<Page, Record<string, Value>>>()
 

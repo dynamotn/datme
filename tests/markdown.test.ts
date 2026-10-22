@@ -147,7 +147,9 @@ describe("dataview", () => {
   test("queries render as tables of published notes", async () => {
     const { html } = await queries
     expect(html).toContain('<table class="dataview dv-table"><thead><tr><th>Ghi chú</th><th>Name</th></tr></thead>')
-    expect(html).toContain('<a href="/06_Reference/Niklas-Luhmann" class="internal" data-key="06_Reference/Niklas Luhmann">Niklas Luhmann</a></td><td>Niklas Luhmann</td>')
+    expect(html).toContain(
+      '<a href="/06_Reference/Niklas-Luhmann" class="internal" data-key="06_Reference/Niklas Luhmann">Niklas Luhmann</a></td><td>Niklas Luhmann</td>',
+    )
   })
 
   test("queries never see unpublished or protected notes", async () => {
@@ -196,15 +198,21 @@ describe("dataview", () => {
   test("a tasks block lists the open tasks, each with a link to its note", async () => {
     const { html } = await queries
     const block = html.match(/<div class="dataview dv-tasks tasks-query">[\s\S]*?<\/div>/)![0]
-    expect(block).toMatch(/<input type="checkbox" disabled aria-label="Ask Niklas Luhmann about it"> Ask <a href="\/06_Reference\/Niklas-Luhmann"[^>]*>Niklas Luhmann<\/a> about it <a class="task-note internal" href="\/03_Atomic\/Queries">Queries<\/a>/)
+    expect(block).toMatch(
+      /<input type="checkbox" disabled aria-label="Ask Niklas Luhmann about it"> Ask <a href="\/06_Reference\/Niklas-Luhmann"[^>]*>Niklas Luhmann<\/a> about it <a class="task-note internal" href="\/03_Atomic\/Queries">Queries<\/a>/,
+    )
     expect(block).not.toContain("Read")
   })
 
   test("a base block renders every view, named, with `this` the note holding it", async () => {
     const { html } = await queries
     const block = html.match(/<div class="base-embed base-block">[\s\S]*?<\/table><\/div>/)![0]
-    expect(block).toContain('<p class="base-view-name">Linked here</p><ul class="dataview dv-list"><li><a href="/06_Reference/Niklas-Luhmann" class="internal" data-key="06_Reference/Niklas Luhmann">Niklas Luhmann</a></li></ul>')
-    expect(block).toContain('<p class="base-view-name">Rated</p><div class="table-wrap"><table class="dataview base-table"><thead><tr><th>Name</th><th>shout</th></tr>')
+    expect(block).toContain(
+      '<p class="base-view-name">Linked here</p><ul class="dataview dv-list"><li><a href="/06_Reference/Niklas-Luhmann" class="internal" data-key="06_Reference/Niklas Luhmann">Niklas Luhmann</a></li></ul>',
+    )
+    expect(block).toContain(
+      '<p class="base-view-name">Rated</p><div class="table-wrap"><table class="dataview base-table"><thead><tr><th>Name</th><th>shout</th></tr>',
+    )
     expect(block).toContain("<td>QUERIES</td>")
   })
 

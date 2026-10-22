@@ -27,7 +27,10 @@ describe("daily note names", () => {
     fs.mkdirSync(path.join(dir, ".obsidian/plugins/periodic-notes"), { recursive: true })
     fs.writeFileSync(path.join(dir, ".obsidian/daily-notes.json"), '{"folder":"/Daily/","format":"DD.MM.YYYY"}')
     expect(dailyFormat(dir)).toEqual({ folder: "Daily", format: "DD.MM.YYYY" })
-    fs.writeFileSync(path.join(dir, ".obsidian/plugins/periodic-notes/data.json"), '{"daily":{"enabled":true,"format":"YYYY/MM/YYYY-MM-DD","folder":"Journal"}}')
+    fs.writeFileSync(
+      path.join(dir, ".obsidian/plugins/periodic-notes/data.json"),
+      '{"daily":{"enabled":true,"format":"YYYY/MM/YYYY-MM-DD","folder":"Journal"}}',
+    )
     expect(dailyFormat(dir)).toEqual({ folder: "Journal", format: "YYYY/MM/YYYY-MM-DD" })
   })
 })
@@ -51,7 +54,12 @@ describe("the journal of the vault", () => {
     expect([oct.year, oct.month, sep.month]).toEqual([2026, 10, 9])
     // 1 October 2026 is a Thursday.
     expect(oct.weeks[0].slice(0, 4).map((c) => c?.day ?? null)).toEqual([null, null, null, 1])
-    expect(oct.weeks.flat().filter((c) => c?.note).map((c) => c!.day)).toEqual([5, 7])
+    expect(
+      oct.weeks
+        .flat()
+        .filter((c) => c?.note)
+        .map((c) => c!.day),
+    ).toEqual([5, 7])
     expect(oct.weeks.every((w) => w.length === 7)).toBe(true)
   })
 })

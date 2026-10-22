@@ -59,7 +59,13 @@ describe("service worker", () => {
     const caches = { open, match: async (r: { url: string }) => [...stores.values()].find((m) => m.has(r.url))?.get(r.url) }
     const listeners: Record<string, (e: unknown) => void> = {}
     const self = { location: { origin: "https://garden.test" }, addEventListener: (t: string, f: (e: unknown) => void) => (listeners[t] = f) }
-    const fetch = async () => ({ ok: true, type: "basic", clone() { return this } })
+    const fetch = async () => ({
+      ok: true,
+      type: "basic",
+      clone() {
+        return this
+      },
+    })
     new Function("self", "caches", "fetch", sw)(self, caches, fetch)
     for (let i = 0; i < MAX_ASSETS + 25; i++) {
       let answer: Promise<unknown> | undefined

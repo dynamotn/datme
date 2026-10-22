@@ -40,7 +40,17 @@ describe("charts", () => {
     dom.document.documentElement.style.setProperty("--accent", "#112233")
     dom.document.documentElement.style.setProperty("--ink-2", "#333")
     dom.document.documentElement.style.setProperty("--line", "#eee")
-    dom.document.body.innerHTML = figure({ type: "line", labels: ["a", "b"], series: [{ title: "One", data: [1, 2] }, { title: "Two", data: [3, 4] }], stacked: true, beginAtZero: true, tension: 0.3 })
+    dom.document.body.innerHTML = figure({
+      type: "line",
+      labels: ["a", "b"],
+      series: [
+        { title: "One", data: [1, 2] },
+        { title: "Two", data: [3, 4] },
+      ],
+      stacked: true,
+      beginAtZero: true,
+      tension: 0.3,
+    })
     charts.setupCharts()
     expect(made).toHaveLength(1)
     const { config, canvas } = made[0]
@@ -61,8 +71,15 @@ describe("charts", () => {
     made.length = 0
     dom.document.documentElement.style.setProperty("--accent", "rgb(1, 2, 3)")
     dom.document.body.innerHTML =
-      figure({ type: "bar", labels: ["a"], series: [{ title: "One", data: [1] }, { title: "Two", data: [2] }], indexAxis: "y" }) +
-      figure({ type: "line", labels: ["a"], series: [{ title: "One", data: [1] }], fill: true })
+      figure({
+        type: "bar",
+        labels: ["a"],
+        series: [
+          { title: "One", data: [1] },
+          { title: "Two", data: [2] },
+        ],
+        indexAxis: "y",
+      }) + figure({ type: "line", labels: ["a"], series: [{ title: "One", data: [1] }], fill: true })
     charts.setupCharts()
     expect(made.map((c) => c.config.data.datasets.map((d) => d.backgroundColor))).toEqual([["rgb(1, 2, 3)", "#d97706cc"], ["rgb(1, 2, 3)"]])
     expect(made[0].config.options.indexAxis).toBe("y")
@@ -74,7 +91,9 @@ describe("charts", () => {
     const root = dom.document.documentElement
     for (const p of ["--accent", "--ink-2", "--line"]) root.style.removeProperty(p)
     const labels = Array.from({ length: 9 }, (_, i) => `l${i}`)
-    dom.document.body.innerHTML = ["pie", "doughnut", "polarArea"].map((type) => figure({ type, labels, series: [{ title: "S", data: labels.map(() => 1) }] })).join("")
+    dom.document.body.innerHTML = ["pie", "doughnut", "polarArea"]
+      .map((type) => figure({ type, labels, series: [{ title: "S", data: labels.map(() => 1) }] }))
+      .join("")
     charts.setupCharts()
     expect(made).toHaveLength(3)
     for (const c of made) {

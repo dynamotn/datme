@@ -44,7 +44,15 @@ const PLAIN = [
 ] as const
 
 /** Functions of the window, called without it. */
-const BOUND = ["getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame", "matchMedia", "scrollTo", "addEventListener", "removeEventListener"] as const
+const BOUND = [
+  "getComputedStyle",
+  "requestAnimationFrame",
+  "cancelAnimationFrame",
+  "matchMedia",
+  "scrollTo",
+  "addEventListener",
+  "removeEventListener",
+] as const
 
 /** Live values read off the window, like `scrollY`. */
 const LIVE = ["innerHeight", "innerWidth", "scrollY"] as const

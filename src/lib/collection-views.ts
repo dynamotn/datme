@@ -14,8 +14,7 @@ import { t } from "./i18n"
 import { field, formatPrice, noteDay, plain, priceOf, quotesOf, textOf, type Spec } from "./note-layouts"
 
 /** A list property: a YAML list, or names joined by commas. */
-export const listOf = (v: unknown): string[] =>
-  (Array.isArray(v) ? v.map(plain) : plain(v).split(/\s*,\s*/)).filter(Boolean)
+export const listOf = (v: unknown): string[] => (Array.isArray(v) ? v.map(plain) : plain(v).split(/\s*,\s*/)).filter(Boolean)
 
 // ---------- daily ----------
 

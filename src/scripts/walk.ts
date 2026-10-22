@@ -14,7 +14,7 @@ const PARAM = "walk"
 export function shortestPath(links: [number, number][], count: number, from: number, to: number): number[] | undefined {
   if (from === to) return [from]
   const near: number[][] = Array.from({ length: count }, () => [])
-  for (const [a, b] of links) (near[a].push(b), near[b].push(a))
+  for (const [a, b] of links) near[a].push(b), near[b].push(a)
   const before = new Map<number, number>([[from, -1]])
   const queue = [from]
   while (queue.length) {
@@ -51,7 +51,10 @@ export function matchNotes(index: GraphIndex, query: string, except: string, lim
     const rank = title.startsWith(q) ? 0 : title.includes(q) ? 1 : n.a.some((a) => fold(a).includes(q)) ? 2 : -1
     if (rank >= 0) hits.push({ i, rank })
   })
-  return hits.sort((a, b) => a.rank - b.rank || index.notes[a.i].t.localeCompare(index.notes[b.i].t)).slice(0, limit).map((h) => h.i)
+  return hits
+    .sort((a, b) => a.rank - b.rank || index.notes[a.i].t.localeCompare(index.notes[b.i].t))
+    .slice(0, limit)
+    .map((h) => h.i)
 }
 
 function active(): string[] | undefined {
@@ -89,7 +92,13 @@ function render(article: HTMLElement, urls: string[], titles: Map<string, string
   bar.dataset.walk = ""
   bar.setAttribute("aria-label", s.walkLabel!)
   const where = el("p", "trail-where")
-  where.append(el("span", "trail-label", `🥾 ${s.walkLabel}`), " ", `${title(urls[0])} → ${title(urls.at(-1)!)}`, " ", el("span", "trail-step", `${here + 1} / ${urls.length}`))
+  where.append(
+    el("span", "trail-label", `🥾 ${s.walkLabel}`),
+    " ",
+    `${title(urls[0])} → ${title(urls.at(-1)!)}`,
+    " ",
+    el("span", "trail-step", `${here + 1} / ${urls.length}`),
+  )
   const share = el("button", "trail-leave", s.walkShare)
   share.type = "button"
   share.addEventListener("click", async () => {

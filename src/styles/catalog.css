@@ -199,7 +199,9 @@
   border-bottom-width: 26px;
   border-radius: 3px;
   background: var(--surface);
-  box-shadow: inset 0 0 0 2px var(--brass), var(--shadow);
+  box-shadow:
+    inset 0 0 0 2px var(--brass),
+    var(--shadow);
   text-align: center;
   font-family: var(--font-type);
   color: var(--ink);

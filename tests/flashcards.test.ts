@@ -50,7 +50,7 @@ describe("flashcards", () => {
   test("separators inside code are not cards, but code inside a card is fine", () => {
     expect(cards("```cpp\nstd::vector<int> v;\n```")).not.toContain("<details")
     expect(cards("Use `a::b` here")).not.toContain("<details")
-    expect(cards("What is `std::vector`?::A growable array")).toContain("<summary data-hint=\"Show\">\n\nWhat is `std::vector`?\n\n</summary>")
+    expect(cards("What is `std::vector`?::A growable array")).toContain('<summary data-hint="Show">\n\nWhat is `std::vector`?\n\n</summary>')
   })
 
   test("highlights become clozes, without their colour emoji", () => {

@@ -80,9 +80,7 @@ function renderView(base: BaseFile, view: BaseView, lang: Lang, currentKey?: str
     const cards = res.rows
       .map(({ page, cells, image }) => {
         const img = typeof image === "string" && /^https?:\/\//.test(image) ? image : notes.get(page.key)?.banner
-        const fields = res.columns
-          .map((c, i) => (c.id === "file.name" ? "" : `<li><b>${escapeAttr(c.name)}</b> ${html(cells[i], lang)}</li>`))
-          .join("")
+        const fields = res.columns.map((c, i) => (c.id === "file.name" ? "" : `<li><b>${escapeAttr(c.name)}</b> ${html(cells[i], lang)}</li>`)).join("")
         return `<article class="index-card base-card">${img ? `<a class="index-card-media" href="${escapeAttr(page.url)}" tabindex="-1"><img src="${escapeAttr(img)}" alt="" loading="lazy"></a>` : ""}<h3 class="index-card-title"><a class="internal" href="${escapeAttr(page.url)}" data-key="${escapeAttr(page.key)}">${escapeAttr(page.title)}</a></h3>${fields ? `<ul class="base-fields">${fields}</ul>` : ""}</article>`
       })
       .join("")

@@ -28,10 +28,26 @@ describe("reading drawings", () => {
 
   test("a freehand stroke keeps its points and pressures, a value that is not a number reads as half pressure", () => {
     const json = JSON.stringify({
-      elements: [{ id: "f", type: "freedraw", x: 0, y: 0, width: 10, height: 10, points: [[0, 0], [5, "x"], "bad", [10, 10]], pressures: [0.2, "x", null, 0.9], simulatePressure: false }],
+      elements: [
+        {
+          id: "f",
+          type: "freedraw",
+          x: 0,
+          y: 0,
+          width: 10,
+          height: 10,
+          points: [[0, 0], [5, "x"], "bad", [10, 10]],
+          pressures: [0.2, "x", null, 0.9],
+          simulatePressure: false,
+        },
+      ],
     })
     const [stroke] = parseDrawing(json).elements
-    expect(stroke.points).toEqual([[0, 0], [5, 0], [10, 10]])
+    expect(stroke.points).toEqual([
+      [0, 0],
+      [5, 0],
+      [10, 10],
+    ])
     expect(stroke.pressures).toEqual([0.2, 0.5, 0.5, 0.9])
     expect(stroke.simulatePressure).toBe(false)
   })
@@ -94,7 +110,9 @@ describe("drawing", () => {
     expect(html).toContain(text)
     expect(html).toContain(">a*b*c + $x$\n\na~b~c<")
     const linked = renderScene(scene([{ id: "l", type: "text", x: 0, y: 0, width: 100, height: 20, text: "[z](https://a.b)" }]))
-    expect(await renderMarkdown(`<span class="drawing generated">${markdownSafe(linked)}</span>`, "en-US", "x")).toContain('<a href="https://a.b" class="drawing-link')
+    expect(await renderMarkdown(`<span class="drawing generated">${markdownSafe(linked)}</span>`, "en-US", "x")).toContain(
+      '<a href="https://a.b" class="drawing-link',
+    )
   })
 
   test("the same seed draws the same lines", () => {
@@ -115,7 +133,9 @@ describe("drawing", () => {
     )
     expect(svg).toMatch(/<a href="\/home" class="drawing-link" aria-label="Home"><g transform="translate\(0 0\)"/)
     expect(svg).toContain('role="group"')
-    expect(svg).toContain('<a href="/home" class="drawing-link"><tspan dominant-baseline="middle">home</tspan></a><tspan dominant-baseline="middle"> or </tspan><tspan dominant-baseline="middle">Nowhere</tspan>')
+    expect(svg).toContain(
+      '<a href="/home" class="drawing-link"><tspan dominant-baseline="middle">home</tspan></a><tspan dominant-baseline="middle"> or </tspan><tspan dominant-baseline="middle">Nowhere</tspan>',
+    )
   })
 
   test("export settings: transparent, dark, padding", () => {
@@ -127,8 +147,36 @@ describe("drawing", () => {
   })
 
   test("every Excalidraw arrowhead draws", () => {
-    for (const head of ["arrow", "bar", "dot", "circle_outline", "triangle", "triangle_outline", "diamond", "diamond_outline", "crowfoot_one", "crowfoot_many", "crowfoot_one_or_many"]) {
-      const svg = renderScene(scene([{ id: "a", type: "arrow", x: 0, y: 0, width: 100, height: 0, points: [[0, 0], [100, 0]], endArrowhead: head }]))
+    for (const head of [
+      "arrow",
+      "bar",
+      "dot",
+      "circle_outline",
+      "triangle",
+      "triangle_outline",
+      "diamond",
+      "diamond_outline",
+      "crowfoot_one",
+      "crowfoot_many",
+      "crowfoot_one_or_many",
+    ]) {
+      const svg = renderScene(
+        scene([
+          {
+            id: "a",
+            type: "arrow",
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 0,
+            points: [
+              [0, 0],
+              [100, 0],
+            ],
+            endArrowhead: head,
+          },
+        ]),
+      )
       expect(svg.match(/<path /g)!.length).toBeGreaterThan(1)
     }
   })
@@ -146,7 +194,10 @@ describe("frames and parts", () => {
   })
 
   test("a frame by name or id shows what it holds, without its outline", () => {
-    for (const select of [{ kind: "frameName" as const, name: "overview" }, { kind: "frame" as const, id: "frame1" }]) {
+    for (const select of [
+      { kind: "frameName" as const, name: "overview" },
+      { kind: "frame" as const, id: "frame1" },
+    ]) {
       const svg = renderScene(s, { select })
       expect(svg).not.toContain("drawing-frame")
       expect(svg).toContain(">Slip box</tspan>")
@@ -234,15 +285,41 @@ describe("untrusted drawings", () => {
     const base = { x: 0, y: 0, width: 100, height: 20 }
     const svgs = [
       draw([{ id: "t", type: "text", ...base, text: "hi", fontSize: evil, lineHeight: evil, textAlign: evil }]),
-      draw([{ id: "r", type: "rectangle", x: evil, y: evil, width: evil, height: evil, angle: evil, opacity: evil, strokeWidth: evil, roundness: { type: 3, value: evil } }]),
+      draw([
+        {
+          id: "r",
+          type: "rectangle",
+          x: evil,
+          y: evil,
+          width: evil,
+          height: evil,
+          angle: evil,
+          opacity: evil,
+          strokeWidth: evil,
+          roundness: { type: 3, value: evil },
+        },
+      ]),
       draw([
         { id: "f", type: "frame", x: evil, y: 0, width: 10, height: 10, name: "F" },
         { id: "e", type: "ellipse", ...base, frameId: "f", strokeStyle: evil, fillStyle: evil, backgroundColor: "#fff" },
       ]),
       draw([{ id: "a", type: "arrow", ...base, points: [[0, evil], [evil, 10], "x"], endArrowhead: "arrow" }]),
-      draw([{ id: "i", type: "image", ...base, fileId: "f1", scale: [evil, 1], crop: { x: evil, y: 0, width: 5, height: 5, naturalWidth: evil, naturalHeight: 5 }, roundness: { type: 3 } }], {
-        f1: { dataURL: "data:image/png;base64,AA==" },
-      }),
+      draw(
+        [
+          {
+            id: "i",
+            type: "image",
+            ...base,
+            fileId: "f1",
+            scale: [evil, 1],
+            crop: { x: evil, y: 0, width: 5, height: 5, naturalWidth: evil, naturalHeight: 5 },
+            roundness: { type: 3 },
+          },
+        ],
+        {
+          f1: { dataURL: "data:image/png;base64,AA==" },
+        },
+      ),
     ]
     for (const svg of svgs) {
       expect(svg).not.toContain("onerror")

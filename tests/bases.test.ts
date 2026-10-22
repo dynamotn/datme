@@ -30,8 +30,8 @@ describe("expressions", () => {
   test("file helpers, operators and precedence", () => {
     expect(names('views: [{ type: table, filters: \'file.hasTag("type/book") && rating >= 4 || file.name == "Idea"\' }]')).toEqual(["Dune", "Idea"])
     expect(names('views: [{ type: table, filters: \'file.inFolder("Books") && !author.contains("Aus")\' }]')).toEqual(["Dune"])
-    expect(names('views: [{ type: table, filters: \'file.hasLink("Dune")\' }]')).toEqual(["Idea"])
-    expect(names('views: [{ type: table, filters: \'file.hasTag("#Type")\' }]')).toEqual(["Dune", "Emma"])
+    expect(names("views: [{ type: table, filters: 'file.hasLink(\"Dune\")' }]")).toEqual(["Idea"])
+    expect(names("views: [{ type: table, filters: 'file.hasTag(\"#Type\")' }]")).toEqual(["Dune", "Emma"])
   })
 
   test("and / or / not filter groups, at file and view level", () => {

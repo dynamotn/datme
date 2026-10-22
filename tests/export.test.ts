@@ -42,7 +42,9 @@ describe("zip", () => {
 
 describe("xhtml", () => {
   test("void elements close, booleans are spelled out, SVG gets its namespace", () => {
-    const tree = fromHtml('<p>a<br>b <input type="checkbox" checked disabled> <img src="x.png" alt="&lt;x&gt;"></p><svg viewBox="0 0 1 1"></svg>', { fragment: true })
+    const tree = fromHtml('<p>a<br>b <input type="checkbox" checked disabled> <img src="x.png" alt="&lt;x&gt;"></p><svg viewBox="0 0 1 1"></svg>', {
+      fragment: true,
+    })
     expect(toXhtml(tree)).toBe(
       '<p>a<br/>b <input type="checkbox" checked="checked" disabled="disabled"/> <img src="x.png" alt="&lt;x&gt;"/></p><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
     )

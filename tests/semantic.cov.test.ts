@@ -50,7 +50,16 @@ describe("embedding a query", () => {
   test("blend with no word matches ranks by meaning alone, and a threshold of 1 does not divide by zero", () => {
     expect(blend([], [{ url: "/m", sim: 1 }], 1)).toEqual(["/m"])
     // A note with both words and meaning ranks above one with the words alone.
-    expect(blend([{ url: "/w", score: 4 }, { url: "/both", score: 4 }], [{ url: "/both", sim: 0.9 }], 0.5)).toEqual(["/both", "/w"])
+    expect(
+      blend(
+        [
+          { url: "/w", score: 4 },
+          { url: "/both", score: 4 },
+        ],
+        [{ url: "/both", sim: 0.9 }],
+        0.5,
+      ),
+    ).toEqual(["/both", "/w"])
   })
 
   test("nearest keeps the closest notes above the threshold, best first, without the skipped one", () => {

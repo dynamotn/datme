@@ -16,8 +16,10 @@ afterAll(() => {
   dom.restore()
 })
 
-const slide = (n: number) => `<svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject><section id="s${n}"><p>Slide ${n}</p><a href="/x">link</a></section></foreignObject></svg>`
-const deck = (n = 3) => `<div class="marp-deck"><template shadowrootmode="open"><div class="marpit">${Array.from({ length: n }, (_, i) => slide(i + 1)).join("")}</div></template></div>`
+const slide = (n: number) =>
+  `<svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject><section id="s${n}"><p>Slide ${n}</p><a href="/x">link</a></section></foreignObject></svg>`
+const deck = (n = 3) =>
+  `<div class="marp-deck"><template shadowrootmode="open"><div class="marpit">${Array.from({ length: n }, (_, i) => slide(i + 1)).join("")}</div></template></div>`
 const current = (host: Element) => [...host.shadowRoot!.querySelectorAll(".marpit > svg")].findIndex((s) => s.classList.contains("current"))
 const clickIn = (host: Element, selector: string, clientX: number) =>
   host.shadowRoot!.querySelector(selector)!.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, clientX }))

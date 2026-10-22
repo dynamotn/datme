@@ -43,7 +43,12 @@ const LIST_ITEM = /^(?:\d+[.)]|[-*+])\s+(.*)$/
 /** A link to a note, as the converter writes it: the first thing of the item. */
 const LEAD_LINK = /^(?:\*\*|__|\*|_)?<a [^>]*?class="internal" data-key="([^"]+)"[^>]*>[\s\S]*?<\/a>(?:\*\*|__|\*|_)?/
 
-const decode = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+const decode = (s: string) =>
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
 
 /**
  * The steps of a trail, read from its converted markdown: each top-level list

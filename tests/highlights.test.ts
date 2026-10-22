@@ -31,7 +31,18 @@ describe("reader highlights", () => {
 
   test("the export quotes each passage, adds the reader's words and links back to the passage", () => {
     const md = toMarkdown(
-      [{ url: "https://g.dev/Notes/Zettel", page: { title: "Zettel", items: [{ ...makeHighlight(text, 0, 6, 2), note: "Start here." }, { ...makeHighlight(text, 24, 34, 1), note: "" }] } }],
+      [
+        {
+          url: "https://g.dev/Notes/Zettel",
+          page: {
+            title: "Zettel",
+            items: [
+              { ...makeHighlight(text, 0, 6, 2), note: "Start here." },
+              { ...makeHighlight(text, 24, 34, 1), note: "" },
+            ],
+          },
+        },
+      ],
       "My highlights · Garden",
       "lost",
       (_url, h) => h.text !== "Every note",

@@ -38,7 +38,8 @@ function fakeContext() {
   const calls: Call[] = []
   const ctx: Record<string, unknown> = { fillStyle: "", strokeStyle: "", globalAlpha: 1, lineWidth: 1, font: "", textAlign: "" }
   for (const op of ["setTransform", "clearRect", "beginPath", "moveTo", "lineTo", "stroke", "arc", "fill", "strokeText", "fillText", "setLineDash"])
-    ctx[op] = (...args: unknown[]) => void calls.push({ op, args, fill: ctx.fillStyle as string, stroke: ctx.strokeStyle as string, alpha: ctx.globalAlpha as number })
+    ctx[op] = (...args: unknown[]) =>
+      void calls.push({ op, args, fill: ctx.fillStyle as string, stroke: ctx.strokeStyle as string, alpha: ctx.globalAlpha as number })
   return { ctx, calls }
 }
 
@@ -116,7 +117,15 @@ describe("the graph in the browser", () => {
     }
     proto.setPointerCapture = () => {}
     const root = document.documentElement.style
-    for (const [k, v] of Object.entries({ "--muted": "grey", "--accent": "blue", "--clay": "clay", "--line-strong": "line", "--ink": "ink", "--surface": "paper" })) root.setProperty(k, v)
+    for (const [k, v] of Object.entries({
+      "--muted": "grey",
+      "--accent": "blue",
+      "--clay": "clay",
+      "--line-strong": "line",
+      "--ink": "ink",
+      "--surface": "paper",
+    }))
+      root.setProperty(k, v)
     graph = await import("../src/scripts/graph")
   })
   beforeEach(() => {
@@ -289,7 +298,10 @@ describe("the graph in the browser", () => {
     resize(canvas)
     document.documentElement.style.removeProperty("--graph-dash")
     const calls = contexts.get(canvas)!.calls
-    const dashes = calls.slice(calls.findLastIndex((c) => c.op === "clearRect")).filter((c) => c.op === "setLineDash").map((c) => c.args[0])
+    const dashes = calls
+      .slice(calls.findLastIndex((c) => c.op === "clearRect"))
+      .filter((c) => c.op === "setLineDash")
+      .map((c) => c.args[0])
     expect(dashes).toEqual([[2, 4], []])
   })
 
@@ -494,7 +506,11 @@ describe("the graph in the browser", () => {
     frames.shift()!()
     expect(frame(canvas).circles).toEqual(hovered)
     // Some notes are drawn fainter than others: they are farther.
-    const alphas = contexts.get(canvas)!.calls.filter((c) => c.op === "fill").slice(-5).map((c) => c.alpha)
+    const alphas = contexts
+      .get(canvas)!
+      .calls.filter((c) => c.op === "fill")
+      .slice(-5)
+      .map((c) => c.alpha)
     expect(new Set(alphas).size).toBeGreaterThan(1)
     canvas.onpointerleave!(pointer(0, 0))
     // A drag turns it by hand and stops the spin.
@@ -762,7 +778,9 @@ describe("the graph in the browser", () => {
       expect(p.range.hidden).toBe(true)
       p.dialog.close()
 
-      document.body.innerHTML = dialogHtml("cov-graph").replace(/<input[^>]+>/, "").replace(/<select data-graph-color[\s\S]*?<\/select>/, "")
+      document.body.innerHTML = dialogHtml("cov-graph")
+        .replace(/<input[^>]+>/, "")
+        .replace(/<select data-graph-color[\s\S]*?<\/select>/, "")
       const q = parts()
       graph.openGraph()
       await settle(30)

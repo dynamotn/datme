@@ -13,10 +13,10 @@ beforeAll(async () => {
   Object.assign(globalThis, { document, window, innerHeight: 800, innerWidth: 1200, HTMLElement: window.HTMLElement })
 })
 
-const slide = (n: number) => `<svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject><section id="${n}"><a href="/x">link</a></section></foreignObject></svg>`
+const slide = (n: number) =>
+  `<svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject><section id="${n}"><a href="/x">link</a></section></foreignObject></svg>`
 const key = (k: string) => document.dispatchEvent(new window.KeyboardEvent("keydown", { key: k, bubbles: true }))
-const current = (host: Element) =>
-  [...host.shadowRoot!.querySelectorAll(".marpit > svg")].findIndex((s) => s.classList.contains("current"))
+const current = (host: Element) => [...host.shadowRoot!.querySelectorAll(".marpit > svg")].findIndex((s) => s.classList.contains("current"))
 
 describe("presenting a deck", () => {
   test("a deck parsed without its shadow root gets one, and a present button", async () => {

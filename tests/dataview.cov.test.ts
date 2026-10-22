@@ -32,22 +32,22 @@ const run = (q: string) => runQuery(parseQuery(q), engine)
 
 describe("functions", () => {
   test("contains over lists, text, links and objects", () => {
-    expect(ev("contains(names, \"Paul\")")).toBe(true)
-    expect(ev("contains(names, \"Alia\")")).toBe(false)
-    expect(ev("contains(Genre, \"Sci\")")).toBe(true)
+    expect(ev('contains(names, "Paul")')).toBe(true)
+    expect(ev('contains(names, "Alia")')).toBe(false)
+    expect(ev('contains(Genre, "Sci")')).toBe(true)
     expect(ev("contains([[Emma]], [[Emma]])")).toBe(true)
-    expect(ev("contains(meta, \"a\")")).toBe(true)
-    expect(ev("contains(meta, \"z\")")).toBe(false)
+    expect(ev('contains(meta, "a")')).toBe(true)
+    expect(ev('contains(meta, "z")')).toBe(false)
     expect(ev("contains(rating, 5)")).toBe(false)
   })
 
   test("icontains, startswith and endswith ignore or keep case", () => {
-    expect(ev("icontains(names, \"PAUL\")")).toBe(true)
-    expect(ev("icontains(names, \"x\")")).toBe(false)
-    expect(ev("icontains(Genre, \"scifi\")")).toBe(true)
-    expect(ev("startswith(Genre, \"Sci\")")).toBe(true)
-    expect(ev("endswith(Genre, \"Fi\")")).toBe(true)
-    expect(ev("endswith(nothing, \"Fi\")")).toBe(false)
+    expect(ev('icontains(names, "PAUL")')).toBe(true)
+    expect(ev('icontains(names, "x")')).toBe(false)
+    expect(ev('icontains(Genre, "scifi")')).toBe(true)
+    expect(ev('startswith(Genre, "Sci")')).toBe(true)
+    expect(ev('endswith(Genre, "Fi")')).toBe(true)
+    expect(ev('endswith(nothing, "Fi")')).toBe(false)
   })
 
   test("length of lists, objects and text; lower and upper", () => {
@@ -62,14 +62,14 @@ describe("functions", () => {
   test("default, choice, join, list, number and string", () => {
     expect(ev("default(nothing, 7)")).toBe(7)
     expect(ev("default(nothing, nothing)")).toBeNull()
-    expect(ev("choice(rating > 4, \"good\", \"bad\")")).toBe("good")
-    expect(ev("choice(false, \"good\")")).toBeNull()
+    expect(ev('choice(rating > 4, "good", "bad")')).toBe("good")
+    expect(ev('choice(false, "good")')).toBeNull()
     expect(ev("join(names)")).toBe("Paul, Leto")
-    expect(ev("join(names, \" & \")")).toBe("Paul & Leto")
+    expect(ev('join(names, " & ")')).toBe("Paul & Leto")
     expect(ev("join(Genre)")).toBe("SciFi")
-    expect(ev("list(1, \"a\")")).toEqual([1, "a"])
-    expect(ev("number(\"4.5 stars\")")).toBe(4.5)
-    expect(ev("number(\"none\")")).toBeNull()
+    expect(ev('list(1, "a")')).toEqual([1, "a"])
+    expect(ev('number("4.5 stars")')).toBe(4.5)
+    expect(ev('number("none")')).toBeNull()
     expect(ev("string(rating)")).toBe("5")
     expect(ev("string(file.ctime)")).toBe("2020-01-01T00:00:00.000Z")
   })
@@ -81,7 +81,7 @@ describe("functions", () => {
     expect(ev("min(scores)")).toBe(1)
     expect(ev("max(3, 9, 4)")).toBe(9)
     expect(ev("sum(scores)")).toBe(6)
-    expect(ev("sum(1, \"x\", 2)")).toBe(3)
+    expect(ev('sum(1, "x", 2)')).toBe(3)
   })
 
   test("regexmatch matches the whole text; a bad pattern is no match", () => {
@@ -155,7 +155,7 @@ describe("expressions", () => {
     expect(ev("nothing >= 1")).toBe(false)
     expect(ev("nothing = null")).toBe(true)
     expect(ev("nothing != null")).toBe(false)
-    expect(ev("file.ctime = date(\"2020-01-01\")")).toBe(true)
+    expect(ev('file.ctime = date("2020-01-01")')).toBe(true)
     expect(ev("scores = scores")).toBe(true)
   })
 
@@ -177,7 +177,7 @@ describe("expressions", () => {
 
 describe("queries", () => {
   test("FROM accepts AND, parentheses and negation; scopeOf reads only tag and folder sources", () => {
-    expect(run('LIST FROM #type AND -#classic').rows.map((r) => (r[0] as { title: string }).title)).toEqual(["Dune"])
+    expect(run("LIST FROM #type AND -#classic").rows.map((r) => (r[0] as { title: string }).title)).toEqual(["Dune"])
     expect(run('LIST FROM (#classic OR "Notes")').rows.length).toBe(2)
     expect(run('LIST FROM "Books/Dune.md"').rows.length).toBe(1)
     expect(scopeOf(parseQuery('LIST FROM #type AND !"Notes"'), engine)!.map((p) => p.key)).toEqual(["Books/Dune", "Books/Emma"])
@@ -208,7 +208,7 @@ describe("queries", () => {
   test("syntax errors", () => {
     expect(() => parseQuery("")).toThrow("a query starts with LIST, TABLE or TASK")
     expect(() => parseQuery("CALENDAR file.ctime")).toThrow(Unsupported)
-    expect(() => parseQuery('TABLE rating AS 5')).toThrow("expected a column name after AS")
+    expect(() => parseQuery("TABLE rating AS 5")).toThrow("expected a column name after AS")
     expect(() => parseQuery("LIST FROM 5")).toThrow('FROM expects #tags, "folders" or [[links]]')
     expect(() => parseQuery("LIST FROM (#a")).toThrow('expected ")"')
     expect(() => parseQuery("LIST LIMIT x")).toThrow("expected num")

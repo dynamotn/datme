@@ -29,7 +29,14 @@ function page({ pages = 4, look = "eink", on = true, dir = "ltr", bar = true } =
   note.getBoundingClientRect = () => ({ left: 100, right: 700, width: 600, top: 0, bottom: 800, height: 800 }) as DOMRect
   paged.setupPaged()
   const $ = <T extends HTMLElement>(s: string) => dom.document.querySelector<T>(s)!
-  return { note, count: $("[data-paged-count]"), prev: $<HTMLButtonElement>("[data-paged-prev]"), next: $<HTMLButtonElement>("[data-paged-next]"), bar: $("[data-paged-bar]"), toggle: $("[data-paged-toggle]") }
+  return {
+    note,
+    count: $("[data-paged-count]"),
+    prev: $<HTMLButtonElement>("[data-paged-prev]"),
+    next: $<HTMLButtonElement>("[data-paged-next]"),
+    bar: $("[data-paged-bar]"),
+    toggle: $("[data-paged-toggle]"),
+  }
 }
 const key = (k: string, init: KeyboardEventInit = {}, target: EventTarget = dom.document.body) => {
   const e = new dom.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true, ...init })

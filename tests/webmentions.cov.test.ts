@@ -37,14 +37,22 @@ describe("webmentions on a note", () => {
       { "wm-property": "like-of", url: "https://social.example/1", author: { name: "Ann", photo: "https://img.example/ann.png", url: "https://ann.example" } },
       { "wm-property": "bookmark-of", url: "https://social.example/2", author: { name: "Bob", photo: "javascript:alert(1)" } },
       { "wm-property": "repost-of", url: "javascript:alert(1)", author: { url: "ftp://nope" } },
-      { "wm-property": "in-reply-to", url: "https://blog.example/reply", published: "2024-03-05T10:00:00Z", author: { name: "Cat" }, content: { text: `  ${long}  ` } },
+      {
+        "wm-property": "in-reply-to",
+        url: "https://blog.example/reply",
+        published: "2024-03-05T10:00:00Z",
+        author: { name: "Cat" },
+        content: { text: `  ${long}  ` },
+      },
       { "wm-property": "mention-of", url: "https://other.example/post", "wm-received": "2024-01-02T00:00:00Z", content: { text: "  " } },
       { "wm-property": "mention-of", url: "javascript:void 0", published: "not a date", author: { name: "" } },
     ]
     feeds.set("https://garden.example/notes/a", json({ children: mentions }))
     const s = section("https://garden.example/notes/a")
     await wm.setupWebmentions()
-    expect(asked[0]).toBe("https://webmention.io/api/mentions.jf2?target%5B%5D=https%3A%2F%2Fgarden.example%2Fnotes%2Fa&target%5B%5D=https%3A%2F%2Fgarden.example%2Fnotes%2Fa%2F&per-page=200")
+    expect(asked[0]).toBe(
+      "https://webmention.io/api/mentions.jf2?target%5B%5D=https%3A%2F%2Fgarden.example%2Fnotes%2Fa&target%5B%5D=https%3A%2F%2Fgarden.example%2Fnotes%2Fa%2F&per-page=200",
+    )
     expect(s.hidden).toBe(false)
 
     const pile = s.querySelector(".wm-pile")!
@@ -78,7 +86,15 @@ describe("webmentions on a note", () => {
   })
 
   test("a short reply is shown whole; only reposts make one pile", async () => {
-    feeds.set("https://garden.example/b", json({ children: [{ "wm-property": "repost-of", url: "https://x.example/r" }, { "wm-property": "in-reply-to", url: "https://x.example/p", content: { text: "Nice!" } }] }))
+    feeds.set(
+      "https://garden.example/b",
+      json({
+        children: [
+          { "wm-property": "repost-of", url: "https://x.example/r" },
+          { "wm-property": "in-reply-to", url: "https://x.example/p", content: { text: "Nice!" } },
+        ],
+      }),
+    )
     const s = section("https://garden.example/b")
     await wm.setupWebmentions()
     expect([...s.querySelector(".wm-pile")!.children].map((c) => c.textContent)).toEqual(["", "1 reposts"])

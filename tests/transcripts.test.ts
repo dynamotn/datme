@@ -22,7 +22,12 @@ const text: Record<string, string> = {
 const opened = (md: string) => {
   const m = md.match(/^<span class="block-embed" data-html="([^"]*)"><\/span>$/)
   expect(m).not.toBeNull()
-  return m![1].replace(/&#10;/g, "\n").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&")
+  return m![1]
+    .replace(/&#10;/g, "\n")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
 }
 
 const run = (src: string, lang = "en-US") =>
@@ -75,9 +80,13 @@ describe("transcripts", () => {
   test("a video gets the captions and transcript of its language's .vtt", () => {
     const { md: placeholder, assets } = run("![[talk.mp4]]")
     const md = opened(placeholder)
-    expect(md).toStartWith('<figure class="media-transcript"><video src="/assets/talks/talk.mp4" controls preload="metadata" data-captions-label="Captions" data-captions-lang="en-US">')
+    expect(md).toStartWith(
+      '<figure class="media-transcript"><video src="/assets/talks/talk.mp4" controls preload="metadata" data-captions-label="Captions" data-captions-lang="en-US">',
+    )
     expect(md).toContain('<track kind="captions" src="/assets/talks/talk.en.vtt" srclang="en-US" label="Captions">')
-    expect(md).toContain('<summary>Transcript</summary><ol class="cues"><li data-start="1" data-end="4"><button type="button" class="cue-time">0:01</button> <span class="cue-text">Ana: Hello garden &amp; friends</span></li>')
+    expect(md).toContain(
+      '<summary>Transcript</summary><ol class="cues"><li data-start="1" data-end="4"><button type="button" class="cue-time">0:01</button> <span class="cue-text">Ana: Hello garden &amp; friends</span></li>',
+    )
     expect(assets).toEqual(["talks/talk.mp4", "talks/talk.en.vtt"])
   })
 

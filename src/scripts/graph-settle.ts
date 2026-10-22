@@ -13,5 +13,9 @@ export function settle<N extends SimulationNodeDatum & { r: number }, L extends 
   d3: Pick<typeof import("d3-force"), "forceCollide">,
 ) {
   if (sim.nodes().length > LARGE_GRAPH) sim.alphaDecay(0.06)
-  else sim.force("collide", d3.forceCollide<N>((n) => n.r + 3))
+  else
+    sim.force(
+      "collide",
+      d3.forceCollide<N>((n) => n.r + 3),
+    )
 }

@@ -49,7 +49,9 @@ const fail = (e: unknown) => async (): Promise<Compiled> => {
 describe("D2 drawn in-process", () => {
   test("the SVG keeps its drawn size and moves its dark colours under the site's theme switch", async () => {
     const out = await renderD2("a -> b")
-    expect(out).toBe('<svg class="d2" viewBox="0 0 120.5 40" width="120.5" height="40"><style>:root[data-theme="dark"]{.a{fill:#fff}}</style><text>a -> b</text></svg>')
+    expect(out).toBe(
+      '<svg class="d2" viewBox="0 0 120.5 40" width="120.5" height="40"><style>:root[data-theme="dark"]{.a{fill:#fff}}</style><text>a -> b</text></svg>',
+    )
     expect(rendered.at(-1)!.options).toEqual({ themeID: site.theme.d2.light, darkThemeID: site.theme.d2.dark, pad: 16, noXMLTag: true })
     // The worker only keeps the process alive while it draws.
     expect(log).toEqual(["ref", "compile a -> b", "unref"])

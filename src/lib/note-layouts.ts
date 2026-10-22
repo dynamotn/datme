@@ -170,7 +170,11 @@ export const presetGroup = (kind: Collection): string => PRESETS[kind].group
 /** The groupings a kind of collection takes; undefined for the usual ones. */
 export const presetGroups = (kind: Collection): string[] | undefined => PRESETS[kind].groups
 
-const normalize = (v: string) => v.trim().toLowerCase().replace(/[\s_]+/g, "-")
+const normalize = (v: string) =>
+  v
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
 
 /** A value written once or per language. */
 const localized = (v: unknown, lang: Lang): string =>
@@ -250,7 +254,10 @@ export function nameDay(n: Note): string | undefined {
   if (!byKey) journalDays.set(days, (byKey = new Map(days.map((d) => [d.note.key, d.date]))))
   const known = byKey.get(n.key)
   if (known) return known
-  const m = n.key.split("/").pop()!.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const m = n.key
+    .split("/")
+    .pop()!
+    .match(/^(\d{4})-(\d{2})-(\d{2})/)
   const d = m && new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
   // 2024-02-30 is not a day.
   return d && d.getUTCDate() === Number(m[3]) ? d.toISOString().slice(0, 10) : undefined
@@ -350,7 +357,12 @@ export interface BaseRef {
 }
 
 const BASE_REF = /<span class="base-ph" data-rel="([^"]*)" data-view="([^"]*)"><\/span>|^```base[^\n]*\n([\s\S]*?)^```/gm
-const unescapeHtml = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+const unescapeHtml = (s: string) =>
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
 
 export function basesOf(note: Note): BaseRef[] {
   const out: BaseRef[] = []
@@ -443,9 +455,7 @@ function notesOf(note: Note): BaseResult {
   const { folders, tags } = sourcesOf(note)
   const inFolder = (n: Note) => folders.some((f) => f === "" || n.dir === f || n.dir.startsWith(f + "/"))
   const tagged = (n: Note) => n.tags.some((tag) => tags.some((x) => tag === x || tag.startsWith(x + "/")))
-  const notes = listed(note.lang).filter(
-    (n) => n.key !== note.key && !n.isHome && !n.protected && !isCollection(n.layout) && (inFolder(n) || tagged(n)),
-  )
+  const notes = listed(note.lang).filter((n) => n.key !== note.key && !n.isHome && !n.protected && !isCollection(n.layout) && (inFolder(n) || tagged(n)))
   return { notes, sorted: false }
 }
 
@@ -656,7 +666,10 @@ const CURRENCY_SIGNS: Record<string, string> = { $: "USD", "€": "EUR", "£": "
 export function priceOf(n: Note): { amount: number; currency?: string } | undefined {
   const v = n.source.fm.price
   const text = typeof v === "number" ? String(v) : plain(v)
-  const digits = text.match(/\d[\d.,\s]*/)?.[0].replace(/\s+/g, "").replace(/[.,]$/, "")
+  const digits = text
+    .match(/\d[\d.,\s]*/)?.[0]
+    .replace(/\s+/g, "")
+    .replace(/[.,]$/, "")
   if (!digits) return undefined
   // The last of a dot or a comma followed by one or two digits is the decimal point; the others group thousands.
   const decimal = digits.match(/[.,](\d{1,2})$/)
@@ -751,11 +764,7 @@ export function itemOf(n: Note): Item | undefined {
     audio: kind === "episodes" ? n.audio?.href : undefined,
     byline: [...bylineOf(n, kind), sourceUrl ? "" : source].filter((x): x is string => !!x),
     rating: ratingOf(n),
-    status: question
-      ? t(n.lang)[question.answered ? "statusAnswered" : "statusOpen"]
-      : kind
-        ? statusLabelOf(n, kind)
-        : plain(n.source.fm.status) || undefined,
+    status: question ? t(n.lang)[question.answered ? "statusAnswered" : "statusOpen"] : kind ? statusLabelOf(n, kind) : plain(n.source.fm.status) || undefined,
     progress: kind === "courses" ? progressOf(n) : undefined,
     answer: question?.answer,
     links: [...(sourceUrl ? [{ label: new URL(source).hostname.replace(/^www\./, ""), href: source }] : []), ...certificate, ...linksOf(n)].filter(
@@ -1130,7 +1139,12 @@ export function paperHtml(html: string, abstractLabel: string, cite = ""): strin
   let rest: string
   if (at >= 0) {
     abstract = parts[at].heading + parts[at].body
-    rest = intro + parts.filter((_, i) => i !== at).map((p) => p.heading + p.body).join("")
+    rest =
+      intro +
+      parts
+        .filter((_, i) => i !== at)
+        .map((p) => p.heading + p.body)
+        .join("")
   } else {
     // Up to the first heading of any level.
     const cut = intro.search(/<h[3-6][\s>]/)
@@ -1256,9 +1270,7 @@ export function changelogHtml(html: string, lang: Lang, feed = ""): string {
       return kind ? `<h3${attrs} class="change-tag change-${kind}">${inner}</h3>` : h3
     })
   const out = releases.map((r) => {
-    const date = r.date
-      ? `<p class="release-date"><time datetime="${r.date}">${escapeAttr(formatDate(new Date(`${r.date}T00:00:00Z`), lang))}</time></p>`
-      : ""
+    const date = r.date ? `<p class="release-date"><time datetime="${r.date}">${escapeAttr(formatDate(new Date(`${r.date}T00:00:00Z`), lang))}</time></p>` : ""
     return `<section class="release"${r.id ? ` id="${escapeAttr(r.id)}"` : ""}>${r.heading}${date}${tag(r.body)}</section>`
   })
   return intro + feed + out.join("")
@@ -1394,7 +1406,9 @@ export function highlightsHtml(html: string): string {
   const { intro, parts } = sections(html)
   return (
     highlightCards(intro) +
-    parts.map((p) => p.heading + (/^(metadata|siêu dữ liệu|metadaten|métadonnées|metadatos)$/i.test(textOf(p.heading)) ? p.body : highlightCards(p.body))).join("")
+    parts
+      .map((p) => p.heading + (/^(metadata|siêu dữ liệu|metadaten|métadonnées|metadatos)$/i.test(textOf(p.heading)) ? p.body : highlightCards(p.body)))
+      .join("")
   )
 }
 
@@ -1450,7 +1464,11 @@ export function glossaryHtml(intro: string, entries: GlossaryEntry[], lang: Lang
     const text = textOf(e.term)
     let id = e.id
     if (!id) {
-      const base = text.toLocaleLowerCase(lang).replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") || "term"
+      const base =
+        text
+          .toLocaleLowerCase(lang)
+          .replace(/[^\p{L}\p{N}]+/gu, "-")
+          .replace(/^-|-$/g, "") || "term"
       id = base
       for (let n = 2; used.has(id); n++) id = `${base}-${n}`
       used.add(id)
@@ -1680,7 +1698,9 @@ export function letterHtml(html: string, dateline: { place?: string; date?: stri
       : `<p class="letter-signature">${escapeAttr(signature.text ?? "")}</p>`
   } else if (tail.length) {
     signedAt = tail.at(-1)!
-    const lines = innerOf(blocks[signedAt].html).trim().split(/<br>\n?|\n/)
+    const lines = innerOf(blocks[signedAt].html)
+      .trim()
+      .split(/<br>\n?|\n/)
     sign = `<p class="letter-signature">${lines.pop()!.trim()}</p>`
     if (lines.length) {
       blocks[signedAt].html = `<p>${lines.join("<br>\n")}</p>`
@@ -1815,12 +1835,17 @@ export function compareHtml(
     ? `<div class="table-wrap compare-table" role="region" aria-label="${escapeAttr(labels.summary)}" tabindex="0"><table><caption>${escapeAttr(labels.summary)}</caption>` +
       `<thead><tr><td></td>${options.map((o) => `<th scope="col"${picked(o) ? ' class="is-picked"' : ""}>${escapeAttr(o.name)}</th>`).join("")}</tr></thead><tbody>` +
       [...keys]
-        .map(([key, label]) => `<tr><th scope="row">${escapeAttr(label)}</th>${options.map((o) => `<td${picked(o) ? ' class="is-picked"' : ""}>${cell(o, key)}</td>`).join("")}</tr>`)
+        .map(
+          ([key, label]) =>
+            `<tr><th scope="row">${escapeAttr(label)}</th>${options.map((o) => `<td${picked(o) ? ' class="is-picked"' : ""}>${cell(o, key)}</td>`).join("")}</tr>`,
+        )
         .join("") +
       `</tbody></table></div>`
     : ""
   const side = (cls: string, label: string, items: string[]) =>
-    items.length ? `<div class="compare-${cls}"><p class="compare-label">${escapeAttr(label)}</p><ul>${items.map((li) => `<li>${li}</li>`).join("")}</ul></div>` : ""
+    items.length
+      ? `<div class="compare-${cls}"><p class="compare-label">${escapeAttr(label)}</p><ul>${items.map((li) => `<li>${li}</li>`).join("")}</ul></div>`
+      : ""
   const cards = options.map(
     (o) =>
       `<section class="compare-option${picked(o) ? " is-picked" : ""}">${o.heading}${picked(o) ? badge : ""}${o.body}` +
@@ -1850,7 +1875,12 @@ export function checklistHtml(html: string, labels: { progress: string; reset: s
         ? b.html
         : b.html.replace(TASK_BOX, (_m, attrs: string) => {
             const label = unescapeHtml(attrs.match(/aria-label="([^"]*)"/)?.[1] ?? "")
-            const base = label.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 60) || "item"
+            const base =
+              label
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}]+/gu, "-")
+                .replace(/^-|-$/g, "")
+                .slice(0, 60) || "item"
             let id = base
             for (let n = 2; used.has(id); n++) id = `${base}-${n}`
             used.add(id)
@@ -1952,7 +1982,8 @@ export function hubSvg(title: string, spokes: Spoke[]): string {
     const [sx, sy] = at(150, deg)
     reach(sx, sy)
     lines.push(`<line class="hub-spoke-line" x1="0" y1="0" x2="${sx}" y2="${sy}"/>`)
-    const shown = spoke.leaves.length > LEAVES ? [...spoke.leaves.slice(0, LEAVES - 1), { label: `+${spoke.leaves.length - LEAVES + 1}`, href: "" }] : spoke.leaves
+    const shown =
+      spoke.leaves.length > LEAVES ? [...spoke.leaves.slice(0, LEAVES - 1), { label: `+${spoke.leaves.length - LEAVES + 1}`, href: "" }] : spoke.leaves
     // The leaves of a spoke fan out across its share of the circle.
     const spread = Math.min((360 / n) * 0.8, 22 * (shown.length - 1))
     shown.forEach((leaf, j) => {
@@ -2027,7 +2058,10 @@ export function relationsOf(note: Note): Relation[] {
 /** Relations that place others above, beside or below an entity in its family. */
 const KIN: [row: "up" | "side" | "down", name: RegExp][] = [
   ["up", /^(parents?|father|mother|cha|bố|mẹ|eltern|vater|mutter|père|mère|padres?|madre|父|母|父母|親)$/i],
-  ["side", /^(spouse|partner|wife|husband|siblings?|brothers?|sisters?|twin|vợ|chồng|anh|chị|em|anh chị em|ehepartner|geschwister|bruder|schwester|époux|épouse|frère|sœur|esposa?|esposo|hermanos?|hermana|配偶者|兄弟|姉妹|配偶|兄弟姐妹)$/i],
+  [
+    "side",
+    /^(spouse|partner|wife|husband|siblings?|brothers?|sisters?|twin|vợ|chồng|anh|chị|em|anh chị em|ehepartner|geschwister|bruder|schwester|époux|épouse|frère|sœur|esposa?|esposo|hermanos?|hermana|配偶者|兄弟|姉妹|配偶|兄弟姐妹)$/i,
+  ],
   ["down", /^(child|children|sons?|daughters?|con|con cái|kinder|kind|sohn|tochter|enfants?|fils|fille|hij[oa]s?|子|子供|子女|孩子)$/i],
 ]
 
@@ -2081,7 +2115,10 @@ export function loreHtml(note: Note, html: string): string {
     ? `<section class="lore-relations"><h2>${escapeAttr(s.loreRelations)}</h2>` +
       `<dl>${relations.map((r) => row(r.name, r.refs.map((x) => refHtml(x)).join(", "))).join("")}</dl>${loreTree(note.title, relations)}</section>`
     : ""
-  const others = [...links.relations.map((g) => row(s.relationOf.replace("{relation}", g.name), notes(g.notes))), ...(links.mentions.length ? [row(s.loreMentions, notes(links.mentions))] : [])]
+  const others = [
+    ...links.relations.map((g) => row(s.relationOf.replace("{relation}", g.name), notes(g.notes))),
+    ...(links.mentions.length ? [row(s.loreMentions, notes(links.mentions))] : []),
+  ]
   const named = others.length ? `<section class="lore-links"><h2>${escapeAttr(s.loreLinks)}</h2><dl>${others.join("")}</dl></section>` : ""
   return html + own + named
 }
@@ -2159,7 +2196,12 @@ export function layoutHtml(note: Note, html: string, translation?: string): stri
     }
     case "compare": {
       const { intro, options } = compareOf(html)
-      return compareHtml(intro, options, plain(note.source.fm.pick), { pros: s.comparePros, cons: s.compareCons, summary: s.compareSummary, picked: s.comparePicked })
+      return compareHtml(intro, options, plain(note.source.fm.pick), {
+        pros: s.comparePros,
+        cons: s.compareCons,
+        summary: s.compareSummary,
+        picked: s.comparePicked,
+      })
     }
     case "checklist":
       return checklistHtml(html, { progress: s.checklistProgress, reset: s.checklistReset })

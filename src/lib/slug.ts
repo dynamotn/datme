@@ -5,23 +5,13 @@ import { stripBase, withBase } from "./base"
  * Composed Unicode (NFC), so a name macOS stored decomposed gets the same URL.
  */
 export function sluggifySegment(s: string): string {
-  const slug = s
-    .normalize("NFC")
-    .replace(/\s/g, "-")
-    .replace(/&/g, "-and-")
-    .replace(/%/g, "-percent")
-    .replace(/\?/g, "")
-    .replace(/#/g, "")
+  const slug = s.normalize("NFC").replace(/\s/g, "-").replace(/&/g, "-and-").replace(/%/g, "-percent").replace(/\?/g, "").replace(/#/g, "")
   // "." and ".." would name a folder above the page, not a page.
   return slug === "." || slug === ".." ? "" : slug
 }
 
 export function sluggify(p: string): string {
-  return p
-    .split("/")
-    .map(sluggifySegment)
-    .filter(Boolean)
-    .join("/")
+  return p.split("/").map(sluggifySegment).filter(Boolean).join("/")
 }
 
 export function slugTag(tag: string): string {

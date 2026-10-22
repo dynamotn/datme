@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test"
-import { accentProblems, checkVault, externalLinks, formatPrivacy, formatReport, gardenShape, privacyReport, stylesInUse, structureProblems, type PrivacyReport } from "../src/lib/check"
+import {
+  accentProblems,
+  checkVault,
+  externalLinks,
+  formatPrivacy,
+  formatReport,
+  gardenShape,
+  privacyReport,
+  stylesInUse,
+  structureProblems,
+  type PrivacyReport,
+} from "../src/lib/check"
 import { getVault } from "../src/lib/vault"
 import type { LinkRef } from "../src/lib/obsidian"
 import { site } from "../src/site.config"
@@ -119,7 +130,8 @@ describe("the accent against the grounds of the styles in use", () => {
     expect(light).toEqual({
       level: "warning",
       file: "datme.yaml",
-      message: "theme.accent #ffcc00 is too faint for text on the light ground of notebook (1.3:1 on #f5f5f0), lacquer (1.2:1 on #f4ecdb): WCAG AA asks for 4.5:1; #826800 passes",
+      message:
+        "theme.accent #ffcc00 is too faint for text on the light ground of notebook (1.3:1 on #f5f5f0), lacquer (1.2:1 on #f4ecdb): WCAG AA asks for 4.5:1; #826800 passes",
     })
     // Gold reads well on black lacquer and the notebook's dark ground.
     expect(dark).toBeUndefined()

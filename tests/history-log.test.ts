@@ -40,7 +40,11 @@ describe("reading the vault's git log in one pass", () => {
 
   test("a renamed-from path no longer feeds the file that left it", () => {
     // B.md was renamed to D.md; an older, unrelated B.md is not D's past.
-    const log = [commit(30, entry("R100", sha("3"), "C.md", "D.md")), commit(20, entry("R100", sha("2"), "B.md", "C.md")), commit(10, entry("M", sha("1"), "D.md"))].join("")
+    const log = [
+      commit(30, entry("R100", sha("3"), "C.md", "D.md")),
+      commit(20, entry("R100", sha("2"), "B.md", "C.md")),
+      commit(10, entry("M", sha("1"), "D.md")),
+    ].join("")
     const chains = parseFileLog(log)
     expect(chains.get("D.md")!.map((c) => c.path)).toEqual(["D.md", "C.md"])
   })

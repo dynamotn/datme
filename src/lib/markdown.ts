@@ -9,12 +9,7 @@ import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings"
 import { rehypeHighlight } from "./highlight"
 import { rehypeTaskLabels } from "./task-labels"
-import {
-  transformerMetaHighlight,
-  transformerNotationDiff,
-  transformerNotationFocus,
-  transformerNotationHighlight,
-} from "@shikijs/transformers"
+import { transformerMetaHighlight, transformerNotationDiff, transformerNotationFocus, transformerNotationHighlight } from "@shikijs/transformers"
 import type { ShikiTransformer } from "shiki"
 import rehypeStringify from "rehype-stringify"
 import { visit, SKIP } from "unist-util-visit"
@@ -147,24 +142,26 @@ const BR = /<\/?br\s*\/?>\s*$/i
  * breaks" is on. A line already ending in <br> or </br> gets no second break.
  */
 // Options are an object: unified reads a bare `true`/`false` as "use with defaults" / "skip".
-const remarkHardBreaks: Plugin<[{ enabled: boolean }], MdRoot> = ({ enabled }) => (tree) => {
-  if (!enabled) return
-  visit(tree, "text", (node: Text, index, parent) => {
-    if (!parent || index == null || !node.value.includes("\n")) return
-    const parts = node.value.split("\n")
-    const out: PhrasingContent[] = []
-    parts.forEach((part, i) => {
-      if (i > 0) {
-        const prev = out.length ? out[out.length - 1] : (parent.children[index - 1] as PhrasingContent | undefined)
-        const brAlready = prev?.type === "html" && BR.test(prev.value)
-        if (!brAlready) out.push({ type: "break" })
-      }
-      if (part) out.push({ type: "text", value: part })
+const remarkHardBreaks: Plugin<[{ enabled: boolean }], MdRoot> =
+  ({ enabled }) =>
+  (tree) => {
+    if (!enabled) return
+    visit(tree, "text", (node: Text, index, parent) => {
+      if (!parent || index == null || !node.value.includes("\n")) return
+      const parts = node.value.split("\n")
+      const out: PhrasingContent[] = []
+      parts.forEach((part, i) => {
+        if (i > 0) {
+          const prev = out.length ? out[out.length - 1] : (parent.children[index - 1] as PhrasingContent | undefined)
+          const brAlready = prev?.type === "html" && BR.test(prev.value)
+          if (!brAlready) out.push({ type: "break" })
+        }
+        if (part) out.push({ type: "text", value: part })
+      })
+      ;(parent.children as PhrasingContent[]).splice(index, 1, ...out)
+      return index + out.length
     })
-    ;(parent.children as PhrasingContent[]).splice(index, 1, ...out)
-    return index + out.length
-  })
-}
+  }
 
 /**
  * Tasks of any status, as Obsidian reads them: `- [?] …` or `- [/] …` is a
@@ -214,31 +211,33 @@ const rehypeBlockIds: Plugin<[], HastRoot> = () => (tree) => {
 }
 
 /** ```dataview queries run over the published notes; DataviewJS only gets a notice. */
-const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> = ({ lang, key }) => (tree) => {
-  visit(tree, "code", (node: Code, index, parent) => {
-    if (!parent || index == null) return
-    if (node.lang === "dataview" || node.lang === "tasks") {
-      const out = node.lang === "tasks" ? renderTasksBlock(node.value, lang) : renderDataview(node.value, lang, key)
-      if (typeof out === "string") parent.children[index] = { type: "html", value: out }
-      else {
-        // TASK results are markdown, parsed in place so each task renders like the rest of the note.
-        const root = unified().use(remarkParse).use(remarkGfm).parse(out.markdown)
-        parent.children.splice(index, 1, ...(root.children as typeof parent.children))
-        return index + root.children.length
-      }
-    } else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
-    else if (node.lang === "query") parent.children[index] = { type: "html", value: renderSearchBlock(node.value, lang) }
-    else if (node.lang === "chart") parent.children[index] = { type: "html", value: renderChart(node.value) }
-    else if (node.lang === "leaflet") parent.children[index] = { type: "html", value: renderLeafletBlock(node.value, lang) }
-    else if (node.lang === "contributionGraph") parent.children[index] = { type: "html", value: renderContributionGraph(node.value, lang, key) }
-    else if (node.lang === "base") parent.children[index] = { type: "html", value: renderBaseBlock(node.value, lang, key) }
-  })
-  // `= this.field` is an inline query; `$= …` (DataviewJS) stays code.
-  visit(tree, "inlineCode", (node: InlineCode, index, parent) => {
-    if (!parent || index == null || !/^=\s/.test(node.value)) return
-    parent.children[index] = { type: "html", value: renderInlineQuery(node.value.slice(1).trim(), lang, key) }
-  })
-}
+const remarkDataview: Plugin<[{ lang: Lang; key: string }], MdRoot> =
+  ({ lang, key }) =>
+  (tree) => {
+    visit(tree, "code", (node: Code, index, parent) => {
+      if (!parent || index == null) return
+      if (node.lang === "dataview" || node.lang === "tasks") {
+        const out = node.lang === "tasks" ? renderTasksBlock(node.value, lang) : renderDataview(node.value, lang, key)
+        if (typeof out === "string") parent.children[index] = { type: "html", value: out }
+        else {
+          // TASK results are markdown, parsed in place so each task renders like the rest of the note.
+          const root = unified().use(remarkParse).use(remarkGfm).parse(out.markdown)
+          parent.children.splice(index, 1, ...(root.children as typeof parent.children))
+          return index + root.children.length
+        }
+      } else if (node.lang === "dataviewjs") parent.children[index] = { type: "html", value: renderDataviewJs(lang) }
+      else if (node.lang === "query") parent.children[index] = { type: "html", value: renderSearchBlock(node.value, lang) }
+      else if (node.lang === "chart") parent.children[index] = { type: "html", value: renderChart(node.value) }
+      else if (node.lang === "leaflet") parent.children[index] = { type: "html", value: renderLeafletBlock(node.value, lang) }
+      else if (node.lang === "contributionGraph") parent.children[index] = { type: "html", value: renderContributionGraph(node.value, lang, key) }
+      else if (node.lang === "base") parent.children[index] = { type: "html", value: renderBaseBlock(node.value, lang, key) }
+    })
+    // `= this.field` is an inline query; `$= …` (DataviewJS) stays code.
+    visit(tree, "inlineCode", (node: InlineCode, index, parent) => {
+      if (!parent || index == null || !/^=\s/.test(node.value)) return
+      parent.children[index] = { type: "html", value: renderInlineQuery(node.value.slice(1).trim(), lang, key) }
+    })
+  }
 
 /** Fenced blocks of a language the vault's plugins render; they go first, so they can replace datme's own. */
 const remarkUserCodeBlocks: Plugin<[{ user: UserPlugins; lang: Lang; key: string }], MdRoot> =
@@ -315,73 +314,75 @@ function readable(node: HastRoot | ElementContent): string {
 }
 
 /** Links, images, tables and headings, plus hoisting of the leading H1. */
-const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> = ({ out, lang }) => (tree) => {
-  const firstEl = tree.children.find((c) => c.type === "element") as Element | undefined
-  if (firstEl?.tagName === "h1") {
-    out.h1 = hastToString(firstEl).replace(/#$/, "").trim()
-    tree.children.splice(tree.children.indexOf(firstEl), 1)
-  }
-  // GFM turns a URL or an address in a drawing's text into a link the drawing never had: back to text.
-  visit(tree, "element", (drawing: Element) => {
-    if (!(drawing.properties.className as string[] | undefined)?.includes("drawing")) return
-    visit(drawing, "element", (node: Element, index, parent) => {
-      if (node.tagName !== "a" || (node.properties.className as string[] | undefined)?.includes("drawing-link") || !parent || index == null) return
-      parent.children.splice(index, 1, ...node.children)
-      return index
-    })
-    return SKIP
-  })
-  const headings: Heading[] = []
-  visit(tree, "element", (node: Element, index, parent) => {
-    const tag = node.tagName
-    if (/^h[2-4]$/.test(tag) && node.properties.id) {
-      headings.push({
-        depth: Number(tag[1]),
-        id: String(node.properties.id),
-        text: hastToString(node).replace(/#$/, "").trim(),
-      })
+const rehypeDecorate: Plugin<[DecorateOpts], HastRoot> =
+  ({ out, lang }) =>
+  (tree) => {
+    const firstEl = tree.children.find((c) => c.type === "element") as Element | undefined
+    if (firstEl?.tagName === "h1") {
+      out.h1 = hastToString(firstEl).replace(/#$/, "").trim()
+      tree.children.splice(tree.children.indexOf(firstEl), 1)
     }
-    if (tag === "a") {
-      const href = String(node.properties.href ?? "")
-      if (/^https?:\/\//.test(href)) {
-        node.properties.target = "_blank"
-        node.properties.rel = ["noopener", "noreferrer"]
-        node.properties.className = [...((node.properties.className as string[]) ?? []), "external"]
-        // A link found dead goes to the archived copy; the original stays in the title.
-        if (site.archiveDeadLinks && deadLinks().has(href)) {
-          node.properties.href = archiveUrl(href)
-          node.properties.title = `${t(lang).archivedLink}: ${href}`
-          ;(node.properties.className as string[]).push("archived")
+    // GFM turns a URL or an address in a drawing's text into a link the drawing never had: back to text.
+    visit(tree, "element", (drawing: Element) => {
+      if (!(drawing.properties.className as string[] | undefined)?.includes("drawing")) return
+      visit(drawing, "element", (node: Element, index, parent) => {
+        if (node.tagName !== "a" || (node.properties.className as string[] | undefined)?.includes("drawing-link") || !parent || index == null) return
+        parent.children.splice(index, 1, ...node.children)
+        return index
+      })
+      return SKIP
+    })
+    const headings: Heading[] = []
+    visit(tree, "element", (node: Element, index, parent) => {
+      const tag = node.tagName
+      if (/^h[2-4]$/.test(tag) && node.properties.id) {
+        headings.push({
+          depth: Number(tag[1]),
+          id: String(node.properties.id),
+          text: hastToString(node).replace(/#$/, "").trim(),
+        })
+      }
+      if (tag === "a") {
+        const href = String(node.properties.href ?? "")
+        if (/^https?:\/\//.test(href)) {
+          node.properties.target = "_blank"
+          node.properties.rel = ["noopener", "noreferrer"]
+          node.properties.className = [...((node.properties.className as string[]) ?? []), "external"]
+          // A link found dead goes to the archived copy; the original stays in the title.
+          if (site.archiveDeadLinks && deadLinks().has(href)) {
+            node.properties.href = archiveUrl(href)
+            node.properties.title = `${t(lang).archivedLink}: ${href}`
+            ;(node.properties.className as string[]).push("archived")
+          }
         }
       }
-    }
-    if (tag === "img") node.properties.loading = "lazy"
-    // A chart's data table is hidden, so it needs no scrolling frame.
-    const chartData = (node.properties.className as string[] | undefined)?.includes("chart-data")
-    if (tag === "table" && !chartData && parent && index != null) {
-      parent.children[index] = {
-        type: "element",
-        tagName: "div",
-        properties: { className: ["table-wrap"] },
-        children: [node],
+      if (tag === "img") node.properties.loading = "lazy"
+      // A chart's data table is hidden, so it needs no scrolling frame.
+      const chartData = (node.properties.className as string[] | undefined)?.includes("chart-data")
+      if (tag === "table" && !chartData && parent && index != null) {
+        parent.children[index] = {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["table-wrap"] },
+          children: [node],
+        }
+        return SKIP
       }
-      return SKIP
-    }
-  })
-  out.headings = headings
-  const text = readable(tree)
-  out.text = text
-  out.words = text ? text.split(" ").length : 0
-  // First paragraph in reading order, including ones inside callouts (often a definition).
-  let firstP: Element | undefined
-  visit(tree, "element", (node: Element) => {
-    if (firstP) return SKIP
-    if (node.tagName === "pre") return SKIP
-    if (node.tagName === "p" && hastToString(node).trim()) firstP = node
-  })
-  const desc = firstP ? readable(firstP) : text
-  out.description = desc.length > 180 ? desc.slice(0, 177).trimEnd() + "…" : desc
-}
+    })
+    out.headings = headings
+    const text = readable(tree)
+    out.text = text
+    out.words = text ? text.split(" ").length : 0
+    // First paragraph in reading order, including ones inside callouts (often a definition).
+    let firstP: Element | undefined
+    visit(tree, "element", (node: Element) => {
+      if (firstP) return SKIP
+      if (node.tagName === "pre") return SKIP
+      if (node.tagName === "p" && hastToString(node).trim()) firstP = node
+    })
+    const desc = firstP ? readable(firstP) : text
+    out.description = desc.length > 180 ? desc.slice(0, 177).trimEnd() + "…" : desc
+  }
 
 /** ```ts title="app.ts" wraps the block in a figure captioned with the file name. */
 const rehypeCodeTitle: Plugin<[], HastRoot> = () => (tree) => {
@@ -395,10 +396,7 @@ const rehypeCodeTitle: Plugin<[], HastRoot> = () => (tree) => {
       type: "element",
       tagName: "figure",
       properties: { className: ["code-figure"] },
-      children: [
-        { type: "element", tagName: "figcaption", properties: {}, children: [{ type: "text", value: title[1] ?? title[2] ?? title[3] }] },
-        node,
-      ],
+      children: [{ type: "element", tagName: "figcaption", properties: {}, children: [{ type: "text", value: title[1] ?? title[2] ?? title[3] }] }, node],
     }
     return SKIP
   })
@@ -429,7 +427,10 @@ const rehypeLinkCards: Plugin<[], HastRoot> = () => async (tree) => {
 }
 
 /** First mentions of glossary terms link to the note defining them. */
-const rehypeGlossary: Plugin<[{ lang: Lang; key: string }], HastRoot> = ({ lang, key }) => (tree) => linkTerms(tree, lang, key)
+const rehypeGlossary: Plugin<[{ lang: Lang; key: string }], HastRoot> =
+  ({ lang, key }) =>
+  (tree) =>
+    linkTerms(tree, lang, key)
 
 const isElement = (n: ElementContent | undefined): n is Element => n?.type === "element"
 
@@ -617,9 +618,7 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
                 type: "element",
                 tagName: "a",
                 properties: { className: ["transclude-src", "internal"], href, dataKey: key },
-                children: [
-                  { type: "text", value: `${target?.protected ? "🔒 " : ""}${t(lang).transcludeFrom} ${target?.title ?? key}` },
-                ],
+                children: [{ type: "text", value: `${target?.protected ? "🔒 " : ""}${t(lang).transcludeFrom} ${target?.title ?? key}` }],
               },
               ...children,
             ],

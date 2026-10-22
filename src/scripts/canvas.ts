@@ -39,9 +39,13 @@ export function setupCanvas() {
   })
   viewport.addEventListener("pointerup", () => (drag = undefined))
   // A drag must not also follow the link it started on.
-  viewport.addEventListener("click", (e) => {
-    if (drag?.moved) e.preventDefault()
-  }, true)
+  viewport.addEventListener(
+    "click",
+    (e) => {
+      if (drag?.moved) e.preventDefault()
+    },
+    true,
+  )
   viewport.addEventListener(
     "wheel",
     (e) => {

@@ -79,7 +79,12 @@ describe("cards of a deck", () => {
       { id: "same", legacy: "same", question: "", answer: "" },
       { id: "kept", legacy: "gone", question: "", answer: "" },
     ]
-    const states: Record<string, { box: number; due: number }> = { old: { box: 2, due: 1 }, same: { box: 1, due: 0 }, kept: { box: 3, due: 2 }, gone: { box: 1, due: 0 } }
+    const states: Record<string, { box: number; due: number }> = {
+      old: { box: 2, due: 1 },
+      same: { box: 1, due: 0 },
+      kept: { box: 3, due: 2 },
+      gone: { box: 1, due: 0 },
+    }
     expect(practice.adoptLegacy(cards, states)).toBe(true)
     expect(states).toEqual({ new: { box: 2, due: 1 }, same: { box: 1, due: 0 }, kept: { box: 3, due: 2 }, gone: { box: 1, due: 0 } })
     expect(practice.adoptLegacy(cards, states)).toBe(false)

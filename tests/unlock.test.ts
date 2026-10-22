@@ -22,8 +22,7 @@ const settle = () => new Promise((r) => setTimeout(r, 300))
 describe("unlocking locked parts", () => {
   test("a wrong password says so; the right one opens its part and every other part it fits", async () => {
     const nested = await form(9, "<p>deepest</p>", "pw")
-    document.body.innerHTML =
-      `<div class="prose">${await form(0, `<p>first</p>${nested}`, "pw")}${await form(1, "<p>second</p>", "pw")}${await form(2, "<p>third</p>", "other")}</div>`
+    document.body.innerHTML = `<div class="prose">${await form(0, `<p>first</p>${nested}`, "pw")}${await form(1, "<p>second</p>", "pw")}${await form(2, "<p>third</p>", "other")}</div>`
     const { setupLocked } = await import("../src/scripts/locked")
     let revealed = 0
     setupLocked(() => revealed++)

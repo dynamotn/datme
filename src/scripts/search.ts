@@ -95,13 +95,14 @@ async function runPagefind(dialog: HTMLDialogElement, list: HTMLElement, q: stri
   // Pagefind's excerpts are page text with <mark> around the matches.
   show(
     list,
-    hits.map(
-      (h) => `<li role="none"><a href="${escapeAttr(h.url)}" role="option">
+    hits
+      .map(
+        (h) => `<li role="none"><a href="${escapeAttr(h.url)}" role="option">
         <div class="r-title"><span>📝</span>${escapeAttr(h.meta.title ?? h.url)}</div>
         <div class="r-snippet">${h.excerpt}</div>
       </a></li>`,
-    )
-    .join(""),
+      )
+      .join(""),
   )
 }
 
@@ -167,7 +168,11 @@ async function run(dialog: HTMLDialogElement, query: string) {
   if (stale()) return
   const idOf = new Map(notes.map((n, id) => [n.u, id]))
   const ranked = meaning.length
-    ? blend(found.map((f) => ({ url: notes[f.id as number].u, score: f.score })), meaning, threshold(dialog)).map((url) => ({ id: idOf.get(url)! }))
+    ? blend(
+        found.map((f) => ({ url: notes[f.id as number].u, score: f.score })),
+        meaning,
+        threshold(dialog),
+      ).map((url) => ({ id: idOf.get(url)! }))
     : found
   const sims = new Map(meaning.map((m) => [m.url, m.sim]))
   const hits = ranked.filter(({ id }) => id !== undefined && matchesFilter(notes[id as number], filter)).slice(0, q ? 30 : 100)
@@ -231,16 +236,16 @@ export function setupSearch() {
     timer = window.setTimeout(() => run(dialog, input.value), 60)
   })
   input.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown") (e.preventDefault(), select(list, selected + 1))
-    else if (e.key === "ArrowUp") (e.preventDefault(), select(list, selected - 1))
+    if (e.key === "ArrowDown") e.preventDefault(), select(list, selected + 1)
+    else if (e.key === "ArrowUp") e.preventDefault(), select(list, selected - 1)
     else if (e.key === "Enter") {
       const a = list.querySelectorAll<HTMLAnchorElement>("a")[selected]
-      if (a) (e.preventDefault(), dialog.close(), navigate(a.getAttribute("href")!))
+      if (a) e.preventDefault(), dialog.close(), navigate(a.getAttribute("href")!)
     }
   })
   // A search field spends Esc on clearing itself, so the dialog never hears it: close here instead.
   dialog.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !e.defaultPrevented) (e.preventDefault(), dialog.close())
+    if (e.key === "Escape" && !e.defaultPrevented) e.preventDefault(), dialog.close()
   })
   setupMeaning(dialog, input)
   dialog.querySelectorAll("select[data-filter]").forEach((sel) => sel.addEventListener("change", () => run(dialog, input.value)))

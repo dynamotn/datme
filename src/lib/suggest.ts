@@ -36,10 +36,7 @@ export function prose(src: string): string {
 }
 
 /** Places where a text names one of the notes without a link: the first per note, in text order. */
-export function findMentions(
-  src: string,
-  notes: { file: string; title: string; names: string[] }[],
-): Suggestions["mentions"] {
+export function findMentions(src: string, notes: { file: string; title: string; names: string[] }[]): Suggestions["mentions"] {
   const text = prose(src)
   const out: Suggestions["mentions"] = []
   for (const n of notes) {
@@ -53,7 +50,15 @@ export function findMentions(
   return out.sort((a, b) => a.offset - b.offset)
 }
 
-const toList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : typeof v === "string" ? v.split(",").map((s) => s.trim()).filter(Boolean) : [])
+const toList = (v: unknown): string[] =>
+  Array.isArray(v)
+    ? v.map(String)
+    : typeof v === "string"
+      ? v
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
 
 export async function suggestionsFor(rel: string, lang: Lang = site.defaultLang): Promise<Suggestions> {
   const vault = getVault()
@@ -115,7 +120,11 @@ export async function suggestionsFor(rel: string, lang: Lang = site.defaultLang)
 /** The report of `datme related` for people: related notes, then unlinked mentions with their line. */
 export function formatSuggestions(s: Suggestions): string {
   const why = (r: Suggestions["related"][number]) =>
-    [r.tags.length ? r.tags.map((t) => "#" + t).join(" ") : "", r.links ? `${r.links} shared link${r.links === 1 ? "" : "s"}` : "", r.similarity ? `≈ ${Math.round(r.similarity * 100)}%` : ""]
+    [
+      r.tags.length ? r.tags.map((t) => "#" + t).join(" ") : "",
+      r.links ? `${r.links} shared link${r.links === 1 ? "" : "s"}` : "",
+      r.similarity ? `≈ ${Math.round(r.similarity * 100)}%` : "",
+    ]
       .filter(Boolean)
       .join(", ")
   const lines = [`Related to ${s.file}${s.published ? "" : " (private)"}`]

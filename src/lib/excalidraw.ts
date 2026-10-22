@@ -131,9 +131,7 @@ function cleanElement(raw: unknown): ExElement | undefined {
     frameId: str(e.frameId) ?? null,
     link: str(e.link) ?? null,
     name: typeof e.name === "string" ? e.name : e.name === null ? null : undefined,
-    points: Array.isArray(e.points)
-      ? e.points.filter((p): p is unknown[] => Array.isArray(p)).map((p): Point => [num(p[0], 0), num(p[1], 0)])
-      : undefined,
+    points: Array.isArray(e.points) ? e.points.filter((p): p is unknown[] => Array.isArray(p)).map((p): Point => [num(p[0], 0), num(p[1], 0)]) : undefined,
     pressures: Array.isArray(e.pressures) ? e.pressures.map((p) => num(p, 0.5)) : undefined,
     simulatePressure: typeof e.simulatePressure === "boolean" ? e.simulatePressure : undefined,
     startArrowhead: str(e.startArrowhead) ?? null,
@@ -218,9 +216,7 @@ export function parseDrawing(src: string): Scene {
 }
 
 /** The part of a drawing an embed asks for, in the plugin's syntax. */
-export type Selection =
-  | { kind: "frame" | "clippedframe" | "group" | "area"; id: string }
-  | { kind: "frameName"; name: string }
+export type Selection = { kind: "frame" | "clippedframe" | "group" | "area"; id: string } | { kind: "frameName"; name: string }
 
 /** `^frame=ID`, `^clippedframe=ID`, `^group=ID`, `^area=ID`, `^ID` (an area) or a frame's name. */
 export function parseSelection(fragment: string): Selection | undefined {
@@ -444,9 +440,22 @@ function shape(e: ExElement, opts: Required<Pick<RenderOptions, "resolveFile" | 
   const dash = roughOptions(e).strokeLineDash
   switch (e.type) {
     case "rectangle":
-      return e.roundness ? paths(generator.path(roundedRect(w, h, e.roundness), roughOptions(e)), dash) : paths(generator.rectangle(0, 0, w, h, roughOptions(e)), dash)
+      return e.roundness
+        ? paths(generator.path(roundedRect(w, h, e.roundness), roughOptions(e)), dash)
+        : paths(generator.rectangle(0, 0, w, h, roughOptions(e)), dash)
     case "diamond":
-      return paths(generator.polygon([[w / 2, 0], [w, h / 2], [w / 2, h], [0, h / 2]], roughOptions(e)), dash)
+      return paths(
+        generator.polygon(
+          [
+            [w / 2, 0],
+            [w, h / 2],
+            [w / 2, h],
+            [0, h / 2],
+          ],
+          roughOptions(e),
+        ),
+        dash,
+      )
     case "ellipse":
       return paths(generator.ellipse(w / 2, h / 2, w, h, roughOptions(e)), dash)
     case "line":
@@ -557,7 +566,8 @@ export function renderParts(scene: Scene, options: RenderOptions = {}): Parts {
           ? byId.get(sel.id)
           : undefined
     if (sel.kind === "frameName" || sel.kind === "frame" || sel.kind === "clippedframe") {
-      if (!frame || !FRAMES.includes(frame.type)) throw new DrawingError(`no frame ${sel.kind === "frameName" ? `named "${sel.name}"` : `"${sel.id}"`} in the drawing`)
+      if (!frame || !FRAMES.includes(frame.type))
+        throw new DrawingError(`no frame ${sel.kind === "frameName" ? `named "${sel.name}"` : `"${sel.id}"`} in the drawing`)
       shown = all.filter((e) => e.frameId === frame.id)
       drawFrames = false
       if (sel.kind === "clippedframe") {

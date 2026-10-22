@@ -242,14 +242,20 @@
   border-radius: 2px;
   border: 1px solid var(--line-strong);
   background:
-    var(--contours),
-    radial-gradient(38% 30% at 30% 35%, var(--land-2) 0 55%, var(--land) 56% 100%, transparent 101%),
-    radial-gradient(34% 40% at 72% 66%, var(--land-2) 0 50%, var(--land) 51% 100%, transparent 101%),
-    var(--sea);
-  background-size: 240px 240px, auto, auto, auto;
+    var(--contours), radial-gradient(38% 30% at 30% 35%, var(--land-2) 0 55%, var(--land) 56% 100%, transparent 101%),
+    radial-gradient(34% 40% at 72% 66%, var(--land-2) 0 50%, var(--land) 51% 100%, transparent 101%), var(--sea);
+  background-size:
+    240px 240px,
+    auto,
+    auto,
+    auto;
 }
 [data-look="atlas"] .graph-modal .graph-full {
-  background-size: 480px 480px, auto, auto, auto;
+  background-size:
+    480px 480px,
+    auto,
+    auto,
+    auto;
 }
 [data-look="atlas"] :focus-visible {
   outline: 2px solid var(--accent);
