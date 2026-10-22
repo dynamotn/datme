@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - datme runs on Node 22.18 or later (the LTS line), not only 23.6 or later; `datme doctor` accepts it. CI now installs the published tarball and builds a garden with it on Node 22.18, 24 and 25.
 - The build cache is now one per vault, in the system's cache directory (`~/.cache/datme`, `~/Library/Caches/datme` or `%LOCALAPPDATA%\datme`) rather than inside datme's own install: building two vaults no longer prunes each other's entries, and the first build of each after upgrading starts from an empty cache. The old `.datme/cache` in datme's install can be deleted. `DATME_CACHE` still moves it.
+- The page layouts have their own pages in the documentation: an overview of every layout and collection, and for each one its properties, a short example, a screenshot and a live example page. *Writing notes* keeps a short section on `layout`, `style` and `chrome`.
 
 ### Fixed
 

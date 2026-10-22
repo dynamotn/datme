@@ -3,9 +3,11 @@
  * captures a few views for the README with Playwright's Chromium into
  * docs/assets/screenshots/; then serves docs/ with `datme dev` and captures a
  * note in every built-in style, light and dark, for docs/themes.md, into
- * docs/assets/screenshots/styles/ as small WebP files. Run with
- * `bun run screenshots` (or `bun run screenshots readme` / `styles` for one
- * set) after `bunx playwright install chromium`.
+ * docs/assets/screenshots/styles/ as small WebP files; and captures the
+ * example of every page layout under docs/examples/ for docs/layouts-text.md
+ * and docs/collections.md, into docs/assets/screenshots/layouts/. Run with
+ * `bun run screenshots` (or `bun run screenshots readme` / `styles` /
+ * `layouts` for one set) after `bunx playwright install chromium`.
  */
 import fs from "node:fs"
 import os from "node:os"
@@ -13,6 +15,7 @@ import path from "node:path"
 import sharp from "sharp"
 import { chromium, type Browser, type Page } from "playwright"
 import { STYLES } from "../src/site.config"
+import { LAYOUTS } from "../src/lib/vault"
 import { parseYaml } from "../src/lib/yaml"
 
 const root = path.resolve(import.meta.dir, "..")
@@ -20,13 +23,63 @@ const outDir = path.join(root, "docs/assets/screenshots")
 const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "" }
 /** The note every style is shown on: callouts, math, a table and code. */
 const STYLE_PAGE = "/showcase/Callouts-and-math"
+/** The path the docs are published under, from the path of their site.url: "/datme", or "" at the root. */
+const { site: docsSite } = parseYaml(fs.readFileSync(path.join(root, "docs/datme.yaml"), "utf8")) as { site: { url: string } }
+const docsPath = new URL(docsSite.url).pathname.replace(/\/+$/, "")
+/** The example note of each layout under docs/examples/, by its path there. */
+const LAYOUT_EXAMPLES: Record<(typeof LAYOUTS)[number], string> = {
+  cv: "cv",
+  gallery: "gallery",
+  timeline: "timeline",
+  links: "links",
+  uses: "uses",
+  now: "now",
+  faq: "faq",
+  quotes: "quotes",
+  paper: "paper",
+  decision: "decision",
+  changelog: "changelog",
+  dialogue: "dialogue",
+  highlights: "highlights",
+  glossary: "glossary",
+  trip: "trip",
+  syllabus: "syllabus",
+  poem: "poem",
+  letter: "letter",
+  compare: "compare",
+  checklist: "checklist",
+  "recipe-card": "recipe-card",
+  hub: "hub",
+  lore: "lore",
+  projects: "Projects",
+  books: "Books",
+  movies: "Movies",
+  talks: "Talks",
+  recipes: "Recipes",
+  places: "Travel",
+  shelf: "Games",
+  daily: "Journal",
+  bookmarks: "Clippings",
+  people: "People",
+  snippets: "Snippets",
+  episodes: "Podcast",
+  courses: "Courses",
+  wishlist: "Wishlist",
+  quotebook: "Quotebook",
+  questions: "Questions",
+  digest: "Digest",
+}
+
+const SETS = ["readme", "styles", "layouts"] as const
 const only = process.argv[2]
-if (only && only !== "readme" && only !== "styles") throw new Error(`unknown set ${only}: readme or styles`)
+if (only && !SETS.includes(only as (typeof SETS)[number])) throw new Error(`unknown set ${only}: ${SETS.join(", ")}`)
+const wanted = (set: (typeof SETS)[number]) => !only || only === set
 
 const browser = await chromium.launch()
 try {
-  if (only !== "styles") await readmeShots(browser)
-  if (only !== "readme") await styleShots(browser)
+  if (wanted("readme")) await readmeShots(browser)
+  if (wanted("styles")) await styleShots(browser)
+  if (wanted("layouts")) await layoutShots(browser)
 } finally {
   await browser.close()
 }
@@ -40,7 +93,8 @@ async function openPage(browser: Browser, url: string, theme: "light" | "dark", 
   return page
 }
 
-async function readmeShots(browser: Browser) {
+/** Builds docs/ into a temporary folder and serves it; `stop` stops the server and removes the build. */
+function serveBuiltDocs(): { base: string; stop: () => void } {
   const site = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "datme-shots-")), "site")
 
   const build = Bun.spawnSync(["bun", "bin/datme.ts", "build", "docs", "--out", site, "--fresh"], {
@@ -54,7 +108,9 @@ async function readmeShots(browser: Browser) {
   const server = Bun.serve({
     port: 0,
     async fetch(req) {
-      const p = decodeURIComponent(new URL(req.url).pathname)
+      // Pages and assets are linked under the path of site.url, as the build is published.
+      const full = decodeURIComponent(new URL(req.url).pathname)
+      const p = full.startsWith(docsPath) ? full.slice(docsPath.length) || "/" : full
       for (const candidate of [p, path.join(p, "index.html"), `${p}.html`]) {
         const file = Bun.file(path.join(site, candidate))
         if ((await file.exists()) && !candidate.endsWith("/")) return new Response(file)
@@ -62,7 +118,17 @@ async function readmeShots(browser: Browser) {
       return new Response(Bun.file(path.join(site, "404.html")), { status: 404 })
     },
   })
-  const base = `http://localhost:${server.port}`
+  return {
+    base: `http://localhost:${server.port}${docsPath}`,
+    stop: () => {
+      server.stop()
+      fs.rmSync(path.dirname(site), { recursive: true, force: true })
+    },
+  }
+}
+
+async function readmeShots(browser: Browser) {
+  const { base, stop } = serveBuiltDocs()
 
   interface Shot {
     name: string
@@ -109,8 +175,7 @@ async function readmeShots(browser: Browser) {
       await page.close()
     }
   } finally {
-    server.stop()
-    fs.rmSync(path.dirname(site), { recursive: true, force: true })
+    stop()
   }
 }
 
@@ -125,8 +190,7 @@ async function styleShots(browser: Browser) {
   probe.stop(true)
   const dev = Bun.spawn(["bun", "bin/datme.ts", "dev", "docs", "--port", String(port)], { cwd: root, env, stdout: "ignore", stderr: "inherit" })
   // `datme dev` serves the docs under the path of their site.url, as the build is published.
-  const { site: docsSite } = parseYaml(fs.readFileSync(path.join(root, "docs/datme.yaml"), "utf8")) as { site: { url: string } }
-  const base = `http://localhost:${port}${new URL(docsSite.url).pathname.replace(/\/+$/, "")}`
+  const base = `http://localhost:${port}${docsPath}`
   const dir = path.join(outDir, "styles")
   fs.mkdirSync(dir, { recursive: true })
   try {
@@ -154,5 +218,41 @@ async function styleShots(browser: Browser) {
     }
   } finally {
     dev.kill()
+  }
+}
+
+/**
+ * The gallery of docs/layouts-text.md and docs/collections.md: the example
+ * of every layout, from a build of docs/, in light mode (a gallery in dark,
+ * as it opens), 1200 pixels wide, as small WebP files.
+ */
+async function layoutShots(browser: Browser) {
+  const { base, stop } = serveBuiltDocs()
+  const dir = path.join(outDir, "layouts")
+  fs.mkdirSync(dir, { recursive: true })
+  let total = 0
+  try {
+    for (const layout of LAYOUTS) {
+      // A collection is the page of its folder; a note's URL has dashes for spaces.
+      const url = `${base}/examples/${LAYOUT_EXAMPLES[layout].replaceAll(" ", "-")}`
+      const page = await openPage(browser, url, layout === "gallery" ? "dark" : "light", 1200, 800)
+      if (!(await page.$(`.layout-${layout}, .collection-${layout}`))) throw new Error(`${url} is not laid out as ${layout}`)
+      // Map tiles come from OpenStreetMap after the page is idle; a map without them is still worth a picture.
+      if (await page.$(".leaflet-container")) {
+        await page.waitForSelector(".leaflet-tile-loaded", { timeout: 15_000 }).catch(() => console.warn(`no map tiles on ${url}`))
+        await page.waitForTimeout(1500)
+      }
+      const file = path.join(dir, `${layout}.webp`)
+      await sharp(await page.screenshot())
+        .webp({ quality: 70 })
+        .toFile(file)
+      const size = fs.statSync(file).size
+      total += size
+      console.log(`📸 ${path.relative(root, file)} (${Math.round(size / 1024)} KB)`)
+      await page.close()
+    }
+    console.log(`${LAYOUTS.length} layouts, ${Math.round(total / 1024)} KB`)
+  } finally {
+    stop()
   }
 }

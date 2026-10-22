@@ -148,6 +148,7 @@ Archive · one-file EPUB or printable export of any folder.
 | --- | --- |
 | [Getting started](docs/getting-started.md) | From a vault to a site online, step by step |
 | [Writing notes](docs/writing.md) | Obsidian syntax, frontmatter, citations, series, languages |
+| [Page layouts](docs/layouts.md) | Résumés, galleries, letters, shelves of books, journals and more page layouts |
 | [Plugins](docs/plugins.md) | Dataview, Tasks, Canvas, Bases, Excalidraw, Marp, Kanban, Charts, flashcards |
 | [Privacy](docs/privacy.md) | What gets published, drafts, schedules, passwords and locked parts |
 | [The reader's side](docs/reading.md) | Search, graph, shortcuts, reading preferences, offline |

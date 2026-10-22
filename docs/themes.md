@@ -13,6 +13,8 @@ bar previews any page of your own garden in any of them.
 
 The screenshots are made by `bun run screenshots styles`, which serves these
 docs with `datme dev` and opens the note with `?style=` for each style.
+[Page layouts](layouts.md) has the same kind of gallery for every layout and
+collection, each of which picks a style and a frame of its own.
 
 ## notebook
 

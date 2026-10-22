@@ -324,7 +324,7 @@ out, and the grid closes up to one column on a phone.
 
 The `resume` and `darkroom` styles are made for a single page rather than a
 whole site: a note picks them with `style:` or through its `layout` (`cv`,
-`gallery`), see [Page layouts](writing.md#page-layouts).
+`gallery`), see [Style and frame](layouts.md#style-and-frame).
 
 ## Search, images and maps
 
