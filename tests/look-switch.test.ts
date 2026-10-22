@@ -5,9 +5,17 @@ import { applyLook, LOOK_KEY, setupLookSwitch } from "../src/scripts/looks"
 import { installDom, type Dom } from "./client-dom"
 
 describe("appearance.readerSwitch", () => {
-  test("off by default; true offers every site-wide style", () => {
+  test("off by default; true offers every style that only recolours a page", () => {
     expect(resolveConfig({}, "/v").appearance.readerSwitch).toEqual([])
-    expect(resolveConfig({ appearance: { readerSwitch: true } }, "/v").appearance.readerSwitch).toEqual(["notebook", "classic", "garden"])
+    expect(resolveConfig({ appearance: { readerSwitch: true } }, "/v").appearance.readerSwitch).toEqual([
+      "notebook",
+      "classic",
+      "garden",
+      "terminal",
+      "blueprint",
+      "manuscript",
+      "lacquer",
+    ])
   })
   test("a list of styles, once each", () => {
     expect(resolveConfig({ appearance: { readerSwitch: ["classic", "garden", "classic"] } }, "/v").appearance.readerSwitch).toEqual(["classic", "garden"])
@@ -17,6 +25,11 @@ describe("appearance.readerSwitch", () => {
     expect(() => resolveConfig({ appearance: { readerSwitch: ["darkroom"] } }, "/v")).toThrow("darkroom is made for a single page")
     expect(() => resolveConfig({ appearance: { readerSwitch: [] } }, "/v")).toThrow()
     expect(() => resolveConfig({ appearance: { readerSwitch: ["fancy"] } }, "/v")).toThrow()
+  })
+  test("a style that lays its pages out its own way is an error", () => {
+    for (const style of ["wiki", "broadsheet", "herbarium"]) {
+      expect(() => resolveConfig({ appearance: { readerSwitch: ["classic", style] } }, "/v")).toThrow(`${style} lays its pages out its own way`)
+    }
   })
 })
 
@@ -29,6 +42,8 @@ describe("readerLooks", () => {
   test("none when the switch is off or the page is a résumé or a gallery", () => {
     expect(readerLooks("classic", draw, [])).toBeUndefined()
     expect(readerLooks("resume", draw, ["notebook"])).toBeUndefined()
+    // A front page, an infobox or a specimen label would lose its frame in another style.
+    for (const own of ["broadsheet", "wiki", "herbarium"]) expect(readerLooks(own, draw, ["notebook"])).toBeUndefined()
     // The fixture leaves the switch off.
     expect(readerLooks("notebook", draw)).toBeUndefined()
   })

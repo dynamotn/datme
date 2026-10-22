@@ -3,7 +3,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import type { APIContext } from "astro"
-import { resolveConfig, site, ConfigError, type SiteConfig } from "../src/site.config"
+import { resolveConfig, site, ConfigError, STYLES, type SiteConfig } from "../src/site.config"
 import { fontFaces, loadPack, packCandidates, packFiles } from "../src/lib/theme-pack"
 import { baseStyle } from "../src/lib/look"
 import { fontsHref, packSheets, packStyleSheets } from "../src/lib/theme"
@@ -131,10 +131,10 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.theme.accent).toBe("#2d6a4f")
     expect(c.theme.fonts).toEqual({ heading: "Fraunces", body: "Ink Serif" })
     expect(c.theme.mermaid).toEqual({ light: "neutral", dark: "dark" })
-    expect(c.styles).toEqual(["notebook", "classic", "garden", "resume", "darkroom", "ink"])
+    expect(c.styles).toEqual([...STYLES, "ink"])
     expect(c.pack).toEqual({ dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], styles: { ink: { base: "classic", css: ["paper.css"] } } })
     expect(c.appearance.folders).toEqual({ Ink: "ink" })
-    expect(c.appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "ink"])
+    expect(c.appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "ink"])
     // appearance.style is set, so the pack's style is not the site's.
     expect(c.appearance.style).toBe("classic")
     expect(c.warnings.map((w) => w.file)).toEqual(Array(6).fill(".datme/themes/ink/theme.yaml"))
@@ -157,13 +157,13 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.styles.at(-1)).toBe("cv")
     expect(c.warnings.map((w) => w.message)).toEqual([
       "theme a: styles.classic: a built-in style has that name, so it is left out",
-      "theme a: styles.sea: base library is not one of notebook, classic, garden, resume, darkroom, so it is left out",
+      `theme a: styles.sea: base library is not one of ${STYLES.join(", ")}, so it is left out`,
       'theme a: style "neon" is no style of datme or of the theme, so it is ignored',
     ])
     expect(c.appearance.style).toBe("notebook")
     expect(resolveConfig({ theme: { preset: "b" } }, vault).warnings[0].message).toContain("style 3 is no style")
     // A style built on a résumé is no style for a whole site.
-    expect(resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch).toEqual(["notebook", "classic", "garden"])
+    expect(resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer"])
     expect(() => resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: ["cv"] } }, vault)).toThrow("cv is made for a single page")
   })
   test("a preset not found is a warning against datme.yaml; no preset reads nothing", () => {

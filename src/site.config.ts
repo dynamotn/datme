@@ -39,6 +39,8 @@ export type BentoTile = (typeof BENTO_TILES)[number]
 export type StyleName = string
 /** Styles made for a single page (a résumé, a gallery) rather than a whole site. */
 export const PAGE_STYLES: readonly Style[] = ["resume", "darkroom"]
+/** Styles that lay their pages out their own way (a front page, an infobox, a specimen label), not only colour them. */
+export const SHAPED_STYLES: readonly Style[] = ["broadsheet", "wiki", "herbarium"]
 
 export interface StageDef {
   icon: string
@@ -690,6 +692,11 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   if (pageStyle) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.readerSwitch: ${pageStyle} is made for a single page, so readers cannot pick it for the site`)
   }
+  // The switch swaps stylesheets only, so a page built for one of these would lose its frame, or keep it in the wrong style.
+  const shaped = Array.isArray(readerSwitch) && readerSwitch.find((st) => SHAPED_STYLES.includes(baseOf(st)))
+  if (shaped) {
+    throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.readerSwitch: ${shaped} lays its pages out its own way, so readers cannot pick it`)
+  }
   for (const [folder, def] of Object.entries(c.stages)) {
     // A string naming no preset is the stage's label; without one, the folder's name is.
     const preset = typeof def === "string" ? STAGE_PRESETS[def.toLowerCase()] : undefined
@@ -782,7 +789,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, StyleName] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
-      readerSwitch: readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])],
+      readerSwitch: readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st)) && !SHAPED_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])],
     },
     strings: c.strings,
     /** Every style the site knows: the built-in ones, then those of its theme pack. */

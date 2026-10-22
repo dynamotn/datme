@@ -107,7 +107,7 @@ appearance:
     til: notebook
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
   seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
-  readerSwitch: false         # true: readers pick notebook, classic or garden in the View menu;
+  readerSwitch: false         # true: readers pick any style that only recolours pages, in the View menu;
                               # or a list, e.g. [notebook, classic]
 
 theme:
@@ -239,7 +239,9 @@ before the page first shows, so it never flashes the author's style first;
 only the stylesheet of the chosen style is downloaded. It changes colours,
 type and paper, not what a page holds: a garden home keeps its tiles in the
 classic style. Pages in `resume` or `darkroom` keep their style, and those
-two cannot be offered.
+two cannot be offered. Nor can `broadsheet`, `wiki` and `herbarium`, which
+lay a page out their own way (a front page, an infobox, a specimen label):
+their pages keep their style, and `true` leaves them out.
 
 `home: bento` lays the home out as a grid of tiles under the home note's
 intro, in whichever style the site has: the latest note with `layout: now`,

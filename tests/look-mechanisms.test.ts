@@ -107,17 +107,17 @@ describe("a style per tag", () => {
 })
 
 describe("the reader's style", () => {
-  test("pages offer every site-wide style in the View menu", () => {
+  test("pages offer every style that only recolours them in the View menu", () => {
     const page = read("Notes/Plain/index.html")
     expect(page).toMatch(/data-look-own="classic"/)
     const looks = JSON.parse(page.match(/data-reader-looks="([^"]*)"/)![1].replaceAll("&quot;", '"')) as Record<string, string[]>
-    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "ink"])
+    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "terminal", "blueprint", "manuscript", "lacquer", "ink"])
     expect(looks.ink).toEqual(["classic", "/theme/paper.css"])
     expect(looks.classic).toEqual(["classic"])
     expect(looks.garden[0]).toBe("garden")
     expect(looks.garden[1]).toMatch(/\.css$/)
     const menu = page.split("data-look-switch")[1].split("</div>")[0]
-    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "ink"])
+    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "ink"])
     // The script that applies the choice before the first paint, and only the page's own sheet linked.
     expect(page).toContain('localStorage.getItem("look")')
     expect(page.match(/<link[^>]*data-look-css/g)).toBeNull()
