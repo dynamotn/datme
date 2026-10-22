@@ -1226,6 +1226,29 @@ export function getVault(): Vault {
   return cached
 }
 
+/**
+ * Values built from the vault, kept for its current version only: when `datme dev`
+ * rebuilds the vault after an edit, the values of the old one are dropped, not piled up.
+ */
+export function vaultMemo<V>(): { get(key: string, make: () => V): V; readonly size: number } {
+  const values = new Map<string, V>()
+  let version: number | undefined
+  return {
+    get(key, make) {
+      const now = getVault().version
+      if (now !== version) {
+        values.clear()
+        version = now
+      }
+      if (!values.has(key)) values.set(key, make())
+      return values.get(key)!
+    },
+    get size() {
+      return values.size
+    },
+  }
+}
+
 export function listed(lang: Lang): Note[] {
   return getVault().notes[lang].filter((n) => !n.unlisted)
 }

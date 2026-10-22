@@ -26,3 +26,19 @@ console.log(JSON.stringify({ first, last: renderedNotes() }))`,
   // Five edits later, the same notes, not six copies of them.
   expect(result.last).toBe(result.first)
 }, 60_000)
+
+test("a vault memo keeps the values of the current version only", () => {
+  const { result } = probeVault(
+    { "A.md": "---\npublish: true\n---\nA.\n" },
+    `import { vaultMemo } from "$src/lib/vault"
+const memo = vaultMemo()
+let made = 0
+const make = () => ++made
+const a = [memo.get("x", make), memo.get("x", make), memo.get("y", make)]
+globalThis.__vaultVersion = 1
+const b = [memo.get("x", make)]
+console.log(JSON.stringify({ a, b, size: memo.size }))`,
+  )
+  // Built once per key and version; a new version starts over.
+  expect(result).toEqual({ a: [1, 1, 2], b: [3], size: 1 })
+}, 60_000)

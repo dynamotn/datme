@@ -1,5 +1,5 @@
 import type { Lang } from "../site.config"
-import { getVault, type Note } from "./vault"
+import { getVault, vaultMemo, type Note } from "./vault"
 import { formatDate, t } from "./i18n"
 import { escapeAttr } from "./html"
 import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
@@ -10,7 +10,8 @@ import { parseTasksQuery, runTasksQuery, groupOf, TasksQueryError, type TaskItem
 import { parseSearch, search, highlight, SearchQueryError, type Searchable } from "./search-query"
 import { listed } from "./vault"
 
-const engines = new Map<string, Engine>()
+/** The Dataview engine of each language, for the current version of the vault. */
+const engines = vaultMemo<Engine>()
 /** Every page of an engine by key, unlisted ones too: a note links and queries itself as any note. */
 const everyPage = new WeakMap<Engine, Map<string, Page>>()
 
@@ -19,10 +20,8 @@ const everyPage = new WeakMap<Engine, Map<string, Page>>()
  * listed ones, as every other list of the site does; links still reach an unlisted note.
  */
 export function engineFor(lang: Lang): Engine {
-  const vault = getVault()
-  const id = `${vault.version}:${lang}`
-  let engine = engines.get(id)
-  if (!engine) {
+  return engines.get(lang, () => {
+    const vault = getVault()
     const notes = vault.notes[lang].filter((n) => !n.protected)
     const back = vault.backlinks[lang]
     const all: Page[] = notes.map((n: Note) => ({
@@ -43,17 +42,16 @@ export function engineFor(lang: Lang): Engine {
     }))
     const byKey = new Map(all.map((p) => [p.key, p]))
     const unlisted = new Set(notes.filter((n) => n.unlisted).map((n) => n.key))
-    engine = {
+    const engine: Engine = {
       pages: all.filter((p) => !unlisted.has(p.key)),
       resolve: (target) => {
         const s = vault.resolveNote(target, "")
         return s ? byKey.get(s.key) : undefined
       },
     }
-    engines.set(id, engine)
     everyPage.set(engine, byKey)
-  }
-  return engine
+    return engine
+  })
 }
 
 /** The page of the note a query runs in, `this`, which may be unlisted. */

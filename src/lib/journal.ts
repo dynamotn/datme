@@ -7,7 +7,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { site, type Lang } from "../site.config"
-import { getVault, listed, type Note } from "./vault"
+import { listed, vaultMemo, type Note } from "./vault"
 
 export interface DailyFormat {
   /** Folder of daily notes, "" for anywhere in the vault. */
@@ -90,14 +90,11 @@ export interface Day {
   note: Note
 }
 
-const cache = new Map<string, Day[]>()
+const cache = vaultMemo<Day[]>()
 
 /** The published daily notes of a language, oldest first. */
 export function journal(lang: Lang): Day[] {
-  const id = `${getVault().version}:${lang}`
-  let days = cache.get(id)
-  if (!days) cache.set(id, (days = findDays(lang)))
-  return days
+  return cache.get(lang, () => findDays(lang))
 }
 
 function findDays(lang: Lang): Day[] {

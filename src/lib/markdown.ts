@@ -23,7 +23,7 @@ import { fromHtml } from "hast-util-from-html"
 import type { Root as MdRoot, Blockquote, ListItem, Paragraph, PhrasingContent, Code, InlineCode, Text } from "mdast"
 import type { Root as HastRoot, Element, ElementContent } from "hast"
 import type { Lang } from "../site.config"
-import { getVault, type Note } from "./vault"
+import { getVault, vaultMemo, type Note } from "./vault"
 import { anchorOf } from "./obsidian"
 import { escapeAttr, escapeAttrKeepGt } from "./html"
 import { t } from "./i18n"
@@ -693,9 +693,8 @@ const autolink: AutolinkOptions = {
   content: { type: "text", value: "#" },
 }
 
-/** Rendered notes of one version of the vault: an edit in `datme dev` starts afresh, so old renders never pile up. */
-const cache = new Map<string, Promise<Rendered>>()
-let cachedVersion: number | undefined
+/** Rendered notes of the current version of the vault. */
+const cache = vaultMemo<Promise<Rendered>>()
 
 /** How many renderings are kept in memory, for the dev server to stay bounded. */
 export const renderedNotes = () => cache.size
@@ -777,70 +776,60 @@ type Parts = Omit<Rendered, "description"> & { description?: string }
 function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   const variant = stack.length > 1 ? "embed" : "page"
   // An embed is shared only along the same chain of embeds: two chains in a cycle would wait on each other forever.
-  const version = getVault().version
-  if (version !== cachedVersion) {
-    cache.clear()
-    cachedVersion = version
-  }
   const id = `${note.lang}:${variant === "page" ? note.key : stack.join("\0")}:${variant}`
-  let hit = cache.get(id)
-  if (!hit) {
-    hit = (async () => {
-      const user = await plugins()
-      // Image sizes end up in the HTML, so a replaced image must invalidate it too.
-      const deps = cacheDeps(note)
-      const diskKey = deps
-        ? [
-            note.lang,
-            variant,
-            String(note.hardBreaks),
-            note.md,
-            glossarySignature(note.lang),
-            deadLinksStamp(),
-            user.signature,
-            ...(note.slides ? [JSON.stringify(note.slides), ...getVault().slideThemes] : []),
-            ...note.assets.map((a) => `${a}@${stamp(a)}`),
-            ...deps,
-          ]
-        : undefined
-      const cached = diskKey && readCache("notes", import.meta.url, diskKey)
-      let parts: Parts
-      const stats = cacheStats()
-      if (cached) stats[deps?.length ? "reusedWithDeps" : "reused"]++
-      else stats[diskKey ? "rendered" : "uncached"]++
-      if (cached) {
-        parts = JSON.parse(cached.toString("utf8"))
-        // The placeholders baked into the cached HTML stay in use, so the build must not prune them.
-        await Promise.all(note.assets.map((a) => placeholder(a)))
-      } else {
-        const out: Partial<Rendered> = {}
-        const file = await processorFor(note.lang, stack, out, note.hardBreaks, user).process(note.md)
-        // A deck is drawn by Marp; the garden's rendering only gives its text, for search and cards.
-        const deck =
-          note.slides &&
-          renderSlides(note.md, note.slides, getVault().slideThemes, {
-            present: t(note.lang).present,
-            slides: t(note.lang).slides,
-          })
-        parts = {
-          html: deck ? deck.html : String(file),
-          // Slides have no page anchors to list, and their first heading is a slide, not the title.
-          h1: deck ? undefined : out.h1,
-          headings: deck ? [] : (out.headings ?? []),
-          text: out.text ?? "",
-          words: out.words ?? 0,
-          description: out.description,
-        }
-        if (diskKey) writeCache("notes", import.meta.url, diskKey, JSON.stringify(parts))
+  return cache.get(id, async () => {
+    const user = await plugins()
+    // Image sizes end up in the HTML, so a replaced image must invalidate it too.
+    const deps = cacheDeps(note)
+    const diskKey = deps
+      ? [
+          note.lang,
+          variant,
+          String(note.hardBreaks),
+          note.md,
+          glossarySignature(note.lang),
+          deadLinksStamp(),
+          user.signature,
+          ...(note.slides ? [JSON.stringify(note.slides), ...getVault().slideThemes] : []),
+          ...note.assets.map((a) => `${a}@${stamp(a)}`),
+          ...deps,
+        ]
+      : undefined
+    const cached = diskKey && readCache("notes", import.meta.url, diskKey)
+    let parts: Parts
+    const stats = cacheStats()
+    if (cached) stats[deps?.length ? "reusedWithDeps" : "reused"]++
+    else stats[diskKey ? "rendered" : "uncached"]++
+    if (cached) {
+      parts = JSON.parse(cached.toString("utf8"))
+      // The placeholders baked into the cached HTML stay in use, so the build must not prune them.
+      await Promise.all(note.assets.map((a) => placeholder(a)))
+    } else {
+      const out: Partial<Rendered> = {}
+      const file = await processorFor(note.lang, stack, out, note.hardBreaks, user).process(note.md)
+      // A deck is drawn by Marp; the garden's rendering only gives its text, for search and cards.
+      const deck =
+        note.slides &&
+        renderSlides(note.md, note.slides, getVault().slideThemes, {
+          present: t(note.lang).present,
+          slides: t(note.lang).slides,
+        })
+      parts = {
+        html: deck ? deck.html : String(file),
+        // Slides have no page anchors to list, and their first heading is a slide, not the title.
+        h1: deck ? undefined : out.h1,
+        headings: deck ? [] : (out.headings ?? []),
+        text: out.text ?? "",
+        words: out.words ?? 0,
+        description: out.description,
       }
-      // Locked parts are encrypted after the cache, so their text never reaches the disk.
-      const html = note.lockedParts.length ? await sealParts(parts.html, note, user) : parts.html
-      // The frontmatter description is not part of the markdown, so it is applied after the cache.
-      return { ...parts, html, description: note.description ?? parts.description ?? "" }
-    })()
-    cache.set(id, hit)
-  }
-  return hit
+      if (diskKey) writeCache("notes", import.meta.url, diskKey, JSON.stringify(parts))
+    }
+    // Locked parts are encrypted after the cache, so their text never reaches the disk.
+    const html = note.lockedParts.length ? await sealParts(parts.html, note, user) : parts.html
+    // The frontmatter description is not part of the markdown, so it is applied after the cache.
+    return { ...parts, html, description: note.description ?? parts.description ?? "" }
+  })
 }
 
 /** Files that only encrypted content uses, put inside it as data URIs. */
