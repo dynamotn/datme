@@ -26,13 +26,15 @@ transformers.js (pinned too) in one global `bun add` and runs that datme, since
 `deploy` never overwrites a file, and
 `--branch` picks the branch to publish from (by default, the current one).
 
-Notes scheduled with `publish_date` need a build on their day to appear:
+Notes scheduled with `publish_date` need a build on their day to appear, and
+so does a style of `appearance.schedule` to start and to end:
 
 - **GitHub** and **Cloudflare**: the workflow also runs once a day.
 - **GitLab**: the pipeline is ready for it; add a daily schedule under
   Build → Pipeline schedules.
 - **Netlify**: builds run on push only. Add a scheduled build hook if you
-  schedule notes.
+  schedule notes or styles, for instance from a daily cron job elsewhere:
+  `curl -X POST https://api.netlify.com/build_hooks/<id>`.
 
 ## Audio in CI
 

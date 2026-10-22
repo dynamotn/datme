@@ -423,6 +423,8 @@ appearance:
 #    Inbox: notebook
   languages: {}               # a site-wide style per language, instead of style
 #    vi-VN: lacquer
+  schedule: []                # site-wide styles for days of the year, built daily by datme deploy's CI
+#    - { style: lacquer, from: "01-20", to: "02-20" }
   readerSwitch: false         # true: readers pick a style in the View menu
 
 # A theme pack: .datme/themes/<name> in the vault, or the datme-theme-<name> package.

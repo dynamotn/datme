@@ -203,7 +203,7 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, stream: [], seasons: false, readerSwitch: [] })
+    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, schedule: [], stream: [], seasons: false, readerSwitch: [] })
   })
 
   test("the garden style and a style per folder", () => {
@@ -246,6 +246,16 @@ describe("menu and appearance", () => {
     expect(c.appearance.languages).toEqual({ "vi-VN": "lacquer", "en-US": "classic", "en-GB": "manuscript" })
     expect(resolveConfig({ languages: ["vi-VN", "en-US"], appearance: { languages: { "vi-VN": "lacquer" } } }, "/v").appearance.languages).toEqual({ "vi-VN": "lacquer" })
     expect(() => resolveConfig({ appearance: { languages: { fr: "classic" } } }, "/v")).toThrow("appearance.languages.fr: matches none of the languages en-US")
+  })
+
+  test("a schedule of styles by day of the year", () => {
+    const schedule = [{ style: "lacquer", from: "01-20", to: "02-20" }, { style: "garden", from: "12-24", to: "01-02" }]
+    expect(resolveConfig({ appearance: { schedule } }, "/v").appearance.schedule).toEqual(schedule)
+    expect(resolveConfig({ appearance: { schedule: [{ style: "classic", from: "02-29", to: "02-29" }] } }, "/v").appearance.schedule).toHaveLength(1)
+    for (const day of ["1-20", "13-01", "00-10", "04-31", "02-30", "01-00"]) {
+      expect(() => resolveConfig({ appearance: { schedule: [{ style: "classic", from: day, to: "12-31" }] } }, "/v")).toThrow("MM-DD")
+    }
+    expect(() => resolveConfig({ appearance: { schedule: [{ style: "fancy", from: "01-01", to: "01-02" }] } }, "/v")).toThrow()
   })
 
   test("unknown styles are rejected", () => {

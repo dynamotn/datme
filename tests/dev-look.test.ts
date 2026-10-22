@@ -151,6 +151,7 @@ describe("describeLookRule and describeFrameRule", () => {
     expect(describeLookRule({ kind: "folders", folder: "Writing" }, note)).toBe("appearance.folders → Writing")
     expect(describeLookRule({ kind: "classic", folder: "Writing" }, note)).toBe("appearance.classic → Writing")
     expect(describeLookRule({ kind: "languages", lang: "vi-VN" }, note)).toBe("appearance.languages → vi-VN")
+    expect(describeLookRule({ kind: "schedule", from: "01-20", to: "02-20" }, note)).toBe("appearance.schedule → 01-20 to 02-20")
     expect(describeLookRule({ kind: "site" }, note)).toBe("appearance.style")
   })
   test("say where the chrome comes from", () => {

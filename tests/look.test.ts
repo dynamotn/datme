@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags, explainStage, explainDefault, defaultLook } from "../src/lib/look"
+import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags, explainStage, explainDefault, defaultLook, inDays, monthDayOf } from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 
@@ -154,6 +154,37 @@ describe("explainDefault", () => {
     expect(explainLook({ dir: "Notes", lang: "vi-VN", stage: "Seeds" }, rules).value).toBe("notebook")
     expect(explainLook({ dir: "Notes", lang: "vi-VN", tags: ["poem"] }, rules).value).toBe("garden")
     expect(explainLook({ dir: "Notes", lang: "en-US" }, rules).rule).toEqual({ kind: "site" })
+  })
+})
+
+describe("appearance.schedule", () => {
+  const day = (md: string) => new Date(`2027-${md}T12:00:00`)
+  const appearance = {
+    ...base,
+    languages: { "vi-VN": "lacquer" as const },
+    schedule: [
+      { style: "garden" as const, from: "12-24", to: "01-02" },
+      { style: "classic" as const, from: "01-01", to: "01-31" },
+    ],
+  }
+  test("a day of the year, in local time", () => {
+    expect(monthDayOf(day("01-05"))).toBe("01-05")
+    expect(monthDayOf(day("12-31"))).toBe("12-31")
+  })
+  test("a range includes both ends and may wrap the year", () => {
+    expect(inDays("01-20", "01-20", "02-20")).toBe(true)
+    expect(inDays("02-20", "01-20", "02-20")).toBe(true)
+    expect(inDays("02-21", "01-20", "02-20")).toBe(false)
+    expect(inDays("12-30", "12-24", "01-02")).toBe(true)
+    expect(inDays("01-02", "12-24", "01-02")).toBe(true)
+    expect(inDays("06-01", "12-24", "01-02")).toBe(false)
+  })
+  test("the first entry covering the build day replaces the site and language styles", () => {
+    expect(explainDefault("vi-VN", appearance, day("12-25"))).toEqual({ value: "garden", rule: { kind: "schedule", from: "12-24", to: "01-02" } })
+    expect(explainDefault("en-US", appearance, day("01-01")).value).toBe("garden")
+    expect(explainDefault("en-US", appearance, day("01-15")).value).toBe("classic")
+    expect(explainDefault("vi-VN", appearance, day("03-01")).rule).toEqual({ kind: "languages", lang: "vi-VN" })
+    expect(explainDefault(undefined, appearance, day("03-01")).rule).toEqual({ kind: "site" })
   })
 })
 

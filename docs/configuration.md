@@ -114,6 +114,9 @@ appearance:
   languages:                  # a site-wide style per language (or its base, as vi), instead of `style`
     vi-VN: lacquer            # on that language's pages, home and tag pages included;
     en-US: classic            # tags, stages and folders still win
+  schedule:                   # a site-wide style for days of the year, MM-DD to MM-DD, both included;
+    - { style: lacquer, from: "01-20", to: "02-20" }   # the first covering the build day replaces
+    - { style: garden, from: "12-24", to: "01-02" }    # style and languages; a range may wrap the year
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
   seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
   readerSwitch: false         # true: readers pick any style that only recolours pages, in the View menu;
@@ -261,6 +264,18 @@ letters of its name, then the subfolder, so `03 Atoms/Code` is
 `03.ATO · Code`; notes at the root are `00.GEN`. A folder page is a drawer,
 its call number on a brass label, its subfolders drawer fronts and its notes
 a row of cards.
+
+`appearance.schedule` changes the site's style for part of the year, a
+lacquer garden around Tết or a garden over the holidays. The day is that of
+the build, in the build machine's time zone (UTC on most CI runners), and
+dates are Gregorian: a feast on the lunar calendar, such as Tết, needs its
+range moved each year. The style is chosen when the site is built, so it
+switches only when a build runs on or after the first day of the range and
+again after its last: the pipelines `datme deploy` writes for GitHub and
+Cloudflare already build once a day, and GitLab needs a daily pipeline
+schedule (see [Deploying](deploying.md)). An entry replaces only
+`appearance.style` and `appearance.languages`: notes and folders styled by
+their own `style:`, a layout, `tags`, `stages` or `folders` keep their style.
 
 With `readerSwitch`, the View menu of every page lists the styles you offer,
 and a reader's pick restyles the whole site for them until they choose "As

@@ -217,8 +217,9 @@ note's tags, in the order it lists them, that has a style; `poem/haiku` takes
 the style of `poem` unless it has its own), then `appearance.stages` (the
 note's growth stage: its `stage` property, else its top folder, as configured
 in `stages`), then `appearance.folders` (the longest
-matching folder), then `appearance.languages` (the style of the note's
-language), then `appearance.style`; the frame is the note's `chrome`,
+matching folder), then the site-wide style: an `appearance.schedule` entry
+covering the day of the build, else `appearance.languages` (the style of the
+note's language), else `appearance.style`; the frame is the note's `chrome`,
 then its layout's, then `full`. An unknown value is reported as a warning at
 build time and ignored. Any folder note (not protected) lends its style and frame
 to the folder page, whether from its own `style:` and `chrome:` or from its

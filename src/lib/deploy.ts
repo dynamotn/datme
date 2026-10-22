@@ -121,7 +121,7 @@ name: datme
 on:
   push:
     branches: [${o.branch}]
-  # Daily, so notes with a publish_date appear on their day.
+  # Daily, so notes with a publish_date appear on their day and appearance.schedule switches styles.
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
@@ -217,7 +217,8 @@ ${o.tts ? gitlabVoice : ""}    - ${build(o, "public")}
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == "${o.branch}"
-    # Add a daily pipeline schedule (Build → Pipeline schedules) so notes with a publish_date appear on their day.
+    # Add a daily pipeline schedule (Build → Pipeline schedules) so notes with a publish_date appear on their day
+    # and appearance.schedule switches styles.
     - if: $CI_PIPELINE_SOURCE == "schedule"
 `,
     },
@@ -255,7 +256,7 @@ name: datme-cloudflare
 on:
   push:
     branches: [${o.branch}]
-  # Daily, so notes with a publish_date appear on their day.
+  # Daily, so notes with a publish_date appear on their day and appearance.schedule switches styles.
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:

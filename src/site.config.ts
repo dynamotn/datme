@@ -134,6 +134,17 @@ const DEFAULT_TYPES: Record<string, string> = {
   video: "🎬",
 }
 
+/** Days in each month, February's leap day included: a schedule's dates come back every year. */
+const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+/** A day of the year as MM-DD, e.g. "01-20". */
+const monthDay = z
+  .string()
+  .regex(/^\d\d-\d\d$/, "expected a day of the year as MM-DD, e.g. 01-20")
+  .refine((v) => {
+    const [m, d] = v.split("-").map(Number)
+    return m >= 1 && m <= 12 && d >= 1 && d <= MONTH_DAYS[m - 1]
+  }, "expected a day of the year as MM-DD, e.g. 01-20")
+
 /** The `theme:` values a theme pack can set too, checked alike. */
 const themeFields = {
   /** Colour scheme before the reader picks one with the toggle; auto follows their system. */
@@ -506,6 +517,11 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         stages: z.record(z.string(), z.enum(styles)).default({}),
         /** A site-wide style per language (or its base, as vi for vi-VN), used instead of `style` on its pages. */
         languages: z.record(z.string(), z.enum(styles)).default({}),
+        /**
+         * Site-wide styles for days of the year, from and to included (a range may wrap the year): the first
+         * entry covering the day of the build replaces `style` and `languages`.
+         */
+        schedule: z.array(z.object({ style: z.enum(styles), from: monthDay, to: monthDay }).strict()).default([]),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
         /**
@@ -519,7 +535,7 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         readerSwitch: z.union([z.boolean(), z.array(z.enum(styles)).min(1)]).default(false),
       })
       .strict()
-      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, stream: [], seasons: false, readerSwitch: false }),
+      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, schedule: [], stream: [], seasons: false, readerSwitch: false }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -819,6 +835,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
           return style ? [[l, style]] : []
         }),
       ),
+      schedule: c.appearance.schedule,
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
       readerSwitch: (readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st)) && !SHAPED_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])]).filter((st) => !templated(st)),

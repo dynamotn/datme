@@ -16,7 +16,7 @@ export function pickOption<T extends string>(value: unknown, options: readonly T
 }
 
 /** What the site-wide style of a language depends on. */
-type DefaultRules = Pick<SiteConfig["appearance"], "style"> & Partial<Pick<SiteConfig["appearance"], "languages">>
+type DefaultRules = Pick<SiteConfig["appearance"], "style"> & Partial<Pick<SiteConfig["appearance"], "languages" | "schedule">>
 type Rules = DefaultRules & Pick<SiteConfig["appearance"], "classic" | "folders">
 type TagRules = Pick<SiteConfig["appearance"], "tags">
 type NoteRules = Rules & TagRules & Pick<SiteConfig["appearance"], "stages">
@@ -29,6 +29,7 @@ export type LookRule =
   | { kind: "stages"; stage: string }
   | { kind: "folders" | "classic"; folder: string }
   | { kind: "languages"; lang: Lang }
+  | { kind: "schedule"; from: string; to: string }
   | { kind: "site" }
 
 /** The rule that gave a page its frame. */
@@ -39,8 +40,22 @@ export interface Explained<T, R> {
   rule: R
 }
 
-/** The site-wide style of a language's pages and its rule: that of `appearance.languages`, else `appearance.style`. */
-export function explainDefault(lang: Lang | undefined, appearance: DefaultRules = site.appearance): Explained<StyleName, LookRule> {
+/** A date's day of the year as MM-DD, in the local time of the build. */
+export const monthDayOf = (date: Date): string => `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+
+/** Whether a day (MM-DD) lies from `from` to `to`, both included; a range whose end comes first wraps the new year. */
+export function inDays(day: string, from: string, to: string): boolean {
+  return from <= to ? day >= from && day <= to : day >= from || day <= to
+}
+
+/**
+ * The site-wide style of a language's pages on a day and its rule: the first `appearance.schedule` entry that
+ * covers the day of the build, else the language's of `appearance.languages`, else `appearance.style`.
+ */
+export function explainDefault(lang: Lang | undefined, appearance: DefaultRules = site.appearance, now = new Date()): Explained<StyleName, LookRule> {
+  const day = monthDayOf(now)
+  const scheduled = appearance.schedule?.find((s) => inDays(day, s.from, s.to))
+  if (scheduled) return { value: scheduled.style, rule: { kind: "schedule", from: scheduled.from, to: scheduled.to } }
   const own = lang === undefined ? undefined : appearance.languages?.[lang]
   if (lang !== undefined && own) return { value: own, rule: { kind: "languages", lang } }
   return { value: appearance.style, rule: { kind: "site" } }
