@@ -327,7 +327,7 @@ export function questionOf(n: Note): { answered: boolean; answer?: Ref } {
       const end = lines.findIndex((l, i) => i > at && /^#{1,6}\s/.test(l) && l.match(/^#+/)![0].length <= level)
       const body = lines.slice(at + 1, end < 0 ? undefined : end).join("\n")
       for (const m of body.matchAll(/data-key="([^"]*)"/g)) {
-        const target = visibleNote(n.lang, unescape(m[1]))
+        const target = visibleNote(n.lang, unescapeHtml(m[1]))
         if (target && target.key !== n.key) {
           answered = true
           answer = { text: target.title, href: target.url }
@@ -350,7 +350,7 @@ export interface BaseRef {
 }
 
 const BASE_REF = /<span class="base-ph" data-rel="([^"]*)" data-view="([^"]*)"><\/span>|^```base[^\n]*\n([\s\S]*?)^```/gm
-const unescape = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+const unescapeHtml = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
 
 export function basesOf(note: Note): BaseRef[] {
   const out: BaseRef[] = []
@@ -358,8 +358,8 @@ export function basesOf(note: Note): BaseRef[] {
     try {
       if (m[3] !== undefined) out.push({ base: parseBase(m[3]) })
       else {
-        const doc = getVault().docs.get(unescape(m[1]))
-        if (doc) out.push({ base: parseBase(doc.src), view: unescape(m[2]) || undefined })
+        const doc = getVault().docs.get(unescapeHtml(m[1]))
+        if (doc) out.push({ base: parseBase(doc.src), view: unescapeHtml(m[2]) || undefined })
       }
     } catch {
       // A malformed base shows its own error where it is embedded.
@@ -948,7 +948,7 @@ export function quotesOf(html: string): FoundQuote[] {
     if (!b.tag) return []
     const { text, who } = quoteOf(innerOf(b.html))
     const id = b.html.match(/^<blockquote\b[^>]*\sid="([^"]*)"/)?.[1]
-    return who ? [{ text, who, id: id && unescape(id) }] : []
+    return who ? [{ text, who, id: id && unescapeHtml(id) }] : []
   })
 }
 
@@ -968,7 +968,7 @@ export function recipeHtml(html: string): string {
 const ANCHOR = /<a class="heading-anchor"[\s\S]*?<\/a>/g
 /** Text of some HTML: tags and heading anchors dropped, spaces collapsed. */
 export const textOf = (html: string) =>
-  unescape(html.replace(ANCHOR, "").replace(/<[^>]+>/g, " "))
+  unescapeHtml(html.replace(ANCHOR, "").replace(/<[^>]+>/g, " "))
     .replace(/\s+/g, " ")
     .trim()
 /** The id of the heading an HTML part starts with. */
@@ -1537,7 +1537,7 @@ export function tripHtml(note: Note, html: string): string {
     const title = textOf(p.heading)
     const pin = p.body.match(PIN)
     const linked = (p.heading + p.body).match(/class="internal" data-key="([^"]*)"/)
-    const place = pin ? { lat: Number(pin[1]), lng: Number(pin[2]) } : linked ? placeOfNote(note, unescape(linked[1])) : undefined
+    const place = pin ? { lat: Number(pin[1]), lng: Number(pin[2]) } : linked ? placeOfNote(note, unescapeHtml(linked[1])) : undefined
     const id = idOf(p.heading)
     if (place && parseLocation([place.lat, place.lng])) stops.push({ lat: place.lat, lng: place.lng, title, url: id ? `#${id}` : "" })
     const body = galleryHtml(pin ? p.body.replace(PIN, "") : p.body, `<div class="trip-strip" role="group" aria-label="${escapeAttr(title)}" tabindex="0">`)
@@ -1849,7 +1849,7 @@ export function checklistHtml(html: string, labels: { progress: string; reset: s
       b.tag && b.html.startsWith('<div class="dataview dv-tasks')
         ? b.html
         : b.html.replace(TASK_BOX, (_m, attrs: string) => {
-            const label = unescape(attrs.match(/aria-label="([^"]*)"/)?.[1] ?? "")
+            const label = unescapeHtml(attrs.match(/aria-label="([^"]*)"/)?.[1] ?? "")
             const base = label.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 60) || "item"
             let id = base
             for (let n = 2; used.has(id); n++) id = `${base}-${n}`
@@ -1901,7 +1901,7 @@ export interface Spoke {
 function linksIn(html: string): { label: string; href: string }[] {
   const out: { label: string; href: string }[] = []
   for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)) {
-    const href = unescape(m[1].match(/\shref="([^"]*)"/)?.[1] ?? "")
+    const href = unescapeHtml(m[1].match(/\shref="([^"]*)"/)?.[1] ?? "")
     const label = textOf(m[2])
     if (!href || href.startsWith("#") || /heading-anchor|data-footnote/.test(m[1]) || !label || out.some((l) => l.href === href)) continue
     out.push({ label, href })

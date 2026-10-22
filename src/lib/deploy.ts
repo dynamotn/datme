@@ -85,6 +85,7 @@ const UV_INSTALL = `curl -LsSf https://astral.sh/uv/${UV_VERSION}/install.sh | s
  */
 const TTS_DIR = ".datme-tts"
 const CACHE_PATHS = `|\n            .datme-cache\n            ${TTS_DIR}`
+// biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub Actions expression, written as it is
 const CACHE_KEY = "datme-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}"
 const ttsEnv = (o: DeployOpts, indent: string) => (o.tts ? `${indent}UV_CACHE_DIR: ${TTS_DIR}/uv\n${indent}HF_HOME: ${TTS_DIR}/hf\n` : "")
 

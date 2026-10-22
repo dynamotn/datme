@@ -102,6 +102,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@biomejs/biome": "2.6.2",
     "@huggingface/transformers": "^4.3.1",
     "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
     "@terrastruct/d2": "^0.1.33",

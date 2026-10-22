@@ -69,7 +69,7 @@ describe("mcp tools edges", () => {
     const noBacklinks = lonely.find((n) => !(backlinks.get(n.key) ?? []).length)!
     expect((await tool("backlinks", { note: noBacklinks.key })).result.content[0].text).toBe(`No published note links to "${noBacklinks.title}".`)
     const { relatedNotes } = await import("../src/lib/related")
-    let noRelated
+    let noRelated: (typeof lonely)[number] | undefined
     for (const n of lonely) {
       if (!(await relatedNotes(n)).length) {
         noRelated = n

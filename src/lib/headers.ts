@@ -110,6 +110,7 @@ export function headersFile(site: SiteConfig, scriptHashes: string[] = []): stri
     "X-Frame-Options: SAMEORIGIN",
     // A site served over HTTPS stays on it; a host that serves only HTTP ignores the header.
     ...(site.url?.startsWith("https://") ? ["Strict-Transport-Security: max-age=31536000"] : []),
+    // biome-ignore lint/complexity/useOptionalChain: headers may be `false`, which `?.` does not narrow
     ...(site.headers && site.headers.csp ? [`Content-Security-Policy: ${contentSecurityPolicy(site, scriptHashes)}`] : []),
   ]
   return [

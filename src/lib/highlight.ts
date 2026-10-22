@@ -87,7 +87,7 @@ export function loadLanguages(h: Highlighter, langs: Iterable<string>): Promise<
 /** The language a `<pre><code class="language-x">` names, as `@shikijs/rehype` reads it. */
 function blockLanguage(pre: Element): string | undefined {
   const head = pre.children[0]
-  if (!head || head.type !== "element" || head.tagName !== "code") return undefined
+  if (head?.type !== "element" || head.tagName !== "code") return undefined
   const classes = head.properties?.className
   const cls = Array.isArray(classes) ? classes.find((c) => typeof c === "string" && c.startsWith("language-")) : undefined
   return typeof cls === "string" ? cls.slice("language-".length) : undefined

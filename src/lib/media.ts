@@ -9,7 +9,7 @@ export function parseTime(v: string | null): number | undefined {
   if (!v) return undefined
   if (/^\d+$/.test(v)) return Number(v)
   const m = v.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/)
-  if (!m || !m[0]) return undefined
+  if (!m?.[0]) return undefined
   return Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0)
 }
 

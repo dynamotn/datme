@@ -13,6 +13,7 @@ export function minutesLeft(words: number, progress: number): number {
   return Math.ceil((words * (1 - progress)) / WPM)
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: read by `frame ||=` below, which Biome counts as a write only
 let frame = 0
 let onScroll: (() => void) | undefined
 

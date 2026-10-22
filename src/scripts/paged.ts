@@ -128,7 +128,7 @@ function onClick(e: MouseEvent) {
   if (target.closest?.("[data-paged-next]")) return void turn(1)
   const note = pagedNote()
   // A tap on a link, a button or a field does what it does; selecting text turns nothing.
-  if (!note || !note.contains(target) || target.closest("a, button, input, select, textarea, summary, label, [tabindex]")) return
+  if (!note?.contains(target) || target.closest("a, button, input, select, textarea, summary, label, [tabindex]")) return
   if (window.getSelection()?.toString()) return
   const box = note.getBoundingClientRect()
   const by = tapTurn(e.clientX, box.left, box.width, rtlOf(note))
@@ -139,7 +139,7 @@ function onClick(e: MouseEvent) {
 function onFocus(e: FocusEvent) {
   const note = pagedNote()
   const target = e.target as HTMLElement
-  if (!note || !note.contains(target) || target === note) return
+  if (!note?.contains(target) || target === note) return
   const box = note.getBoundingClientRect()
   const gap = gapOf(note)
   const rtl = rtlOf(note)

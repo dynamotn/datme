@@ -227,7 +227,7 @@ export function cite(md: string, bib: Map<string, BibEntry>, heading: string): C
     // Inline code is kept aside while citations are replaced around it.
     const code: string[] = []
     const masked = line.replace(/(`+)[^`]*?\1/g, (m) => `\u0002${code.push(m) - 1}\u0002`)
-    const replaced = masked.replace(/\[([^\[\]]*?-?@[^\[\]]+?)\](?![(:])/g, (whole, inner: string) => {
+    const replaced = masked.replace(/\[([^[\]]*?-?@[^[\]]+?)\](?![(:])/g, (whole, inner: string) => {
       const items = inner.split(";").map((s) => s.trim().match(ITEM))
       if (items.some((m) => !m)) return whole
       const rendered = items.map((m) => {

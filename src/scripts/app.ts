@@ -218,6 +218,7 @@ function setupCode() {
     btn.type = "button"
     btn.textContent = document.body.dataset.copy ?? "Copy"
     btn.addEventListener("click", async () => {
+      // biome-ignore lint/performance/useDomNodeTextContent: the code as shown, without what a highlighter hides
       await navigator.clipboard.writeText(pre.querySelector("code")?.innerText ?? pre.innerText)
       const label = btn.textContent
       btn.textContent = document.body.dataset.copied ?? "Copied"

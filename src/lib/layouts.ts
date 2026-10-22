@@ -89,7 +89,7 @@ export function tabsHtml(source: string, seed: string): string {
   return `<div class="tabs" data-tabs>\n<div class="tab-list" role="tablist">${buttons}</div>\n${panels}\n</div>`
 }
 
-const MARK = String.raw`(?:-{3}|={3})`
+const MARK = "(?:-{3}|={3})"
 const START = new RegExp(String.raw`^\s*${MARK}\s*start-multi-column\b.*$`, "im")
 const BREAK = new RegExp(String.raw`^\s*${MARK}\s*(?:column-break|column-end|end-column)\s*(?:${MARK})?\s*$`, "im")
 const END = new RegExp(String.raw`^\s*${MARK}\s*end-multi-column\b.*$`, "im")

@@ -1,0 +1,57 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    // .astro files are left out: Biome reads only their frontmatter, and would format half a file.
+    "includes": ["src/**", "tests/**", "bin/**", "tools/**", "examples/**", "*.mjs", "*.json", "*.jsonc", "!tests/fixtures", "!**/*.astro", "!bin/datme.js"]
+  },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 160 },
+  "javascript": {
+    "formatter": { "semicolons": "asNeeded", "quoteStyle": "double", "trailingCommas": "all", "arrowParentheses": "always" }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        // `x!` after a check TypeScript cannot follow is the house idiom, with strict null checks on.
+        "noNonNullAssertion": "off",
+        // Concatenation reads better than a template in many of these one-liners.
+        "useTemplate": "off",
+        // CSS: rules are ordered by component, not by specificity.
+        "noDescendingSpecificity": "off"
+      },
+      "complexity": {
+        // `(e.preventDefault(), openSearch())` in key handlers is deliberate.
+        "noCommaOperator": "off",
+        // CSS: !important is how reduced motion, print and the reader's own choices win.
+        "noImportantStyles": "off"
+      },
+      "suspicious": {
+        // `if (!x) cache.set(k, (x = make()))` is the memo idiom.
+        "noAssignInExpressions": "off",
+        // `list.forEach((a) => set.add(a))`: the returned value is ignored on purpose.
+        "useIterableCallbackReturn": "off",
+        // \u0000 and \u0001 mark masked spans and URL placeholders in the markdown pipeline.
+        "noControlCharactersInRegex": "off",
+        // CSS: a property written twice is a fallback for browsers that lack the second form.
+        "noDuplicateProperties": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            // Probes and tool calls hand back untyped JSON, read field by field.
+            "noExplicitAny": "off",
+            // Tests hold CI expressions and source templates as plain strings to compare with.
+            "noTemplateCurlyInString": "off"
+          }
+        }
+      }
+    }
+  ],
+  "assist": { "enabled": false }
+}

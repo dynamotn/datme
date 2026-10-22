@@ -106,7 +106,7 @@ function loadFonts() {
 /** Satori has no emoji font; drop pictographs instead of drawing empty boxes. */
 export const stripEmoji = (s: string) =>
   s
-    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, "")
+    .replace(/\p{Extended_Pictographic}|\u{FE0F}|\u{200D}/gu, "")
     .replace(/\s+/g, " ")
     .trim()
 

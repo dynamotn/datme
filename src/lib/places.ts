@@ -82,7 +82,7 @@ export function parseLocation(v: unknown): [number, number] | undefined {
     const o = v as Record<string, unknown>
     pair = [o.lat ?? o.latitude, o.lng ?? o.lon ?? o.long ?? o.longitude]
   }
-  if (!pair || pair.length !== 2) return undefined
+  if (pair?.length !== 2) return undefined
   const [lat, lng] = pair.map((x) => Number(String(x).trim()))
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return undefined
   return [lat, lng]

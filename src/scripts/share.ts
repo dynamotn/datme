@@ -43,7 +43,7 @@ function action(label: string, cls: string, on: (b: HTMLButtonElement) => void):
 function showButton() {
   const sel = document.getSelection()
   const text = sel?.toString() ?? ""
-  const range = sel && sel.rangeCount ? sel.getRangeAt(0) : undefined
+  const range = sel?.rangeCount ? sel.getRangeAt(0) : undefined
   const at = range && (range.commonAncestorContainer.parentElement ?? (range.commonAncestorContainer as Element))
   const inProse = at?.closest?.(".prose")
   if (!range || !at || !inProse || text.trim().length < 3) return hideButton()

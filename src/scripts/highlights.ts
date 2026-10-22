@@ -180,7 +180,7 @@ const labels = () => document.body.dataset
 /** The words selected in the note, as offsets in its text, or undefined. */
 export function selectionIn(prose: Element): { start: number; end: number } | undefined {
   const sel = document.getSelection()
-  if (!sel || !sel.rangeCount || sel.isCollapsed) return undefined
+  if (!sel?.rangeCount || sel.isCollapsed) return undefined
   const range = sel.getRangeAt(0)
   if (!prose.contains(range.commonAncestorContainer)) return undefined
   const before = document.createRange()

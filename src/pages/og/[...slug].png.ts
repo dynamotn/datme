@@ -2,7 +2,7 @@ import type { APIRoute, GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
 import { getVault, type Note } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { cardSpec, renderOg, OG_SOURCE } from "~/lib/og"
+import { cardSpec, renderOg, OG_SOURCE, type OgCard } from "~/lib/og"
 import { baseStyle, lookOf } from "~/lib/look"
 import { callNumber } from "~/lib/catalog"
 import { readCache, writeCache } from "~/lib/render-cache"
@@ -25,7 +25,7 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
   // The card is drawn in the page's style: the home's is the site's, a note's its own.
   const accent = site.theme.accent
   const spec = cardSpec(baseStyle(note ? lookOf(note) : site.appearance.style), typeof accent === "object" ? accent.light : accent)
-  let card
+  let card: OgCard
   if (!note) card = { title: site.title[lang], kicker: site.tagline[lang] || kicker, logo: site.logo }
   else {
     const r = await renderNote(note)

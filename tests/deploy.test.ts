@@ -60,7 +60,7 @@ describe("deployFiles", () => {
     for (const target of TARGETS) {
       const [file] = deployFiles(target, { ...opts, semantic: true })
       const bun = target === "netlify" ? "~/.bun/bin/" : ""
-      const command = `${bun}${install}"\$(${bun}bun pm bin -g)/datme" build 'notes/My Vault' --out`
+      const command = `${bun}${install}"$(${bun}bun pm bin -g)/datme" build 'notes/My Vault' --out`
       if (file.path.endsWith(".yml")) {
         expect(file.content).toContain(command)
         expect(() => loadYaml(file.content)).not.toThrow()

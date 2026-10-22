@@ -157,9 +157,8 @@ export class CliError extends Error {
 }
 
 export function parseArgs(argv: string[]): Args {
-  let parsed
-  try {
-    parsed = parseNodeArgs({
+  const parse = () =>
+    parseNodeArgs({
       args: argv,
       allowPositionals: true,
       options: {
@@ -182,6 +181,9 @@ export function parseArgs(argv: string[]): Args {
         version: { type: "boolean", short: "v" },
       },
     })
+  let parsed: ReturnType<typeof parse>
+  try {
+    parsed = parse()
   } catch (e) {
     throw new CliError((e as Error).message)
   }

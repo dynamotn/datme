@@ -88,7 +88,7 @@ function show(i: number) {
 
 function open(img: HTMLImageElement | SVGSVGElement) {
   // The dialog belongs to the page; a client-side navigation replaces the body.
-  if (!dialog || !dialog.isConnected) {
+  if (!dialog?.isConnected) {
     dialog = build()
     document.body.append(dialog)
   }

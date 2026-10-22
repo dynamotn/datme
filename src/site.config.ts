@@ -7,7 +7,7 @@ import { bundledThemes } from "shiki"
 import { folderDisplayName, slugTag } from "./lib/slug"
 import { CONFIG_FILES } from "./lib/config-files"
 import { basePath, useSite } from "./lib/base"
-import { loadPack, PACK_STYLE_NAME, PACK_THEME_KEYS, type PackStyle } from "./lib/theme-pack"
+import { loadPack, type PACK_THEME_KEYS, type PackStyle } from "./lib/theme-pack"
 
 /** A small multilingual sentence model: Vietnamese, English and 50 other languages. */
 export const SEMANTIC_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
