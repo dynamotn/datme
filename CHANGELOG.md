@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A build whose output folder has a space or an accented letter in its path (or any build on Windows) writes the ActivityPub files, the Pagefind index and the script hashes of `_headers` into that folder, not into a percent-encoded twin of it.
 - `datme dev` no longer grows in memory with every edit: it kept, for each version of the vault, a rendered copy of every note visited, a Dataview index and the journal of each language; it now keeps only the current ones.
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
+- On a `broadsheet` home, the notes at the root of the vault are filed under a "notes" label instead of an empty one linking back to the home.
 
 ### Security
 

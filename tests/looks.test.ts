@@ -103,6 +103,14 @@ describe("broadsheet look", () => {
     expect(html).toContain('<h3 class="bs-headline"><a class="internal" href="/News/Harbour">Harbour</a></h3>')
   })
 
+  test("the notes at the root of the vault run under a section of their own, unlinked", () => {
+    const html = read("index.html")
+    expect(html).toContain(
+      '<h2 class="bs-section-label">notes</h2><article class="bs-story"><h3 class="bs-headline"><a class="internal" href="/Colophon">Colophon</a>',
+    )
+    expect(html).not.toContain('<h2 class="bs-section-label"><a href="/"></a></h2>')
+  })
+
   test("a story names its section above the headline", () => {
     const html = read("Essays/On-walking/index.html")
     expect(html).toContain('<p class="bs-kicker"><a href="/Essays/">Essays</a></p>')

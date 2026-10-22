@@ -16,8 +16,9 @@ const s = t(lang)
 const folders = getVault().folders[lang]
 const front = frontPage(notes, bySection ? undefined : Infinity)
 // A folder's own page has one section; the home has one per top folder, named and linked after it.
+// Notes at the root of the vault have no folder of their own: their section is "notes", unlinked.
 const sections = bySection
-  ? front.sections.map(({ dir, notes }) => ({ label: folders.get(dir)?.name ?? s.notes, url: folders.get(dir)?.url, notes }))
+  ? front.sections.map(({ dir, notes }) => ({ label: (dir && folders.get(dir)?.name) || s.notes, url: dir ? folders.get(dir)?.url : undefined, notes }))
   : [{ label: s.latest, url: undefined, notes: front.sections.flatMap((x) => x.notes) }]
 const kicker = (n: Note) => (bySection ? folders.get(n.dir.split("/")[0])?.name : undefined)
 ---
