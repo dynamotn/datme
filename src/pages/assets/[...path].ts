@@ -1,9 +1,7 @@
-import fs from "node:fs/promises"
 import path from "node:path"
 import type { APIRoute, GetStaticPaths } from "astro"
-import { site } from "~/site.config"
 import { getVault } from "~/lib/vault"
-import { imageSize, renderVariant, variantWidths, VARIANT } from "~/lib/images"
+import { imageSize, publicOriginal, renderVariant, variantWidths, VARIANT } from "~/lib/images"
 
 /** Only assets referenced by a published note are ever emitted, with resized copies of images. */
 export const getStaticPaths = (async () => {
@@ -40,8 +38,9 @@ export const GET: APIRoute = async ({ params }) => {
     return new Response(new Uint8Array(await renderVariant(original, width)), { headers: { "content-type": "image/webp" } })
   }
   if (!getVault().assets.has(rel)) return new Response(null, { status: 404 })
-  const data = await fs.readFile(path.join(site.vault, rel))
-  return new Response(data, {
+  // A photo's EXIF can hold where it was taken: originals go out without it.
+  const data = await publicOriginal(rel)
+  return new Response(new Uint8Array(data), {
     headers: { "content-type": TYPES[path.extname(rel).toLowerCase()] ?? "application/octet-stream" },
   })
 }

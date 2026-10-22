@@ -336,6 +336,7 @@ images:                       # PNG/JPEG/WebP/AVIF get their size and resized We
   widths: [480, 960, 1600]
   quality: 80
   placeholders: true          # a tiny blurred copy shows while each image loads
+  keepMetadata: false         # true: originals keep their EXIF/XMP/IPTC (camera, time, GPS)
 map:                          # tiles of /map (OpenStreetMap by default)
   tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
   darkTiles: https://…/{z}/{x}/{y}.png   # for the dark theme; else the light tiles are darkened

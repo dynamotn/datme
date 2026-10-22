@@ -1,6 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
-import sharp from "sharp"
+import sharp, { type FormatEnum } from "sharp"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { withBase } from "./base"
@@ -88,6 +88,38 @@ export async function renderVariant(rel: string, width: number): Promise<Buffer>
     return fs.readFileSync(file)
   }
   writeCache("img", import.meta.url, key, out)
+  return out
+}
+
+/**
+ * The bytes published for an original image: without its EXIF, XMP and IPTC
+ * (where a phone keeps the GPS position, the camera and the time), turned
+ * upright as its orientation said, and with its colour profile. A picture
+ * carrying none of these, any other file, or `images.keepMetadata`, goes out
+ * as it is.
+ */
+export async function publicOriginal(rel: string): Promise<Buffer> {
+  const file = path.join(site.vault, rel)
+  if (site.images.keepMetadata || !RASTER.test(rel)) return fs.readFileSync(file)
+  const key = [rel, stamp(rel)]
+  const cached = readCache("img-orig", import.meta.url, key)
+  if (cached) return cached
+  let out: Buffer
+  try {
+    const meta = await sharp(file).metadata()
+    if (!meta.exif && !meta.xmp && !meta.iptc) {
+      out = fs.readFileSync(file)
+    } else {
+      // An animation keeps its frames; a still picture is turned upright, since its orientation goes with the EXIF.
+      const animated = (meta.pages ?? 1) > 1
+      const image = animated ? sharp(file, { animated }) : sharp(file).rotate()
+      out = await image.keepIccProfile().toFormat(meta.format as keyof FormatEnum, { quality: 95 }).toBuffer()
+    }
+  } catch (e) {
+    console.warn(`[datme] could not read ${rel} to strip its metadata, so it is published as it is: ${(e as Error).message}`)
+    return fs.readFileSync(file)
+  }
+  writeCache("img-orig", import.meta.url, key, out)
   return out
 }
 

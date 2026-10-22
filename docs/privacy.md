@@ -15,6 +15,12 @@ public", and gives you several ways to share a little more.
   listed in `ignore`, are never read.
 - **Files:** only the images and attachments a published note uses are copied
   to the site; those that only encrypted content uses travel inside it.
+- **Photo metadata:** a phone writes where and when it took a picture, and
+  with what, into its EXIF. PNG, JPEG, WebP and AVIF originals are published
+  without their EXIF, XMP and IPTC, turned upright and with their colour
+  profile kept; the resized copies never had it. Set `images.keepMetadata: true`
+  to publish them as they are. Other files, such as GIF, HEIC, TIFF or PDF,
+  are copied unchanged.
 - **Canvases and bases:** only those a published note links to or embeds, or
   all of them with `publish: all`. To keep one out whatever links to it, list
   it (or its folder) in `ignore`.

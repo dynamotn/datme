@@ -404,9 +404,11 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         quality: z.number().int().min(1).max(100).default(80),
         /** Show a tiny blurred copy of each image while it loads. */
         placeholders: z.boolean().default(true),
+        /** Publish original images with their EXIF, XMP and IPTC (camera, time, GPS position) instead of without. */
+        keepMetadata: z.boolean().default(false),
       })
       .strict()
-      .default({ optimize: true, widths: [480, 960, 1600], quality: 80, placeholders: true }),
+      .default({ optimize: true, widths: [480, 960, 1600], quality: 80, placeholders: true, keepMetadata: false }),
     /**
      * Search engine of the site: minisearch loads every note's text at once, which suits most
      * gardens; pagefind indexes the built pages and loads only what a query needs, for large ones.

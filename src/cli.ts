@@ -25,7 +25,7 @@ const CACHE = path.join(PACKAGE_ROOT, ".datme", "cache")
 /** Marks a directory as datme's build cache, so builds may delete in it. */
 const CACHE_MARKER = ".datme-cache"
 /** What datme writes in its cache: the kinds of render-cache and the dead links. */
-const CACHE_ENTRIES = ["notes", "og", "img", "img-size", "lqip", "diagrams", "embeddings", "tts", "preview", DEAD_LINKS_FILE, NEIGHBOURS_FILE]
+const CACHE_ENTRIES = ["notes", "og", "img", "img-size", "img-orig", "lqip", "diagrams", "embeddings", "tts", "preview", DEAD_LINKS_FILE, NEIGHBOURS_FILE]
 
 /** The build cache: DATME_CACHE moves it, an empty value turns it off. */
 function cacheDirOf(env: NodeJS.ProcessEnv, cwd: string): string | undefined {
