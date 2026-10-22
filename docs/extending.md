@@ -22,7 +22,8 @@ title: "Extending"
 ## Theme packs
 
 A theme pack is a look to reuse and share: a folder holding a `theme.yaml`,
-its stylesheets, and the fonts and pictures they load. `theme.preset` in
+its stylesheets, the fonts and pictures they load, and templates for a few
+parts of a page. `theme.preset` in
 `datme.yaml` names one:
 
 ```yaml
@@ -48,10 +49,14 @@ fonts: { heading: Fraunces, body: Ink Serif }
 code: { light: github-light, dark: github-dark-dimmed }
 mermaid: neutral            # also scheme, comments and d2, as under theme:
 css: ink.css                # stylesheets for every page, one or a list
+templates:                  # templates for slots of every page, below
+  footer-band: templates/band.html
 styles:                     # styles of its own
   ink:
     base: classic           # the built-in style it builds on: its pages and stylesheet
     css: paper.css          # loaded after the base's, only on pages in this style
+    templates:              # templates for slots of its pages, beating the pack's
+      note-card: templates/card.html
 ```
 
 - **Settings** take the same values as `theme:` in `datme.yaml`, and
@@ -69,12 +74,96 @@ styles:                     # styles of its own
   Nothing else is: no script of a pack ever runs, SVG files (which can carry
   scripts) are left out, and so are hidden folders, `node_modules` and any
   file a link points out of the pack's folder.
+- **Templates** reshape a few parts of a page, the slots below, with HTML of
+  the pack's own. They are read at build time and never published.
 
 Problems with a pack never stop the build: a missing pack, a value datme does
 not take or a stylesheet outside the pack is reported as a warning (by
 `datme check` and `datme dev`), and the site keeps datme's own value.
 `examples/themes/datme-theme-ink` in datme's repository is a complete pack to
 start from.
+
+### Templates
+
+A template is a `.html` file of the pack holding plain HTML with
+placeholders, and nothing that runs:
+
+```html
+<!-- templates/card.html -->
+<p class="ink-card-meta">{{#if date}}<time datetime="{{datetime}}">{{date}}</time>{{/if}}</p>
+<h3><a class="internal" href="{{url}}">{{title}}</a></h3>
+{{#if excerpt}}<p>{{excerpt}}</p>{{/if}}
+{{#unless excerpt}}<p>…</p>{{/unless}}
+<ul>{{#each tags}}<li><a href="{{url}}">#{{name}}</a></li>{{/each}}</ul>
+```
+
+- `{{field}}` is the value of a field of the slot, in text or in an
+  attribute; it is always escaped, and there is no way to insert raw HTML.
+- `{{#if field}}…{{/if}}` and `{{#unless field}}…{{/unless}}` keep what they
+  hold when the field is set (a list: not empty), or not. `{{#each tags}}…{{/each}}`
+  repeats what it holds for every tag, whose `{{name}}` and `{{url}}` it sees
+  besides the slot's fields. A block opens and closes among the same
+  siblings, around text and elements, never inside a tag's attributes.
+- Every slot has `siteTitle`, `home` (the address of the home page) and
+  `lang`.
+
+| Slot | Where | Fields |
+| --- | --- | --- |
+| `header-brand` | Replaces the site's name in the header, inside its link to the home page | `logo` |
+| `note-card` | Replaces the card of a note on home, folder and tag pages | `title`, `url`, `excerpt`, `date`, `datetime`, `cover`, `stage`, `stageIcon`, `type`, `typeIcon`, `readingTime`, `locked`, `featured`, `tags` |
+| `note-row` | Replaces the row of a note in a list (recent notes, a folder of a classic site…) | `title`, `url`, `date`, `datetime`, `stage`, `stageIcon`, `type`, `typeIcon`, `locked`, `tags` |
+| `note-footer` | Adds a footer at the end of a note, after its text | `title`, `url`, `date` (last tended), `datetime`, `stage`, `stageIcon`, `author`, `locked`, `tags` |
+| `footer-band` | Adds a band to the site's footer, above its last line | `author`, `year`, `rss` |
+
+A card's headings are the template's own, whatever list it is in; datme's
+own card uses `h3`, or `h2` on folder and tag pages.
+
+A template drawn for a slot sits in an element with the classes `pack-slot`
+and `pack-<slot>` (`pack-note-card`…) for the pack's stylesheets to style.
+`templates:` at the top of `theme.yaml` apply to every page of the site, in
+any style, since a pack is the site's own preset; `styles.<name>.templates`
+apply only to pages in that style and beat the top ones slot by slot. Readers
+cannot pick a style with templates of its own in `readerSwitch`, which swaps
+stylesheets only: it is left out of `readerSwitch: true`, and a warning when
+listed.
+
+A template gets what datme's own component shows there, and never more: a
+card gets its banner as `cover` only where datme's card shows one, and a
+protected note has no `excerpt` (its text is sealed) and `locked` set. The
+fields of a slot are its whole contract: a placeholder of another field is a
+warning and draws nothing.
+
+**Security.** A pack is code from someone else, so its templates are treated
+as untrusted. They are parsed once, as browsers parse HTML, and only an
+allowlist survives:
+
+- **Elements**: text-level and sectioning HTML (`div`, `p`, `span`, `a`,
+  `img`, headings, lists, `time`, `figure`, tables, `details`…). Anything else
+  is left out with what it holds: `script`, `style`, `iframe`, `object`,
+  `embed`, `form` and its fields, `base`, `meta`, `link`, `template`,
+  `noscript`, SVG and MathML among them. Comments and CDATA are left out
+  too, so they cannot hide a placeholder. In `header-brand`, which is drawn
+  inside a link, links and `details` are left out as well.
+- **Attributes**: `class`, `title`, `lang`, `dir`, `role`, `hidden`,
+  `translate`, `aria-*`, and a few per element (`href`, `rel` and `hreflang`
+  on links; `src`, `alt`, `width`, `height`, `loading` on pictures;
+  `datetime`, `cite`, `colspan`…). Event handlers (`on*`), `id`, `name`,
+  `data-*`, `srcdoc`, `srcset`, `target`, `formaction` and every other
+  attribute are left out.
+- **Addresses** in `href`, `src` and `cite` must be relative, `http:`,
+  `https:` or `mailto:`; `javascript:`, `data:` and the like are left out,
+  however they are cased, spaced or written with entities. An address a
+  field fills is checked again once filled, so a note's banner of
+  `javascript:…` draws no `src`.
+- **Inline styles** are kept only when they cannot load a file or run code:
+  no `url(`, `image-set`, `expression`, `@import`, quotes, escapes or
+  comments, and no placeholders.
+- **Values** of fields are escaped in text and in attributes, which are
+  always quoted, so a title such as `"><script>` stays text.
+
+What a template loses is a warning naming the slot and what was left out,
+in `datme check` and `datme dev`; it never stops the build.
+
 
 ## Your own syntax: `datme.config.mjs`
 
@@ -160,6 +249,7 @@ A map of the code:
 | `src/cli.ts` | The `datme` command |
 | `src/site.config.ts` | Loads and validates `datme.yaml` |
 | `src/lib/theme-pack.ts` | Finds and reads theme packs |
+| `src/lib/pack-template.ts` | Parses, sanitises and draws the templates of theme packs |
 | `src/lib/vault.ts` | Scans the vault; resolves links; builds backlinks, tags and folders |
 | `src/lib/obsidian.ts` | Turns Obsidian syntax into standard markdown |
 | `src/lib/markdown.ts` | The unified pipeline: callouts, KaTeX, Shiki, transclusion |

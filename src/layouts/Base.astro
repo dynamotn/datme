@@ -31,6 +31,7 @@ import { brandParts, profileOf } from "~/lib/footer"
 import { ogPath } from "~/lib/og-url"
 import { MONO_FONT_CSS, MONO_FONT_ORIGIN } from "~/lib/fonts"
 import { customCssFile, fontsHref, packSheets, packStyleSheets, themeCss } from "~/lib/theme"
+import { drawSlot } from "~/lib/pack-slots"
 import Analytics from "~/components/Analytics.astro"
 import Filters from "~/components/Filters.astro"
 import DevProblems from "~/components/DevProblems.astro"
@@ -151,6 +152,9 @@ const [base, ...lookCss] = draw(look)
 const seasons = baseStyle(look) === "garden" ? site.appearance.seasons : false
 // The styles readers may pick instead; a preview of `datme dev` shows what was asked for, never the reader's choice.
 const looks = preview.style ? undefined : readerLooks(look, draw)
+// Slots the theme pack draws on this page: the site's name, and a band of the footer.
+const packBrand = drawSlot("header-brand", look, lang, { logo: site.logo })
+const packBand = drawSlot("footer-band", look, lang, { author: site.author, year: String(year), rss })
 ---
 
 <!doctype html>
@@ -294,10 +298,18 @@ const looks = preview.style ? undefined : readerLooks(look, draw)
           </button>
         )
       }
-      <a class="brand" href={home}>
-        <span class="brand-mark">{site.logo}</span>
-        <span class="brand-name">{siteTitle}</span>
-      </a>
+      {
+        packBrand !== undefined ? (
+          <a class="brand" href={home} aria-label={siteTitle}>
+            <span class="pack-slot pack-header-brand" data-slot="header-brand" set:html={packBrand} />
+          </a>
+        ) : (
+          <a class="brand" href={home}>
+            <span class="brand-mark">{site.logo}</span>
+            <span class="brand-name">{siteTitle}</span>
+          </a>
+        )
+      }
       {minimal && <div class="header-spacer"></div>}
       {
         !minimal && (
@@ -481,6 +493,7 @@ const looks = preview.style ? undefined : readerLooks(look, draw)
             </div>
           )
         }
+        {packBand !== undefined && <div class="pack-slot pack-footer-band" data-slot="footer-band" set:html={packBand} />}
         <div class="footer-bottom">
           <span>© {year} {site.author} · <a href={rss}>{s.rss}</a> <DevProblems /></span>
           {

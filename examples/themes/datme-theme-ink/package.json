@@ -4,5 +4,5 @@
   "description": "A datme theme pack: blue-black ink on cream paper.",
   "keywords": ["datme", "datme-theme"],
   "license": "MPL-2.0",
-  "files": ["theme.yaml", "*.css"]
+  "files": ["theme.yaml", "*.css", "templates/*.html"]
 }

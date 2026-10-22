@@ -7,11 +7,11 @@ export type LookSheets = Record<string, string[]>
  * The styles a reader can pick on a page drawn in `own`, with what draws each, the page's own
  * included so the reader can go back to it. None when the switch is off or the page's style is
  * made for a single page or lays the page out its own way: a résumé stays a résumé, a front page
- * stays a newspaper.
+ * stays a newspaper, and a theme pack's style with templates of its own keeps them.
  */
 export function readerLooks(own: StyleName, draw: (style: StyleName) => string[], choices: readonly StyleName[] = site.appearance.readerSwitch): LookSheets | undefined {
   const base = draw(own)[0] as Style
-  if (!choices.length || PAGE_STYLES.includes(base) || SHAPED_STYLES.includes(base)) return undefined
+  if (!choices.length || PAGE_STYLES.includes(base) || SHAPED_STYLES.includes(base) || site.pack?.styles[own]?.templates) return undefined
   return Object.fromEntries([own, ...choices].map((st) => [st, draw(st)]))
 }
 

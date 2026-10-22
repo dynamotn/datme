@@ -113,13 +113,13 @@ const stream = isStream(folder.dir)
         ) : baseStyle(look) === "notebook" ? (
           <div class="card-wall">
             {byRecent(folder.notes).map((n) => (
-              <IndexCard note={n} level={2} />
+              <IndexCard note={n} level={2} look={look} />
             ))}
           </div>
         ) : (
           <ul class="note-list">
             {byRecent(folder.notes).map((n) => (
-              <NoteRow note={n} />
+              <NoteRow note={n} look={look} />
             ))}
           </ul>
         ))

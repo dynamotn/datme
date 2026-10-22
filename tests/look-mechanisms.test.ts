@@ -96,6 +96,27 @@ describe("a theme pack", () => {
   })
 })
 
+describe("templates of a theme pack", () => {
+  test("its style's row draws the notes of the Ink folder, sanitised", () => {
+    const row = read("Ink/index.html").split('<li class="pack-slot pack-note-row" data-slot="note-row">')[1].split("</ul></li>")[0]
+    expect(row).toContain('<a class="note-row internal" href="/Ink/Letter"><span class="title">Letter</span> <time datetime="2026-02-05T00:00:00.000Z">Feb 5, 2026</time></a>')
+    expect(row).toContain('<li><a href="/tags/letter">letter</a></li>')
+    expect(read("Ink/index.html")).toContain('<img src="x.png" alt="">')
+    expect(read("Ink/index.html")).not.toMatch(/<script>alert|onerror|Sealed/)
+    // Pages in another style keep datme's own rows.
+    expect(read("Notes/index.html")).not.toContain('data-slot="note-row"')
+  })
+  test("the pack's band and note footer draw on every page; a page in its templated style has no reader switch", () => {
+    const page = read("Notes/Plain/index.html")
+    expect(page).toContain('<div class="pack-slot pack-footer-band" data-slot="footer-band"><p class="ink-band">Set in ink for Looks test · <a href="/index.xml">feed</a></p>')
+    expect(page).toMatch(/<footer class="pack-slot pack-note-footer" data-slot="note-footer"><p class="ink-foot">Plain · [^<]+ · <\/p><\/footer>/)
+    expect(read("Ink/Letter/index.html")).toContain('<p class="ink-foot">Letter · Feb 5, 2026 · </p>')
+    expect(read("Ink/Letter/index.html")).not.toContain("data-reader-looks")
+    // The site's name keeps datme's own mark: the pack has no header-brand.
+    expect(page).toContain('<span class="brand-name">Looks test</span>')
+  })
+})
+
 describe("a style per tag", () => {
   test("a note takes the style of its tag, a nested one its parent's", () => {
     expect(read("Notes/Haiku/index.html")).toContain('data-look="garden"')
@@ -111,13 +132,13 @@ describe("the reader's style", () => {
     const page = read("Notes/Plain/index.html")
     expect(page).toMatch(/data-look-own="classic"/)
     const looks = JSON.parse(page.match(/data-reader-looks="([^"]*)"/)![1].replaceAll("&quot;", '"')) as Record<string, string[]>
-    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "terminal", "blueprint", "manuscript", "lacquer", "ink"])
-    expect(looks.ink).toEqual(["classic", "/theme/paper.css"])
+    // The pack's ink style has templates of its own, which a swap of stylesheets cannot draw.
+    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "terminal", "blueprint", "manuscript", "lacquer"])
     expect(looks.classic).toEqual(["classic"])
     expect(looks.garden[0]).toBe("garden")
     expect(looks.garden[1]).toMatch(/\.css$/)
     const menu = page.split("data-look-switch")[1].split("</div>")[0]
-    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "ink"])
+    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer"])
     // The script that applies the choice before the first paint, and only the page's own sheet linked.
     expect(page).toContain('localStorage.getItem("look")')
     expect(page.match(/<link[^>]*data-look-css/g)).toBeNull()

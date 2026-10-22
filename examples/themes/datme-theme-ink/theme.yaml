@@ -14,3 +14,5 @@ styles:
   ink:                        # a new style: the pages of classic, on the paper below
     base: classic
     css: paper.css
+    templates:                # logic-less HTML for slots of its pages; never run, always escaped
+      note-card: templates/card.html

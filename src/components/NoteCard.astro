@@ -1,16 +1,23 @@
 ---
 import type { Note } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { site } from "~/site.config"
+import { site, type StyleName } from "~/site.config"
 import { formatDate, t } from "~/lib/i18n"
+import { drawSlot, noteFields } from "~/lib/pack-slots"
+import { previewOf } from "~/lib/dev-look"
 
 interface Props {
   note: Note
+  /** Style of the page the card is on, whose theme pack template draws it if it has one. */
+  look?: StyleName
 }
-const { note } = Astro.props
+const { note, look = previewOf(Astro.url).style ?? site.appearance.style } = Astro.props
 const r = await renderNote(note)
 const minutes = Math.max(1, Math.round(r.words / 220))
+const packed = drawSlot("note-card", look, note.lang, noteFields(note, { title: r.h1 ?? note.title, date: note.created, excerpt: r.description, cover: note.banner, words: r.words, tags: note.tags.slice(0, 4) }))
 ---
+
+{packed !== undefined ? <article class="pack-slot pack-note-card" data-slot="note-card" set:html={packed} /> :
 
 <a class="card internal" href={note.url}>
   <div class="card-media">
@@ -27,4 +34,4 @@ const minutes = Math.max(1, Math.round(r.words / 220))
       <span>{t(note.lang).readingTime(minutes)}</span>
     </div>
   </div>
-</a>
+</a>}

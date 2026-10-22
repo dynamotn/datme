@@ -622,7 +622,7 @@ function withPack(raw: unknown, vault: string) {
     raw: { ...config, theme: { ...fromPack, ...theme, fonts }, ...(style === undefined ? {} : { appearance: { ...appearance, style } }) },
     styles,
     warnings,
-    pack: { dir: pack.dir, css: pack.css, fonts: pack.fonts },
+    pack: { dir: pack.dir, css: pack.css, fonts: pack.fonts, ...(pack.templates && { templates: pack.templates }) },
   }
 }
 
@@ -688,6 +688,11 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     }
   }
   const { readerSwitch } = c.appearance
+  // A pack's style with templates of its own reshapes its pages, which the reader switch cannot do.
+  const templated = (st: StyleName) => !!packStyles[st]?.templates
+  for (const st of Array.isArray(readerSwitch) ? readerSwitch.filter(templated) : []) {
+    packed.warnings.push({ file: "datme.yaml", message: `appearance.readerSwitch: ${st} has templates of its own that reshape its pages, so readers cannot pick it` })
+  }
   const pageStyle = Array.isArray(readerSwitch) && readerSwitch.find((st) => PAGE_STYLES.includes(baseOf(st)))
   if (pageStyle) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.readerSwitch: ${pageStyle} is made for a single page, so readers cannot pick it for the site`)
@@ -789,12 +794,12 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, StyleName] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
-      readerSwitch: readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st)) && !SHAPED_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])],
+      readerSwitch: (readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st)) && !SHAPED_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])]).filter((st) => !templated(st)),
     },
     strings: c.strings,
     /** Every style the site knows: the built-in ones, then those of its theme pack. */
     styles: styleNames,
-    /** The theme pack of `theme.preset`: its folder, stylesheets for every page, styles and own fonts. */
+    /** The theme pack of `theme.preset`: its folder, stylesheets and templates for every page, styles and own fonts. */
     pack: packed.pack && { ...packed.pack, styles: packStyles },
     /** Problems of the config that do not stop the build, reported by `datme check`. */
     warnings: packed.warnings,

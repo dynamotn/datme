@@ -1,0 +1,13 @@
+<!--
+  The card of a note on the home, folder and tag pages of the ink style: a
+  logic-less template, filled with the fields of the note-card slot (see
+  docs/extending.md). Every value is escaped; a protected note has no excerpt.
+-->
+<p class="ink-card-meta">
+  {{#if date}}<time datetime="{{datetime}}">{{date}}</time>{{/if}}
+  {{#if stage}}<span>{{stageIcon}} {{stage}}</span>{{/if}}
+  {{#if locked}}<span title="Locked">🔒</span>{{/if}}
+</p>
+<h3 class="ink-card-title"><a class="internal" href="{{url}}">{{title}}</a></h3>
+{{#if excerpt}}<p class="ink-card-excerpt">{{excerpt}}</p>{{/if}}
+{{#if tags}}<ul class="ink-card-tags">{{#each tags}}<li><a href="{{url}}">#{{name}}</a></li>{{/each}}</ul>{{/if}}

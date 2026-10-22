@@ -1,0 +1,5 @@
+<!-- The Ink style's row: its title, date and tags; the script and handler are left out with a warning. -->
+<a class="note-row internal" href="{{url}}"><span class="title">{{title}}</span> <time datetime="{{datetime}}">{{date}}</time></a>
+{{#if locked}}<span>Sealed</span>{{/if}}
+<ul class="ink-row-tags">{{#each tags}}<li><a href="{{url}}">{{name}}</a></li>{{/each}}</ul>
+<script>alert("pack")</script><img src="x.png" alt="" onerror="alert(1)">

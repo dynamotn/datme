@@ -1,19 +1,26 @@
 ---
 import type { Note } from "~/lib/vault"
 import { getVault } from "~/lib/vault"
-import { site } from "~/site.config"
+import { site, type StyleName } from "~/site.config"
 import { formatDate } from "~/lib/i18n"
 import { typeInfo } from "~/lib/types"
+import { drawSlot, noteFields } from "~/lib/pack-slots"
+import { previewOf } from "~/lib/dev-look"
 import Outdated from "./Outdated.astro"
 
 interface Props {
   note: Note
   date?: "created" | "updated"
+  /** Style of the page the row is on, whose theme pack template draws it if it has one. */
+  look?: StyleName
 }
-const { note, date = "updated" } = Astro.props
+const { note, date = "updated", look = previewOf(Astro.url).style ?? site.appearance.style } = Astro.props
 const folder = getVault().folders[note.lang].get(note.dir)
 const d = note[date]
+const packed = drawSlot("note-row", look, note.lang, noteFields(note, { title: note.title, date: d, words: 0, tags: note.tags }))
 ---
+
+{packed !== undefined ? <li class="pack-slot pack-note-row" data-slot="note-row" set:html={packed} /> :
 
 <li>
   <a class="note-row internal" href={note.url}>
@@ -29,4 +36,4 @@ const d = note[date]
       </time>
     )}
   </a>
-</li>
+</li>}

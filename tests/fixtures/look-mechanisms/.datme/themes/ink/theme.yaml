@@ -7,9 +7,14 @@ fonts:
   body: Ink Serif
 mermaid: pink
 css: [ink.css, ../../stray.css, missing.css, theme.js]
+templates:
+  footer-band: templates/band.html
+  note-footer: templates/foot.html
+  sidebar: templates/band.html
 styles:
   ink:
     base: classic
     css: paper.css
+    templates: { note-card: templates/card.html, note-row: templates/row.html }
   Bad Name: { base: classic }
 colour: blue

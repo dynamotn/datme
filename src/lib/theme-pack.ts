@@ -2,12 +2,14 @@ import fs from "node:fs"
 import path from "node:path"
 import { parseYaml } from "./yaml"
 import { PACKAGE_ROOT } from "./package-root"
+import { compileTemplate, SLOTS, type Slot, type TemplateNode } from "./pack-template"
 
 /**
  * Theme packs: a reusable look in a folder holding a theme.yaml, its stylesheets, fonts and
  * pictures. `theme.preset` names one: a folder of the vault, `.datme/themes/<name>` in it, or an
- * installed `datme-theme-<name>` package. A pack only ever ships CSS and files that CSS loads:
- * no script of a pack runs, and no file outside its folder is read or published.
+ * installed `datme-theme-<name>` package. A pack only ever ships CSS, files that CSS loads and
+ * logic-less templates of a few slots (src/lib/pack-template.ts): no script of a pack runs, and
+ * no file outside its folder is read or published.
  */
 
 /** Files a pack publishes, by extension: stylesheets, fonts and pictures; SVG could carry scripts. */
@@ -27,12 +29,19 @@ export const PACK_TYPES: Record<string, string> = {
 
 /** The keys of theme.yaml that set `theme:` values of datme.yaml. */
 export const PACK_THEME_KEYS = ["scheme", "accent", "fonts", "code", "comments", "mermaid", "d2"] as const
-const OTHER_KEYS = ["name", "description", "style", "css", "styles"]
+const OTHER_KEYS = ["name", "description", "style", "css", "styles", "templates"]
 
-/** A style a pack adds: a built-in style to build on, and stylesheets loaded on its pages after that one's. */
+/** Compiled templates of a pack, by slot. */
+export type PackTemplates = Partial<Record<Slot, TemplateNode[]>>
+
+/**
+ * A style a pack adds: a built-in style to build on, stylesheets loaded on its pages after that
+ * one's, and templates for slots of its pages, which beat the pack's own.
+ */
 export interface PackStyle {
   base: string
   css: string[]
+  templates?: PackTemplates
 }
 
 export interface ThemePack {
@@ -49,6 +58,8 @@ export interface ThemePack {
   /** Stylesheets loaded on every page, from the pack's folder. */
   css: string[]
   styles: Record<string, PackStyle>
+  /** Templates for slots of every page. */
+  templates?: PackTemplates
   /** Font families its stylesheets declare with @font-face: never fetched from Google Fonts. */
   fonts: string[]
 }
@@ -135,6 +146,30 @@ export function loadPack(preset: string, vault: string, roots?: string[]): { pac
     if ((PACK_THEME_KEYS as readonly string[]).includes(key)) theme[key] = value
     else if (!OTHER_KEYS.includes(key)) warnings.push(`${label}: theme.yaml has no setting ${key}, so it is ignored`)
   }
+  /** Templates a map names, compiled; a slot with none, or none at all, is left out. */
+  const templates = (value: unknown, where: string): PackTemplates | undefined => {
+    if (value == null) return undefined
+    if (!isObject(value)) {
+      warnings.push(`${label}: ${where} must map a slot (${SLOTS.join(", ")}) to an .html file, so it is left out`)
+      return undefined
+    }
+    const out: PackTemplates = {}
+    for (const [slot, rel] of Object.entries(value)) {
+      if (!(SLOTS as string[]).includes(slot)) {
+        warnings.push(`${label}: ${where}.${slot}: is no slot of datme (${SLOTS.join(", ")}), so it is left out`)
+        continue
+      }
+      const { file, problem } = packFile(dir, rel, ".html")
+      if (problem) {
+        warnings.push(`${label}: ${where}.${slot}: ${problem}, so it is left out`)
+        continue
+      }
+      const compiled = compileTemplate(fs.readFileSync(path.join(dir, file!), "utf8"), slot as Slot)
+      for (const w of compiled.warnings) warnings.push(`${label}: ${where}.${slot}: ${w}`)
+      out[slot as Slot] = compiled.nodes
+    }
+    return Object.keys(out).length ? out : undefined
+  }
   const css = sheets(raw.css, "css")
   const styles: Record<string, PackStyle> = {}
   if (raw.styles != null && !isObject(raw.styles)) warnings.push(`${label}: styles must map a style's name to its base and stylesheets`)
@@ -148,11 +183,13 @@ export function loadPack(preset: string, vault: string, roots?: string[]): { pac
       warnings.push(`${label}: styles.${name}: needs a base, the built-in style it builds on, so it is left out`)
       continue
     }
-    styles[name] = { base: style.base, css: sheets(style.css, `styles.${name}.css`) }
+    const own = templates(style.templates, `styles.${name}.templates`)
+    styles[name] = { base: style.base, css: sheets(style.css, `styles.${name}.css`), ...(own && { templates: own }) }
   }
   const all = [...css, ...Object.values(styles).flatMap((s) => s.css)]
   const fonts = [...new Set(all.flatMap((f) => fontFaces(fs.readFileSync(path.join(dir, f), "utf8"))))]
-  return { pack: { preset, dir, file, theme, style: raw.style, css, styles, fonts }, warnings }
+  const shared = templates(raw.templates, "templates")
+  return { pack: { preset, dir, file, theme, style: raw.style, css, styles, ...(shared && { templates: shared }), fonts }, warnings }
 }
 
 /** Every file a pack publishes, from its folder: those of PACK_TYPES, outside hidden folders and node_modules. */

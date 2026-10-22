@@ -15,6 +15,7 @@ import { hasMarkdown, mdUrl } from "~/lib/llms"
 import { embeddable, oembedUrl } from "~/lib/oembed"
 import { absUrl, withBase } from "~/lib/base"
 import Base from "~/layouts/Base.astro"
+import { drawSlot, noteFields } from "~/lib/pack-slots"
 import Breadcrumbs from "../Breadcrumbs.astro"
 import NoteMeta from "../NoteMeta.astro"
 import SpecimenLabel from "../garden/SpecimenLabel.astro"
@@ -101,6 +102,8 @@ const item = itemOf(note)
 // A now page says when it was last true, and warns once it is three months old.
 const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefined
 const NOW_STALE_YEARS = 0.25
+// The theme pack's footer of a note: what the note's head shows of it, never its text.
+const packFooter = drawSlot("note-footer", look, note.lang, noteFields(note, { title, date: note.updated ?? note.created, words: r.words, tags: note.tags }))
 // Podcast apps find the feed of a collection of episodes from its page, and a changelog has a feed of its versions.
 const feed = note.protected
   ? undefined
@@ -253,6 +256,7 @@ const feed = note.protected
         </p>
       )
     }
+    {packFooter !== undefined && <footer class="pack-slot pack-note-footer" data-slot="note-footer" set:html={packFooter} />}
   </article>
   {plain && <section class="backlinks">
     <h2>{garden ? s.pathsFromHere : s.backlinks} <span class="count">{backlinks.length}</span></h2>

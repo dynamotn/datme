@@ -76,8 +76,15 @@ describe("loadPack", () => {
       "theme ink: css: ../../stray.css is outside the theme's folder, so it is left out",
       "theme ink: css: missing.css is not in the theme, so it is left out",
       "theme ink: css: theme.js is not a .css file, so it is left out",
+      "theme ink: styles.ink.templates.note-row: <script> is not an element a template can hold, so it is left out with what it holds",
+      "theme ink: styles.ink.templates.note-row: <img>: the attribute onerror is not one a template can set, so it is left out",
       "theme ink: styles.Bad Name: a style's name is lower-case letters, digits and -, so it is left out",
+      // A note's footer is never given its text.
+      "theme ink: templates.note-footer: {{excerpt}} is not a field of note-footer (siteTitle, home, lang, title, url, date, datetime, stage, stageIcon, author, locked, tags), so it is left out",
+      "theme ink: templates.sidebar: is no slot of datme (header-brand, note-card, note-row, note-footer, footer-band), so it is left out",
     ])
+    expect(Object.keys(pack!.templates!)).toEqual(["footer-band", "note-footer"])
+    expect(Object.keys(pack!.styles.ink.templates!)).toEqual(["note-card", "note-row"])
   })
   test("styles need a map, a base and file names; a link out of the pack is refused", () => {
     const vault = write(path.join(tmp, "styles"), {
@@ -100,6 +107,44 @@ describe("loadPack", () => {
     const { pack } = loadPack("sea", path.join(root, "vault"), [root])
     expect(pack?.dir).toBe(path.join(root, "node_modules/datme-theme-sea"))
     expect(pack?.file).toBe("datme.yaml")
+  })
+})
+
+describe("templates of a pack", () => {
+  test("a map of slots to .html files of the pack, compiled; each mistake is a warning", () => {
+    const vault = write(path.join(tmp, "templates"), {
+      "outside.html": "<p>x</p>",
+      "a/theme.yaml": "templates: [card.html]",
+      "b/theme.yaml": "templates: { note-card: card.htm, footer-band: missing.html, note-footer: link.html, header-brand: brand.html }\nstyles: { sea: { base: classic, templates: { note-card: card.html } }, dry: { base: classic, templates: {} } }",
+      "b/card.htm": "",
+      "b/card.html": "<p>{{title}}</p>",
+      "b/brand.html": "<b>{{siteTitle}}</b>",
+    })
+    fs.symlinkSync(path.join(vault, "outside.html"), path.join(vault, "b/link.html"))
+    expect(loadPack("./a", vault, [])).toMatchObject({ warnings: ["theme ./a: templates must map a slot (header-brand, note-card, note-row, note-footer, footer-band) to an .html file, so it is left out"] })
+    expect(loadPack("./a", vault, []).pack?.templates).toBeUndefined()
+    const { pack, warnings } = loadPack("./b", vault, [])
+    expect(warnings).toEqual([
+      "theme ./b: templates.note-card: card.htm is not a .html file, so it is left out",
+      "theme ./b: templates.footer-band: missing.html is not in the theme, so it is left out",
+      "theme ./b: templates.note-footer: link.html is outside the theme's folder, so it is left out",
+    ])
+    expect(Object.keys(pack!.templates!)).toEqual(["header-brand"])
+    expect(pack!.styles.sea.templates!["note-card"]).toEqual([{ kind: "element", tag: "p", attrs: [], children: [{ kind: "text", parts: [{ field: "title" }] }] }])
+    // A style whose templates are all left out has none.
+    expect(pack!.styles.dry).toEqual({ base: "classic", css: [] })
+    // Templates are read at build time, never published.
+    expect(packFiles(path.join(vault, "b"))).toEqual([])
+  })
+  test("a style with templates of its own is no choice of the reader switch", () => {
+    const vault = write(path.join(tmp, "switch"), {
+      ".datme/themes/t/theme.yaml": "styles: { sea: { base: classic, templates: { note-card: c.html } }, sky: { base: classic } }",
+      ".datme/themes/t/c.html": "<p>{{title}}</p>",
+    })
+    const c = resolveConfig({ theme: { preset: "t" }, appearance: { readerSwitch: ["sea", "sky", "garden"] } }, vault)
+    expect(c.appearance.readerSwitch).toEqual(["sky", "garden"])
+    expect(c.warnings).toEqual([{ file: "datme.yaml", message: "appearance.readerSwitch: sea has templates of its own that reshape its pages, so readers cannot pick it" }])
+    expect(resolveConfig({ theme: { preset: "t" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch.at(-1)).toBe("sky")
   })
 })
 
@@ -132,12 +177,14 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.theme.fonts).toEqual({ heading: "Fraunces", body: "Ink Serif" })
     expect(c.theme.mermaid).toEqual({ light: "neutral", dark: "dark" })
     expect(c.styles).toEqual([...STYLES, "ink"])
-    expect(c.pack).toEqual({ dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], styles: { ink: { base: "classic", css: ["paper.css"] } } })
+    expect(c.pack).toMatchObject({ dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], styles: { ink: { base: "classic", css: ["paper.css"] } } })
+    expect(Object.keys(c.pack!.templates!)).toEqual(["footer-band", "note-footer"])
     expect(c.appearance.folders).toEqual({ Ink: "ink" })
-    expect(c.appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "ink"])
+    // The pack's style has templates of its own, so readers cannot pick it.
+    expect(c.appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer"])
     // appearance.style is set, so the pack's style is not the site's.
     expect(c.appearance.style).toBe("classic")
-    expect(c.warnings.map((w) => w.file)).toEqual(Array(6).fill(".datme/themes/ink/theme.yaml"))
+    expect(c.warnings.map((w) => w.file)).toEqual(Array(10).fill(".datme/themes/ink/theme.yaml"))
     expect(c.warnings.at(-1)!.message).toStartWith("theme ink: mermaid: ")
   })
   test("datme.yaml's fonts beat the pack's one family at a time; its style is the site's unless one is set", () => {
