@@ -20,8 +20,7 @@ import {
   sourceLangOf,
   type Note,
 } from "./vault"
-import { withoutLocked } from "./locked"
-import { withoutPrivateLinks } from "./llms"
+import { publicMarkdown } from "./llms"
 
 export interface Version {
   date: Date
@@ -42,12 +41,7 @@ export function publicText(raw: string, lang: Lang, until = new Date(), note?: N
   if (!isPublished(fm, site.publish, until) || (fm.password != null && fm.password !== "")) return undefined
   // Each version falls back the way the note does today.
   const shown = contentLanguage(body, lang, fallbackOf(fm, sourceLangOf(fm)))
-  const text = withoutLocked(filterLanguage(body, shown))
-  return (note ? withoutPrivateLinks(text, note) : text)
-    .replace(/%%[\s\S]*?%%/g, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
+  return publicMarkdown(filterLanguage(body, shown), note)
 }
 
 /** A commit that changed a file: when, the path the file had, and its text then as a blob. */

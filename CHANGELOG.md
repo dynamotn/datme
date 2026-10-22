@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - An unlisted note no longer appears in the backlinks of the notes it links to, so its title, URL and the sentence around the link stay with those who have the link.
 - A password-protected note no longer publishes its `banner`, `cover` or `avatar`: they were copied to the site, drawn above the locked page and used as its social card. The page now gets the generated card, as for any note without a banner.
+- The markdown copies (`llms.txt`, `.md` next to each page) and the history pages read comments the way the page does: a `%%` inside code or math is text. Before, such a mark could pair with the start of a real comment, so the comment's words were published there while the code around it was cut.
 
 ## [3.1.0] - 2026-10-20
 

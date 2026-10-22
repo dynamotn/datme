@@ -13,6 +13,14 @@ describe("what a version showed", () => {
     expect(publicText(raw, "en-US")).toBe("Seen.\n\nEnglish.\nEnd.")
   })
 
+  test("comment marks inside code and math are text, as on the page", () => {
+    const raw =
+      "---\npublish: true\n---\nRun `echo %%x%%` and $a %% b$.\n\n```\n%% kept %%\n<!-- kept -->\n```\n\n    %% indented %%\n\n%%gone%%<!-- gone -->\nEnd."
+    expect(publicText(raw, "en-US")).toBe(
+      "Run `echo %%x%%` and $a %% b$.\n\n```\n%% kept %%\n<!-- kept -->\n```\n\n    %% indented %%\n\nEnd.",
+    )
+  })
+
   test("an untranslated version showed its fallback language, as the page did", () => {
     const raw = "---\npublish: true\n---\nSeen.\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:*-->\nEnd."
     expect(publicText(raw, "en-US")).toBe("Seen.\nTiếng Việt.\nEnd.")

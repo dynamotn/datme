@@ -3,6 +3,7 @@ import { getVault, listed, filterLanguage, type Note } from "./vault"
 import { langMeta, t } from "./i18n"
 import { renderNote } from "./markdown"
 import { withoutLocked } from "./locked"
+import { withoutComments } from "./obsidian"
 import { absUrl, withBase } from "./base"
 
 /** Notes offered as plain markdown: public, listed, not the home page. */
@@ -22,13 +23,19 @@ export const mdUrl = (n: Note) => `${n.url}.md`
  * what the published page does not show.
  */
 export function noteMarkdown(n: Note): string {
-  const body = withoutPrivateLinks(withoutLocked(filterLanguage(n.source.raw, n.contentLang)), n)
-    .replace(/%%[\s\S]*?%%/g, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
+  const body = publicMarkdown(filterLanguage(n.source.raw, n.contentLang), n)
   const head = body.startsWith("# ") ? "" : `# ${n.title}\n\n`
   return `${head}${body}\n`
+}
+
+/**
+ * Markdown as the public may read it: without locked parts and comments and,
+ * given the note it belongs to, with links to private notes as the page shows
+ * them. Every plain-text copy of a note goes through here.
+ */
+export function publicMarkdown(md: string, n?: Note): string {
+  const open = withoutComments(withoutLocked(md))
+  return (n ? withoutPrivateLinks(open, n) : open).replace(/\n{3,}/g, "\n\n").trim()
 }
 
 /** Links and embeds of private notes as the words the page shows for them, following privateLinks. */

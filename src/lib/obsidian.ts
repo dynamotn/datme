@@ -154,6 +154,39 @@ function maskIndentedCode(md: string, mask: (s: string) => string): string {
   return md
 }
 
+/** What a fenced code block becomes: masked whole, unless it holds markdown. */
+type Fence = (block: string, info: string, body: string, offset: number) => string
+
+const FENCE = /^(\s*)(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)\n\s*\2[^\S\n]*$/gm
+
+/** An Obsidian comment, `%%…%%`, inline or over several lines. */
+const OBSIDIAN_COMMENT = /%%[\s\S]*?%%/g
+
+function maskFences(md: string, fence: Fence): string {
+  return md.replace(FENCE, (m, _indent, _marker, info: string, body: string, offset: number) => fence(m, info, body, offset))
+}
+
+/** Code and math masked, so what rewrites the rest (comments, links, tags) leaves them as written. */
+function maskCode(md: string, mask: (s: string) => string, fence: Fence = (m) => mask(m)): string {
+  return maskIndentedCode(maskFences(md, fence), mask)
+    .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
+    .replace(CODE_SPAN, (m) => mask(m))
+    .replace(INLINE_MATH, (m) => mask(m))
+}
+
+/**
+ * Markdown without its comments, `%%…%%` and HTML, as the page shows it: a
+ * comment mark inside code or math is text. For the plain-text copies of a note.
+ */
+export function withoutComments(md: string): string {
+  const masks: string[] = []
+  const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
+  let out = maskCode(md, mask).replace(OBSIDIAN_COMMENT, "").replace(COMMENT, "")
+  // A mask may hold an earlier one, such as a code span inside inline math.
+  while (/\u0000\d+\u0000/.test(out)) out = out.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
+  return out
+}
+
 /**
  * Obsidian's inline footnotes, ^[text], as GFM footnotes defined at the end of
  * the note; their text may hold brackets of its own, such as a link.
@@ -200,15 +233,9 @@ export function preprocess(
   const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
 
   // ```tabs blocks hold markdown, not code: they become tabs whose content is converted like the rest.
-  const maskFences = (text: string): string =>
-    text.replace(/^(\s*)(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)\n\s*\2[^\S\n]*$/gm, (m, _indent, _fence, info: string, body: string, offset: number) =>
-      !ctx.slides && /^\s*tabs\s*$/i.test(info) ? maskFences(tabsHtml(body, `${ctx.dir}:${offset}`)) : mask(m),
-    )
-  let md = maskIndentedCode(maskFences(src), mask)
-    .replace(/^\$\$[\s\S]*?^\$\$/gm, (m) => mask(m))
-    .replace(CODE_SPAN, (m) => mask(m))
-    .replace(INLINE_MATH, (m) => mask(m))
-    .replace(/%%[\s\S]*?%%/g, "")
+  const fence: Fence = (m, info, body, offset) =>
+    !ctx.slides && /^\s*tabs\s*$/i.test(info) ? maskFences(tabsHtml(body, `${ctx.dir}:${offset}`), fence) : mask(m)
+  let md = maskCode(src, mask, fence).replace(OBSIDIAN_COMMENT, "")
   // A deck keeps its comments (directives, speaker notes) and styles, untouched by tags and highlights.
   // Elsewhere a comment loses its words but stays, empty: like any comment it may end a list or start a block of HTML.
   md = ctx.slides
