@@ -19,6 +19,10 @@ beforeAll(async () => {
   await picture("png").withXmp('<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:creator>Secret Author</dc:creator></rdf:Description></rdf:RDF></x:xmpmeta>').toFile(path.join(vault, "tagged.png"))
   await picture("png").toFile(path.join(vault, "plain.png"))
   fs.writeFileSync(path.join(vault, "broken.jpg"), "not a picture")
+  // The same photo under a name that says otherwise, or in a format sharp cannot read.
+  fs.copyFileSync(path.join(vault, "phone.jpg"), path.join(vault, "phone.gif"))
+  fs.copyFileSync(path.join(vault, "phone.jpg"), path.join(vault, "stuck.jpg"))
+  fs.writeFileSync(path.join(vault, "phone.heic"), Buffer.concat([Buffer.from("ftypheic"), Buffer.from("Exif\0\0SecretPhone")]))
   fs.writeFileSync(path.join(vault, "paper.pdf"), "%PDF-1.4")
   site.vault = vault
 })
@@ -58,6 +62,22 @@ describe("published originals", () => {
     } finally {
       warn.mockRestore()
     }
+  })
+
+  test("what the file holds counts, not its name", async () => {
+    const out = await publicOriginal("phone.gif")
+    expect((await sharp(out).metadata()).exif).toBeUndefined()
+    expect(out.includes("SecretPhone")).toBe(false)
+  })
+
+  test("metadata that cannot be removed stops the build rather than going out", async () => {
+    const encode = spyOn(sharp.prototype, "toBuffer").mockImplementation(() => Promise.reject(new Error("no encoder")))
+    try {
+      await expect(publicOriginal("stuck.jpg")).rejects.toThrow("stuck.jpg holds metadata")
+    } finally {
+      encode.mockRestore()
+    }
+    await expect(publicOriginal("phone.heic")).rejects.toThrow("images.keepMetadata")
   })
 
   test("images.keepMetadata publishes originals unchanged", async () => {

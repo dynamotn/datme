@@ -1,6 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
-import sharp, { type FormatEnum } from "sharp"
+import sharp, { type FormatEnum, type Metadata } from "sharp"
 import { site } from "../site.config"
 import { readCache, writeCache } from "./render-cache"
 import { withBase } from "./base"
@@ -91,33 +91,49 @@ export async function renderVariant(rel: string, width: number): Promise<Buffer>
   return out
 }
 
+/** Pictures that may carry EXIF, XMP or IPTC: the formats sharp reads, and the HEIC/HEIF phones save. */
+const PICTURE = /\.(png|jpe?g|webp|avif|gif|tiff?|heic|heif)$/i
+
+/** Marks of EXIF and XMP in a file sharp cannot read, so they are found without decoding it. */
+const METADATA_MARKS = [Buffer.from("Exif\0\0"), Buffer.from("<x:xmpmeta"), Buffer.from("http://ns.adobe.com/xap/1.0/")]
+
 /**
- * The bytes published for an original image: without its EXIF, XMP and IPTC
- * (where a phone keeps the GPS position, the camera and the time), turned
- * upright as its orientation said, and with its colour profile. A picture
- * carrying none of these, any other file, or `images.keepMetadata`, goes out
- * as it is.
+ * The bytes published for an original image: without its EXIF, XMP, IPTC and
+ * comments (where a phone keeps the GPS position, the camera and the time),
+ * turned upright as its orientation said, and with its colour profile; in the
+ * format the file holds, whatever its name says. A picture carrying none of
+ * these, any other file, or `images.keepMetadata`, goes out as it is.
+ * Metadata that cannot be removed fails the build: it never goes out by accident.
  */
 export async function publicOriginal(rel: string): Promise<Buffer> {
   const file = path.join(site.vault, rel)
-  if (site.images.keepMetadata || !RASTER.test(rel)) return fs.readFileSync(file)
+  if (site.images.keepMetadata || !PICTURE.test(rel)) return fs.readFileSync(file)
   const key = [rel, stamp(rel)]
   const cached = readCache("img-orig", import.meta.url, key)
   if (cached) return cached
-  let out: Buffer
+  const refuse = (why: string) =>
+    new Error(`${rel} holds metadata (EXIF, XMP or IPTC, such as where it was taken) that datme could not remove: ${why}. Convert it to JPEG, PNG or WebP, or set images.keepMetadata: true to publish it as it is`)
+  let meta: Metadata
   try {
-    const meta = await sharp(file).metadata()
-    if (!meta.exif && !meta.xmp && !meta.iptc) {
-      out = fs.readFileSync(file)
-    } else {
+    meta = await sharp(file).metadata()
+  } catch (e) {
+    const data = fs.readFileSync(file)
+    if (METADATA_MARKS.some((mark) => data.includes(mark))) throw refuse((e as Error).message)
+    console.warn(`[datme] could not read ${rel} as a picture, so it is published as it is: ${(e as Error).message}`)
+    return data
+  }
+  let out: Buffer
+  if (!meta.exif && !meta.xmp && !meta.iptc && !meta.comments?.length) {
+    out = fs.readFileSync(file)
+  } else {
+    try {
       // An animation keeps its frames; a still picture is turned upright, since its orientation goes with the EXIF.
       const animated = (meta.pages ?? 1) > 1
       const image = animated ? sharp(file, { animated }) : sharp(file).rotate()
       out = await image.keepIccProfile().toFormat(meta.format as keyof FormatEnum, { quality: 95 }).toBuffer()
+    } catch (e) {
+      throw refuse((e as Error).message)
     }
-  } catch (e) {
-    console.warn(`[datme] could not read ${rel} to strip its metadata, so it is published as it is: ${(e as Error).message}`)
-    return fs.readFileSync(file)
   }
   writeCache("img-orig", import.meta.url, key, out)
   return out
