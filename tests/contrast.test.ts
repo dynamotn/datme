@@ -294,6 +294,14 @@ describe("layouts in a look", () => {
     }
     expect(out).toEqual([])
   })
+
+  test("notebook: the label of a comparison's cons reads at AA on a light card, where its red would not", () => {
+    const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/notebook.css"), "utf8")
+    const label = css.match(/\[data-look="notebook"\]:not\(\[data-theme="dark"\]\) \.compare-cons \.compare-label \{\s*color: (#[0-9a-f]+);/)![1]
+    const p = sheetPalette("notebook.css", ['[data-look="notebook"]'])
+    expect(ratio(p["--clay"], p["--surface"])).toBeLessThan(AA_TEXT)
+    expect(ratio(label, p["--surface"])).toBeGreaterThanOrEqual(AA_TEXT)
+  })
 })
 
 describe("an accent readable on its grounds", () => {

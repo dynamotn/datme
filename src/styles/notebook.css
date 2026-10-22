@@ -1453,3 +1453,9 @@
   color: #050505;
   text-decoration: underline;
 }
+
+/* ---------- comparisons ---------- */
+/* The red of the margin and the marks is too light for words on a white card: the cons get a darker label. */
+[data-look="notebook"]:not([data-theme="dark"]) .compare-cons .compare-label {
+  color: #cc2a18;
+}
