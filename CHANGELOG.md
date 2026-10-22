@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `datme dev` no longer grows in memory with every edit: it kept a rendered copy of every note visited for each version of the vault, and now keeps only the current one.
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
 
 ### Security

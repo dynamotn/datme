@@ -693,7 +693,12 @@ const autolink: AutolinkOptions = {
   content: { type: "text", value: "#" },
 }
 
+/** Rendered notes of one version of the vault: an edit in `datme dev` starts afresh, so old renders never pile up. */
 const cache = new Map<string, Promise<Rendered>>()
+let cachedVersion: number | undefined
+
+/** How many renderings are kept in memory, for the dev server to stay bounded. */
+export const renderedNotes = () => cache.size
 
 let userPlugins: { version: number; plugins: Promise<UserPlugins> } | undefined
 /** The vault's own plugins, loaded again whenever the vault changes in `datme dev`. */
@@ -772,7 +777,12 @@ type Parts = Omit<Rendered, "description"> & { description?: string }
 function renderFull(note: Note, stack: string[]): Promise<Rendered> {
   const variant = stack.length > 1 ? "embed" : "page"
   // An embed is shared only along the same chain of embeds: two chains in a cycle would wait on each other forever.
-  const id = `${getVault().version}:${note.lang}:${variant === "page" ? note.key : stack.join("\0")}:${variant}`
+  const version = getVault().version
+  if (version !== cachedVersion) {
+    cache.clear()
+    cachedVersion = version
+  }
+  const id = `${note.lang}:${variant === "page" ? note.key : stack.join("\0")}:${variant}`
   let hit = cache.get(id)
   if (!hit) {
     hit = (async () => {
