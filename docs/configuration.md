@@ -46,6 +46,7 @@ ignore: [Archive, Journal]    # added to .obsidian, .trash, templates, private
 privateLinks: text            # links to private notes: text, placeholder or hide
 check:
   structure: true             # datme check notices orphan notes, dead ends and hubs
+  layouts: true               # datme check suggests layouts for notes and folders
 encryption:
   iterations: 600000          # PBKDF2 rounds for passwords (at least 100000)
 ```

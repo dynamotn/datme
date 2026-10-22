@@ -37,6 +37,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `--verbose` | check, build | Also lists links to unpublished notes, and scheduled notes; with build, how many notes came from the cache |
 | `--json` | check | Prints every problem, notices included, as JSON for other tools |
 | `--privacy` | check | Lists what leaves the vault instead of the problems (see [Privacy](privacy.md#auditing-what-leaves-the-vault)); JSON with `--json` |
+| `--suggest` | check | Lists only the layouts that would suit notes and folders, each with the `layout:` line to add (see [Suggested layouts](#suggested-layouts)); JSON with `--json` |
 | `--external` | check | Also checks that links to other websites still answer (404, 410 and unreachable hosts are reported) |
 | `--write` | migrate | Applies the changes instead of only listing them |
 | `--branch` | deploy | The branch to publish from (default: the current one) |
@@ -58,6 +59,62 @@ garden, in its first language:
 
 `check: { structure: false }` in `datme.yaml` turns these off. The Obsidian
 plugin lists them too when its *Show notices* setting is on.
+
+### Suggested layouts
+
+`check --verbose` also suggests a [layout](writing.md#page-layouts) for
+notes that ask for none, and a collection for folders, as notices: they never
+fail `--strict`. `check --suggest` lists only them, each with the line to add
+to the note's frontmatter:
+
+```text
+Interview.md
+  layout: dialogue     8 of 9 paragraphs start with a speaker's name (89%)
+Reading/Reading.md  (new folder note)
+  layout: books        lists Reading/ as a collection: 5 of 5 notes have an author and a rating, ISBN or page count (100%)
+```
+
+A note is suggested a layout only when nearly all of it fits, so an essay
+that quotes someone once, or has one task list among its paragraphs, is left
+alone:
+
+| Layout | When |
+| --- | --- |
+| `dialogue` | 6 paragraphs or more, and 60% of them, open with a speaker's name (`**Ada:**`, or `Ada:` said more than once), two lines a speaker or more on average |
+| `quotes` | 3 quotes or more signed `— Name`, and 60% of the note's blocks |
+| `checklist` | 5 tasks or more, and 60% of the note's list items and paragraphs |
+| `changelog` | 3 `##` sections or more named by a version (`1.2.0`, `Unreleased`), and 80% of them |
+| `timeline` | 4 `##` sections or more named by a year or a date, in order, and 80% of them |
+| `faq` | 3 `##` sections or more that are questions, and 80% of them |
+| `compare` | 2 `##` options or more with pros and cons (`✅`/`❌`, or `+`/`-` items), and 60% of them |
+| `glossary` | 5 paragraphs or more, and 60% of them, defining a term in bold (`**Term**: …`), each term once |
+| `highlights` | 3 quotes or list items or more giving a location or page (`(Location 123)`, `(p. 45)`), and half of them |
+| `paper` | `authors` (or `author`) with a `doi` or `arxiv` |
+| `decision` | a decision's `status` (accepted, proposed…) and Context and Decision sections |
+| `letter` | `place` and `date`, with a `signature` or a first paragraph that greets (`Dear Bob,`) |
+| `poem` | only stanzas of short lines, and a heading at most: 8 lines or more, 3 a stanza and 3 to 10 words a line on average |
+| `recipe-card` | an Ingredients section with a list, and numbered steps |
+
+A folder with 4 notes or more, 80% of which share the properties of a
+collection, is suggested that collection in its folder note, or a folder note
+to create when it has none: `number` and `audio` for `episodes`, `price` for
+`wishlist`, names starting with a date for `daily`, `director` for `movies`,
+`author` with `rating`, `isbn` or `pages` for `books`, `event` and `date` for
+`talks`, `provider` with `instructor` or `progress` for `courses`, `role` and
+`org` (or `company`) for `people`, `language` and a code block for
+`snippets`, `servings` or an Ingredients section for `recipes`, `location`
+for `places`, `repo` (or `start` and `status`) for `projects`, and a `source`
+URL, as Web Clipper saves, for `bookmarks`. A folder a collection already
+lists is left alone.
+
+Days of the journal, flashcard decks, Kanban boards and slide decks get no
+suggestion. Protected notes are never read, nor counted in a folder; drafts
+are read only with `--drafts`, and private notes never.
+
+`layout: none` keeps a note as it is, and stops its suggestion (in a folder
+note, the folder's); any other `layout` does too. `check: { layouts: false }`
+in `datme.yaml` turns the notices off, while `check --suggest` still lists
+them. The 🎨 bar of `datme dev` previews a suggestion before you add it.
 
 `check` also warns when `theme.accent`, set in `datme.yaml` or by a theme
 pack, is too faint to read: below WCAG AA's 4.5:1 as link text on the light

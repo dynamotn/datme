@@ -38,7 +38,7 @@ describe("datme check", () => {
     expect(formatReport(problems)).not.toContain('"Private"')
     expect(formatReport(problems, true)).toContain('"Private"')
     expect(formatReport(problems)).toEndWith(
-      `${summarize(counts)}\nNotices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs) are expected; "--verbose" lists them.`,
+      `${summarize(counts)}\nNotices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs, suggested layouts) are expected; "--verbose" lists them.`,
     )
   })
 })

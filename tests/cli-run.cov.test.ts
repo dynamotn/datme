@@ -75,6 +75,8 @@ describe("parseArgs, every command", () => {
     expect(() => parseArgs(["related"])).toThrow("Missing note")
     expect(parseArgs(["check", "--privacy"]).privacy).toBe(true)
     expect(parseArgs(["build", "--privacy"])).not.toHaveProperty("privacy")
+    expect(parseArgs(["check", "--suggest"]).suggest).toBe(true)
+    expect(parseArgs(["build", "--suggest"])).not.toHaveProperty("suggest")
     expect(parseArgs(["build", "--drafts", "--fresh"])).toMatchObject({ drafts: true, fresh: true })
     expect(parseArgs(["check", "--external"]).external).toBe(true)
     expect(parseArgs(["mcp"]).command).toBe("mcp")
@@ -361,6 +363,13 @@ describe("run, check", () => {
     expect(JSON.parse(log.mock.calls[0][0])).toBeObject()
     await run({ command: "check", privacy: true, vault: fixture }, {}, tmp)
     expect(log.mock.calls[1][0]).not.toStartWith("{")
+  })
+
+  test("--suggest lists the suggested layouts, as text or JSON", async () => {
+    await run({ command: "check", suggest: true, json: true, vault: fixture }, {}, tmp)
+    expect(JSON.parse(log.mock.calls[0][0])).toBeArray()
+    await run({ command: "check", suggest: true, vault: fixture }, {}, tmp)
+    expect(log.mock.calls[1][0]).toBe("No layout to suggest.")
   })
 
   test("problems fail the check, after printing them", async () => {

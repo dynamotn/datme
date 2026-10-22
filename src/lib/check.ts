@@ -17,6 +17,7 @@ import { unified } from "unified"
 import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import { visit } from "unist-util-visit"
+import { suggestLayouts } from "./layout-hints"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -85,6 +86,21 @@ export function structureProblems(): Problem[] {
     })
   }
   return problems
+}
+
+/**
+ * Notices suggesting a layout, in the default language: to a note whose text
+ * fits one, and to the folder note of a folder whose notes fit a collection.
+ * A folder without one is named itself, with the folder note to create.
+ */
+export function layoutProblems(): Problem[] {
+  return suggestLayouts(getVault(), site.defaultLang).map((h) => ({
+    level: "info",
+    file: h.create ? h.folder! : h.file,
+    message: h.folder
+      ? `suggested layout: ${h.layout}, listing ${h.folder}/ as a collection${h.create ? ` from a new folder note ${h.file}` : ""}: ${h.reason}`
+      : `suggested layout: ${h.layout}: ${h.reason}`,
+  }))
 }
 
 /** Every style a page of the site can take: the configured ones, and those its notes pick or their layouts give. */
@@ -182,6 +198,7 @@ export function checkVault(): Problem[] {
     ...vault.problems,
     ...routeProblems(),
     ...(site.check.structure ? structureProblems() : []),
+    ...(site.check.layouts ? layoutProblems() : []),
     ...accentProblems(site.theme.accent, stylesInUse(), accentFile),
     ...queryProblems(),
   ]
@@ -256,7 +273,7 @@ export function formatReport(problems: Problem[], verbose = false): string {
   const counts = countProblems(problems)
   lines.push("", summarize(counts))
   if (!verbose && counts.info) {
-    lines.push('Notices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs) are expected; "--verbose" lists them.')
+    lines.push('Notices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs, suggested layouts) are expected; "--verbose" lists them.')
   }
   return lines.join("\n").replace(/^\n/, "")
 }

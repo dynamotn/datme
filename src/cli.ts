@@ -79,7 +79,8 @@ Usage:
   datme build   [vault] [--out ./dist] [--fresh] build the static site (dev, build and preview take --drafts)
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose] [--external] report broken links and other problems
-                                                 (--json for tools, --privacy for what leaves the vault)
+                                                 (--json for tools, --privacy for what leaves the vault,
+                                                 --suggest for layouts that would suit notes and folders)
   datme url     <note> [vault] [--lang xx]       the URL path of a published note
   datme related <note> [vault] [--json]          notes related to one, and the published
                                                  notes its text names without a link
@@ -112,6 +113,7 @@ Options:
   --lang <l>     language of the export or url (default: the first one)
   --privacy      list what check would publish: notes, files, properties, links to
                  private notes and outside hosts
+  --suggest      list only the layouts check suggests, with the frontmatter line to add
   --json         print the problems of check as JSON
   --write        apply the changes of migrate instead of only listing them
   -h, --help     show this help
@@ -155,6 +157,8 @@ export interface Args {
   json?: boolean
   /** `datme check --privacy`: what leaves the vault, instead of the problems. */
   privacy?: boolean
+  /** `datme check --suggest`: the layouts that would suit notes and folders, instead of the problems. */
+  suggest?: boolean
   /** Vault-relative file of `datme url` and `datme related`. */
   note?: string
   /** Publisher `datme migrate` switches from. */
@@ -187,6 +191,7 @@ export function parseArgs(argv: string[]): Args {
         json: { type: "boolean" },
         write: { type: "boolean" },
         privacy: { type: "boolean" },
+        suggest: { type: "boolean" },
         branch: { type: "string", short: "b" },
         format: { type: "string", short: "f" },
         lang: { type: "string" },
@@ -252,6 +257,7 @@ export function parseArgs(argv: string[]): Args {
     ...(from ? { from, write: values.write ?? false } : {}),
     ...(values.json ? { json: true } : {}),
     ...(values.privacy && command === "check" ? { privacy: true } : {}),
+    ...(values.suggest && command === "check" ? { suggest: true } : {}),
     out: values.out,
     site: values.site,
     port,
@@ -659,6 +665,15 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     const { privacyReport, formatPrivacy } = await import("./lib/check.ts")
     const report = privacyReport()
     return void console.log(args.json ? JSON.stringify(report) : formatPrivacy(report))
+  }
+
+  // Asked for, the suggestions are listed even when check.layouts turns the notices off.
+  if (args.command === "check" && args.suggest) {
+    const { site } = await import("./site.config.ts")
+    const { getVault } = await import("./lib/vault.ts")
+    const { suggestLayouts, formatHints } = await import("./lib/layout-hints.ts")
+    const hints = suggestLayouts(getVault(), site.defaultLang)
+    return void console.log(args.json ? JSON.stringify(hints) : formatHints(hints))
   }
 
   if (args.command === "check" || args.command === "build") {

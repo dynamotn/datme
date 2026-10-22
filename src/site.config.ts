@@ -429,9 +429,11 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) =>
         .object({
           /** Notices about the shape of the garden: orphan notes, dead ends and hubs. */
           structure: z.boolean().default(true),
+          /** Notices suggesting a layout for notes and folders whose text or properties look like one. */
+          layouts: z.boolean().default(true),
         })
         .strict()
-        .default({ structure: true }),
+        .default({ structure: true, layouts: true }),
       /** Point links that `datme check --external` found dead at the Internet Archive's copy. */
       archiveDeadLinks: z.boolean().default(true),
       /** Link the first mention of a term (a note tagged type/term) to its note. */

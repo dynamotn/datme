@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
 import {
   accentProblems,
   checkVault,
@@ -6,11 +6,13 @@ import {
   formatPrivacy,
   formatReport,
   gardenShape,
+  layoutProblems,
   privacyReport,
   stylesInUse,
   structureProblems,
   type PrivacyReport,
 } from "../src/lib/check"
+import * as hints from "../src/lib/layout-hints"
 import { getVault } from "../src/lib/vault"
 import type { LinkRef } from "../src/lib/obsidian"
 import { site } from "../src/site.config"
@@ -36,11 +38,47 @@ describe("hubs in the garden", () => {
   })
 })
 
+describe("suggested layouts", () => {
+  test("are notices on the note, or on a folder without a folder note", () => {
+    const suggest = spyOn(hints, "suggestLayouts").mockReturnValue([
+      { file: "Talk.md", layout: "dialogue", score: 0.9, reason: "9 of 10 paragraphs start with a speaker's name" },
+      { file: "Reading/Reading.md", layout: "books", score: 1, reason: "5 of 5 notes have an author", folder: "Reading", create: true },
+      { file: "Films/Films.md", layout: "movies", score: 1, reason: "4 of 4 notes name a director", folder: "Films" },
+    ])
+    try {
+      expect(layoutProblems()).toEqual([
+        { level: "info", file: "Talk.md", message: "suggested layout: dialogue: 9 of 10 paragraphs start with a speaker's name" },
+        {
+          level: "info",
+          file: "Reading",
+          message: "suggested layout: books, listing Reading/ as a collection from a new folder note Reading/Reading.md: 5 of 5 notes have an author",
+        },
+        { level: "info", file: "Films/Films.md", message: "suggested layout: movies, listing Films/ as a collection: 4 of 4 notes name a director" },
+      ])
+    } finally {
+      suggest.mockRestore()
+    }
+  })
+
+  test("check.layouts: false turns them off", () => {
+    const suggest = spyOn(hints, "suggestLayouts").mockReturnValue([{ file: "Talk.md", layout: "dialogue", score: 1, reason: "r" }])
+    const before = site.check.layouts
+    try {
+      expect(checkVault().some((p) => p.message.startsWith("suggested layout"))).toBe(true)
+      site.check.layouts = false
+      expect(checkVault().some((p) => p.message.startsWith("suggested layout"))).toBe(false)
+    } finally {
+      site.check.layouts = before
+      suggest.mockRestore()
+    }
+  })
+})
+
 describe("reports", () => {
   test("a report with only notices still ends with the summary and the hint", () => {
     const report = formatReport([{ level: "info", file: "a.md", message: "orphan" }])
     expect(report).toBe(
-      '0 errors, 0 warnings, 1 notice\nNotices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs) are expected; "--verbose" lists them.',
+      '0 errors, 0 warnings, 1 notice\nNotices (links to unpublished notes, scheduled notes, orphans, dead ends, hubs, suggested layouts) are expected; "--verbose" lists them.',
     )
     expect(formatReport([], true)).toBe("0 errors, 0 warnings")
     const problems = [

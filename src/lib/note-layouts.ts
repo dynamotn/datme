@@ -822,7 +822,7 @@ function galleryOfNotes(notes: Note[]): string {
 }
 
 /** What comes before the first H2, and each H2 split from the text below it. */
-function sections(html: string): { intro: string; parts: { heading: string; body: string }[] } {
+export function sections(html: string): { intro: string; parts: { heading: string; body: string }[] } {
   const parts = html.split(/(?=<h2[\s>])/)
   const [intro, ...rest] = /^<h2[\s>]/.test(parts[0]) ? ["", ...parts] : parts
   return {
@@ -961,10 +961,13 @@ export function quotesOf(html: string): FoundQuote[] {
   })
 }
 
+/** The heading of a recipe's ingredients, in the languages of the UI. */
+export const INGREDIENTS = /ingredient|nguyên liệu|thành phần|zutaten|ingrédients|ingredientes/i
+
 /** A recipe: its ingredients (a section named so) beside its steps, each ingredient to tick off. */
 export function recipeHtml(html: string): string {
   const { intro, parts } = sections(html)
-  const at = parts.findIndex((p) => /ingredient|nguyên liệu|thành phần|zutaten|ingrédients|ingredientes/i.test(p.heading))
+  const at = parts.findIndex((p) => INGREDIENTS.test(p.heading))
   if (at < 0) return html
   const ingredients = parts[at]
   const ticks = ingredients.body.replace(/<li>([\s\S]*?)<\/li>/g, '<li><label class="recipe-tick"><input type="checkbox"> $1</label></li>')
@@ -1010,7 +1013,7 @@ export function refsOf(note: Note, v: unknown): Ref[] {
 }
 
 /** Top-level elements named `tags` in some HTML, and the HTML between them: nested ones count, so each match is whole. */
-function topLevel(html: string, tags: string[]): { tag?: string; html: string }[] {
+export function topLevel(html: string, tags: string[]): { tag?: string; html: string }[] {
   const out: { tag?: string; html: string }[] = []
   const open = new RegExp(`<(${tags.join("|")})\\b[^>]*>`, "g")
   let at = 0
@@ -1036,7 +1039,7 @@ function topLevel(html: string, tags: string[]): { tag?: string; html: string }[
 }
 
 /** What is inside an element's outer HTML. */
-const innerOf = (outer: string) => outer.slice(outer.indexOf(">") + 1, outer.lastIndexOf("</"))
+export const innerOf = (outer: string) => outer.slice(outer.indexOf(">") + 1, outer.lastIndexOf("</"))
 
 // ---------- a paper ----------
 
@@ -1125,7 +1128,7 @@ export function citeHtml(entry: BibEntry, label: string): string {
   )
 }
 
-const ABSTRACT = /^(abstract|summary|tóm tắt|zusammenfassung|résumé|resumen|要旨|概要|摘要)$/i
+export const ABSTRACT = /^(abstract|summary|tóm tắt|zusammenfassung|résumé|resumen|要旨|概要|摘要)$/i
 
 /**
  * A paper: its abstract (a section named so, else the text before the first
@@ -1199,6 +1202,12 @@ const DECISION_PARTS: [cls: string, heading: RegExp][] = [
   ["consequences", /^(consequences|implications|hệ quả|kết quả|konsequenzen|folgen|conséquences|consecuencias|結果|影響|后果|影响)/i],
 ]
 
+/** The part of a decision record a heading names (context, options, decision, consequences), from its text. */
+export const decisionPartOf = (heading: string): string | undefined => DECISION_PARTS.find(([, re]) => re.test(heading))?.[0]
+
+/** Whether a status is one a decision record knows, such as accepted or superseded. */
+export const isDecisionStatus = (v: unknown): boolean => DECISION_STATUSES.some(([, , spellings]) => spellings.includes(normalize(plain(v))))
+
 /** A decision record: its context, options, decision and consequences each a section of its own look. */
 export function decisionHtml(html: string): string {
   const { intro, parts } = sections(html)
@@ -1206,8 +1215,8 @@ export function decisionHtml(html: string): string {
     intro +
     parts
       .map((p) => {
-        const part = DECISION_PARTS.find(([, re]) => re.test(textOf(p.heading)))
-        return part ? `<section class="adr-section adr-${part[0]}">${p.heading}${p.body}</section>` : p.heading + p.body
+        const part = decisionPartOf(textOf(p.heading))
+        return part ? `<section class="adr-section adr-${part}">${p.heading}${p.body}</section>` : p.heading + p.body
       })
       .join("")
   )
@@ -1283,29 +1292,38 @@ const SAID = /^<p>\s*(?:<strong>([^<]{1,40}?)\s*(:?)\s*<\/strong>\s*(:?)|([\p{L}
 /** Bubble colours: a speaker keeps one, from this many. */
 const VOICES = 6
 
+/** The name a paragraph opens with, as a dialogue reads it; a name in bold needs its colon. */
+function saidIn(part: string): { name: string; bold: boolean; rest: string } | undefined {
+  const m = part.match(SAID)
+  if (!m) return undefined
+  const bold = m[1] !== undefined
+  if (bold && !m[2] && !m[3]) return undefined
+  return { name: (bold ? m[1] : m[4]).trim(), bold, rest: part.slice(m[0].length) }
+}
+
+/**
+ * Who speaks in each part of some HTML split at its paragraphs: a name in
+ * bold always counts; a plain one only when it opens two paragraphs or more,
+ * or is one of `known` (lowercase), so "Note: …" stays a paragraph.
+ */
+export function speakersOf(parts: string[], known: Set<string> = new Set()): ({ name: string; rest: string } | undefined)[] {
+  const said = parts.map(saidIn)
+  // How many paragraphs each name opens.
+  const opens = new Map<string, number>()
+  const key = (s: { name: string }) => s.name.toLowerCase()
+  for (const s of said) if (s) opens.set(key(s), (opens.get(key(s)) ?? 0) + 1)
+  return said.map((s) => (s && (s.bold || known.has(key(s)) || opens.get(key(s))! > 1) ? s : undefined))
+}
+
 /**
  * A dialogue: runs of paragraphs that start with a speaker's name become
- * chat bubbles, each speaker on a side and in a colour of their own. A name
- * in bold always counts; a plain one only when it opens two paragraphs or
- * more, or is one of `speakers`, so "Note: …" stays a paragraph. `speakers`
- * maps names to their pictures.
+ * chat bubbles, each speaker on a side and in a colour of their own (see
+ * `speakersOf` for the names that count). `speakers` maps names to their pictures.
  */
 export function dialogueHtml(html: string, speakers: Record<string, string | undefined> = {}): string {
   const parts = html.split(/(<p>[\s\S]*?<\/p>)/)
   const known = new Map(Object.entries(speakers).map(([name, src]) => [name.toLowerCase(), src]))
-  const said = (part: string) => {
-    const m = part.match(SAID)
-    if (!m) return undefined
-    const bold = m[1] !== undefined
-    if (bold && !m[2] && !m[3]) return undefined
-    return { name: (bold ? m[1] : m[4]).trim(), bold, rest: part.slice(m[0].length) }
-  }
-  // How many paragraphs each name opens.
-  const opens = new Map<string, number>()
-  for (const part of parts) {
-    const key = said(part)?.name.toLowerCase()
-    if (key) opens.set(key, (opens.get(key) ?? 0) + 1)
-  }
+  const said = speakersOf(parts, new Set(known.keys()))
   const order: string[] = []
   const out: string[] = []
   let run: string[] = []
@@ -1315,10 +1333,10 @@ export function dialogueHtml(html: string, speakers: Record<string, string | und
     run = []
     last = ""
   }
-  for (const part of parts) {
-    const s = said(part)
+  for (const [at, part] of parts.entries()) {
+    const s = said[at]
     const key = s?.name.toLowerCase() ?? ""
-    if (s && (s.bold || known.has(key) || (opens.get(key) ?? 0) > 1)) {
+    if (s) {
       if (!order.includes(key)) order.push(key)
       const i = order.indexOf(key)
       const src = known.get(key)
@@ -1340,6 +1358,9 @@ export function dialogueHtml(html: string, speakers: Record<string, string | und
 /** Where a highlight is in its book: "(Location 123)", "(p. 45)", "— location: [123](kindle://…)". */
 const LOCATOR =
   /\s*(?:\(\s*((?:<a\b[^>]*>)?\s*(?:loc(?:ation)?\.?|page|pg\.?|pp?\.)\s*:?\s*[\dxivlc]+(?:\s*[-–]\s*[\dxivlc]+)?\s*(?:<\/a>)?)\s*\)|[—–]\s*((?:loc(?:ation)?|page)\s*:\s*(?:<a\b[^>]*>)?\s*\d+(?:\s*[-–]\s*\d+)?\s*(?:<\/a>)?))/i
+
+/** Whether a highlight names where it is in its book. */
+export const hasLocator = (html: string): boolean => LOCATOR.test(html)
 
 /** A highlight as a card: its text, where it is in the book, and the reader's note. */
 function highlightCard(text: string, note: string): string {
@@ -1424,6 +1445,12 @@ export interface GlossaryEntry {
 /** A term in bold opening a paragraph, then a colon or a dash: "**Term**: what it means." */
 const BOLD_TERM = /^<p>\s*<strong>([\s\S]+?)\s*(:?)\s*<\/strong>\s*([:—–-]?)\s*([\s\S]*)<\/p>$/
 
+/** The term a paragraph defines, and its definition: a term in bold, then a colon or a dash. */
+export function termOf(paragraph: string): { term: string; definition: string } | undefined {
+  const m = paragraph.match(BOLD_TERM)
+  return m && (m[2] || m[3]) ? { term: m[1], definition: m[4] } : undefined
+}
+
 /** The terms a glossary page defines, after the text that introduces them. */
 export function glossaryEntries(html: string): { intro: string; entries: GlossaryEntry[] } {
   let intro = ""
@@ -1433,8 +1460,8 @@ export function glossaryEntries(html: string): { intro: string; entries: Glossar
     // A heading of one letter only groups terms; any other names one.
     if (heading && !/^\p{L}$/u.test(textOf(heading))) entries.push({ term: innerOf(heading).replace(ANCHOR, ""), id: idOf(heading), definition: "" })
     for (const part of chunk.slice(heading.length).split(/(<p>[\s\S]*?<\/p>)/)) {
-      const m = part.match(BOLD_TERM)
-      if (m && (m[2] || m[3])) entries.push({ term: m[1], definition: m[4].trim() ? `<p>${m[4].trim()}</p>` : "" })
+      const m = termOf(part)
+      if (m) entries.push({ term: m.term, definition: m.definition.trim() ? `<p>${m.definition.trim()}</p>` : "" })
       else if (entries.length) entries.at(-1)!.definition += part
       else intro += part
     }
@@ -1625,7 +1652,7 @@ export function syllabusHtml(intro: string, lessons: Lesson[], lang: Lang): stri
 // ---------- a poem ----------
 
 /** Block elements a poem, a letter or a comparison is made of. */
-const BLOCKS = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "ul", "ol", "div", "section", "figure", "pre", "table", "details", "dl"]
+export const BLOCKS = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "ul", "ol", "div", "section", "figure", "pre", "table", "details", "dl"]
 
 /** The top-level blocks of some HTML, and whatever stands between them (an <hr>), each trimmed; blank text left out. */
 const blocksOf = (html: string) =>
@@ -1858,7 +1885,7 @@ export function compareHtml(
 // ---------- a checklist ----------
 
 /** A task's checkbox, as the markdown renders it: read only. */
-const TASK_BOX = /<input type="checkbox"([^>]*)>/g
+export const TASK_BOX = /<input type="checkbox"([^>]*)>/g
 
 /**
  * A checklist: every task of the note, outside task queries, a box the

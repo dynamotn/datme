@@ -839,7 +839,8 @@ function buildVault(version: number): Vault {
       const certificate = s.password ? undefined : fileProp("certificate")
       const layoutField = typeof s.fm.layout === "string" ? s.fm.layout.trim().toLowerCase() : undefined
       const layout = LAYOUTS.find((l) => l === layoutField)
-      if (layoutField && !layout && lang === site.defaultLang) {
+      // `layout: none` keeps the usual page, and `datme check` from suggesting a layout.
+      if (layoutField && layoutField !== "none" && !layout && lang === site.defaultLang) {
         report("warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
       }
       // A dialogue's `speakers` map names to pictures, published like a cover; a protected dialogue keeps them.

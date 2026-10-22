@@ -1,0 +1,6 @@
+# Notes that datme check suggests a layout for, and notes it must not read:
+# a protected one, a draft, a private one, and one that opts out.
+site:
+  title: Hints test
+languages: [en-US]
+publish: all
