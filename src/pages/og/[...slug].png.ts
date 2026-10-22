@@ -4,6 +4,7 @@ import { getVault, type Note } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
 import { cardSpec, renderOg, OG_SOURCE } from "~/lib/og"
 import { baseStyle, lookOf } from "~/lib/look"
+import { callNumber } from "~/lib/catalog"
 import { readCache, writeCache } from "~/lib/render-cache"
 import { formatDate, langPrefix, t } from "~/lib/i18n"
 
@@ -21,6 +22,9 @@ export const getStaticPaths = (() => {
 
 export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
   const kicker = site.title[lang]
+  // The card is drawn in the page's style: the home's is the site's, a note's its own.
+  const accent = site.theme.accent
+  const spec = cardSpec(baseStyle(note ? lookOf(note) : site.appearance.style), typeof accent === "object" ? accent.light : accent)
   let card
   if (!note) card = { title: site.title[lang], kicker: site.tagline[lang] || kicker, logo: site.logo }
   else {
@@ -33,11 +37,11 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
       meta: [formatDate(note.created, lang), stage, minutes].filter(Boolean).join(" · "),
       tags: note.tags.map((x) => (x.startsWith(site.conventions.typePrefix) ? x.slice(site.conventions.typePrefix.length) : x)),
       logo: site.logo,
+      // An atlas letters the note's region, a catalogue card its call number; other cards leave them out of the cache key.
+      region: spec.design === "atlas" && note.dir ? getVault().folders[lang].get(note.dir.split("/")[0])?.name : undefined,
+      callNumber: spec.design === "catalog" ? callNumber(note.dir, getVault().trees[lang].folders.map((f) => f.dir)) : undefined,
     }
   }
-  // The card is drawn in the page's style: the home's is the site's, a note's its own.
-  const accent = site.theme.accent
-  const spec = cardSpec(baseStyle(note ? lookOf(note) : site.appearance.style), typeof accent === "object" ? accent.light : accent)
   // Drawing a card is the slowest step of a build; an unchanged card in an unchanged style is reused.
   const key = [JSON.stringify(card), JSON.stringify(spec)]
   let png = readCache("og", OG_SOURCE, key)

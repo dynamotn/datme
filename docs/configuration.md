@@ -397,7 +397,9 @@ for `herbarium`, terraces mirrored in water for `paddy`, a phosphor prompt for
 `terminal` (in `theme.accent` when it reads on black), a drawing with its
 title block for `blueprint`, gold leaf on lacquer for `lacquer`, a masthead
 for `broadsheet`, a sidenote in the margin for `manuscript`, a print between
-film strips for `darkroom` and a grey e-reader page for `eink`. Other styles
+film strips for `darkroom`, a grey e-reader page for `eink`, a taped cut-out
+strip for `zine`, parchment with contours, a compass and the note's region
+for `atlas`, and a typed card with its call number for `catalog`. Other styles
 (`wiki`, `resume`) get a plain white card in `theme.accent`, or their own
 accent. Cards use the fonts bundled with datme, not `theme.fonts`.
 

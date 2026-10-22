@@ -240,6 +240,13 @@ describe("social cards", () => {
     const daily = getVault().byKey["vi-VN"].get("08_Journal/2026-10-05")!
     const r = await call(og.GET, {}, { lang: "vi-VN", note: { ...daily, stage: undefined, created: undefined } })
     expect(type(r)).toBe("image/png")
+    // An atlas card letters the note's region and a catalogue card its call number; a root note has no region.
+    for (const style of ["atlas", "catalog"] as const) {
+      for (const dir of [daily.dir, ""]) expect(type(await call(og.GET, {}, { lang: "vi-VN", note: { ...daily, dir, style } }))).toBe("image/png")
+    }
+    // An accent for each scheme tints the card with its light one.
+    setSite({ theme: { ...site.theme, accent: { light: "#7c3aed", dark: "#c4b5fd" } } })
+    expect(type(await call(og.GET, {}, { lang: "en-US" }))).toBe("image/png")
   }, 120_000)
 })
 

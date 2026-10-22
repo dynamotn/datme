@@ -13,6 +13,10 @@ export interface OgCard {
   meta?: string
   tags?: string[]
   logo: string
+  /** The note's top folder, the region an atlas letters above it. */
+  region?: string
+  /** The call number a catalogue card is filed under (src/lib/catalog.ts). */
+  callNumber?: string
 }
 
 /** The drawings of a card: one per style that has its own, `plain` for the rest. */
@@ -29,6 +33,9 @@ export type CardDesign =
   | "manuscript"
   | "darkroom"
   | "eink"
+  | "zine"
+  | "atlas"
+  | "catalog"
   | "plain"
 
 /** How a card is drawn: its design, and the accent of the designs that take one. */
@@ -39,7 +46,7 @@ export interface CardSpec {
   onAccent: string
 }
 
-const DESIGNS: readonly CardDesign[] = ["notebook", "classic", "garden", "herbarium", "paddy", "terminal", "blueprint", "lacquer", "broadsheet", "manuscript", "darkroom", "eink"]
+const DESIGNS: readonly CardDesign[] = ["notebook", "classic", "garden", "herbarium", "paddy", "terminal", "blueprint", "lacquer", "broadsheet", "manuscript", "darkroom", "eink", "zine", "atlas", "catalog"]
 /** The accent of the styles drawn plain, as their own stylesheets set it. */
 const PLAIN_ACCENT: Partial<Record<Style, string>> = { wiki: "#0645ad", resume: "#1f5f8b" }
 const DEFAULT_ACCENT = "#2d6a4f"
@@ -119,6 +126,8 @@ interface Text {
   meta?: string
   tags: string[]
   logo: string
+  region?: string
+  callNumber?: string
   /** A size for the title at `scale` of the notebook's. */
   size(scale?: number): number
 }
@@ -132,6 +141,8 @@ function textOf(card: OgCard): Text {
     meta: card.meta ? stripEmoji(card.meta) : undefined,
     tags: (card.tags ?? []).slice(0, 4),
     logo: stripEmoji(card.logo) || "✦",
+    region: card.region ? stripEmoji(card.region) : undefined,
+    callNumber: card.callNumber,
     size: (scale = 1) => Math.round(base * scale),
   }
 }
@@ -428,6 +439,103 @@ function eink(t: Text): Node {
   )
 }
 
+/** A photocopied zine: the title on a cut-out strip held by tape, pasted boxes askew, grain over all. */
+function zine(t: Text): Node {
+  const ink = "#141414"
+  return div(
+    {
+      width: "100%",
+      height: "100%",
+      flexDirection: "column",
+      padding: "56px 72px",
+      backgroundColor: "#ecebe6",
+      // The photocopier's grain: specks of toner in two sizes.
+      backgroundImage: "radial-gradient(rgba(20,20,20,0.10) 1px, transparent 1px), radial-gradient(rgba(20,20,20,0.06) 1.5px, transparent 1.5px)",
+      backgroundSize: "7px 7px, 13px 13px",
+      fontFamily: SANS,
+      color: ink,
+    },
+    div(
+      { alignSelf: "flex-start", padding: "6px 18px", backgroundColor: "#b8174a", color: "#fff", fontFamily: MONO, fontSize: 24, fontWeight: 700, textTransform: "uppercase", transform: "rotate(-2deg)" },
+      t.kicker,
+    ),
+    div(
+      { flex: 1, alignItems: "center", position: "relative" },
+      div(
+        { maxWidth: 980, padding: "18px 30px", backgroundColor: "#fff0a0", boxShadow: `6px 7px 0 ${ink}`, fontSize: t.size(0.9), fontWeight: 800, lineHeight: 1.08, transform: "rotate(-1.5deg)" },
+        t.title,
+      ),
+      div({ position: "absolute", top: 46, left: -24, width: 130, height: 34, backgroundColor: "rgba(236,226,178,0.85)", transform: "rotate(-24deg)" }),
+    ),
+    div(
+      { gap: 16, alignItems: "center" },
+      t.meta && div({ padding: "6px 14px", backgroundColor: "#d3e4ff", fontFamily: MONO, fontSize: 20, fontWeight: 700, transform: "rotate(1deg)" }, t.meta),
+      ...t.tags.map((tag, i) => div({ padding: "4px 10px", backgroundColor: ["#ffd6e4", "#d8f0d0"][i % 2], fontFamily: MONO, fontSize: 18, fontWeight: 700, transform: `rotate(${i % 2 ? 2 : -2}deg)` }, tag)),
+    ),
+  )
+}
+
+/** A sheet of an old atlas: contour lines under the text, a compass rose, the region lettered above the title. */
+function atlas(t: Text): Node {
+  const brown = "#7a5a24"
+  const contour = (size: number, top: number, left: number) =>
+    div({ position: "absolute", top: top - size / 2, left: left - size * 0.65, width: size * 1.3, height: size, borderRadius: "50%", border: `2px solid rgba(122,90,36,0.22)` })
+  return div(
+    { width: "100%", height: "100%", position: "relative", padding: "64px 80px", backgroundColor: "#eadcb8", fontFamily: SANS, color: "#2b2214" },
+    ...[340, 260, 180, 100].map((size) => contour(size, 470, 980)),
+    ...[300, 210, 120].map((size) => contour(size, 90, 160)),
+    // The compass rose: a ring, its needle and the north it points to.
+    div(
+      { position: "absolute", top: 48, right: 64, width: 120, height: 150, flexDirection: "column", alignItems: "center", color: brown, fontFamily: MONO, fontSize: 22, fontWeight: 700 },
+      "N",
+      div(
+        { position: "relative", width: 110, height: 110, marginTop: 6, alignItems: "center", justifyContent: "center", borderRadius: 999, border: `3px solid ${brown}` },
+        div({ position: "absolute", width: 12, height: 96, borderRadius: 999, backgroundColor: "#8c3410" }),
+        div({ position: "absolute", width: 8, height: 70, borderRadius: 999, backgroundColor: brown, transform: "rotate(90deg)" }),
+      ),
+    ),
+    div(
+      { flex: 1, flexDirection: "column", maxWidth: 900 },
+      div({ fontSize: 26, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: "#8c3410" }, t.region ?? t.kicker),
+      titleBlock(t, { fontSize: t.size(0.95), fontWeight: 400, letterSpacing: "-0.01em" }),
+      div({ height: 2, width: 260, backgroundColor: brown, marginBottom: 16 }),
+      t.meta && div({ fontFamily: MONO, fontSize: 22, fontWeight: 700, color: "#5e4d30" }, t.meta),
+      t.region && div({ marginTop: 6, fontSize: 22, color: "#5e4d30" }, t.kicker),
+    ),
+  )
+}
+
+/** A typed card of a library catalogue: its call number, a red rule, the hole punched for the drawer's rod. */
+function catalog(t: Text): Node {
+  const ink = "#1f1d1a"
+  return div(
+    { width: "100%", height: "100%", padding: "40px 90px", backgroundColor: "#e4d6bb", fontFamily: MONO, fontWeight: 700, color: ink },
+    div(
+      {
+        flex: 1,
+        flexDirection: "column",
+        position: "relative",
+        padding: "34px 48px 70px",
+        backgroundColor: "#fdfaf1",
+        border: "1px solid #d9ceb6",
+        boxShadow: "0 10px 24px rgba(60,40,10,0.25)",
+        // The faint ruled lines of a printed card.
+        backgroundImage: "repeating-linear-gradient(180deg, rgba(43,88,133,0) 0px, rgba(43,88,133,0) 43px, rgba(43,88,133,0.14) 43px, rgba(43,88,133,0.14) 44px)",
+      },
+      div(
+        { justifyContent: "space-between", fontSize: 24, paddingBottom: 10, borderBottom: "4px solid #c0392b" },
+        div({ color: "#9e2a20" }, t.callNumber ?? t.logo),
+        div({ color: "#5b554a" }, t.kicker),
+      ),
+      titleBlock(t, { fontFamily: SANS, fontSize: t.size(0.86), fontWeight: 400, letterSpacing: "-0.01em" }),
+      t.meta && div({ fontSize: 22, color: "#3a3630" }, t.meta),
+      t.tags.length > 0 && div({ marginTop: 10, fontSize: 20, color: "#5b554a" }, t.tags.map((tag, i) => `${i + 1}. ${tag}`).join("   ")),
+      // The hole at the foot of the card.
+      div({ position: "absolute", bottom: 18, left: 494, width: 34, height: 34, borderRadius: 999, backgroundColor: "#e4d6bb", border: "2px solid #c9b994" }),
+    ),
+  )
+}
+
 /** Any other style: a white card in the style's accent, or theme.accent. */
 function plain(t: Text, spec: CardSpec): Node {
   const ink = "#1d1b17"
@@ -461,6 +569,9 @@ const DRAW: Record<CardDesign, (t: Text, spec: CardSpec) => Node> = {
   manuscript,
   darkroom,
   eink,
+  zine,
+  atlas,
+  catalog,
   plain,
 }
 
