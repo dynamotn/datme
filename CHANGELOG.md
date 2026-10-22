@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Theme pack templates never run: they are parsed and kept only as allowlisted elements and attributes, so scripts, styles, frames, plugins, forms, `base`, `meta`, SVG, MathML, comments, event handlers, `id`, `data-*` and `srcdoc` are left out; addresses must be relative, http(s) or mailto, also once a field fills them; inline styles that load files or run code are dropped; and every value is escaped in text and attributes. Whatever is left out is a `datme check` warning, never a failed build.
 
+### Fixed
+
+- A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
+
 ## [3.1.0] - 2026-10-20
 
 ### Added

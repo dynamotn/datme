@@ -119,6 +119,12 @@ describe("languages", () => {
     expect(filterLanguage(src, "vi-VN")).toBe(src)
   })
 
+  test("a code block in another language's block stays out with it", () => {
+    const src = "<!--lang:en-US-->\n```\nen code\n```\n<!--lang:vi-VN-->\nvi\n<!--lang:*-->"
+    expect(filterLanguage(src, "vi-VN")).toBe("vi")
+    expect(filterLanguage(src, "en-US")).toBe("```\nen code\n```")
+  })
+
   test("two trailing spaces stay, as the line break they are", () => {
     expect(filterLanguage("Roses are red  \r\nViolets\n<!--lang:*-->  ", "vi-VN")).toBe("Roses are red  \nViolets")
   })

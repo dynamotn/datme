@@ -415,8 +415,9 @@ export function filterLanguage(src: string, lang: Lang): string {
         }
         continue
       }
-      if (inLang && !inThisLang) continue
     }
+    // A code block of another language's block is that language's too.
+    if (inLang && !inThisLang) continue
     out.push(line)
   }
   return out.join("\n")
