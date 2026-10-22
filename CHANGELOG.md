@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `datme check` suggests a layout for notes that ask for none, as notices listed with `--verbose` (never warnings, so `--strict` still passes): a dialogue when most paragraphs open with a few speakers' names, quotes, a checklist, a changelog, a timeline, a FAQ, a comparison, a glossary, reading highlights, a paper, a decision record, a letter, a poem or a recipe card, each only when nearly all of the note fits and with the reason ("8 of 9 paragraphs start with a speaker's name"). A folder whose notes nearly all share a collection's properties (an author and a rating for books, a `source` URL for bookmarks, dated names for a journal, a number and audio for episodes, a price for a wishlist…) is suggested that collection in its folder note. `datme check --suggest` lists only the suggestions, each with the `layout:` line to add (`--json` for tools). `layout: none` keeps a note as it is and stops its suggestion, and `check: { layouts: false }` turns the notices off. Protected notes are never read, and drafts only with `--drafts`.
+
+### Changed
+
+- The page layouts have their own pages in the documentation: an overview of every layout and collection, and for each one its properties, a short example, a screenshot and a live example page. *Writing notes* keeps a short section on `layout`, `style` and `chrome`.
+
+### Fixed
+
+- On a `broadsheet` home, the notes at the root of the vault are filed under a "notes" label instead of an empty one linking back to the home.
+- The credits of a map (a `trip`, a `places` collection, a map page or a Leaflet block) are readable in dark mode: they sat on white, where the light links of a dark page did not read.
+- Text in the accent on its pale tint (links between notes, the stack of a `projects` card, the current page in the menus) reads at WCAG AA in the `notebook` style in dark mode, `herbarium` in light mode and `lacquer` in dark mode.
+- Red words read at WCAG AA in every style: warnings, the *Cons* of a `compare` layout and other text drawn in the clay colour were too light in the `notebook` style's light mode (3.3:1) and just short in the `classic` one. Text now uses a `--clay-text` colour that a style or theme can set apart from its decorative `--clay`.
+
 ## [3.2.0] - 2026-10-23
 
 ### Added
@@ -42,13 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `datme check` warns when `theme.accent` (light or dark, from `datme.yaml` or a theme pack) fails WCAG AA: below 4.5:1 as text on the ground of a style the site uses, or under the text set on it. Each warning gives the ratio on every ground that fails and a darker or lighter accent of the same hue that passes.
 - A theme gallery in the documentation (`docs/themes.md`) shows every built-in style on the same note, in light and dark; `bun run screenshots styles` remakes its pictures.
 - `properties.show` in `datme.yaml` lists the only frontmatter keys a note's properties block (and a wiki infobox) may show, so a key added to a note later, such as a phone number, is not published until you list it. `datme check --privacy` suggests it while every key not hidden is shown.
-- `datme check` suggests a layout for notes that ask for none, as notices listed with `--verbose` (never warnings, so `--strict` still passes): a dialogue when most paragraphs open with a few speakers' names, quotes, a checklist, a changelog, a timeline, a FAQ, a comparison, a glossary, reading highlights, a paper, a decision record, a letter, a poem or a recipe card, each only when nearly all of the note fits and with the reason ("8 of 9 paragraphs start with a speaker's name"). A folder whose notes nearly all share a collection's properties (an author and a rating for books, a `source` URL for bookmarks, dated names for a journal, a number and audio for episodes, a price for a wishlist…) is suggested that collection in its folder note. `datme check --suggest` lists only the suggestions, each with the `layout:` line to add (`--json` for tools). `layout: none` keeps a note as it is and stops its suggestion, and `check: { layouts: false }` turns the notices off. Protected notes are never read, and drafts only with `--drafts`.
 
 ### Changed
 
 - datme runs on Node 22.18 or later (the LTS line), not only 23.6 or later; `datme doctor` accepts it. CI now installs the published tarball and builds a garden with it on Node 22.18, 24 and 25.
 - The build cache is now one per vault, in the system's cache directory (`~/.cache/datme`, `~/Library/Caches/datme` or `%LOCALAPPDATA%\datme`) rather than inside datme's own install: building two vaults no longer prunes each other's entries, and the first build of each after upgrading starts from an empty cache. The old `.datme/cache` in datme's install can be deleted. `DATME_CACHE` still moves it.
-- The page layouts have their own pages in the documentation: an overview of every layout and collection, and for each one its properties, a short example, a screenshot and a live example page. *Writing notes* keeps a short section on `layout`, `style` and `chrome`.
 
 ### Fixed
 
@@ -58,10 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A build whose output folder has a space or an accented letter in its path (or any build on Windows) writes the ActivityPub files, the Pagefind index and the script hashes of `_headers` into that folder, not into a percent-encoded twin of it.
 - `datme dev` no longer grows in memory with every edit: it kept, for each version of the vault, a rendered copy of every note visited, a Dataview index and the journal of each language; it now keeps only the current ones.
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
-- On a `broadsheet` home, the notes at the root of the vault are filed under a "notes" label instead of an empty one linking back to the home.
-- The credits of a map (a `trip`, a `places` collection, a map page or a Leaflet block) are readable in dark mode: they sat on white, where the light links of a dark page did not read.
-- Text in the accent on its pale tint (links between notes, the stack of a `projects` card, the current page in the menus) reads at WCAG AA in the `notebook` style in dark mode, `herbarium` in light mode and `lacquer` in dark mode.
-- Red words read at WCAG AA in every style: warnings, the *Cons* of a `compare` layout and other text drawn in the clay colour were too light in the `notebook` style's light mode (3.3:1) and just short in the `classic` one. Text now uses a `--clay-text` colour that a style or theme can set apart from its decorative `--clay`.
 
 ### Security
 
