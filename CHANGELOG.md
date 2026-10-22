@@ -39,19 +39,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `appearance.schedule` changes the site-wide style for days of the year, e.g. `[{ style: lacquer, from: "01-20", to: "02-20" }]`; a range may wrap the new year, and the first entry covering the day of the build wins. It replaces only `appearance.style` and `appearance.languages`, so notes styled by their own `style:`, layout, tag, stage or folder keep theirs. The style is chosen at build time: the daily build of the GitHub and Cloudflare pipelines from `datme deploy` switches it on its dates, and the deploy docs show how on GitLab and Netlify. The 🎨 bar of `datme dev` names the entry.
 - `datme check` warns when `theme.accent` (light or dark, from `datme.yaml` or a theme pack) fails WCAG AA: below 4.5:1 as text on the ground of a style the site uses, or under the text set on it. Each warning gives the ratio on every ground that fails and a darker or lighter accent of the same hue that passes.
 - A theme gallery in the documentation (`docs/themes.md`) shows every built-in style on the same note, in light and dark; `bun run screenshots styles` remakes its pictures.
-
-### Security
-
-- Theme pack templates never run: they are parsed and kept only as allowlisted elements and attributes, so scripts, styles, frames, plugins, forms, `base`, `meta`, SVG, MathML, comments, event handlers, `id`, `data-*` and `srcdoc` are left out; addresses must be relative, http(s) or mailto, also once a field fills them; inline styles that load files or run code are dropped; and every value is escaped in text and attributes. Whatever is left out is a `datme check` warning, never a failed build.
+- `properties.show` in `datme.yaml` lists the only frontmatter keys a note's properties block (and a wiki infobox) may show, so a key added to a note later, such as a phone number, is not published until you list it. `datme check --privacy` suggests it while every key not hidden is shown.
 
 ### Fixed
 
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
 
-- `properties.show` in `datme.yaml` lists the only frontmatter keys a note's properties block (and a wiki infobox) may show, so a key added to a note later, such as a phone number, is not published until you list it. `datme check --privacy` suggests it while every key not hidden is shown.
-
 ### Security
 
+- Theme pack templates never run: they are parsed and kept only as allowlisted elements and attributes, so scripts, styles, frames, plugins, forms, `base`, `meta`, SVG, MathML, comments, event handlers, `id`, `data-*` and `srcdoc` are left out; addresses must be relative, http(s) or mailto, also once a field fills them; inline styles that load files or run code are dropped; and every value is escaped in text and attributes. Whatever is left out is a `datme check` warning, never a failed build.
 - Original pictures (PNG, JPEG, WebP, AVIF, GIF, TIFF, HEIC) are published without their EXIF, XMP, IPTC and comments, which held the GPS position where a phone took the picture, the device and the time; they are turned upright as their orientation said and keep their colour profile, and the format is read from the file, not its name. A picture with no such metadata is copied byte for byte. One whose metadata cannot be removed stops the build rather than going out with it. `images.keepMetadata: true` publishes originals as they are.
 - An unlisted note no longer appears in the backlinks of the notes it links to, so its title, URL and the sentence around the link stay with those who have the link.
 - A password-protected note no longer publishes its `banner`, `cover` or `avatar`: they were copied to the site, drawn above the locked page and used as its social card. The page now gets the generated card, as for any note without a banner.
