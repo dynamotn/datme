@@ -1,6 +1,7 @@
 import type { AstroIntegration } from "astro"
 import fs from "node:fs"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 import { site } from "../site.config"
 import { redirectsFile } from "./routes"
 import { headersFile, inlineScriptHashes } from "./headers"
@@ -47,6 +48,8 @@ export default function vaultWatcher(): AstroIntegration {
       // Vite adds its own rules, such as node_modules, to these.
       "astro:config:setup": ({ updateConfig }) => void updateConfig({ vite: { server: { watch: { ignored: [ignoredInVault] } } } }),
       "astro:build:done": async ({ dir }) => {
+        // The output folder as a path: a URL's pathname is percent-encoded, and on Windows starts with /C:.
+        const out = fileURLToPath(dir)
         if (site.cname && site.url) fs.writeFileSync(new URL("CNAME", dir), new URL(site.url).host + "\n")
         if (site.redirects) {
           const lines = redirectsFile()
@@ -56,7 +59,7 @@ export default function vaultWatcher(): AstroIntegration {
         if (ap && ap !== "bridgy" && site.url) {
           // The static parts of an actor: found from Mastodon, read, not followed.
           const write = (p: string, data: object) => {
-            const file = path.join(dir.pathname, p)
+            const file = path.join(out, p)
             fs.mkdirSync(path.dirname(file), { recursive: true })
             fs.writeFileSync(file, JSON.stringify(data))
           }
@@ -73,13 +76,13 @@ export default function vaultWatcher(): AstroIntegration {
           const pagefind = await import("pagefind")
           const { index } = await pagefind.createIndex({})
           if (!index) throw new Error("Pagefind could not start")
-          await index.addDirectory({ path: dir.pathname })
-          await index.writeFiles({ outputPath: path.join(dir.pathname, "pagefind") })
+          await index.addDirectory({ path: out })
+          await index.writeFiles({ outputPath: path.join(out, "pagefind") })
           await pagefind.close()
         }
         if (site.headers) {
           // The CSP allows the inline scripts the pages actually hold, by hash.
-          const hashes = site.headers.csp ? inlineScriptHashes(htmlFiles(dir.pathname)) : []
+          const hashes = site.headers.csp ? inlineScriptHashes(htmlFiles(out)) : []
           fs.writeFileSync(new URL("_headers", dir), headersFile(site, hashes))
         }
       },

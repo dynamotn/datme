@@ -382,7 +382,8 @@ describe("the Astro integration", () => {
   })
 
   test("after a build: CNAME, redirects, the static actor, the Pagefind index and _headers with script hashes", async () => {
-    const out = path.join(tmp, "build-all")
+    // A space and an accent, which a file URL percent-encodes: every file must still land in the folder itself.
+    const out = path.join(tmp, "build all ở đây")
     fs.mkdirSync(path.join(out, "a"), { recursive: true })
     fs.writeFileSync(path.join(out, "a", "index.html"), '<html><body data-pagefind-body><h1>Hi</h1><script>console.log(1)</script></body></html>')
     fs.writeFileSync(path.join(out, "plain.txt"), "not a page")

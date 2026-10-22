@@ -535,7 +535,7 @@ function buildVault(version: number): Vault {
     const isHome = fold(rel) === fold(site.home)
     if (isHome) {
       try {
-        homeTarget = path.relative(site.vault, fs.realpathSync(abs)).replace(MD_EXT, "")
+        homeTarget = path.relative(site.vault, fs.realpathSync(abs)).split(path.sep).join("/").replace(MD_EXT, "")
       } catch {
         // not a symlink
       }
