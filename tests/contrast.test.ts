@@ -3,7 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { AA_TEXT, contrastOf, contrastRatio, DARK_INK, luminance, onAccent, parseColor, readableAccent } from "../src/lib/contrast"
 import { themeCss } from "../src/lib/theme"
-import { site } from "../src/site.config"
+import { site, STYLES } from "../src/site.config"
 
 const ratio = (a: string, b: string) => contrastRatio(luminance(parseColor(a)!), luminance(parseColor(b)!))
 
@@ -155,10 +155,10 @@ function rules(file: string): Map<string, Record<string, string>> {
   return out
 }
 
-/** The palette the given rules make together, later ones winning, with var() references followed. */
-function sheetPalette(file: string, selectors: string[]): Record<string, string> {
+/** The palette the given rules make together over an inherited one, later ones winning, with var() references followed. */
+function sheetPalette(file: string, selectors: string[], inherited: Record<string, string> = {}): Record<string, string> {
   const all = rules(file)
-  const merged: Record<string, string> = Object.assign({}, ...selectors.map((sel) => all.get(sel) ?? {}))
+  const merged: Record<string, string> = Object.assign({ ...inherited }, ...selectors.map((sel) => all.get(sel) ?? {}))
   const resolve = (v: string): string => v.replace(/^var\((--[\w-]+)\)$/, (_, name) => resolve(merged[name]))
   return Object.fromEntries(Object.entries(merged).map(([k, v]) => [k, resolve(v)]))
 }
@@ -243,6 +243,37 @@ describe("the palettes of the looks", () => {
       // In cascade order: the dark rules outrank the light season, whatever their place in the file.
       expect(unreadable(`${season} dark`, sheetPalette("garden.css", [light, light + where, dark, dark + where]))).toEqual([])
     }
+  })
+})
+
+describe("chips: the accent on its own soft tint", () => {
+  // Links between notes, the stack of a project and the current page of a menu draw the accent on --accent-soft; the tint
+  // sits on the page or on a card, and darkens or lightens the ground the accent has to read on.
+  test("reads at AA over the page and the cards, in every look and both schemes", () => {
+    const out: string[] = []
+    for (const look of STYLES) {
+      const own = look === "classic" ? undefined : `[data-look="${look}"]`
+      // A look sets what it changes; the rest is global.css's.
+      const base = sheetPalette("global.css", [":root"])
+      const dark = sheetPalette("global.css", [":root", ':root[data-theme="dark"]'])
+      const schemes = {
+        light: own ? sheetPalette(`${look}.css`, [own], base) : base,
+        dark: own ? sheetPalette(`${look}.css`, [own, `${own}[data-theme="dark"]`], dark) : dark,
+      }
+      for (const [scheme, p] of Object.entries(schemes)) {
+        for (const ground of ["--bg", "--surface"]) {
+          // The terminal mixes its tint from whatever accent it has.
+          const soft = p["--accent-soft"].replace(
+            /^color-mix\(in srgb, var\(--accent\) (\d+)%, transparent\)$/,
+            (_, n) => `rgb(${parseColor(p["--accent"])!.join(" ")} / ${n}%)`,
+          )
+          const chip = overPage(soft, overPage(p[ground], p["--bg"]))
+          const r = ratio(p["--accent"], chip)
+          if (r < AA_TEXT) out.push(`${look} ${scheme}: --accent on --accent-soft over ${ground} is ${r.toFixed(2)}:1`)
+        }
+      }
+    }
+    expect(out).toEqual([])
   })
 })
 

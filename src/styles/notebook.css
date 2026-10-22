@@ -61,7 +61,7 @@
   --line-strong: #f2f2ea;
   --accent: #6c8dff;
   --accent-2: #6c8dff;
-  --accent-soft: rgb(108 141 255 / 0.16);
+  --accent-soft: rgb(108 141 255 / 0.12);
   /* The dark accent is light: text on it is ink, not white. */
   --on-accent: #050505;
   --clay: #ff6b5b;

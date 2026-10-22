@@ -22,7 +22,7 @@
   --line-strong: #bfb291;
   --accent: #40632b;
   --accent-2: #7a4c22;
-  --accent-soft: rgb(64 99 43 / 0.12);
+  --accent-soft: rgb(64 99 43 / 0.1);
   --on-accent: #fff;
   --earth: #7a4c22;
   --clay: var(--earth);
