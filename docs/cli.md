@@ -109,8 +109,10 @@ Notes that embed others or run queries are cached too, keyed by what they read:
 
 `datme build --verbose` ends with how many notes came from the cache.
 
-The cache lives in datme's `.datme/cache`. `$DATME_CACHE` moves it (handy for
-CI caches), an empty value turns it off, and `--fresh` starts from scratch.
+Each vault has its own cache in the system's cache directory: `datme/<vault
+name>-<id>` under `$XDG_CACHE_HOME` (or `~/.cache`) on Linux,
+`~/Library/Caches` on macOS and `%LOCALAPPDATA%` on Windows, so building one
+vault never prunes another's. `$DATME_CACHE` moves it (handy for CI caches), an empty value turns it off, and `--fresh` starts from scratch.
 Since datme deletes what a build no longer uses, `$DATME_CACHE` must name an
 empty directory or one datme filled; any other stops the build.
 

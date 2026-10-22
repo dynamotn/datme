@@ -1,3 +1,4 @@
+import crypto from "node:crypto"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
@@ -17,19 +18,58 @@ export { PACKAGE_ROOT }
  * filesystems. One per process, so builds running at once never share it.
  */
 const STAGING = path.join(PACKAGE_ROOT, ".datme", `dist-${process.pid}`)
+/** Whether a process is still running; one we may not signal is, all the same. */
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === "EPERM"
+  }
+}
+
+/** Remove the staging folders of builds that died before cleaning up, so they do not pile up. */
+export function sweepStaging(dir = path.dirname(STAGING)): void {
+  let entries: string[]
+  try {
+    entries = fs.readdirSync(dir)
+  } catch {
+    return
+  }
+  for (const name of entries) {
+    const pid = Number(name.match(/^dist-(\d+)$/)?.[1])
+    if (pid && !alive(pid)) fs.rmSync(path.join(dir, name), { recursive: true, force: true })
+  }
+}
+
 /** Marks a directory as datme output, so a rebuild may replace it. */
 const MARKER = ".datme-build"
-/** Rendered notes and social cards reused by the next build, unless DATME_CACHE says otherwise. */
-const CACHE = path.join(PACKAGE_ROOT, ".datme", "cache")
 
 /** Marks a directory as datme's build cache, so builds may delete in it. */
 const CACHE_MARKER = ".datme-cache"
 /** What datme writes in its cache: the kinds of render-cache and the dead links. */
 const CACHE_ENTRIES = ["notes", "og", "img", "img-size", "img-orig", "lqip", "diagrams", "embeddings", "tts", "preview", DEAD_LINKS_FILE, NEIGHBOURS_FILE]
 
-/** The build cache: DATME_CACHE moves it, an empty value turns it off. */
-function cacheDirOf(env: NodeJS.ProcessEnv, cwd: string): string | undefined {
-  return env.DATME_CACHE === undefined ? CACHE : env.DATME_CACHE ? path.resolve(cwd, env.DATME_CACHE) : undefined
+/** Where the system keeps caches: $XDG_CACHE_HOME or ~/.cache, ~/Library/Caches on macOS, %LOCALAPPDATA% on Windows. */
+export function userCacheDir(env: NodeJS.ProcessEnv, platform: NodeJS.Platform = process.platform, home = os.homedir()): string {
+  if (platform === "win32") return env.LOCALAPPDATA || path.join(home, "AppData", "Local")
+  if (env.XDG_CACHE_HOME) return env.XDG_CACHE_HOME
+  return platform === "darwin" ? path.join(home, "Library", "Caches") : path.join(home, ".cache")
+}
+
+/**
+ * Rendered notes and social cards reused by the next build: a folder per vault in the user's
+ * cache directory, so two vaults never prune each other's entries and the package stays as installed.
+ */
+export function defaultCacheOf(vault: string, env: NodeJS.ProcessEnv): string {
+  const name = path.basename(vault).replace(/[^\p{L}\p{N}._-]+/gu, "-") || "vault"
+  const id = crypto.createHash("sha256").update(vault).digest("hex").slice(0, 12)
+  return path.join(userCacheDir(env), "datme", `${name}-${id}`)
+}
+
+/** The build cache of a vault: DATME_CACHE moves it, an empty value turns it off. */
+function cacheDirOf(env: NodeJS.ProcessEnv, cwd: string, vault: string): string | undefined {
+  return env.DATME_CACHE === undefined ? defaultCacheOf(vault, env) : env.DATME_CACHE ? path.resolve(cwd, env.DATME_CACHE) : undefined
 }
 
 export const USAGE = `datme: publish an Obsidian vault as a digital garden
@@ -306,7 +346,7 @@ export function pruneCache(root: string, since: number): void {
  * not empty and unmarked, so pruning never deletes files datme did not write.
  */
 export function claimCache(dir: string): void {
-  const entries = dir !== CACHE && fs.existsSync(dir) ? fs.readdirSync(dir) : []
+  const entries = fs.existsSync(dir) ? fs.readdirSync(dir) : []
   // A cache an older datme wrote has no marker, only datme's own entries.
   if (entries.length && !entries.includes(CACHE_MARKER) && !entries.every((e) => CACHE_ENTRIES.includes(e))) {
     throw new CliError(`DATME_CACHE "${dir}" is not empty and was not created by datme; choose another directory.`)
@@ -589,7 +629,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     const { site } = await import("./site.config.ts")
     if (Object.keys(site.neighbours).length) {
       const { fetchNeighbours } = await import("./lib/neighbours.ts")
-      const cacheDir = cacheDirOf(env, cwd)
+      const cacheDir = cacheDirOf(env, cwd, vault)
       if (cacheDir) claimCache(cacheDir)
       const file = path.join(cacheDir ?? path.join(PACKAGE_ROOT, ".datme"), NEIGHBOURS_FILE)
       const failed = await fetchNeighbours(site.neighbours, site.langs, file)
@@ -616,7 +656,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       problems.push(...found)
       sortProblems(problems)
       // Builds point the dead ones at the Internet Archive.
-      const cacheDir = cacheDirOf(env, cwd)
+      const cacheDir = cacheDirOf(env, cwd, vault)
       if (cacheDir) {
         claimCache(cacheDir)
         const { writeDeadLinks } = await import("./lib/dead-links.ts")
@@ -646,7 +686,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return
   }
   // An empty DATME_CACHE turns the cache off; a path moves it, e.g. somewhere CI keeps between runs.
-  const cacheDir = cacheDirOf(env, cwd)
+  const cacheDir = cacheDirOf(env, cwd, vault)
   if (cacheDir) {
     claimCache(cacheDir)
     if (args.fresh) emptyCache(cacheDir)
@@ -660,6 +700,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000
   // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends.
+  sweepStaging()
   const dropStaging = () => fs.rmSync(STAGING, { recursive: true, force: true })
   if (args.command === "preview") process.once("exit", dropStaging)
   try {

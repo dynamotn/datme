@@ -41,8 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A theme gallery in the documentation (`docs/themes.md`) shows every built-in style on the same note, in light and dark; `bun run screenshots styles` remakes its pictures.
 - `properties.show` in `datme.yaml` lists the only frontmatter keys a note's properties block (and a wiki infobox) may show, so a key added to a note later, such as a phone number, is not published until you list it. `datme check --privacy` suggests it while every key not hidden is shown.
 
+### Changed
+
+- The build cache is now one per vault, in the system's cache directory (`~/.cache/datme`, `~/Library/Caches/datme` or `%LOCALAPPDATA%\datme`) rather than inside datme's own install: building two vaults no longer prunes each other's entries, and the first build of each after upgrading starts from an empty cache. The old `.datme/cache` in datme's install can be deleted. `DATME_CACHE` still moves it.
+
 ### Fixed
 
+- Staging folders left in datme's install by builds that were killed are removed by the next build.
 - `datme check` (and so `--strict`) runs the Dataview queries of published notes, blocks and inline: one that cannot run is an error and one datme does not support yet is a warning, instead of an error box found only on the published page.
 - A diagram renderer (D2, Typst) that is installed but fails to load, such as a native binding built for another machine, says why on the page instead of asking to install it.
 - A build whose output folder has a space or an accented letter in its path (or any build on Windows) writes the ActivityPub files, the Pagefind index and the script hashes of `_headers` into that folder, not into a percent-encoded twin of it.

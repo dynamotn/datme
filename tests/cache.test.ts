@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { claimCache, emptyCache, pruneCache } from "../src/cli"
+import { claimCache, defaultCacheOf, emptyCache, pruneCache, sweepStaging, userCacheDir } from "../src/cli"
 import { DEAD_LINKS_FILE } from "../src/lib/dead-links"
 import { NEIGHBOURS_FILE } from "../src/lib/neighbours"
 
@@ -142,5 +142,37 @@ describe("pruneCache", () => {
     pruneCache(dir, Date.now() - 30_000)
     expect(files(dir)).toEqual([path.join("og", "cd", "new")])
     expect(fs.existsSync(path.join(dir, "notes"))).toBe(false)
+  })
+})
+
+describe("the default cache", () => {
+  test("sits in the user's cache directory of each system", () => {
+    expect(userCacheDir({}, "linux", "/home/ana")).toBe("/home/ana/.cache")
+    expect(userCacheDir({ XDG_CACHE_HOME: "/var/cache/ana" }, "linux", "/home/ana")).toBe("/var/cache/ana")
+    expect(userCacheDir({}, "darwin", "/home/ana")).toBe("/home/ana/Library/Caches")
+    expect(userCacheDir({ LOCALAPPDATA: "C:\\Users\\ana\\AppData\\Local" }, "win32", "C:\\Users\\ana")).toBe("C:\\Users\\ana\\AppData\\Local")
+    expect(userCacheDir({}, "win32", "/home/ana")).toBe(path.join("/home/ana", "AppData", "Local"))
+  })
+
+  test("is one per vault, named after it, so two vaults never prune each other's entries", () => {
+    const env = { XDG_CACHE_HOME: "/c" }
+    const garden = defaultCacheOf("/notes/My Garden", env)
+    expect(path.dirname(garden)).toBe(path.join(userCacheDir(env), "datme"))
+    expect(path.basename(garden)).toMatch(/^My-Garden-[0-9a-f]{12}$/)
+    expect(defaultCacheOf("/notes/My Garden", env)).toBe(garden)
+    expect(defaultCacheOf("/other/My Garden", env)).not.toBe(garden)
+    expect(path.basename(defaultCacheOf("/", env))).toMatch(/^vault-[0-9a-f]{12}$/)
+  })
+})
+
+describe("staging folders", () => {
+  test("those of builds that died are swept; a running build's and other files stay", () => {
+    const dir = path.join(tmp, "staging")
+    // Process 1 always runs, though as another user it may refuse our signal.
+    for (const name of ["dist-999999999", `dist-${process.pid}`, "dist-1", "dist-x", "cache"]) fs.mkdirSync(path.join(dir, name), { recursive: true })
+    sweepStaging(dir)
+    expect(fs.readdirSync(dir).sort()).toEqual(["cache", "dist-1", `dist-${process.pid}`, "dist-x"].sort())
+    // A missing folder is nothing to sweep.
+    expect(() => sweepStaging(path.join(tmp, "nowhere"))).not.toThrow()
   })
 })
