@@ -4,7 +4,7 @@ title: "Command line"
 # Command line
 
 ```bash
-bunx @dynamotn/datme <command> [vault] [flags]   # or npx with Node 23.6+, or `datme` when installed globally
+bunx @dynamotn/datme <command> [vault] [flags]   # or npx with Node 22.18+, or `datme` when installed globally
 ```
 
 The vault defaults to `$DATME_VAULT`, then the current directory.

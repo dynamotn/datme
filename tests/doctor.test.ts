@@ -6,7 +6,7 @@ import { parseArgs } from "../src/cli"
 const machine = (over: Partial<Machine> = {}): Machine => ({
   env: { DATME_LOCK_TESTERS: "x", DATME_LOCK_NOBODY: "y" },
   runtime: { bun: "1.4.2", node: "24.3.0" },
-  engines: { node: ">=23.6", bun: ">=1.2" },
+  engines: { node: "^22.18.0 || >=23.6", bun: ">=1.2" },
   resolves: () => true,
   which: () => true,
   git: () => "git version 2.50.0",
@@ -23,6 +23,18 @@ describe("meets", () => {
     expect(meets("1.1.30", ">=1.2")).toBe(false)
     expect(meets("1.0.0", undefined)).toBe(true)
   })
+
+  test("takes alternatives and caret ranges, as the engines of package.json write them", () => {
+    const node = "^22.18.0 || >=23.6"
+    expect(meets("22.18.0", node)).toBe(true)
+    expect(meets("v22.20.1", node)).toBe(true)
+    expect(meets("22.17.9", node)).toBe(false)
+    expect(meets("23.5.0", node)).toBe(false)
+    expect(meets("24.1.0", node)).toBe(true)
+    expect(meets("20.19.0", node)).toBe(false)
+    // A form it does not know never stands in the way.
+    expect(meets("1.0.0", "~1.2 || latest")).toBe(true)
+  })
 })
 
 describe("datme doctor", () => {
@@ -35,7 +47,7 @@ describe("datme doctor", () => {
   test("an old runtime is to fix, with the command that fixes it", () => {
     const [bun] = diagnose(machine({ runtime: { bun: "1.1.0", node: "22.0.0" } }))
     expect(bun).toEqual({ level: "fail", message: "Bun 1.1.0 is too old (needs >=1.2)", fix: "bun upgrade" })
-    expect(levels(machine({ runtime: { node: "22.1.0" } }))[0]).toBe("fail: Node 22.1.0 is too old (needs >=23.6)")
+    expect(levels(machine({ runtime: { node: "22.1.0" } }))[0]).toBe("fail: Node 22.1.0 is too old (needs ^22.18.0 || >=23.6)")
   })
 
   test("a group password used by a published note must be in the environment; its value is never shown", () => {

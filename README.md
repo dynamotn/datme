@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@dynamotn/datme"><img alt="npm" src="https://img.shields.io/npm/v/@dynamotn/datme?color=2d6a4f&label=npm"></a>
   <a href="LICENSE"><img alt="License: MPL 2.0" src="https://img.shields.io/badge/license-MPL%202.0-b5532c"></a>
-  <img alt="Runs on Bun or Node 23.6+" src="https://img.shields.io/badge/runs%20on-Bun%20%7C%20Node%2023.6%2B-4f8f5b">
+  <img alt="Runs on Bun or Node 22.18+" src="https://img.shields.io/badge/runs%20on-Bun%20%7C%20Node%2022.18%2B-4f8f5b">
 </p>
 
 <p align="center">
@@ -84,7 +84,7 @@ Prefer to stay in Obsidian? The [companion plugin](https://github.com/dynamotn/o
 toggles publishing from the status bar, checks the garden and previews the
 current note.
 
-`npx` works just as well with Node 23.6+. Install it globally with
+`npx` works just as well with Node 22.18+. Install it globally with
 `npm i -g @dynamotn/datme` and the command is simply `datme`.
 [Getting started](docs/getting-started.md) walks through the rest.
 

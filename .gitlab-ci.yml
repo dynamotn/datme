@@ -22,6 +22,21 @@ test:
     - bunx astro check
     - bun test --coverage
 
+# The package as npm users get it: packed, installed from its tarball and run under
+# each Node that `engines` allows (Bun packs it, so the job installs Bun as well).
+package:
+  needs: [test]
+  image: node:${NODE}
+  parallel:
+    matrix:
+      - NODE: ["22.18", "24", "25"]
+  cache: []
+  before_script:
+    - npm install --global --no-audit --no-fund bun@1.4.2
+  script:
+    - bun install --frozen-lockfile
+    - bun tools/pack-check.ts
+
 # The documentation is a datme garden; the default branch publishes it on GitLab Pages.
 pages:
   <<: *git

@@ -28,16 +28,19 @@ export interface Machine {
   gitTop(vault: string): string | undefined
 }
 
-/** Whether a version meets a `>=x.y` requirement. */
+/** Whether a version meets an `engines` requirement: `>=x.y.z` or `^x.y.z` alternatives joined by `||`. */
 export function meets(version: string, range: string | undefined): boolean {
-  const want = range?.match(/>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/)
-  if (!want) return true
+  if (!range) return true
   const have = version.replace(/^v/, "").split(".").map(Number)
-  for (let i = 0; i < 3; i++) {
-    const w = Number(want[i + 1] ?? 0)
-    if ((have[i] ?? 0) !== w) return (have[i] ?? 0) > w
-  }
-  return true
+  return range.split("||").some((alternative) => {
+    // >=X.Y.Z, or ^X.Y.Z (the same major, X.Y.Z or later); any other form is not checked.
+    const m = alternative.trim().match(/^(>=|\^)\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?$/)
+    if (!m) return true
+    const want = [m[2], m[3], m[4]].map((n) => Number(n ?? 0))
+    if (m[1] === "^" && have[0] !== want[0]) return false
+    for (let i = 0; i < 3; i++) if ((have[i] ?? 0) !== want[i]) return (have[i] ?? 0) > want[i]
+    return true
+  })
 }
 
 /** The published notes of the vault, as written: what decides the packages and passwords a build needs. */
@@ -61,7 +64,7 @@ export function diagnose(m: Machine): Finding[] {
     if (meets(m.runtime.bun, m.engines.bun)) ok(`Bun ${m.runtime.bun} (needs ${m.engines.bun})`)
     else fail(`Bun ${m.runtime.bun} is too old (needs ${m.engines.bun})`, "bun upgrade")
   } else if (meets(m.runtime.node, m.engines.node)) ok(`Node ${m.runtime.node} (needs ${m.engines.node})`)
-  else fail(`Node ${m.runtime.node} is too old (needs ${m.engines.node})`, "install Node 23.6 or later, or run datme with Bun: bunx @dynamotn/datme")
+  else fail(`Node ${m.runtime.node} is too old (needs ${m.engines.node})`, "install Node 22.18 or later, or run datme with Bun: bunx @dynamotn/datme")
 
   const sources = publishedSources()
   const needs: [string, string][] = []

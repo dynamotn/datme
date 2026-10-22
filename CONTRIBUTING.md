@@ -14,6 +14,11 @@ With `--coverage` the run fails unless every line and function of `src/` and
 `bin/` runs in some test (`coverageThreshold` in `bunfig.toml`). Run single
 files without it: on its own, a file covers only part of the code.
 
+A change to `package.json` (`files`, dependencies, `engines`) or to how the
+CLI starts should also pass `bun tools/pack-check.ts`: it packs datme,
+installs the tarball with npm in an empty project and builds the fixture
+vault with that copy under Node, as CI does on every Node `engines` allows.
+
 Record anything a user could notice in `CHANGELOG.md`, under `[Unreleased]`.
 
 ## Adding a language to the interface

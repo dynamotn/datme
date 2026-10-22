@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { load as loadYaml } from "js-yaml";
+import { meets } from "../src/lib/doctor";
 import {
   parseArgs,
   resolveVault,
@@ -298,19 +299,10 @@ describe("init", () => {
 });
 
 describe("runtimes", () => {
-  // Node strips TypeScript types natively from 23.6 on.
+  // Node strips TypeScript types natively from 22.18 and 23.6 on: the engines of package.json.
   const node = Bun.which("node");
-  const version = node
-    ? Bun.spawnSync([node, "--version"])
-        .stdout.toString()
-        .trim()
-        .slice(1)
-        .split(".")
-        .map(Number)
-    : [];
-  const modernNode =
-    version.length > 1 &&
-    (version[0] > 23 || (version[0] === 23 && version[1] >= 6));
+  const version = node ? Bun.spawnSync([node, "--version"]).stdout.toString().trim() : "";
+  const modernNode = !!version && meets(version, JSON.parse(fs.readFileSync(path.resolve(import.meta.dir, "../package.json"), "utf8")).engines.node);
 
   test.skipIf(!modernNode)("the CLI runs on Node as well as Bun", () => {
     const root = path.resolve(import.meta.dir, "..");

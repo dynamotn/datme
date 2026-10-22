@@ -4,7 +4,7 @@ title: "Getting started"
 # Getting started
 
 This page takes you from an Obsidian vault to a garden online in four steps.
-All you need is [Bun](https://bun.sh) or Node 23.6+.
+All you need is [Bun](https://bun.sh) or Node 22.18+.
 
 ## 1. Preview your vault
 

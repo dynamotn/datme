@@ -19,6 +19,25 @@ jobs:
       - run: bunx astro check
       - run: bun test --coverage
 
+  # The package as npm users get it: packed, installed from its tarball and run under
+  # each Node that `engines` allows.
+  package:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        node: ["22.18", "24", "25"]
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+      - run: bun install --frozen-lockfile
+      - run: bun tools/pack-check.ts
+
   # Accessibility (with colour contrast, which needs a real browser), best practices and SEO
   # of the fixture site, measured by Lighthouse; reports are kept as an artifact.
   lighthouse:
