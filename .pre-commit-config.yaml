@@ -1,0 +1,14 @@
+# Hooks run by prek (or pre-commit) before each commit: `prek install` once.
+repos:
+  - repo: local
+    hooks:
+      - id: biome
+        name: biome check
+        entry: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true
+        language: system
+        types_or: [ts, javascript, json, css]
+      - id: dyshellint
+        name: dyshellint
+        entry: dyshellint
+        language: system
+        types: [shell]

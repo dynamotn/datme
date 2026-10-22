@@ -1,0 +1,6 @@
+# Formatting-only commits, hidden from `git blame`:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitLab and GitHub read this file on their own.
+
+# style: format the repository with Biome
+55d68107f45c5bb3f37f4223e6fd4317c0213b90

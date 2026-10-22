@@ -44,6 +44,8 @@
     "build": "bun bin/datme.ts build",
     "preview": "bun bin/datme.ts preview",
     "check": "astro check",
+    "lint": "biome ci",
+    "format": "biome format --write",
     "test": "bun test --coverage",
     "screenshots": "bun tools/screenshots.ts"
   },

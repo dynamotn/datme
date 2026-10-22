@@ -162,7 +162,7 @@ function _preflight {
   fi
   local remote
   for remote in "${REMOTES[@]}"; do
-    if git -C "${ROOT_DIR}" ls-remote --exit-code --tags "${remote}" "refs/tags/${tag}" > /dev/null 2>&1; then
+    if git -C "${ROOT_DIR}" ls-remote --exit-code --tags "${remote}" "refs/tags/${tag}" &> /dev/null; then
       dybatpho::die "Tag ${tag} already exists on ${remote}"
     fi
   done
@@ -245,7 +245,7 @@ function _main {
   read -r -a REMOTES <<< "${REMOTE_LIST}"
   local remote
   for remote in "${REMOTES[@]}"; do
-    git -C "${ROOT_DIR}" remote get-url "${remote}" > /dev/null 2>&1 \
+    git -C "${ROOT_DIR}" remote get-url "${remote}" &> /dev/null \
       || dybatpho::die "No remote named ${remote}; pass --remotes with the ones to push to"
   done
 
@@ -328,7 +328,7 @@ function _spec {
   # shellcheck disable=SC1083 # `--{no-}name` is dybatpho's toggle-switch syntax
   dybatpho::opts::flag "Run astro check and the tests before stamping" CHECKS --{no-}checks \
     on:true off:false init:="true"
-  # shellcheck disable=SC1083
+  # shellcheck disable=SC1083 # `--{no-}name` is dybatpho's toggle-switch syntax
   dybatpho::opts::flag "Push the branch and the tag" PUSH --{no-}push \
     on:true off:false init:="true"
   dybatpho::opts::flag "Report every step and change nothing" DRY_RUN -n --dry-run \

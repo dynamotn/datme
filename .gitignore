@@ -7,3 +7,6 @@ bin/datme.js
 .lhci-site/
 .lhci-report/
 dist-cli/
+
+# Biome findings as a GitLab code quality report, written by CI.
+gl-code-quality.json

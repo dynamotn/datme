@@ -19,8 +19,14 @@ test:
   <<: *git
   script:
     - bun install --frozen-lockfile
+    # The findings as a code quality report on merge requests, and readable in the log when there are any.
+    - bunx biome ci --colors=off --reporter=gitlab > gl-code-quality.json || (bunx biome ci; exit 1)
     - bunx astro check
     - bun test --coverage
+  artifacts:
+    when: always
+    reports:
+      codequality: gl-code-quality.json
 
 # The package as npm users get it: packed, installed from its tarball and run under
 # each Node that `engines` allows (Bun packs it, so the job installs Bun as well).

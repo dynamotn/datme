@@ -6,9 +6,18 @@ the checks CI runs:
 
 ```bash
 bun install
+bun run lint          # Biome: lint, and the formatting it expects
 bunx astro check
 bun test --coverage
 ```
+
+`bun run format` formats the tree. [Biome](https://biomejs.dev) reads
+`biome.jsonc`, where each rule turned off says why; a finding that is
+deliberate gets a `// biome-ignore <rule>: <reason>` comment on the line above.
+`prek install` (or `pre-commit install`) runs Biome on staged files, and
+`dyshellint` on shell scripts, before each commit; `git config
+blame.ignoreRevsFile .git-blame-ignore-revs` keeps the formatting commit out of
+`git blame`.
 
 With `--coverage` the run fails unless every line and function of `src/` and
 `bin/` runs in some test (`coverageThreshold` in `bunfig.toml`). Run single
