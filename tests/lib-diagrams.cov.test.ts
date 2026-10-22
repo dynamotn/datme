@@ -144,6 +144,30 @@ describe("mind maps", () => {
 })
 
 describe("renderers that are not installed", () => {
+  test("one that is installed but fails to load says why, instead of asking to install it", async () => {
+    setOptionalImport(async () => {
+      throw Object.assign(new Error("dlopen: incompatible architecture"), { code: "ERR_DLOPEN_FAILED" })
+    })
+    try {
+      const html = await renderMarkdown("```d2\ncov-broken -> load\n```", "en-US", "x")
+      expect(html).toContain("@terrastruct/d2 is installed but could not be loaded: dlopen: incompatible architecture")
+      expect(html).not.toContain("install it next to datme")
+    } finally {
+      setOptionalImport(undefined)
+    }
+  })
+
+  test("a module that is not found, by code or by message, counts as not installed", async () => {
+    setOptionalImport(async () => {
+      throw Object.assign(new Error("no such thing"), { code: "ERR_MODULE_NOT_FOUND" })
+    })
+    try {
+      expect(await renderMarkdown("```typst\ncov-notfound\n```", "en-US", "x")).toContain("install it next to datme")
+    } finally {
+      setOptionalImport(undefined)
+    }
+  })
+
   test("a block shows its source and how to install what draws it; restoring the importer draws again", async () => {
     const asked: string[] = []
     setOptionalImport(async (name) => {

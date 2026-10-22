@@ -48,12 +48,22 @@ export function setOptionalImport(fn: ((name: string) => Promise<unknown>) | und
   typst = undefined
 }
 
-/** An optional package, loaded only when a note needs it; undefined when it is not installed. */
+/** Whether an import failed because the package is not there, rather than broken once found. */
+function notFound(e: unknown): boolean {
+  const { code, message } = (e ?? {}) as { code?: string; message?: string }
+  return code === "ERR_MODULE_NOT_FOUND" || code === "MODULE_NOT_FOUND" || /Cannot find (package|module)/.test(message ?? "")
+}
+
+/**
+ * An optional package, loaded only when a note needs it; undefined when it is not installed.
+ * One that is installed but fails to load (a native binding, a version) says why on the page.
+ */
 async function optional<T>(name: string): Promise<T | undefined> {
   try {
     return (await importer(name)) as T
-  } catch {
-    return undefined
+  } catch (e) {
+    if (notFound(e)) return undefined
+    throw new Error(`${name} is installed but could not be loaded: ${(e as Error).message}`)
   }
 }
 

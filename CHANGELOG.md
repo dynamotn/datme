@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `datme check` (and so `--strict`) runs the Dataview queries of published notes, blocks and inline: one that cannot run is an error and one datme does not support yet is a warning, instead of an error box found only on the published page.
+- A diagram renderer (D2, Typst) that is installed but fails to load, such as a native binding built for another machine, says why on the page instead of asking to install it.
 - A build whose output folder has a space or an accented letter in its path (or any build on Windows) writes the ActivityPub files, the Pagefind index and the script hashes of `_headers` into that folder, not into a percent-encoded twin of it.
 - `datme dev` no longer grows in memory with every edit: it kept, for each version of the vault, a rendered copy of every note visited, a Dataview index and the journal of each language; it now keeps only the current ones.
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.

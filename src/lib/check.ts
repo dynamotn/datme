@@ -12,6 +12,11 @@ import { routeProblems } from "./routes"
 import { AA_TEXT, contrastOf, onAccent, readableAccent } from "./contrast"
 import { THEME_COLOR } from "./pwa"
 import { baseStyle, lookOf } from "./look"
+import { queryProblem } from "./dataview-render"
+import { unified } from "unified"
+import remarkParse from "remark-parse"
+import remarkGfm from "remark-gfm"
+import { visit } from "unist-util-visit"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -139,6 +144,33 @@ export function accentProblems(accent: SiteConfig["theme"]["accent"], styles: re
   return problems
 }
 
+/** The text of a query as a problem names it: its first line, cut short. */
+const queryText = (q: string) => {
+  const line = q.trim().split("\n")[0]
+  return line.length > 60 ? line.slice(0, 59) + "…" : line
+}
+
+/**
+ * Dataview queries of published notes that would show an error on the page instead
+ * of a result, or that datme does not support yet; in the default language.
+ */
+export function queryProblems(): Problem[] {
+  const lang = site.defaultLang
+  const problems: Problem[] = []
+  for (const n of getVault().notes[lang]) {
+    if (!/```dataview|`=\s/.test(n.md)) continue
+    const report = (source: string, inline: boolean) => {
+      const p = queryProblem(source, lang, n.key, inline)
+      if (p) problems.push({ level: p.level, file: n.key + ".md", message: `Dataview ${inline ? "`= " : "`"}${queryText(source)}\`: ${p.message}` })
+    }
+    visit(unified().use(remarkParse).use(remarkGfm).parse(n.md), (node) => {
+      if (node.type === "code" && node.lang === "dataview") report(node.value, false)
+      else if (node.type === "inlineCode" && /^=\s/.test(node.value)) report(node.value.slice(1).trim(), true)
+    })
+  }
+  return problems
+}
+
 /** Every problem of the vault and of datme.yaml, sorted by file. */
 export function checkVault(): Problem[] {
   const vault = getVault()
@@ -148,6 +180,7 @@ export function checkVault(): Problem[] {
     ...routeProblems(),
     ...(site.check.structure ? structureProblems() : []),
     ...accentProblems(site.theme.accent, stylesInUse(), accentFile),
+    ...queryProblems(),
   ]
   for (const [list, items] of [["nav", site.nav], ["sidebar", site.sidebar]] as const) {
     for (const item of items) {

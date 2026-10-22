@@ -103,6 +103,24 @@ export function renderInlineQuery(source: string, lang: Lang, currentKey: string
   }
 }
 
+/**
+ * What `datme check` says of a query: an error when it cannot run (the page would show
+ * the error instead of a result), a warning when datme does not support it yet.
+ */
+export function queryProblem(source: string, lang: Lang, currentKey: string, inline = false): { level: "error" | "warning"; message: string } | undefined {
+  try {
+    const engine = engineFor(lang)
+    const env = { ...engine, current: currentPage(engine, currentKey) }
+    if (inline) evaluateInline(source, env)
+    else if (source.trim()) runQuery(parseQuery(source), env)
+    return undefined
+  } catch (e) {
+    if (e instanceof Unsupported) return { level: "warning", message: `not supported yet: ${e.message}` }
+    if (e instanceof DataviewError) return { level: "error", message: e.message }
+    throw e
+  }
+}
+
 export function renderDataview(source: string, lang: Lang, currentKey: string): string | { markdown: string } {
   const s = t(lang)
   // An empty block shows nothing in Obsidian either.

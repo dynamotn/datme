@@ -16,7 +16,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `datme dev [vault]` | Live preview that reloads when a note changes. `--port`, `--host` |
 | `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is replaced only if datme created it. |
 | `datme preview [vault]` | Builds, then serves the result |
-| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases, and invalid frontmatter; exits 1 on errors |
+| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases, invalid frontmatter and Dataview queries that cannot run; exits 1 on errors |
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push (see [Deploying](deploying.md)) |
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or a printable page |
 | `datme doctor [vault]` | Checks the machine and the vault before a build: the Bun or Node version, the optional packages the vault's notes need (D2, Typst, transformers.js), git, the `DATME_LOCK_…` variables of group passwords, and `site.url`. Each problem comes with the command that fixes it; exits 1 if one must be fixed |
@@ -66,6 +66,12 @@ its notes take), or as the ground of the white or near-black text set on it.
 The warning gives each ratio and an accent of the same hue, darker or
 lighter, that passes. A theme pack's style is read on the ground of its base;
 a ground its stylesheets change is not seen.
+
+`check` runs every Dataview query of the published notes, ```` ```dataview ````
+blocks and inline `` `= …` `` alike. One that cannot run is an error, since the
+page would show the error instead of a result; one that datme does not
+support yet, such as `CALENDAR`, is a warning. Either way `--strict` stops the
+build before a broken query goes live.
 
 `build` prints a one-line summary of the problems `check` would report.
 `datme dev` also shows a note's problems on its page, and a switcher to
