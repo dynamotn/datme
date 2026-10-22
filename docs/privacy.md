@@ -19,10 +19,10 @@ public", and gives you several ways to share a little more.
   all of them with `publish: all`. To keep one out whatever links to it, list
   it (or its folder) in `ignore`.
 - **Drawings:** an Excalidraw drawing is published once a published note
-  embeds or links to it. A drawing whose own frontmatter says
-  `publish: false` or `draft: true` never is: the link shows as a link to a
-  private note, and embedding it does not publish the images exported next to
-  it either. Embedding such an exported image by its own name still does.
+  embeds or links to it, together with the images exported next to it. Its
+  own `publish: false` only keeps it from being a page of its own (with
+  `publish: all`); to keep a drawing home whatever embeds it, list it (or its
+  folder) in `ignore`.
 - **Queries:** Dataview, Tasks, `query` blocks and Bases only see published
   notes.
 - **Properties:** a note's properties block shows every frontmatter key except

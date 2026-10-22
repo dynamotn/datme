@@ -483,16 +483,11 @@ function buildVault(version: number): Vault {
     assetByName.set(name, [...(assetByName.get(name) ?? []), rel])
   }
 
-  // Excalidraw sources, published or not: an embed is what makes a drawing public,
-  // unless the drawing itself says `publish: false` or `draft: true`.
+  // Excalidraw sources, published or not: an embed is what makes a drawing public.
+  // A drawing's own `publish: false` only keeps it from being a note (with `publish: all`); `ignore` keeps it home.
   const drawingByPath = new Map<string, string>()
   const drawingByName = new Map<string, string[]>()
-  const withheldDrawings = new Set<string>()
   for (const rel of [...found.md, ...found.files].filter((f) => /\.excalidraw(\.md)?$/i.test(f))) {
-    if (MD_EXT.test(rel)) {
-      const { fm } = parseFrontmatter(fs.readFileSync(path.join(site.vault, rel), "utf8"))
-      if (flag(fm.publish) === false || flag(fm.draft) === true) withheldDrawings.add(rel)
-    }
     const lower = fold(rel)
     drawingByPath.set(lower, rel)
     drawingByPath.set(lower.replace(/\.md$/, ""), rel)
@@ -601,27 +596,13 @@ function buildVault(version: number): Vault {
     return byAlias.get(lower)
   }
 
-  /** The drawing a target names, withheld or not. */
-  function findDrawing(target: string, fromDir: string): string | undefined {
+  function resolveDrawing(target: string, fromDir: string): string | undefined {
     const t = fold(decodeTarget(target.trim()).replace(/^\/+/, ""))
     const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
     const hit = drawingByPath.get(relative) ?? drawingByPath.get(t)
     if (hit) return hit
     const cands = drawingByName.get(path.posix.basename(t).replace(/\.md$/, ""))
     return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
-  }
-
-  /** The drawing a target names, unless it is withheld from publishing. */
-  function resolveDrawing(target: string, fromDir: string): string | undefined {
-    const rel = findDrawing(target, fromDir)
-    return rel && withheldDrawings.has(rel) ? undefined : rel
-  }
-
-  /** The words a link to a withheld drawing leaves, as for a private note; undefined for any other target. */
-  function withheldDrawing(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined {
-    const rel = findDrawing(target, fromDir)
-    if (!rel || !withheldDrawings.has(rel)) return undefined
-    return privateLinkText(site.privateLinks, target.replace(/\.md$/i, "").replace(/\.excalidraw$/i, ""), alias, t(lang).privateNote)
   }
 
   const scenes = new Map<string, Scene>()
@@ -918,7 +899,6 @@ function buildVault(version: number): Vault {
         drawingPage: resolveDrawing,
         readText,
         privateLink: (target: string, fromDir: string, alias: string | undefined) => privateLink(target, fromDir, alias, lang),
-        withheldDrawing: (target: string, fromDir: string, alias: string | undefined) => withheldDrawing(target, fromDir, alias, lang),
         gardenLink: (name: string, target: string) => gardenLink(name, target, lang),
       }
       const pre = preprocess(body, { ...prepare, slides })
@@ -1075,7 +1055,6 @@ function buildVault(version: number): Vault {
               drawingPage: resolveDrawing,
               readText,
               privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
-              withheldDrawing: (target, fromDir, alias) => withheldDrawing(target, fromDir, alias, lang),
               gardenLink: (name, target) => gardenLink(name, target, lang),
             })
             pre.assets.forEach((a) => assets.add(a))

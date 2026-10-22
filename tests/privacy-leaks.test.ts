@@ -16,11 +16,11 @@ beforeAll(() => {
       "Locked.md": "---\npublish: true\npassword: fixture-not-a-real-secret\nbanner: banner.png\ncover: cover.png\n---\nLocked.\n",
       "banner.png": "png",
       "cover.png": "png",
-      "Open.excalidraw.md": sketch,
-      "Plan.excalidraw.md": withFrontmatter(sketch, "publish: false"),
-      "Plan.excalidraw.svg": "<svg/>",
-      "Draft.excalidraw.md": withFrontmatter(sketch, "draft: true"),
-      "Embeds.md": "---\npublish: true\n---\n![[Open.excalidraw]]\n\n![[Plan.excalidraw]] and [[Draft.excalidraw|the draft]] and [draft](Draft.excalidraw)\n",
+      "Open.excalidraw.md": withFrontmatter(sketch, "publish: false"),
+      "Kept/Plan.excalidraw.md": sketch,
+      "Kept/Plan.excalidraw.svg": "<svg/>",
+      "datme.yaml": "ignore: [Kept]\n",
+      "Embeds.md": "---\npublish: true\n---\n![[Open.excalidraw]]\n\n![[Plan.excalidraw]] and [[Plan.excalidraw|the plan]]\n",
     },
     `import { getVault } from "$src/lib/vault"
 import { renderNote } from "$src/lib/markdown"
@@ -58,17 +58,13 @@ describe("protected notes", () => {
 })
 
 describe("drawings", () => {
-  test("an embedded drawing is drawn and published", () => {
+  test("an embedded drawing is drawn, even one whose publish: false only keeps it from being a note", () => {
     expect(result.embeds).toContain('class="drawing generated"')
   })
 
-  test("a drawing saying publish: false or draft: true is withheld, with its exported image", () => {
-    expect(result.assets).not.toContain("Plan.excalidraw.svg")
-    expect(result.docs).not.toContain("Draft.excalidraw.md")
+  test("a drawing in an ignored folder stays home, with its exported image", () => {
+    expect(result.assets.filter((a: string) => a.startsWith("Kept/"))).toEqual([])
+    expect(result.docs.filter((d: string) => d.startsWith("Kept/"))).toEqual([])
     expect(result.embeds.match(/class="drawing generated"/g)).toHaveLength(1)
-    // As a private note: the words of the link stay, nothing leads anywhere.
-    expect(result.embeds).toContain('title="Not published">Plan</span>')
-    expect(result.embeds).toContain('title="Not published">the draft</span>')
-    expect(result.embeds).toContain('title="Not published">draft</span>')
   })
 })
