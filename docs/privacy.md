@@ -21,7 +21,8 @@ public", and gives you several ways to share a little more.
 - **Drawings:** an Excalidraw drawing is published once a published note
   embeds or links to it. A drawing whose own frontmatter says
   `publish: false` or `draft: true` never is: the link shows as a link to a
-  private note, and the images exported next to it stay home too.
+  private note, and embedding it does not publish the images exported next to
+  it either. Embedding such an exported image by its own name still does.
 - **Queries:** Dataview, Tasks, `query` blocks and Bases only see published
   notes.
 - **Properties:** a note's properties block shows every frontmatter key except

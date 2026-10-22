@@ -49,13 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
 
 - `properties.show` in `datme.yaml` lists the only frontmatter keys a note's properties block (and a wiki infobox) may show, so a key added to a note later, such as a phone number, is not published until you list it. `datme check --privacy` suggests it while every key not hidden is shown.
-- An Excalidraw drawing whose frontmatter says `publish: false` or `draft: true` stays private even when a published note embeds or links to it: the embed shows as a link to a private note (following `privateLinks`), and the images exported next to the drawing are not published either.
+- An Excalidraw drawing whose frontmatter says `publish: false` or `draft: true` stays private even when a published note embeds or links to it: the embed shows as a link to a private note (following `privateLinks`), and embedding it no longer publishes the images exported next to it (an exported image embedded by its own name still is).
 
 ### Security
 
 - An unlisted note no longer appears in the backlinks of the notes it links to, so its title, URL and the sentence around the link stay with those who have the link.
 - A password-protected note no longer publishes its `banner`, `cover` or `avatar`: they were copied to the site, drawn above the locked page and used as its social card. The page now gets the generated card, as for any note without a banner.
-- The markdown copies (`llms.txt`, `.md` next to each page) and the history pages read comments the way the page does: a `%%` inside code or math is text. Before, such a mark could pair with the start of a real comment, so the comment's words were published there while the code around it was cut.
+- The markdown copies (`llms.txt`, `.md` next to each page) and the history pages read comments the way the page does: a `%%` inside code or math is text, and comments inside a ```` ```tabs ```` block are removed as on the page. Before, such a mark could pair with the start of a real comment, so the comment's words were published there while the code around it was cut.
 
 ## [3.1.0] - 2026-10-20
 

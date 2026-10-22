@@ -21,6 +21,11 @@ describe("what a version showed", () => {
     )
   })
 
+  test("a tabs block is markdown, not code: its comments go, its own code keeps them", () => {
+    const raw = "---\npublish: true\n---\n```tabs\n--- One\nShown %%secret%%<!-- also -->\n~~~\n%% code %%\n~~~\n```\nEnd."
+    expect(publicText(raw, "en-US")).toBe("```tabs\n--- One\nShown \n~~~\n%% code %%\n~~~\n```\nEnd.")
+  })
+
   test("an untranslated version showed its fallback language, as the page did", () => {
     const raw = "---\npublish: true\n---\nSeen.\n<!--lang:vi-VN-->\nTiếng Việt.\n<!--lang:*-->\nEnd."
     expect(publicText(raw, "en-US")).toBe("Seen.\nTiếng Việt.\nEnd.")

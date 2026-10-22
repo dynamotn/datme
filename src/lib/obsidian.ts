@@ -181,7 +181,14 @@ function maskCode(md: string, mask: (s: string) => string, fence: Fence = (m) =>
 export function withoutComments(md: string): string {
   const masks: string[] = []
   const mask = (s: string) => `\u0000${masks.push(s) - 1}\u0000`
-  let out = maskCode(md, mask).replace(OBSIDIAN_COMMENT, "").replace(COMMENT, "")
+  // A ```tabs block is markdown the page shows, so only the code inside it keeps its comment marks.
+  const fence: Fence = (m, info, body) => {
+    if (!/^\s*tabs\s*$/i.test(info)) return mask(m)
+    // Its fence lines masked apart, so their backticks cannot pair up as a code span around it.
+    const at = m.indexOf("\n") + 1
+    return mask(m.slice(0, at)) + maskFences(body, fence) + mask(m.slice(at + body.length))
+  }
+  let out = maskCode(md, mask, fence).replace(OBSIDIAN_COMMENT, "").replace(COMMENT, "")
   // A mask may hold an earlier one, such as a code span inside inline math.
   while (/\u0000\d+\u0000/.test(out)) out = out.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[Number(i)])
   return out
