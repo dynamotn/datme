@@ -421,6 +421,8 @@ appearance:
 #    poem: classic
   stages: {}                  # a style per stage of \`stages\`, after the tags, before the folder's
 #    Inbox: notebook
+  languages: {}               # a site-wide style per language, instead of style
+#    vi-VN: lacquer
   readerSwitch: false         # true: readers pick a style in the View menu
 
 # A theme pack: .datme/themes/<name> in the vault, or the datme-theme-<name> package.

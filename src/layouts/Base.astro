@@ -21,7 +21,7 @@ import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style, type StyleName } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
 import { seasonOf } from "~/lib/garden"
-import { baseStyle, startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
+import { baseStyle, explainDefault, startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
 import { previewOf, type LookTarget, type Shape } from "~/lib/dev-look"
 import { LOOK_SCRIPT, readerLooks } from "~/lib/look-switch"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
@@ -86,7 +86,7 @@ const {
   translatedIn,
   canonicalUrl,
   rail = false,
-  look: ownLook = site.appearance.style,
+  look: ownLook = explainDefault(lang).value,
   frame: ownFrame = "full",
   jsonLd = [],
   feed,
@@ -94,7 +94,7 @@ const {
   oembed,
   noindex = false,
   explained = {
-    look: { value: ownLook, rule: { kind: "site" } },
+    look: Astro.props.look === undefined ? explainDefault(lang) : { value: ownLook, rule: { kind: "site" } },
     frame: { value: ownFrame, rule: { kind: "default" } },
     target: { kind: "site" },
   },

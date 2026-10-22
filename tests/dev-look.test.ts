@@ -150,6 +150,7 @@ describe("describeLookRule and describeFrameRule", () => {
     expect(describeLookRule({ kind: "stages", stage: "01_Fleeting" }, note)).toBe("appearance.stages → 01_Fleeting")
     expect(describeLookRule({ kind: "folders", folder: "Writing" }, note)).toBe("appearance.folders → Writing")
     expect(describeLookRule({ kind: "classic", folder: "Writing" }, note)).toBe("appearance.classic → Writing")
+    expect(describeLookRule({ kind: "languages", lang: "vi-VN" }, note)).toBe("appearance.languages → vi-VN")
     expect(describeLookRule({ kind: "site" }, note)).toBe("appearance.style")
   })
   test("say where the chrome comes from", () => {

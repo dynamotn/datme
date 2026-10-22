@@ -3,7 +3,7 @@ import { t, langPrefix } from "./i18n"
 import { slugToUrl } from "./slug"
 import { withBase } from "./base"
 import { escapeText } from "./html"
-import { baseStyle } from "./look"
+import { baseStyle, defaultLook } from "./look"
 
 /** Theme colours of the browser chrome, matching the light page background. */
 export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
@@ -27,7 +27,7 @@ export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
 /** The web app manifest: lets readers install the garden and open it like an app. */
 export function manifest(): string {
   const lang = site.defaultLang
-  const color = THEME_COLOR[baseStyle(site.appearance.style)].light
+  const color = THEME_COLOR[baseStyle(defaultLook(lang))].light
   return JSON.stringify(
     {
       name: site.title[lang],

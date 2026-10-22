@@ -203,7 +203,7 @@ describe("menu and appearance", () => {
   test("the menu defaults to home and tags, in the notebook style", () => {
     const c = resolveConfig({}, "/v")
     expect(c.nav).toEqual([{ kind: "home" }, { kind: "tags" }])
-    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, stream: [], seasons: false, readerSwitch: [] })
+    expect(c.appearance).toEqual({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, stream: [], seasons: false, readerSwitch: [] })
   })
 
   test("the garden style and a style per folder", () => {
@@ -239,6 +239,13 @@ describe("menu and appearance", () => {
     expect(c.appearance.stages).toEqual({ Seeds: "notebook", Trees: "manuscript" })
     expect(() => resolveConfig({ appearance: { stages: { Seeds: "notebook" } } }, "/v")).toThrow("appearance.stages.Seeds: is no stage of `stages`")
     expect(() => resolveConfig({ stages: { Seeds: null }, appearance: { stages: { Seeds: "fancy" } } }, "/v")).toThrow()
+  })
+
+  test("a style per language, by its full tag or its base", () => {
+    const c = resolveConfig({ languages: ["vi-VN", "en-US", "en-GB"], appearance: { languages: { vi: "lacquer", en: "classic", "en-GB": "manuscript" } } }, "/v")
+    expect(c.appearance.languages).toEqual({ "vi-VN": "lacquer", "en-US": "classic", "en-GB": "manuscript" })
+    expect(resolveConfig({ languages: ["vi-VN", "en-US"], appearance: { languages: { "vi-VN": "lacquer" } } }, "/v").appearance.languages).toEqual({ "vi-VN": "lacquer" })
+    expect(() => resolveConfig({ appearance: { languages: { fr: "classic" } } }, "/v")).toThrow("appearance.languages.fr: matches none of the languages en-US")
   })
 
   test("unknown styles are rejected", () => {

@@ -111,6 +111,9 @@ appearance:
   stages:                     # a style per growth stage, a key of `stages`; after tags, before folders
     01_Fleeting: notebook
     03_Permanent: manuscript
+  languages:                  # a site-wide style per language (or its base, as vi), instead of `style`
+    vi-VN: lacquer            # on that language's pages, home and tag pages included;
+    en-US: classic            # tags, stages and folders still win
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
   seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
   readerSwitch: false         # true: readers pick any style that only recolours pages, in the View menu;

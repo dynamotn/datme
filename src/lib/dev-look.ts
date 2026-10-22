@@ -163,6 +163,8 @@ export function describeLookRule(rule: LookRule, target: LookTarget): string {
       return `appearance.folders → ${rule.folder}`
     case "classic":
       return `appearance.classic → ${rule.folder}`
+    case "languages":
+      return `appearance.languages → ${rule.lang}`
     case "site":
       return "appearance.style"
   }

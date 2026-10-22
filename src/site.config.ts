@@ -504,6 +504,8 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         tags: z.record(z.string(), z.enum(styles)).default({}),
         /** A style per growth stage, a key of `stages`, e.g. { 01_Fleeting: notebook }; after tags, before folders. */
         stages: z.record(z.string(), z.enum(styles)).default({}),
+        /** A site-wide style per language (or its base, as vi for vi-VN), used instead of `style` on its pages. */
+        languages: z.record(z.string(), z.enum(styles)).default({}),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
         /**
@@ -517,7 +519,7 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         readerSwitch: z.union([z.boolean(), z.array(z.enum(styles)).min(1)]).default(false),
       })
       .strict()
-      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, stream: [], seasons: false, readerSwitch: false }),
+      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, languages: {}, stream: [], seasons: false, readerSwitch: false }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -714,6 +716,11 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   for (const key of Object.keys(c.appearance.stages)) {
     if (!(key in c.stages)) throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.stages.${key}: is no stage of \`stages\``)
   }
+  for (const key of Object.keys(c.appearance.languages)) {
+    if (!langs.some((l) => l === key || l.split("-")[0] === key)) {
+      throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.languages.${key}: matches none of the languages ${langs.join(", ")}`)
+    }
+  }
   for (const [folder, def] of Object.entries(c.stages)) {
     // A string naming no preset is the stage's label; without one, the folder's name is.
     const preset = typeof def === "string" ? STAGE_PRESETS[def.toLowerCase()] : undefined
@@ -805,6 +812,13 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       // Written as in a note's tags: `#poem`, `Poem` and `poem` are the same tag.
       tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, StyleName] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
       stages: c.appearance.stages,
+      // Keyed by every language that has one, a full tag winning over its base.
+      languages: Object.fromEntries(
+        langs.flatMap((l): [Lang, StyleName][] => {
+          const style = c.appearance.languages[l] ?? c.appearance.languages[l.split("-")[0]]
+          return style ? [[l, style]] : []
+        }),
+      ),
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
       readerSwitch: (readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st)) && !SHAPED_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])]).filter((st) => !templated(st)),

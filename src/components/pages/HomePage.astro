@@ -8,7 +8,7 @@ import { slugToUrl } from "~/lib/slug"
 import { absUrl, withBase } from "~/lib/base"
 import { websiteLd } from "~/lib/jsonld"
 import { previewOf } from "~/lib/dev-look"
-import { baseStyle, isGarden } from "~/lib/look"
+import { baseStyle, defaultLook, isGarden } from "~/lib/look"
 import Base from "~/layouts/Base.astro"
 import NoteCard from "../NoteCard.astro"
 import NoteRow from "../NoteRow.astro"
@@ -59,7 +59,7 @@ const blogUrl = blog.length
 // A broadsheet is dated by its newest story.
 const edition = byRecent(counted, "created")[0]?.created
 // `datme dev` can preview the home in another style from its address.
-const look = baseStyle(previewOf(Astro.url).style ?? site.appearance.style)
+const look = baseStyle(previewOf(Astro.url).style ?? defaultLook(lang))
 const alternates = Object.fromEntries(site.langs.map((l) => [l, slugToUrl(langPrefix(l) + "index")]))
 ---
 

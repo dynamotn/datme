@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags, explainStage } from "../src/lib/look"
+import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags, explainStage, explainDefault, defaultLook } from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 
@@ -133,6 +133,27 @@ describe("explainStage", () => {
     expect(explainLook({ dir: "03_Atomic", stage: "03_Atomic" }, appearance).rule).toEqual({ kind: "stages", stage: "03_Atomic" })
     expect(explainLook({ dir: "03_Atomic", stage: "03_Atomic", tags: ["poem"] }, appearance).rule).toEqual({ kind: "tags", tag: "poem" })
     expect(explainLook({ dir: "03_Atomic" }, appearance).rule).toEqual({ kind: "folders", folder: "03_Atomic" })
+  })
+})
+
+describe("explainDefault", () => {
+  const appearance = { ...base, languages: { "vi-VN": "lacquer" as const } }
+  test("a language's own style, else the site style", () => {
+    expect(explainDefault("vi-VN", appearance)).toEqual({ value: "lacquer", rule: { kind: "languages", lang: "vi-VN" } })
+    expect(explainDefault("en-US", appearance)).toEqual({ value: "notebook", rule: { kind: "site" } })
+    expect(explainDefault(undefined, appearance)).toEqual({ value: "notebook", rule: { kind: "site" } })
+    expect(explainDefault("vi-VN", base)).toEqual({ value: "notebook", rule: { kind: "site" } })
+    // The fixture styles no language.
+    expect(defaultLook("vi-VN")).toBe("notebook")
+  })
+  test("folders, stages and tags still win over the language", () => {
+    const rules = { ...appearance, folders: { Writing: "classic" as const }, tags: { poem: "garden" as const }, stages: { Seeds: "notebook" as const } }
+    expect(explainDir("Notes", rules, "vi-VN").rule).toEqual({ kind: "languages", lang: "vi-VN" })
+    expect(explainDir("Writing", rules, "vi-VN").value).toBe("classic")
+    expect(explainLook({ dir: "Notes", lang: "vi-VN" }, rules).value).toBe("lacquer")
+    expect(explainLook({ dir: "Notes", lang: "vi-VN", stage: "Seeds" }, rules).value).toBe("notebook")
+    expect(explainLook({ dir: "Notes", lang: "vi-VN", tags: ["poem"] }, rules).value).toBe("garden")
+    expect(explainLook({ dir: "Notes", lang: "en-US" }, rules).rule).toEqual({ kind: "site" })
   })
 })
 

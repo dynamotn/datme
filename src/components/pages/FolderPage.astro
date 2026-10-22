@@ -40,7 +40,7 @@ const owner = ownNote
     ? previewNote(folderStandIn(folder, lang), preview)
     : undefined
 const explained = {
-  look: owner ? explainLook(owner) : explainDir(folder.dir, site.appearance),
+  look: owner ? explainLook(owner) : explainDir(folder.dir, site.appearance, lang),
   frame: owner ? explainFrame(owner) : explainFrame(undefined),
   target: { kind: "folder", dir: folder.dir, file: ownNote && ownNote.source.key + ".md" } as const,
   // A protected folder note keeps its folder as it is.

@@ -1,4 +1,4 @@
-import { site, type SiteConfig, type Style, type StyleName } from "../site.config"
+import { site, type Lang, type SiteConfig, type Style, type StyleName } from "../site.config"
 import type { Layout, Note } from "./vault"
 
 /** Navigation frames a note can ask for with its `chrome` property. */
@@ -15,7 +15,9 @@ export function pickOption<T extends string>(value: unknown, options: readonly T
   return found ? { value: found } : { invalid: value }
 }
 
-type Rules = Pick<SiteConfig["appearance"], "style" | "classic" | "folders">
+/** What the site-wide style of a language depends on. */
+type DefaultRules = Pick<SiteConfig["appearance"], "style"> & Partial<Pick<SiteConfig["appearance"], "languages">>
+type Rules = DefaultRules & Pick<SiteConfig["appearance"], "classic" | "folders">
 type TagRules = Pick<SiteConfig["appearance"], "tags">
 type NoteRules = Rules & TagRules & Pick<SiteConfig["appearance"], "stages">
 
@@ -26,6 +28,7 @@ export type LookRule =
   | { kind: "tags"; tag: string }
   | { kind: "stages"; stage: string }
   | { kind: "folders" | "classic"; folder: string }
+  | { kind: "languages"; lang: Lang }
   | { kind: "site" }
 
 /** The rule that gave a page its frame. */
@@ -36,8 +39,20 @@ export interface Explained<T, R> {
   rule: R
 }
 
-/** Style of a folder and its rule: the deepest of `classic` and `folders` that covers it, else the site style. */
-export function explainDir(dir: string, appearance: Rules): Explained<StyleName, LookRule> {
+/** The site-wide style of a language's pages and its rule: that of `appearance.languages`, else `appearance.style`. */
+export function explainDefault(lang: Lang | undefined, appearance: DefaultRules = site.appearance): Explained<StyleName, LookRule> {
+  const own = lang === undefined ? undefined : appearance.languages?.[lang]
+  if (lang !== undefined && own) return { value: own, rule: { kind: "languages", lang } }
+  return { value: appearance.style, rule: { kind: "site" } }
+}
+
+/** The site-wide style of a language's pages: the home, tag pages, and every page no other rule styles. */
+export function defaultLook(lang: Lang | undefined): StyleName {
+  return explainDefault(lang).value
+}
+
+/** Style of a folder and its rule: the deepest of `classic` and `folders` that covers it, else the language's style. */
+export function explainDir(dir: string, appearance: Rules, lang?: Lang): Explained<StyleName, LookRule> {
   const { style, classic, folders } = appearance
   const flipped: Style = style === "notebook" ? "classic" : style === "classic" ? "notebook" : "classic"
   const rules: [string, StyleName, boolean][] = [
@@ -50,13 +65,13 @@ export function explainDir(dir: string, appearance: Rules): Explained<StyleName,
     if (dir !== f && !dir.startsWith(f + "/")) continue
     if (!best || f.length > best[0].length || (f.length === best[0].length && fromFolders && !best[2])) best = rule
   }
-  if (!best) return { value: style, rule: { kind: "site" } }
+  if (!best) return explainDefault(lang, appearance)
   return { value: best[1], rule: { kind: best[2] ? "folders" : "classic", folder: best[0] } }
 }
 
-/** Style of a folder: the deepest rule among `classic` and `folders` that covers it, else the site style. */
-export function resolveLook(dir: string, appearance: Rules): StyleName {
-  return explainDir(dir, appearance).value
+/** Style of a folder: the deepest rule among `classic` and `folders` that covers it, else the language's style. */
+export function resolveLook(dir: string, appearance: Rules, lang?: Lang): StyleName {
+  return explainDir(dir, appearance, lang).value
 }
 
 /** What a layout asks for by default: a style (none: the site's own) and a frame. */
@@ -128,15 +143,18 @@ export function explainStage(stage: string | undefined, appearance: Pick<SiteCon
 }
 
 /** What the style of a note's page depends on. */
-type LookNote = Pick<Note, "dir" | "style" | "layout"> & { tags?: readonly string[]; stage?: string }
+type LookNote = Pick<Note, "dir" | "style" | "layout"> & { tags?: readonly string[]; stage?: string; lang?: Lang }
 
-/** Page style of a note and the rule that chose it: its own `style`, else its layout's, its tags', its stage's, or its folder's. */
+/**
+ * Page style of a note and the rule that chose it: its own `style`, else its layout's, its tags', its stage's,
+ * its folder's, or its language's.
+ */
 export function explainLook(note: LookNote | undefined, appearance: NoteRules = site.appearance): Explained<StyleName, LookRule> {
-  if (!note) return { value: appearance.style, rule: { kind: "site" } }
+  if (!note) return explainDefault(undefined, appearance)
   if (note.style) return { value: note.style, rule: { kind: "note" } }
   const fromLayout = note.layout && LAYOUT_LOOKS[note.layout]?.style
   if (note.layout && fromLayout) return { value: fromLayout, rule: { kind: "layout", layout: note.layout } }
-  return explainTags(note.tags ?? [], appearance) ?? explainStage(note.stage, appearance) ?? explainDir(note.dir, appearance)
+  return explainTags(note.tags ?? [], appearance) ?? explainStage(note.stage, appearance) ?? explainDir(note.dir, appearance, note.lang)
 }
 
 /** Page style of a note: its own `style`, else its layout's, its tags', its stage's or its folder's; the site style when there is no note. */
