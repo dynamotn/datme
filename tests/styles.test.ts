@@ -213,6 +213,76 @@ describe("zine, atlas and catalog looks", () => {
   })
 })
 
+describe("eink look", () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/eink.css"), "utf8")
+  const print = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/print.css"), "utf8")
+
+  test("every rule is scoped to the eink look", () => {
+    expectScoped("eink.css", "eink")
+  })
+
+  test("nothing moves on e-paper, whatever the reader's motion setting", () => {
+    const still = rule(css, '[data-look="eink"] *,\n[data-look="eink"] *::before,\n[data-look="eink"] *::after')
+    expect(still).toContain("transition: none !important")
+    expect(still).toContain("animation: none !important")
+    expect(css).not.toMatch(/@keyframes|transition:(?!\s*none)/)
+  })
+
+  test("its accent stays ink, over theme.accent and the high-contrast blue", () => {
+    expect(rule(css, '[data-look="eink"][data-look="eink"][data-look="eink"]')).toContain("--accent: #111111")
+    expect(rule(css, '[data-look="eink"][data-look="eink"][data-theme="dark"]')).toContain("--accent: #ececec")
+  })
+
+  test("what a mouse would reveal is always shown", () => {
+    expect(rule(css, '[data-look="eink"] .heading-anchor,\n[data-look="eink"] .copy-btn')).toContain("opacity: 1")
+  })
+
+  test("a paged note is a run of columns as tall as the screen, its toggle shown only in this look", () => {
+    const paged = rule(css, '[data-look="eink"].paged .note.is-paged')
+    for (const d of ["columns: 1", "column-fill: auto", "overflow: hidden", "column-gap: var(--page-gap)"]) expect(paged).toContain(d)
+    expect(rule(css, '[data-look="eink"] .prefs-item.paged-toggle')).toContain("display: flex")
+    const global = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/global.css"), "utf8")
+    expect(rule(global, ".prefs-item.paged-toggle")).toContain("display: none")
+  })
+
+  test("it prints on white paper as one long text, without its page buttons", () => {
+    expect(print).toContain('[data-look="eink"][data-theme="dark"]')
+    expect(rule(print, '  [data-look="eink"].paged .note.is-paged')).toContain("overflow: visible")
+    expect(rule(print, '  [data-look="eink"] .paged-bar')).toContain("display: none !important")
+  })
+})
+
+describe("paddy look", () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/paddy.css"), "utf8")
+
+  test("every rule is scoped to the paddy look", () => {
+    expectScoped("paddy.css", "paddy")
+  })
+
+  test("each step of growth has its rice, its field and its height of blade", () => {
+    for (const step of [0, 1, 2, 3]) {
+      const r = rule(css, `[data-look="paddy"] .garden-tile[data-growth="${step}"],\n[data-look="paddy"] .chip.garden-stage[data-growth="${step}"]`)
+      expect(r).toContain(`--rice: var(--rice-${step})`)
+      expect(r).toContain(`--field: var(--field-${step})`)
+      expect(r).toMatch(/--blade: \d+px/)
+    }
+  })
+
+  test("a terrace's fields stand on one bank, in reading order", () => {
+    const bed = rule(css, '[data-look="paddy"] .garden-bed')
+    expect(bed).toContain("flex-wrap: wrap")
+    expect(bed).toContain("align-items: flex-end")
+    expect(bed).not.toMatch(/order:|row-reverse/)
+  })
+
+  test("its fields stop moving for readers who ask for less motion, and print on white", () => {
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\[data-look="paddy"\] \.garden-tile,/)
+    const print = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/print.css"), "utf8")
+    expect(print).toContain('[data-look="paddy"][data-theme="dark"]')
+    expect(print).toContain('[data-look="paddy"] .note-head::after')
+  })
+})
+
 describe("seasonal garden", () => {
   const garden = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/garden.css"), "utf8")
   test("every season has a palette in each scheme, as weak as the look's own", () => {

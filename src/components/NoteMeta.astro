@@ -8,6 +8,7 @@ import PropValue from "./PropValue.astro"
 import { noteProperties } from "~/lib/properties"
 import { typeInfo } from "~/lib/types"
 import { baseStyle, isGarden } from "~/lib/look"
+import { growthStep } from "~/lib/garden"
 
 interface Props {
   note: Note
@@ -16,6 +17,8 @@ interface Props {
 }
 const { note, words, look } = Astro.props
 const garden = isGarden(look)
+// Garden styles colour the stage by how grown it is, as paddy fields do from seedling to harvest.
+const growth = garden ? growthStep(note.stage) : undefined
 const s = t(note.lang)
 const tagUrl = (tag: string) => slugToUrl(langPrefix(note.lang) + "tags/" + tag)
 const minutes = Math.max(1, Math.round(words / 220))
@@ -29,11 +32,11 @@ const tended =
   {
     note.stage &&
       (note.stage === stageFolder ? (
-        <a class:list={["chip stage", { "garden-stage": garden }]} href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
+        <a class:list={["chip stage", { "garden-stage": garden }]} data-growth={growth} href={slugToUrl(langPrefix(note.lang) + stageFolder) + "/"}>
           {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
         </a>
       ) : (
-        <span class:list={["chip stage", { "garden-stage": garden }]}>
+        <span class:list={["chip stage", { "garden-stage": garden }]} data-growth={growth}>
           {site.stages[note.stage].icon} {site.stages[note.stage].label[note.lang]}
         </span>
       ))

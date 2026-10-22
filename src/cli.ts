@@ -411,7 +411,8 @@ stages: {}
 # broadsheet: a newspaper, the home a front page and each top folder a section;
 # herbarium: notes as pressed specimens in a cabinet; manuscript: a book page with sidenotes;
 # lacquer: black lacquer, vermilion and gold leaf; zine: a photocopied cut-and-paste zine;
-# atlas: an old atlas, each top folder a region; catalog: a card catalogue with call numbers.
+# atlas: an old atlas, each top folder a region; catalog: a card catalogue with call numbers;
+# eink: an e-reader's still grey page; paddy: the garden as terraced rice fields.
 appearance:
   style: notebook
   folders: {}

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { resolveConfig, ConfigError } from "../src/site.config"
-import { LOOK_SCRIPT, readerLooks } from "../src/lib/look-switch"
+import { canTurnPages, LOOK_SCRIPT, readerLooks } from "../src/lib/look-switch"
 import { applyLook, LOOK_KEY, setupLookSwitch } from "../src/scripts/looks"
 import { installDom, type Dom } from "./client-dom"
 
@@ -16,6 +16,8 @@ describe("appearance.readerSwitch", () => {
       "manuscript",
       "lacquer",
       "zine",
+      "eink",
+      "paddy",
     ])
   })
   test("a list of styles, once each", () => {
@@ -31,6 +33,19 @@ describe("appearance.readerSwitch", () => {
     for (const style of ["wiki", "broadsheet", "herbarium", "atlas", "catalog"]) {
       expect(() => resolveConfig({ appearance: { readerSwitch: ["classic", style] } }, "/v")).toThrow(`${style} lays its pages out its own way`)
     }
+  })
+})
+
+describe("canTurnPages", () => {
+  test("a note in the e-ink style, or one the switch can draw in it", () => {
+    expect(canTurnPages("eink", [])).toBe(true)
+    expect(canTurnPages("classic", [])).toBe(false)
+    expect(canTurnPages("classic", ["notebook", "eink"])).toBe(true)
+    expect(canTurnPages("classic", ["notebook"])).toBe(false)
+    // A page the switch leaves alone keeps to its own style.
+    expect(canTurnPages("wiki", ["eink"])).toBe(false)
+    // The fixture leaves the switch off.
+    expect(canTurnPages("notebook")).toBe(false)
   })
 })
 

@@ -32,6 +32,8 @@ export const STYLES = [
   "zine",
   "atlas",
   "catalog",
+  "eink",
+  "paddy",
 ] as const
 export type Style = (typeof STYLES)[number]
 /** Tiles of a bento home, in their default order. */
@@ -504,7 +506,9 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
          * notebook: index cards on dotted paper; classic: the quiet serif blog look; garden: tiles sized by
          * maturity, recently tended first; herbarium: notes as pressed specimens; manuscript: a book page with
          * notes in its margin; lacquer: vermilion, black and gold leaf; zine: a cut-and-paste photocopied zine;
-         * atlas: an old atlas, each top folder a region; catalog: a library card catalogue with call numbers.
+         * atlas: an old atlas, each top folder a region; catalog: a library card catalogue with call numbers;
+         * eink: an e-reader's grey page, turned page by page if the reader likes; paddy: the garden as terraced
+         * rice fields.
          */
         style: z.enum(styles).default("notebook"),
         /** Folders whose notes use the other style, e.g. long-form writing. */

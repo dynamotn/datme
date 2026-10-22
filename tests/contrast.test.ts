@@ -163,11 +163,22 @@ function sheetPalette(file: string, selectors: string[]): Record<string, string>
   return Object.fromEntries(Object.entries(merged).map(([k, v]) => [k, resolve(v)]))
 }
 
+/** A see-through ground, such as `rgb(0 0 0 / 0.12)`, as it shows over the page; an opaque one as it is. */
+function overPage(color: string, page: string): string {
+  const alpha = color.match(/^rgba?\([^)]*\/\s*([\d.]+)(%?)\s*\)$/)
+  if (!alpha) return color
+  const a = parseFloat(alpha[1]) / (alpha[2] ? 100 : 1)
+  const [top, under] = [parseColor(color)!, parseColor(page)!]
+  return `rgb(${top.map((c, i) => Math.round(c * a + under[i] * (1 - a))).join(" ")})`
+}
+
 /** Text colours a look sets that read under WCAG AA on a ground it sets; none should be listed. */
 function unreadable(name: string, p: Record<string, string>): string[] {
   const out: string[] = p["--bg"] ? [] : [`${name}: no palette`]
   const check = (fg: string, bg: string) => {
-    if (p[fg] && p[bg] && ratio(p[fg], p[bg]) < 4.5) out.push(`${name}: ${fg} on ${bg} is ${ratio(p[fg], p[bg]).toFixed(2)}:1`)
+    if (!p[fg] || !p[bg]) return
+    const ground = overPage(p[bg], p["--bg"])
+    if (ratio(p[fg], ground) < 4.5) out.push(`${name}: ${fg} on ${bg} is ${ratio(p[fg], ground).toFixed(2)}:1`)
   }
   for (const fg of ["--ink", "--ink-2", "--muted", "--accent", "--earth", "--clay"])
     for (const bg of ["--bg", "--surface", "--surface-2", "--label", "--box-1", "--box-2", "--box-3", "--box-4", "--mark", "--land", "--sea"]) check(fg, bg)
@@ -189,6 +200,37 @@ describe("the palettes of the looks", () => {
       const light = `[data-look="${look}"]`
       expect(unreadable(`${look} light`, sheetPalette(`${look}.css`, [light]))).toEqual([])
       expect(unreadable(`${look} dark`, sheetPalette(`${look}.css`, [light, `${light}[data-theme="dark"]`]))).toEqual([])
+    }
+  })
+
+  test("eink reads at AA in both schemes, its accent ink included", () => {
+    const light = '[data-look="eink"]'
+    const ink = '[data-look="eink"][data-look="eink"][data-look="eink"]'
+    const dark = [`${light}[data-theme="dark"]`, '[data-look="eink"][data-look="eink"][data-theme="dark"]']
+    expect(unreadable("eink light", sheetPalette("eink.css", [light, ink]))).toEqual([])
+    expect(unreadable("eink dark", sheetPalette("eink.css", [light, ink, ...dark]))).toEqual([])
+  })
+
+  test("eink has no colour: every colour it sets is a grey", () => {
+    const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/eink.css"), "utf8")
+    for (const [hex] of css.matchAll(/#[0-9a-f]{6}\b/gi)) {
+      const [r, g, b] = parseColor(hex)!
+      expect({ hex, grey: r === g && g === b }).toEqual({ hex, grey: true })
+    }
+    for (const m of css.matchAll(/rgb\((\d+) (\d+) (\d+)/g)) expect(new Set(m.slice(1)).size).toBe(1)
+  })
+
+  test("paddy reads at AA in both schemes, on its page and on the field of every stage", () => {
+    const light = '[data-look="paddy"]'
+    expect(unreadable("paddy light", sheetPalette("paddy.css", [light]))).toEqual([])
+    expect(unreadable("paddy dark", sheetPalette("paddy.css", [light, `${light}[data-theme="dark"]`]))).toEqual([])
+    for (const scheme of ["light", "dark"] as const) {
+      const vars = palette("paddy", scheme)
+      for (const bg of ["--field-0", "--field-1", "--field-2", "--field-3", "--field-none"]) {
+        for (const fg of ["--ink", "--ink-2", "--muted", "--earth", "--accent"]) {
+          expect({ scheme, fg, bg, ok: contrast(vars, fg, bg) >= 4.5 }).toEqual({ scheme, fg, bg, ok: true })
+        }
+      }
     }
   })
 

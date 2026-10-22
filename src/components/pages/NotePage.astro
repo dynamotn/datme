@@ -6,6 +6,7 @@ import { encrypt } from "~/lib/encrypt"
 import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
 import { explainFrame, explainLook, isGarden, baseStyle } from "~/lib/look"
+import { canTurnPages } from "~/lib/look-switch"
 import { stageOf } from "~/lib/garden"
 import { callNumber } from "~/lib/catalog"
 import { ownGroup, previewNote, previewOf } from "~/lib/dev-look"
@@ -101,6 +102,8 @@ const wiki = baseStyle(look) === "wiki"
 // The herbarium is the garden pressed: the same stages and wording, and a label card on each sheet.
 const garden = isGarden(look)
 const stageIcon = (n: Note) => stageOf(n)?.icon
+// The e-ink style can lay a note out in pages as tall as the screen, turned with the keys or a tap.
+const paged = plain && canTurnPages(look)
 // A book, a film or a project of a collection shows its cover beside its title.
 const item = itemOf(note)
 // A now page says when it was last true, and warns once it is three months old.
@@ -120,7 +123,7 @@ const feed = note.protected
         : undefined
 ---
 
-<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} feed={feed} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>
+<Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} feed={feed} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"} paged={paged}>
   {/* Stacked pages belong to the full frame, the only one with their toggle. */}
   <div class="stack-row" data-stack-row={stacks ? "" : undefined}>
   <div class="stack-col" data-stack-col={stacks ? "" : undefined} data-url={stacks ? note.url : undefined} data-title={title}>
@@ -278,6 +281,19 @@ const feed = note.protected
     }
     {packFooter !== undefined && <footer class="pack-slot pack-note-footer" data-slot="note-footer" set:html={packFooter} />}
   </article>
+  {
+    paged && (
+      <nav class="paged-bar" data-paged-bar aria-label={s.pages} hidden>
+        <button type="button" data-paged-prev aria-label={s.previousPage} title={s.previousPage}>
+          ‹
+        </button>
+        <span data-paged-count data-template={s.pageOf} aria-live="polite" />
+        <button type="button" data-paged-next aria-label={s.nextPage} title={s.nextPage}>
+          ›
+        </button>
+      </nav>
+    )
+  }
   {plain && <section class="backlinks">
     <h2>{garden ? s.pathsFromHere : s.backlinks} <span class="count">{backlinks.length}</span></h2>
     {

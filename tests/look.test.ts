@@ -196,7 +196,7 @@ describe("startsDark", () => {
 })
 
 describe("isGarden", () => {
-  test("the herbarium shows the garden, pressed; the other styles do not", () => {
-    expect(STYLES.filter(isGarden)).toEqual(["garden", "herbarium"])
+  test("the herbarium and the paddy fields show the garden, pressed or terraced; the other styles do not", () => {
+    expect(STYLES.filter(isGarden)).toEqual(["garden", "herbarium", "paddy"])
   })
 })

@@ -1,5 +1,5 @@
 # A site in the garden style, with three stages, a classic folder, a herbarium
-# folder, and colours that follow the southern seasons.
+# folder, a paddy folder, and colours that follow the southern seasons.
 site:
   title: Garden test
 languages: [en-US]
@@ -13,4 +13,5 @@ appearance:
   classic: [Writing]
   folders:
     Sources: herbarium
+    Seeds: paddy
   seasons: { hemisphere: south }

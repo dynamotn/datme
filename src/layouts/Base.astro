@@ -16,6 +16,8 @@ import lacquerCss from "~/styles/lacquer.css?url"
 import zineCss from "~/styles/zine.css?url"
 import atlasCss from "~/styles/atlas.css?url"
 import catalogCss from "~/styles/catalog.css?url"
+import einkCss from "~/styles/eink.css?url"
+import paddyCss from "~/styles/paddy.css?url"
 import printCss from "~/styles/print.css?url"
 import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style, type StyleName } from "~/site.config"
@@ -71,6 +73,8 @@ interface Props {
   oembed?: string
   /** Keep the page out of search engines, e.g. a draft built for preview. */
   noindex?: boolean
+  /** A note the e-ink style can lay out in pages: the View menu offers to turn them. */
+  paged?: boolean
   /**
    * The page's own style and frame with the rules that chose them, for the switcher of `datme dev`;
    * `shape` is its layout, on the pages that can take one.
@@ -93,6 +97,7 @@ const {
   mdAlternate,
   oembed,
   noindex = false,
+  paged = false,
   explained = {
     look: Astro.props.look === undefined ? explainDefault(lang) : { value: ownLook, rule: { kind: "site" } },
     frame: { value: ownFrame, rule: { kind: "default" } },
@@ -147,6 +152,8 @@ const LOOK_CSS: Partial<Record<Style, string>> = {
   zine: zineCss,
   atlas: atlasCss,
   catalog: catalogCss,
+  eink: einkCss,
+  paddy: paddyCss,
 }
 // A style draws as its built-in base, with the stylesheets a theme pack adds for it after that one's.
 const draw = (style: StyleName) => {
@@ -251,6 +258,8 @@ const packBand = drawSlot("footer-band", look, lang, { author: site.author, year
             reader = localStorage.getItem("reader")
             hidden = localStorage.getItem("sidebars") || ""
             doc.documentElement.classList.toggle("stack-mode", localStorage.getItem("stack") === "1")
+            // Paged reading of the e-ink style (src/scripts/paged.ts); the other styles ignore the class.
+            doc.documentElement.classList.toggle("paged", localStorage.getItem("paged") === "1")
           } catch {}
           // Same order as initialTheme (src/lib/theme-init.ts): the stored choice, the page's own
           // default, the scheme set in datme.yaml (both on <html>), then the system's.
@@ -371,6 +380,13 @@ const packBand = drawSlot("footer-band", look, lang, { author: site.author, year
                   <button class="prefs-item" type="button" data-reader-toggle aria-pressed="false">
                     <Icon name="book" /> {s.readerMode}
                   </button>
+                  {
+                    paged && (
+                      <button class="prefs-item paged-toggle" type="button" data-paged-toggle aria-pressed="false">
+                        <Icon name="pages" /> {s.turnPages}
+                      </button>
+                    )
+                  }
                 </div>
                 <div class="prefs-group" role="group" aria-label={s.prefs}>
                   <span class="prefs-label">{s.prefs}</span>

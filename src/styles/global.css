@@ -3322,6 +3322,10 @@ li > .flashcard {
   text-align: start;
   cursor: pointer;
 }
+/* Turning pages is the e-ink style's; eink.css shows its toggle. */
+.prefs-item.paged-toggle {
+  display: none;
+}
 .prefs-item .icon {
   width: 16px;
   height: 16px;

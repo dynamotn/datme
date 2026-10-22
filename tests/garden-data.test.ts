@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { gardenChips, gardenOrder, seasonOf, stageOf, tileSize, topTags } from "../src/lib/garden"
+import { gardenChips, gardenOrder, growthStep, seasonOf, stageOf, tileSize, topTags } from "../src/lib/garden"
 import { listed } from "../src/lib/vault"
 import { site } from "../src/site.config"
 
@@ -17,6 +17,18 @@ describe("garden data", () => {
     expect(tileSize("b", s(["a", "b"]))).toBe("large")
     expect(tileSize("a", s(["a"]))).toBe("medium")
     expect(tileSize("a", {})).toBe("medium")
+  })
+
+  test("growth steps spread the stages from the first shoot to the harvest", () => {
+    const four = s(["seed", "sprout", "tree", "old"])
+    expect(["seed", "sprout", "tree", "old"].map((k) => growthStep(k, four))).toEqual([0, 1, 2, 3])
+    expect(["a", "b", "c"].map((k) => growthStep(k, s(["a", "b", "c"])))).toEqual([0, 2, 3])
+    expect(["a", "b"].map((k) => growthStep(k, s(["a", "b"])))).toEqual([0, 3])
+    expect(growthStep("a", s(["a"]))).toBe(1)
+    expect(growthStep(undefined, four)).toBeUndefined()
+    expect(growthStep("nope", four)).toBeUndefined()
+    // The fixture's own stages, by default.
+    expect(growthStep(Object.keys(site.stages)[0])).toBe(0)
   })
 
   test("the garden opens on its most mature note and mixes stages, newest first within each", () => {

@@ -304,5 +304,10 @@
   "questionAnswer": "回答",
   "digestWeek": "{year}年 第{week}週",
   "digestFeed": "週間ダイジェスト (RSS)",
-  "wishPriority": "優先度"
+  "wishPriority": "優先度",
+  "turnPages": "ページをめくる",
+  "pages": "ページ",
+  "pageOf": "{total} ページ中 {n} ページ",
+  "previousPage": "前のページ",
+  "nextPage": "次のページ"
 }

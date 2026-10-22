@@ -95,6 +95,7 @@ describe("broadsheet look", () => {
       ["/Shell/", "Shell"],
       ["/Plans/", "Plans"],
       ["/Wiki/", "Wiki"],
+      ["/Reader/", "Reader"],
       ["/Zine/", "Zine"],
       ["/Atlas/", "Atlas"],
       ["/03-Atoms/", "Atoms"],
@@ -166,10 +167,35 @@ describe("catalog look", () => {
   })
 })
 
+describe("eink look", () => {
+  test("a note in an eink folder links its sheet, opens light and offers to turn its pages", () => {
+    const html = read("Reader/Long-read/index.html")
+    expect(html).toContain('data-look="eink"')
+    expect(html).not.toContain("data-scheme-default")
+    expect(lookSheet(html)).toBe("eink")
+    expect(html).toContain('<meta name="theme-color" content="#f4f4f4" media="(prefers-color-scheme: light)"')
+    expect(html).toMatch(/<button class="prefs-item paged-toggle" type="button" data-paged-toggle aria-pressed="false">[\s\S]*?Turn pages\s*<\/button>/)
+    const bar = html.match(/<nav class="paged-bar"[\s\S]*?<\/nav>/)![0]
+    expect(bar).toContain('aria-label="Pages" hidden')
+    expect(bar).toContain('<button type="button" data-paged-prev aria-label="Previous page" title="Previous page">')
+    expect(bar).toContain('<span data-paged-count data-template="Page {n} of {total}" aria-live="polite"></span>')
+    // The page bar follows the note; the text stays one article in reading order.
+    expect(html.indexOf("</article>")).toBeLessThan(html.indexOf('class="paged-bar"'))
+    expect(html).toContain('doc.documentElement.classList.toggle("paged", localStorage.getItem("paged") === "1")')
+  })
+
+  test("only a note that can be shown in the eink style can be paged", () => {
+    for (const page of ["Shell/Uptime/index.html", "Reader/index.html", "index.html"]) {
+      expect(read(page)).not.toContain("data-paged-toggle")
+      expect(read(page)).not.toContain("paged-bar")
+    }
+  })
+})
+
 describe("accessibility of the looks", () => {
   const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
   // As tests/a11y.test.ts: serious and critical axe violations of the markup, scripts not run.
-  const PAGES = ["index.html", "Essays/index.html", "Essays/On-walking/index.html", "News/index.html", "Wiki/Zettelkasten/index.html", "Shell/Uptime/index.html", "Plans/Pump/index.html", "Zine/Cut-and-paste/index.html", "Atlas/index.html", "Atlas/North/Harbour-town/index.html", "03-Atoms/index.html", "03-Atoms/Code/Hash-map/index.html"]
+  const PAGES = ["index.html", "Essays/index.html", "Essays/On-walking/index.html", "News/index.html", "Wiki/Zettelkasten/index.html", "Shell/Uptime/index.html", "Plans/Pump/index.html", "Zine/Cut-and-paste/index.html", "Atlas/index.html", "Atlas/North/Harbour-town/index.html", "03-Atoms/index.html", "03-Atoms/Code/Hash-map/index.html", "Reader/Long-read/index.html", "Reader/index.html"]
   for (const page of PAGES) {
     test(`${page} has no serious or critical axe violations`, async () => {
       const window = new Window({ url: "https://example.com/", settings: { disableJavaScriptEvaluation: false } })

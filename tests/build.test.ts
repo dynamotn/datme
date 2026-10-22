@@ -532,7 +532,7 @@ describe("static build", () => {
     expect(trail).toContain("4 bước")
     expect(trail).not.toContain("<dt>trail")
     // A stage set by property is a chip, not a link to its folder, and not a property.
-    expect(trail).toMatch(/<span class="chip stage garden-stage">\s*⚛️ Nguyên tử\s*<\/span>/)
+    expect(trail).toMatch(/<span class="chip stage garden-stage" data-growth="\d">\s*⚛️ Nguyên tử\s*<\/span>/)
     expect(trail).not.toContain("<dt>stage")
     const stop = read("06_Reference/Niklas-Luhmann/index.html")
     expect(stop).toMatch(/<aside class="trail-bar" data-trail="\/05_Structure\/First-walk" aria-label="Lối dạo: First walk" hidden>/)

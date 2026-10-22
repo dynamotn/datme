@@ -170,7 +170,7 @@ afterEach(() => {
 describe("slots on the site", () => {
   const card = compileTemplate(`<h3><a href="{{url}}">{{title}}</a></h3><p>{{excerpt}}</p><small>{{siteTitle}} {{home}} {{lang}}</small>`, "note-card").nodes
   const own = compileTemplate(`<p class="own">{{title}}</p>`, "note-card").nodes
-  const pack = { dir: "/p", css: [], fonts: [], templates: { "note-card": card }, styles: { ink: { base: "classic", css: [], templates: { "note-card": own } }, plain: { base: "classic", css: [] } } }
+  const pack = { dir: "/p", css: [], fonts: [], file: "theme.yaml", accent: false, templates: { "note-card": card }, styles: { ink: { base: "classic", css: [], templates: { "note-card": own } }, plain: { base: "classic", css: [] } } }
 
   test("nothing without a pack or a template for the slot", () => {
     expect(drawSlot("note-card", "classic", "en-US")).toBeUndefined()

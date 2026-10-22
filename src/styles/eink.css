@@ -1,0 +1,260 @@
+/*
+ * E-ink look: a page of an e-reader. Grey ink on grey paper, no colour, no
+ * transition or animation of any kind (a refresh of e-paper is slow and
+ * flashes), large Literata with generous leading, and nothing that shows only
+ * on hover. On a note, the View menu offers to turn pages instead of
+ * scrolling: the note is laid out in columns as tall as the screen
+ * (src/scripts/paged.ts turns them). Everything is scoped to
+ * [data-look="eink"].
+ */
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/literata/opsz-italic.css";
+
+[data-look="eink"] {
+  --bg: #f4f4f4;
+  --surface: #fbfbfb;
+  --surface-2: #eaeaea;
+  --surface-3: #dedede;
+  --ink: #111111;
+  --ink-2: #2b2b2b;
+  --muted: #4d4d4d;
+  --line: #c8c8c8;
+  --line-strong: #8a8a8a;
+  --clay: #2b2b2b;
+  --clay-soft: rgb(0 0 0 / 0.06);
+  --mark: rgb(0 0 0 / 0.12);
+  --mark-red: rgb(0 0 0 / 0.12);
+  --mark-orange: rgb(0 0 0 / 0.12);
+  --mark-yellow: rgb(0 0 0 / 0.12);
+  --mark-green: rgb(0 0 0 / 0.12);
+  --mark-blue: rgb(0 0 0 / 0.12);
+  --mark-purple: rgb(0 0 0 / 0.12);
+  --title-grad: linear-gradient(#111111, #111111);
+  --shadow: none;
+  --shadow-sm: none;
+  --shadow-lg: 0 0 0 2px #111111;
+  --font-ui: "Literata Variable", "Literata", Georgia, serif;
+  --font-read: "Literata Variable", "Literata", Georgia, serif;
+  --font-heading: "Literata Variable", "Literata", Georgia, serif;
+  --radius: 4px;
+  --radius-sm: 3px;
+  --measure: 40rem;
+  /* The space between two pages of the paged mode. */
+  --page-gap: 48px;
+}
+
+[data-look="eink"][data-theme="dark"] {
+  --bg: #161616;
+  --surface: #1e1e1e;
+  --surface-2: #2a2a2a;
+  --surface-3: #353535;
+  --ink: #ececec;
+  --ink-2: #d4d4d4;
+  --muted: #b5b5b5;
+  --line: #474747;
+  --line-strong: #8c8c8c;
+  --clay: #d4d4d4;
+  --clay-soft: rgb(255 255 255 / 0.08);
+  --mark: rgb(255 255 255 / 0.16);
+  --mark-red: rgb(255 255 255 / 0.16);
+  --mark-orange: rgb(255 255 255 / 0.16);
+  --mark-yellow: rgb(255 255 255 / 0.16);
+  --mark-green: rgb(255 255 255 / 0.16);
+  --mark-blue: rgb(255 255 255 / 0.16);
+  --mark-purple: rgb(255 255 255 / 0.16);
+  --title-grad: linear-gradient(#ececec, #ececec);
+  --shadow-lg: 0 0 0 2px #ececec;
+}
+
+/*
+ * The accent is ink too. Tripled so it outranks theme.accent and the reader's
+ * high-contrast blue (src/lib/theme.ts, global.css): e-paper has no colour.
+ */
+[data-look="eink"][data-look="eink"][data-look="eink"] {
+  --accent: #111111;
+  --accent-2: #2b2b2b;
+  --accent-soft: rgb(0 0 0 / 0.08);
+  --on-accent: #fff;
+}
+[data-look="eink"][data-look="eink"][data-theme="dark"] {
+  --accent: #ececec;
+  --accent-2: #d4d4d4;
+  --accent-soft: rgb(255 255 255 / 0.1);
+  --on-accent: #111111;
+}
+
+/* E-paper redraws slowly: nothing fades, slides or spins, whatever the reader's motion setting. */
+[data-look="eink"] *,
+[data-look="eink"] *::before,
+[data-look="eink"] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+/* Pictures and marks in greys; emoji in the text keep the device's own rendering. */
+[data-look="eink"] img,
+[data-look="eink"] picture,
+[data-look="eink"] video,
+[data-look="eink"] iframe,
+[data-look="eink"] canvas,
+[data-look="eink"] svg,
+[data-look="eink"] .brand-mark,
+[data-look="eink"] .chip,
+[data-look="eink"] .banner {
+  filter: grayscale(1);
+}
+
+[data-look="eink"] body {
+  background: var(--bg);
+  font-family: var(--font-read);
+}
+
+/* ---------- type: large, open, one book face ---------- */
+[data-look="eink"] .prose {
+  font-size: calc(1.36rem * var(--reading-scale, 1));
+  line-height: 1.8;
+  hyphens: auto;
+}
+[data-look="eink"] .note-title,
+[data-look="eink"] .page-head h1,
+[data-look="eink"] .prose h1,
+[data-look="eink"] .prose h2,
+[data-look="eink"] .prose h3,
+[data-look="eink"] .prose h4 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+[data-look="eink"] .note-title {
+  font-size: clamp(2.1rem, 1.6rem + 2vw, 3rem);
+  line-height: 1.15;
+}
+[data-look="eink"] .gradient-text {
+  background: none;
+  color: var(--ink);
+}
+/* Links are told apart by their underline, never by a colour. */
+[data-look="eink"] .prose a,
+[data-look="eink"] .prose a.internal {
+  color: var(--ink);
+  background: none;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.18em;
+}
+[data-look="eink"] .prose a.internal {
+  text-decoration-style: solid;
+}
+[data-look="eink"] .prose a.external {
+  text-decoration-style: dotted;
+}
+[data-look="eink"] .prose a:focus-visible,
+[data-look="eink"] :focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+[data-look="eink"] .prose blockquote {
+  border-left: 3px solid var(--ink);
+  background: none;
+}
+[data-look="eink"] .prose pre,
+[data-look="eink"] .prose code {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+[data-look="eink"] .site-header {
+  background: var(--bg);
+  border-bottom: 2px solid var(--ink);
+  backdrop-filter: none;
+}
+[data-look="eink"] .brand-mark {
+  background: var(--ink);
+  color: var(--bg);
+}
+[data-look="eink"] .chip {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+[data-look="eink"] .note-card,
+[data-look="eink"] .backlink,
+[data-look="eink"] .index-card {
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+}
+
+/* ---------- nothing only on hover: what a mouse would reveal is always there ---------- */
+[data-look="eink"] .heading-anchor,
+[data-look="eink"] .copy-btn {
+  opacity: 1;
+}
+
+/* ---------- paged reading ---------- */
+[data-look="eink"] .prefs-item.paged-toggle {
+  display: flex;
+}
+[data-look="eink"] .paged-bar {
+  display: none;
+}
+/* The note in columns as tall as the screen; src/scripts/paged.ts scrolls from one to the next. */
+[data-look="eink"].paged .note.is-paged {
+  height: calc(100svh - var(--header-h) - 7.5rem);
+  min-height: 18rem;
+  columns: 1;
+  column-gap: var(--page-gap);
+  column-fill: auto;
+  overflow: hidden;
+}
+[data-look="eink"].paged .note.is-paged img,
+[data-look="eink"].paged .note.is-paged video,
+[data-look="eink"].paged .note.is-paged figure,
+[data-look="eink"].paged .note.is-paged pre,
+[data-look="eink"].paged .note.is-paged table,
+[data-look="eink"].paged .note.is-paged .callout {
+  max-height: calc(100svh - var(--header-h) - 9rem);
+  break-inside: avoid;
+}
+[data-look="eink"].paged .note.is-paged img {
+  object-fit: contain;
+}
+[data-look="eink"].paged .note.is-paged .reading-progress {
+  display: none;
+}
+[data-look="eink"].paged .paged-bar:not([hidden]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: var(--measure);
+  margin: 12px auto 0;
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+[data-look="eink"] .paged-bar button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+[data-look="eink"] .paged-bar button:disabled {
+  border-color: var(--line-strong);
+  color: var(--muted);
+  cursor: default;
+}
+
+@media (max-width: 520px) {
+  [data-look="eink"] .prose {
+    font-size: calc(1.2rem * var(--reading-scale, 1));
+    line-height: 1.75;
+  }
+  [data-look="eink"] {
+    --page-gap: 32px;
+  }
+}

@@ -102,6 +102,14 @@ type never leaves the page. Nothing loads until they press the button. It needs
   (Atkinson Hyperlegible) or high contrast. When the site offers it
   (`appearance.readerSwitch`), a Style group restyles every page in another
   of its styles. Every choice stays in the reader's browser.
+- **Turning pages:** on a note in the `eink` style (or one the Style group
+  can draw in it), "Turn pages" in the View menu lays the note out in pages as
+  tall as the screen, as an e-reader does. Page Down and the right arrow turn
+  to the next, Page Up and the left arrow back (swapped in right-to-left
+  languages); so does a tap on the right or left edge of the page, or the
+  buttons under it beside "Page 2 of 7". A link reached with Tab turns to its
+  page, screen readers and find-in-page read the note as one text, and it
+  prints as one long page.
 - **Graphs:** the wheel zooms a graph around the pointer, and the + and −
   buttons in its corner zoom it for readers without one.
 - **Languages:** with several languages, the header shows the current one;

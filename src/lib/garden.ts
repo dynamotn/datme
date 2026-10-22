@@ -45,6 +45,22 @@ export function tileSize(stage: string | undefined, stages: Record<string, Stage
   return i === keys.length - 1 ? "large" : "medium"
 }
 
+/** Steps of growth a style can colour, from the first shoot to the harvest. */
+export const GROWTH_STEPS = 4
+
+/**
+ * Where a stage stands among `GROWTH_STEPS` steps of growth, 0 for the least mature, the last
+ * for the most, the others spread between; one stage alone is a young plant, step 1. Paddy fields
+ * read the steps as seedling, young rice, ripening and the golden harvest. None without a stage.
+ */
+export function growthStep(stage: string | undefined, stages: Record<string, StageDef> = site.stages): number | undefined {
+  const keys = ranked(stages)
+  const i = stage ? keys.indexOf(stage) : -1
+  if (i < 0) return undefined
+  if (keys.length < 2) return 1
+  return Math.round((i / (keys.length - 1)) * (GROWTH_STEPS - 1))
+}
+
 /**
  * Stages dealt in turns, most mature first, so the bed opens on an evergreen
  * and every column mixes sizes. Within a stage, newest first; notes without a

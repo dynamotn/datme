@@ -4,7 +4,7 @@ import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
 import { formatDate, t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
-import { stageOf, tileSize } from "~/lib/garden"
+import { growthStep, stageOf, tileSize } from "~/lib/garden"
 
 interface Props {
   note: Note
@@ -25,6 +25,7 @@ const tended = note.updated ? formatDate(note.updated, note.lang) : ""
   class={variant ? `garden-tile is-${variant}` : "garden-tile"}
   data-size={size}
   data-stage={note.stage ?? ""}
+  data-growth={growthStep(note.stage)}
   data-folder={note.dir.split("/")[0]}
   data-tags={tags.join(" ")}
 >

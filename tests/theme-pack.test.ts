@@ -181,7 +181,7 @@ describe("theme.preset in datme.yaml", () => {
     expect(Object.keys(c.pack!.templates!)).toEqual(["footer-band", "note-footer"])
     expect(c.appearance.folders).toEqual({ Ink: "ink" })
     // The pack's style has templates of its own, so readers cannot pick it.
-    expect(c.appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine"])
+    expect(c.appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine", "eink", "paddy"])
     // appearance.style is set, so the pack's style is not the site's.
     expect(c.appearance.style).toBe("classic")
     expect(c.warnings.map((w) => w.file)).toEqual(Array(10).fill(".datme/themes/ink/theme.yaml"))
@@ -213,7 +213,7 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.appearance.style).toBe("notebook")
     expect(resolveConfig({ theme: { preset: "b" } }, vault).warnings[0].message).toContain("style 3 is no style")
     // A style built on a résumé is no style for a whole site.
-    expect(resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine"])
+    expect(resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: true } }, vault).appearance.readerSwitch).toEqual(["notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine", "eink", "paddy"])
     expect(() => resolveConfig({ theme: { preset: "a" }, appearance: { readerSwitch: ["cv"] } }, vault)).toThrow("cv is made for a single page")
   })
   test("a preset not found is a warning against datme.yaml; no preset reads nothing", () => {

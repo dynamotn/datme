@@ -203,8 +203,10 @@ export function startsDark(look: StyleName): boolean {
   return DARK_FIRST.includes(baseStyle(look))
 }
 
+/** Styles that show the garden: the garden itself, pressed in a herbarium, or terraced into rice fields. */
+const GARDENS: readonly Style[] = ["garden", "herbarium", "paddy"]
+
 /** Whether a style shows the garden: notes in beds by stage, with its planted and tended wording. */
 export function isGarden(look: StyleName): boolean {
-  const base = baseStyle(look)
-  return base === "garden" || base === "herbarium"
+  return GARDENS.includes(baseStyle(look))
 }

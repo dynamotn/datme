@@ -44,7 +44,7 @@ that folder's page.
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
 | `layout` | A page made for what the note holds: `cv`, `gallery`, `projects`, `books`… see [Page layouts](#page-layouts) |
-| `style` | The look of this page: `notebook`, `classic`, `garden`, `herbarium`, `manuscript`, `lacquer`, `zine`, `atlas`, `catalog`, `terminal`, `blueprint`, `wiki`, `broadsheet`, `resume`, `darkroom` or a style of the theme pack. See [Page layouts](#page-layouts) |
+| `style` | The look of this page: `notebook`, `classic`, `garden`, `herbarium`, `paddy`, `manuscript`, `lacquer`, `zine`, `atlas`, `catalog`, `eink`, `terminal`, `blueprint`, `wiki`, `broadsheet`, `resume`, `darkroom` or a style of the theme pack. See [Page layouts](#page-layouts) |
 | `chrome` | The frame around the page: `full`, or `minimal` for a thin bar with no menu, search or sidebars |
 | `cover` | The picture that stands for the note in a collection and beside its title (a vault file or a URL); the banner otherwise |
 | `cssclasses` | Classes added to the note, as in Obsidian |
@@ -207,7 +207,10 @@ dark unless the reader chose a theme; `zine` pastes its blocks down at an
 angle under tape, in mismatched boxes on grainy photocopy paper; `atlas`
 letters the note's region (its top folder) above its title on parchment with
 a compass rose; `catalog` types it on a catalogue card under a call number
-made from its folders, such as `03.ATO · Code`. See [Look and
+made from its folders, such as `03.ATO · Code`; `eink` is an e-reader's grey page,
+still and in large type, which the reader can turn page by page; `paddy`
+plants it in a terraced rice field, its stage the rice from seedling to
+golden harvest. See [Look and
 navigation](configuration.md#look-and-navigation).
 
 To override, set `style` and `chrome` on the note: `style: notebook` and

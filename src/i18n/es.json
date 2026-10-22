@@ -304,5 +304,10 @@
   "questionAnswer": "Respuesta",
   "digestWeek": "Semana {week}, {year}",
   "digestFeed": "Resumen semanal (RSS)",
-  "wishPriority": "Prioridad"
+  "wishPriority": "Prioridad",
+  "turnPages": "Pasar páginas",
+  "pages": "Páginas",
+  "pageOf": "Página {n} de {total}",
+  "previousPage": "Página anterior",
+  "nextPage": "Página siguiente"
 }

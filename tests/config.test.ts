@@ -221,8 +221,8 @@ describe("menu and appearance", () => {
     expect(() => seasons({ hemisphere: "east" })).toThrow()
   })
 
-  test("the herbarium, manuscript and lacquer styles", () => {
-    for (const style of ["herbarium", "manuscript", "lacquer"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
+  test("the herbarium, manuscript, lacquer, eink and paddy styles", () => {
+    for (const style of ["herbarium", "manuscript", "lacquer", "eink", "paddy"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
   })
   test("the zine, atlas and catalog styles", () => {
     for (const style of ["zine", "atlas", "catalog"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)

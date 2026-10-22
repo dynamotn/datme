@@ -22,6 +22,8 @@ export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
   zine: { light: "#ecebe6", dark: "#161514" },
   atlas: { light: "#eadcb8", dark: "#141a1b" },
   catalog: { light: "#e4d6bb", dark: "#1a1612" },
+  eink: { light: "#f4f4f4", dark: "#161616" },
+  paddy: { light: "#eef3e6", dark: "#0f1a17" },
 }
 
 /** The web app manifest: lets readers install the garden and open it like an app. */

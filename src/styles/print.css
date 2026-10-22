@@ -31,7 +31,11 @@
   [data-look="atlas"],
   [data-look="atlas"][data-theme="dark"],
   [data-look="catalog"],
-  [data-look="catalog"][data-theme="dark"] {
+  [data-look="catalog"][data-theme="dark"],
+  [data-look="eink"],
+  [data-look="eink"][data-theme="dark"],
+  [data-look="paddy"],
+  [data-look="paddy"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;
@@ -63,7 +67,9 @@
   [data-look="garden"],
   [data-look="garden"][data-theme="dark"],
   [data-look="herbarium"],
-  [data-look="herbarium"][data-theme="dark"] {
+  [data-look="herbarium"][data-theme="dark"],
+  [data-look="paddy"],
+  [data-look="paddy"][data-theme="dark"] {
     --earth: #000;
     --growth-small: #fff;
     --growth-medium: #f4f4f2;
@@ -106,6 +112,32 @@
   }
   [data-look="herbarium"] .specimen-label {
     break-inside: avoid;
+  }
+  /* A paged e-ink note prints as one long text, without its page buttons. */
+  [data-look="eink"][data-look="eink"][data-look="eink"],
+  [data-look="eink"][data-look="eink"][data-theme="dark"] {
+    --accent: #000;
+    --accent-2: #000;
+    --accent-soft: transparent;
+  }
+  [data-look="eink"].paged .note.is-paged {
+    height: auto;
+    columns: auto;
+    overflow: visible;
+  }
+  [data-look="eink"] .paged-bar {
+    display: none !important;
+  }
+  /* The terraces print as a plain bed, without water or straw. */
+  [data-look="paddy"] .garden-tile,
+  [data-look="paddy"] article.note {
+    background: #fff;
+    box-shadow: none;
+  }
+  [data-look="paddy"] .garden-filters,
+  [data-look="paddy"] .garden-more,
+  [data-look="paddy"] .note-head::after {
+    display: none !important;
   }
   /* Lacquer keeps its gold rules, in ink. */
   [data-look="lacquer"],

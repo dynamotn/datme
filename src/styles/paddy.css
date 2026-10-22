@@ -1,0 +1,531 @@
+/*
+ * Paddy look: the garden as terraced rice fields of the northern Vietnamese
+ * hills. Beds become terraces stepping down the slope, each field curved
+ * along its contour above an earth bank; a note's stage reads as the rice in
+ * it, from seedling (mạ) through young rice and ripening to the golden
+ * harvest, in that stage's colour (the step comes from the garden's own data,
+ * data-growth of src/lib/garden.ts). Water lies under every field and the
+ * terraces are mirrored in it under a note's title. It shows the garden's
+ * own markup (beds, stages, filters, planted and tended), so only its colours
+ * and shapes live here. Everything is scoped to [data-look="paddy"].
+ */
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/literata/opsz-italic.css";
+
+[data-look="paddy"] {
+  --bg: #eef3e6;
+  --surface: #f8faf2;
+  --surface-2: #e4ecd8;
+  --surface-3: #d7e2c8;
+  --ink: #1d2719;
+  --ink-2: #364330;
+  --muted: #4f5c47;
+  --line: #d3dec4;
+  --line-strong: #a9bc94;
+  --accent: #2f6328;
+  --accent-2: #6a4a1c;
+  --accent-soft: rgb(47 99 40 / 0.12);
+  --on-accent: #fff;
+  /* The banks between the fields, darkened to read as small text. */
+  --earth: #6a4a1c;
+  --clay: var(--earth);
+  --clay-soft: rgb(106 74 28 / 0.12);
+  /* The rice through the year: seedling, young rice, ripening, harvest. */
+  --rice-0: #a6d36a;
+  --rice-1: #5c9e3c;
+  --rice-2: #a9ad35;
+  --rice-3: #dcae32;
+  --water: #c9dfe0;
+  --water-line: rgb(255 255 255 / 0.7);
+  /* A field of each step, the ground its text reads on. */
+  --field-0: color-mix(in srgb, var(--rice-0) 22%, var(--surface));
+  --field-1: color-mix(in srgb, var(--rice-1) 20%, var(--surface));
+  --field-2: color-mix(in srgb, var(--rice-2) 24%, var(--surface));
+  --field-3: color-mix(in srgb, var(--rice-3) 28%, var(--surface));
+  --field-none: color-mix(in srgb, var(--water) 45%, var(--surface));
+  --title-grad: linear-gradient(135deg, #2f6328 0%, #7d8c1e 55%, #a8770f 100%);
+  --shadow: 0 1px 2px rgb(30 50 20 / 0.06), 0 10px 24px -16px rgb(30 50 20 / 0.3);
+  --font-ui: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-read: "Literata Variable", "Literata", Georgia, serif;
+  --font-heading: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --radius: 14px;
+  --radius-sm: 10px;
+}
+
+[data-look="paddy"][data-theme="dark"] {
+  --bg: #0f1a17;
+  --surface: #15231f;
+  --surface-2: #1c2e28;
+  --surface-3: #243a32;
+  --ink: #e8eedc;
+  --ink-2: #cfd8c2;
+  --muted: #a9b59d;
+  --line: #24372f;
+  --line-strong: #39523f;
+  --accent: #9fd27c;
+  --accent-2: #e0bb62;
+  --accent-soft: rgb(159 210 124 / 0.14);
+  --on-accent: #0f1a17;
+  --earth: #d9b06a;
+  --clay-soft: rgb(217 176 106 / 0.14);
+  --rice-0: #b8e486;
+  --rice-1: #78bd55;
+  --rice-2: #c2c351;
+  --rice-3: #e8bd4c;
+  --water: #1f4447;
+  --water-line: rgb(190 230 230 / 0.25);
+  --field-0: color-mix(in srgb, var(--rice-0) 12%, var(--surface));
+  --field-1: color-mix(in srgb, var(--rice-1) 14%, var(--surface));
+  --field-2: color-mix(in srgb, var(--rice-2) 14%, var(--surface));
+  --field-3: color-mix(in srgb, var(--rice-3) 16%, var(--surface));
+  --field-none: color-mix(in srgb, var(--water) 40%, var(--surface));
+  --title-grad: linear-gradient(135deg, #9fd27c 0%, #c9cc5c 50%, #e8bd4c 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 10px 24px -16px rgb(0 0 0 / 0.75);
+}
+
+/* The hillside at dawn: mist over the slope, water catching the sky at its foot. */
+[data-look="paddy"] body {
+  background:
+    radial-gradient(70rem 26rem at 50% -8%, color-mix(in srgb, var(--water) 55%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  font-family: var(--font-read);
+}
+
+/* ---------- type: Fraunces for names, Literata to read ---------- */
+[data-look="paddy"] .brand-name,
+[data-look="paddy"] .note-title,
+[data-look="paddy"] .page-head h1,
+[data-look="paddy"] .prose h1,
+[data-look="paddy"] .prose h2,
+[data-look="paddy"] .prose h3,
+[data-look="paddy"] .prose h4,
+[data-look="paddy"] .garden-gate h1,
+[data-look="paddy"] .garden-recent h2,
+[data-look="paddy"] .garden-paths h2,
+[data-look="paddy"] .garden-main h2,
+[data-look="paddy"] .backlinks h2,
+[data-look="paddy"] .garden-tile-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+[data-look="paddy"] .prose a.internal {
+  border-radius: 6px;
+}
+
+/* ---------- the stage, as the rice in the field ---------- */
+[data-look="paddy"] .garden-tile,
+[data-look="paddy"] .chip.garden-stage {
+  --rice: var(--water);
+  --field: var(--field-none);
+  /* How tall the rice stands in its rows. */
+  --blade: 0px;
+}
+[data-look="paddy"] .garden-tile[data-growth="0"],
+[data-look="paddy"] .chip.garden-stage[data-growth="0"] {
+  --rice: var(--rice-0);
+  --field: var(--field-0);
+  --blade: 6px;
+}
+[data-look="paddy"] .garden-tile[data-growth="1"],
+[data-look="paddy"] .chip.garden-stage[data-growth="1"] {
+  --rice: var(--rice-1);
+  --field: var(--field-1);
+  --blade: 10px;
+}
+[data-look="paddy"] .garden-tile[data-growth="2"],
+[data-look="paddy"] .chip.garden-stage[data-growth="2"] {
+  --rice: var(--rice-2);
+  --field: var(--field-2);
+  --blade: 13px;
+}
+[data-look="paddy"] .garden-tile[data-growth="3"],
+[data-look="paddy"] .chip.garden-stage[data-growth="3"] {
+  --rice: var(--rice-3);
+  --field: var(--field-3);
+  --blade: 15px;
+}
+
+/* ---------- home: the slope, its terraces named on wooden stakes ---------- */
+[data-look="paddy"] .garden-gate {
+  max-width: 44rem;
+  margin: 8px 0 44px;
+}
+[data-look="paddy"] .garden-gate h1 {
+  margin: 0 0 10px;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.05;
+  color: var(--ink);
+}
+/* Under the name, the terraces and their mirror in the water. */
+[data-look="paddy"] .garden-gate h1::after,
+[data-look="paddy"] .note-head::after {
+  content: "";
+  display: block;
+  max-width: 18rem;
+  height: 30px;
+  margin-top: 14px;
+  border-radius: 999px 999px 4px 4px / 14px 14px 4px 4px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, var(--water-line) 3px 4px) bottom / 100% 50% no-repeat,
+    linear-gradient(
+        color-mix(in srgb, var(--rice-0) 45%, var(--water)) 0 25%,
+        color-mix(in srgb, var(--rice-1) 45%, var(--water)) 0 50%,
+        color-mix(in srgb, var(--rice-2) 45%, var(--water)) 0 75%,
+        color-mix(in srgb, var(--rice-3) 45%, var(--water)) 0
+      )
+      bottom / 100% 50% no-repeat,
+    linear-gradient(var(--rice-3) 0 25%, var(--rice-2) 0 50%, var(--rice-1) 0 75%, var(--rice-0) 0) top / 100% 50% no-repeat;
+}
+[data-look="paddy"] .garden-tagline {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 1.15rem;
+  font-style: italic;
+}
+[data-look="paddy"] .garden-recent,
+[data-look="paddy"] .garden-paths,
+[data-look="paddy"] .garden-main,
+[data-look="paddy"] .garden-beds {
+  margin: 0 0 44px;
+}
+[data-look="paddy"] .garden-recent > h2,
+[data-look="paddy"] .garden-paths > h2,
+[data-look="paddy"] .garden-main > h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  font-size: 1.35rem;
+}
+/* A bank of earth after each heading. */
+[data-look="paddy"] .garden-recent > h2::after,
+[data-look="paddy"] .garden-paths > h2::after,
+[data-look="paddy"] .garden-main > h2::after {
+  content: "";
+  flex: 0 0 3.5rem;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--rice-1), var(--rice-3));
+}
+[data-look="paddy"] .garden-beds {
+  display: grid;
+  gap: 8px 32px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+[data-look="paddy"] .garden-shelf > :first-child {
+  margin-top: 0;
+}
+
+/*
+ * ---------- the terraces: rows of fields along the contour ----------
+ * Each row of the bed is one terrace: its fields stand on the same bank, as
+ * wide as their rice is grown, so the rows step down the slope. DOM order is
+ * reading order.
+ */
+[data-look="paddy"] .garden-bed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 26px 12px;
+  padding-bottom: 6px;
+}
+[data-look="paddy"] .garden-bed > .garden-tile {
+  flex: 1 1 14rem;
+}
+[data-look="paddy"] .garden-bed > .garden-tile[data-size="small"] {
+  flex-basis: 10rem;
+}
+[data-look="paddy"] .garden-bed > .garden-tile[data-size="large"] {
+  flex-basis: 20rem;
+}
+[data-look="paddy"] .garden-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 4px 2px 14px;
+  scrollbar-width: thin;
+}
+[data-look="paddy"] .garden-row > .garden-tile {
+  flex: 0 0 13rem;
+  scroll-snap-align: start;
+}
+/* A field: curved along its contour, its bank of earth below, rice standing in rows over the water. */
+[data-look="paddy"] .garden-tile {
+  position: relative;
+  margin: 0;
+  padding: 14px 16px 34px;
+  border-radius: 48% 52% 10px 10px / 16px 20px 10px 10px;
+  border-bottom: 5px solid color-mix(in srgb, var(--earth) 55%, var(--surface));
+  background: var(--field);
+  box-shadow:
+    inset 0 2px 0 color-mix(in srgb, var(--rice) 70%, transparent),
+    var(--shadow);
+  color: var(--ink);
+}
+[data-look="paddy"] .garden-tile[hidden] {
+  display: none;
+}
+/* No two fields follow the hill alike. */
+[data-look="paddy"] .garden-bed > .garden-tile:nth-child(even) {
+  border-radius: 52% 48% 10px 10px / 20px 15px 10px 10px;
+}
+/* The water, with a ripple of light on it. */
+[data-look="paddy"] .garden-tile::before {
+  content: "";
+  position: absolute;
+  inset: auto 10px 6px;
+  height: 12px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, var(--water-line) 3px 4px),
+    var(--water);
+  pointer-events: none;
+}
+/* Rows of rice standing in it, taller as the stage grows. */
+[data-look="paddy"] .garden-tile::after {
+  content: "";
+  position: absolute;
+  inset: auto 16px 12px;
+  height: var(--blade);
+  background: repeating-linear-gradient(90deg, var(--rice) 0 2px, transparent 2px 9px);
+  pointer-events: none;
+}
+[data-look="paddy"] .garden-tile.is-path {
+  border-bottom-style: dashed;
+}
+[data-look="paddy"] .garden-tile-title {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+[data-look="paddy"] .garden-tile[data-size="large"] .garden-tile-title {
+  font-size: 1.3rem;
+}
+[data-look="paddy"] .garden-tile-icon {
+  flex: none;
+  font-family: var(--font-ui);
+}
+[data-look="paddy"] .garden-tile-title a {
+  color: inherit;
+  text-decoration: none;
+}
+/* The whole field opens the note. */
+[data-look="paddy"] .garden-tile-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+[data-look="paddy"] .garden-tile-title a:focus-visible {
+  outline: none;
+}
+[data-look="paddy"] .garden-tile:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+[data-look="paddy"] .garden-tile-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin: 8px 0 0;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+[data-look="paddy"] .garden-tile-date {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+[data-look="paddy"] .garden-tags {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+[data-look="paddy"] .garden-tag {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--earth);
+}
+@media (hover: hover) {
+  [data-look="paddy"] .garden-tile-title a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+}
+
+/* ---------- filters: stakes along the bank ---------- */
+[data-look="paddy"] .garden-filters:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-family: var(--font-ui);
+}
+[data-look="paddy"] .garden-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+[data-look="paddy"] .garden-chip,
+[data-look="paddy"] .garden-tag-select,
+[data-look="paddy"] .garden-more {
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+[data-look="paddy"] .garden-chip small {
+  margin-left: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+[data-look="paddy"] .garden-chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+[data-look="paddy"] .garden-chip[aria-pressed="true"] small {
+  color: inherit;
+}
+[data-look="paddy"] .garden-chip:focus-visible,
+[data-look="paddy"] .garden-tag-select:focus-visible,
+[data-look="paddy"] .garden-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+[data-look="paddy"] .garden-tag-select {
+  max-width: 100%;
+}
+[data-look="paddy"] .garden-more {
+  display: block;
+  margin: 24px auto 0;
+  padding: 9px 20px;
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+[data-look="paddy"] .garden-more[hidden] {
+  display: none;
+}
+
+/* ---------- note pages ---------- */
+[data-look="paddy"] .note-head::after {
+  margin-top: 18px;
+}
+[data-look="paddy"] .chip.garden-stage {
+  height: 30px;
+  padding: 0 13px;
+  gap: 6px;
+  border: 0;
+  border-bottom: 3px solid var(--rice);
+  border-radius: 999px 999px 8px 8px;
+  background: var(--field);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+[data-look="paddy"] .garden-dates {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 15px;
+}
+[data-look="paddy"] .garden-dates time {
+  font-style: normal;
+  color: var(--ink-2);
+}
+[data-look="paddy"] .backlinks {
+  border-top: 0;
+  padding-top: 0;
+}
+[data-look="paddy"] .backlinks h2 .count {
+  font-family: var(--font-ui);
+  background: var(--field-1);
+  color: var(--ink-2);
+}
+[data-look="paddy"] .backlink {
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  border: 0;
+  border-bottom: 3px solid color-mix(in srgb, var(--earth) 45%, var(--surface));
+  border-radius: 40% 60% 8px 8px / 12px 14px 8px 8px;
+  background: var(--field-0);
+}
+[data-look="paddy"] .backlink strong {
+  flex: 1;
+  font-family: var(--font-heading);
+  color: var(--ink);
+}
+[data-look="paddy"] .backlink p {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+[data-look="paddy"] .stream-item {
+  border-top: 3px solid color-mix(in srgb, var(--earth) 35%, var(--surface));
+}
+[data-look="paddy"] .stream-item:first-child {
+  border-top: 0;
+}
+
+@media (max-width: 520px) {
+  [data-look="paddy"] .garden-bed {
+    gap: 20px 10px;
+  }
+  [data-look="paddy"] .garden-bed > .garden-tile,
+  [data-look="paddy"] .garden-bed > .garden-tile[data-size] {
+    flex-basis: 40%;
+  }
+  [data-look="paddy"] .garden-tile {
+    padding: 10px 12px 30px;
+  }
+  [data-look="paddy"] .garden-tile-title {
+    font-size: 0.98rem;
+    gap: 6px;
+  }
+  [data-look="paddy"] .garden-tile[data-size="large"] .garden-tile-title {
+    font-size: 1.1rem;
+  }
+  [data-look="paddy"] .garden-row > .garden-tile {
+    flex-basis: 11rem;
+  }
+}
+@media (max-width: 340px) {
+  [data-look="paddy"] .garden-bed > .garden-tile[data-size] {
+    flex-basis: 100%;
+  }
+}
+
+/* The terraces stand still for readers who ask for less motion; nothing here moves otherwise either. */
+@media (prefers-reduced-motion: reduce) {
+  [data-look="paddy"] .garden-tile,
+  [data-look="paddy"] .garden-chip {
+    transition: none;
+  }
+}

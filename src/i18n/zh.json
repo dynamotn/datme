@@ -304,5 +304,10 @@
   "questionAnswer": "答案",
   "digestWeek": "{year}年第{week}周",
   "digestFeed": "每周摘要 (RSS)",
-  "wishPriority": "优先级"
+  "wishPriority": "优先级",
+  "turnPages": "翻页阅读",
+  "pages": "页面",
+  "pageOf": "第 {n} 页，共 {total} 页",
+  "previousPage": "上一页",
+  "nextPage": "下一页"
 }

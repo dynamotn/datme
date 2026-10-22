@@ -304,5 +304,10 @@
   "questionAnswer": "Câu trả lời",
   "digestWeek": "Tuần {week}, {year}",
   "digestFeed": "Bản tin hằng tuần (RSS)",
-  "wishPriority": "Ưu tiên"
+  "wishPriority": "Ưu tiên",
+  "turnPages": "Lật trang",
+  "pages": "Trang",
+  "pageOf": "Trang {n} / {total}",
+  "previousPage": "Trang trước",
+  "nextPage": "Trang sau"
 }

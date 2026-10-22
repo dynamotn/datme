@@ -1,4 +1,5 @@
 import { PAGE_STYLES, SHAPED_STYLES, site, type Style, type StyleName } from "../site.config"
+import { baseStyle } from "./look"
 
 /** How the reader switch draws each style it offers: the `data-look` it sets (its built-in base), then the stylesheets it links. */
 export type LookSheets = Record<string, string[]>
@@ -13,6 +14,15 @@ export function readerLooks(own: StyleName, draw: (style: StyleName) => string[]
   const base = draw(own)[0] as Style
   if (!choices.length || PAGE_STYLES.includes(base) || SHAPED_STYLES.includes(base) || site.pack?.styles[own]?.templates) return undefined
   return Object.fromEntries([own, ...choices].map((st) => [st, draw(st)]))
+}
+
+/**
+ * Whether a note drawn in `own` can be read page by page: it is in the e-ink style, or the reader
+ * switch offers that style on it.
+ */
+export function canTurnPages(own: StyleName, choices: readonly StyleName[] = site.appearance.readerSwitch): boolean {
+  const looks = readerLooks(own, (st) => [baseStyle(st)], choices) ?? { [own]: [baseStyle(own)] }
+  return Object.values(looks).some(([base]) => base === "eink")
 }
 
 /**

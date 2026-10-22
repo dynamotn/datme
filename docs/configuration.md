@@ -102,7 +102,9 @@ appearance:
                               # lacquer: black lacquer, vermilion and gold leaf, dark first;
                               # zine: a photocopied zine, pasted blocks, tape and grain;
                               # atlas: an old atlas, each top folder a region, the graph a map;
-                              # catalog: a card catalogue, each note a card with a call number
+                              # catalog: a card catalogue, each note a card with a call number;
+                              # eink: an e-reader's grey page, still, large type, pages to turn;
+                              # paddy: the garden as terraced rice fields, seedling to harvest
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
@@ -279,6 +281,24 @@ Cloudflare already build once a day, and GitLab needs a daily pipeline
 schedule (see [Deploying](deploying.md)). An entry replaces only
 `appearance.style` and `appearance.languages`: notes and folders styled by
 their own `style:`, a layout, `tags`, `stages` or `folders` keep their style.
+
+The `eink` style is a page of an e-reader: greys only (pictures too), no
+transition or animation at all, whatever the reader's motion setting, large
+Literata with generous leading, high contrast, and nothing that shows only
+under a mouse: heading anchors and copy buttons are always there. Links are
+told apart by their underline, so `theme.accent` and the reader's
+high-contrast blue are ignored. On a note, the View menu offers "Turn pages":
+the note is laid out in pages as tall as the screen and turned rather than
+scrolled, see [Reading](reading.md#reading).
+
+The `paddy` style is the garden terraced into rice fields: same stages, same
+filters, same planted and tended wording, but each bed is a hillside of
+fields standing on their earth banks, each field curved along its contour
+with water under it. A note's stage reads as the rice in its field: the least
+mature stage is the seedling (mạ), then young rice, ripening and the golden
+harvest for the most mature, each in its colour; with more or fewer than four
+stages they are spread over those four. Under a note's title, and the home's,
+the terraces are mirrored in the water.
 
 With `readerSwitch`, the View menu of every page lists the styles you offer,
 and a reader's pick restyles the whole site for them until they choose "As

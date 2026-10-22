@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { Window } from "happy-dom"
 
 // A site in the garden style: tiles sized by stage, recently tended notes first.
 const root = path.resolve(import.meta.dir, "..")
@@ -138,4 +139,42 @@ describe("herbarium style", () => {
   test("only the herbarium has the label", () => {
     expect(read("Evergreen/Gardens/index.html")).not.toContain("specimen-label")
   })
+})
+
+describe("paddy style", () => {
+  test("a folder in the paddy style is a terrace of fields, each with its step of growth", () => {
+    const html = read("Seeds/index.html")
+    expect(html).toContain('data-look="paddy"')
+    expect(html).toContain('class="garden-bed"')
+    expect(html).toMatch(/<article class="garden-tile"[^>]*data-stage="Seeds" data-growth="0"/)
+    expect(html).toContain("data-garden-filters")
+  })
+
+  test("a note keeps the garden's wording, its stage chip coloured by its step", () => {
+    const html = read("Seeds/Idea/index.html")
+    expect(html).toContain('data-look="paddy"')
+    expect(html).toMatch(/<a class="chip stage garden-stage" data-growth="0" href="\/Seeds\/">/)
+    expect(html).toMatch(/Planted <time datetime="[^"]+">/)
+  })
+
+  test("the garden's own tiles say how grown they are too, and a note without a stage says nothing", () => {
+    const home = read("index.html")
+    expect(home).toMatch(/data-stage="Evergreen" data-growth="3"/)
+    expect(home).toMatch(/data-stage="Sources" data-growth="2"/)
+    expect(home).toMatch(/data-stage data-folder="Writing"/)
+  })
+
+  // As tests/a11y.test.ts: serious and critical axe violations of the markup, scripts not run.
+  for (const page of ["Seeds/index.html", "Seeds/Idea/index.html"]) {
+    test(`${page} has no serious or critical axe violations`, async () => {
+      const window = new Window({ url: "https://example.com/", settings: { disableJavaScriptEvaluation: false } })
+      window.document.write(read(page).replace(/<script\b[\s\S]*?<\/script>/g, ""))
+      window.eval(fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8"))
+      type Result = { violations: { id: string; impact: string | null }[] }
+      const axe = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<Result> } }).axe
+      const res = await axe.run(window.document, { rules: { "color-contrast": { enabled: false } }, resultTypes: ["violations"] })
+      await window.happyDOM.close()
+      expect(res.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id)).toEqual([])
+    }, 30_000)
+  }
 })
