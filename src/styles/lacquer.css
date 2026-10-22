@@ -107,7 +107,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.55em;
-  color: var(--clay);
+  color: var(--clay-text);
 }
 [data-look="lacquer"] .prose h2::before {
   content: "";

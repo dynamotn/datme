@@ -22,6 +22,8 @@
   --on-accent: #fff;
   --clay: #ff3b28;
   --clay-soft: rgb(255 59 40 / 0.12);
+  /* The red of the margin and the marks is too light for words on paper or a white card. */
+  --clay-text: #bf2c1e;
   --yellow: #ffe800;
   --green: #00ff85;
   --pink: #ffa3e5;
@@ -66,6 +68,7 @@
   --on-accent: #050505;
   --clay: #ff6b5b;
   --clay-soft: rgb(255 107 91 / 0.16);
+  --clay-text: var(--clay);
   --mark: rgb(255 232 0 / 0.35);
   /* Solid in the dark too: marked text stays dark ink, as on the yellow marker. */
   --mark-red: #ff8a7a;
@@ -1283,7 +1286,7 @@
   font-size: 3rem;
   font-weight: 800;
   font-style: normal;
-  color: var(--clay);
+  color: var(--clay-text);
 }
 [data-look="notebook"] .index-card[data-type="book"]::before {
   left: 0;
@@ -1452,10 +1455,4 @@
 [data-look="notebook"] .untranslated a {
   color: #050505;
   text-decoration: underline;
-}
-
-/* ---------- comparisons ---------- */
-/* The red of the margin and the marks is too light for words on a white card: the cons get a darker label. */
-[data-look="notebook"]:not([data-theme="dark"]) .compare-cons .compare-label {
-  color: #cc2a18;
 }

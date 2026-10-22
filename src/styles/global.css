@@ -44,8 +44,10 @@
   --accent-soft: rgb(45 106 79 / 0.1);
   /* Text on the accent; theme.ts swaps it for a configured accent by its lightness. */
   --on-accent: #fff;
-  --clay: #b5532c;
+  --clay: #a74c28;
   --clay-soft: rgb(181 83 44 / 0.1);
+  /* Words in clay: the clay itself, unless a look keeps a brighter clay for its shadows and rules. */
+  --clay-text: var(--clay);
   --mark: rgb(234 179 8 / 0.32);
   --mark-red: rgb(239 68 68 / 0.24);
   --mark-orange: rgb(249 115 22 / 0.26);
@@ -715,7 +717,7 @@ button.chip[hidden] {
 }
 .chip.type {
   background: var(--clay-soft);
-  color: var(--clay);
+  color: var(--clay-text);
 }
 .chip.tag::before {
   content: "#";
@@ -1042,7 +1044,7 @@ button.chip[hidden] {
   font-size: 0.78em;
   font-weight: 600;
   text-decoration: none;
-  color: var(--clay);
+  color: var(--clay-text);
   background: var(--clay-soft);
   padding: 1px 7px;
   border-radius: 99px;
@@ -2587,7 +2589,7 @@ dialog.graph-modal {
 .locked .locked-error {
   flex-basis: 100%;
   margin: 0;
-  color: var(--clay);
+  color: var(--clay-text);
   font-size: 14px;
 }
 
@@ -2925,7 +2927,7 @@ dialog.graph-modal {
   font-style: normal;
 }
 .prose .citation-missing {
-  color: var(--clay);
+  color: var(--clay-text);
   text-decoration: underline wavy;
 }
 .prose .references ol {
@@ -3118,10 +3120,10 @@ dialog.graph-modal {
   font-size: 11px;
 }
 .dev-problems li[data-level="error"] span {
-  color: var(--clay);
+  color: var(--clay-text);
 }
 .dev-problems-count {
-  color: var(--clay);
+  color: var(--clay-text);
 }
 
 /* ---------- datme dev: style switcher ---------- */
@@ -3150,7 +3152,7 @@ dialog.graph-modal {
   padding: 0 6px;
   border-radius: 999px;
   background: var(--clay-soft);
-  color: var(--clay);
+  color: var(--clay-text);
   font-style: normal;
   font-size: 11px;
   text-transform: uppercase;
@@ -3196,7 +3198,7 @@ dialog.graph-modal {
 .dev-look-reset {
   display: inline-block;
   margin-top: 4px;
-  color: var(--clay);
+  color: var(--clay-text);
 }
 /* On phones, Astro's own dev toolbar takes the bottom centre. */
 @media (max-width: 640px) {
@@ -4126,7 +4128,7 @@ a.drawing-link tspan {
   font-size: 0.8em;
 }
 .prose .dv-error {
-  color: var(--clay);
+  color: var(--clay-text);
 }
 .prose .dv-null {
   color: var(--muted);
@@ -4745,7 +4747,7 @@ summary.ntn-col-head {
   font-size: 14px;
 }
 .untranslated a {
-  color: var(--clay);
+  color: var(--clay-text);
   font-weight: 650;
 }
 .lang-badge {
@@ -7176,7 +7178,7 @@ summary.ntn-col-head {
   color: var(--accent);
 }
 .compare-cons .compare-label {
-  color: var(--clay);
+  color: var(--clay-text);
 }
 .prose .compare-procon ul {
   margin: 0;
@@ -7200,7 +7202,7 @@ summary.ntn-col-head {
 .compare-cons li::before {
   content: "✗";
   content: "✗" / "";
-  color: var(--clay);
+  color: var(--clay-text);
 }
 
 /* A checklist: every task a box to tick, each section's count under its heading, the progress of the whole on top. */

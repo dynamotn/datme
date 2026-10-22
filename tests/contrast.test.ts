@@ -277,6 +277,43 @@ describe("chips: the accent on its own soft tint", () => {
   })
 })
 
+describe("clay words", () => {
+  // Warnings, cons and the marks of a note write in --clay-text, alone or on --clay-soft; --clay itself may stay a bright
+  // red for the shadows and rules of a look.
+  test("read at AA over the page, the cards and the clay tint, in every look and both schemes", () => {
+    const out: string[] = []
+    for (const look of STYLES) {
+      const own = look === "classic" ? undefined : `[data-look="${look}"]`
+      // global.css writes clay words in the clay of the page, whichever look sets it; a look may set its own.
+      const { "--clay-text": _, ...base } = sheetPalette("global.css", [":root"])
+      const { "--clay-text": __, ...dark } = sheetPalette("global.css", [":root", ':root[data-theme="dark"]'])
+      const schemes = {
+        light: own ? sheetPalette(`${look}.css`, [own], base) : base,
+        dark: own ? sheetPalette(`${look}.css`, [own, `${own}[data-theme="dark"]`], dark) : dark,
+      }
+      for (const [scheme, p] of Object.entries(schemes)) {
+        const text = p["--clay-text"] ?? p["--clay"]
+        for (const ground of ["--bg", "--surface"]) {
+          const under = overPage(p[ground], p["--bg"])
+          // A look that borrows its accent for clay (the terminal, the résumé) borrows its mixed tint too.
+          const soft = p["--clay-soft"].replace(
+            /^color-mix\(in srgb, var\(--accent\) (\d+)%, transparent\)$/,
+            (_, n) => `rgb(${parseColor(p["--accent"])!.join(" ")} / ${n}%)`,
+          )
+          for (const [name, bg] of [
+            [ground, under],
+            [`--clay-soft over ${ground}`, overPage(soft, under)],
+          ]) {
+            const r = ratio(text, bg)
+            if (r < AA_TEXT) out.push(`${look} ${scheme}: --clay-text on ${name} is ${r.toFixed(2)}:1`)
+          }
+        }
+      }
+    }
+    expect(out).toEqual([])
+  })
+})
+
 describe("layouts in a look", () => {
   test("a map's credits in the dark sit on the card, where the links and words of every look read", () => {
     const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/global.css"), "utf8")
@@ -295,12 +332,12 @@ describe("layouts in a look", () => {
     expect(out).toEqual([])
   })
 
-  test("notebook: the label of a comparison's cons reads at AA on a light card, where its red would not", () => {
-    const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/notebook.css"), "utf8")
-    const label = css.match(/\[data-look="notebook"\]:not\(\[data-theme="dark"\]\) \.compare-cons \.compare-label \{\s*color: (#[0-9a-f]+);/)![1]
+  test("the label of a comparison's cons writes in clay words, which notebook keeps darker than its red", () => {
+    const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/global.css"), "utf8")
+    expect(css).toMatch(/\.compare-cons \.compare-label \{\s*color: var\(--clay-text\);/)
     const p = sheetPalette("notebook.css", ['[data-look="notebook"]'])
     expect(ratio(p["--clay"], p["--surface"])).toBeLessThan(AA_TEXT)
-    expect(ratio(label, p["--surface"])).toBeGreaterThanOrEqual(AA_TEXT)
+    expect(ratio(p["--clay-text"], p["--surface"])).toBeGreaterThanOrEqual(AA_TEXT)
   })
 })
 
