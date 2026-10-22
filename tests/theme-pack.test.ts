@@ -177,7 +177,7 @@ describe("theme.preset in datme.yaml", () => {
     expect(c.theme.fonts).toEqual({ heading: "Fraunces", body: "Ink Serif" })
     expect(c.theme.mermaid).toEqual({ light: "neutral", dark: "dark" })
     expect(c.styles).toEqual([...STYLES, "ink"])
-    expect(c.pack).toMatchObject({ dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], styles: { ink: { base: "classic", css: ["paper.css"] } } })
+    expect(c.pack).toMatchObject({ dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], file: ".datme/themes/ink/theme.yaml", accent: false, styles: { ink: { base: "classic", css: ["paper.css"] } } })
     expect(Object.keys(c.pack!.templates!)).toEqual(["footer-band", "note-footer"])
     expect(c.appearance.folders).toEqual({ Ink: "ink" })
     // The pack's style has templates of its own, so readers cannot pick it.
@@ -192,6 +192,9 @@ describe("theme.preset in datme.yaml", () => {
     const c = resolveConfig({ theme: { preset: "ink", fonts: { body: "Literata" } } }, looks)
     expect(c.theme.fonts).toEqual({ heading: "Fraunces", body: "Literata" })
     expect(c.appearance.style).toBe("ink")
+    // datme.yaml sets no accent here, so the pack's is the site's and `datme check` points at its file.
+    expect(c.theme.accent).toEqual({ light: "#1f3a93", dark: "#9db4ff" })
+    expect(c.pack?.accent).toBe(true)
     expect(raw.theme.preset).toBe("ink")
     expect(() => resolveConfig({ theme: { preset: "ink", fonts: "Literata" } }, looks)).toThrow(ConfigError)
   })
@@ -234,7 +237,7 @@ afterEach(() => {
 })
 
 describe("a pack on the site", () => {
-  const pack = { dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], styles: { ink: { base: "classic", css: ["paper.css"] } } }
+  const pack = { dir: path.join(looks, ".datme/themes/ink"), css: ["ink.css"], fonts: ["Ink Serif"], file: ".datme/themes/ink/theme.yaml", accent: true, styles: { ink: { base: "classic", css: ["paper.css"] } } }
   test("a style draws as its base", () => {
     expect(baseStyle("ink", pack)).toBe("classic")
     expect(baseStyle("garden", pack)).toBe("garden")

@@ -59,6 +59,14 @@ garden, in its first language:
 `check: { structure: false }` in `datme.yaml` turns these off. The Obsidian
 plugin lists them too when its *Show notices* setting is on.
 
+`check` also warns when `theme.accent`, set in `datme.yaml` or by a theme
+pack, is too faint to read: below WCAG AA's 4.5:1 as link text on the light
+or dark ground of any style the site uses (its configured styles and those
+its notes take), or as the ground of the white or near-black text set on it.
+The warning gives each ratio and an accent of the same hue, darker or
+lighter, that passes. A theme pack's style is read on the ground of its base;
+a ground its stylesheets change is not seen.
+
 `build` prints a one-line summary of the problems `check` would report.
 `datme dev` also shows a note's problems on its page, and a switcher to
 preview any page in another style or chrome, and a note or folder in another

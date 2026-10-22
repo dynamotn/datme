@@ -1,5 +1,5 @@
 import { site } from "../site.config"
-import type { Lang } from "../site.config"
+import type { Lang, SiteConfig, StyleName } from "../site.config"
 import { getVault, type Note, type PrivateLinkUse, type Problem } from "./vault"
 import { externalUrls } from "./links"
 import { docUrl } from "./obsidian"
@@ -9,6 +9,9 @@ import { parseLocation } from "./places"
 import { MONO_FONT_CSS } from "./fonts"
 import { journal } from "./journal"
 import { routeProblems } from "./routes"
+import { AA_TEXT, contrastOf, onAccent, readableAccent } from "./contrast"
+import { THEME_COLOR } from "./pwa"
+import { baseStyle, lookOf } from "./look"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -79,10 +82,73 @@ export function structureProblems(): Problem[] {
   return problems
 }
 
+/** Every style a page of the site can take: the configured ones, and those its notes pick or their layouts give. */
+export function stylesInUse(): StyleName[] {
+  const { appearance } = site
+  const configured = [
+    appearance.style,
+    ...Object.values(appearance.languages),
+    ...appearance.schedule.map((s) => s.style),
+    ...Object.values(appearance.folders),
+    ...Object.values(appearance.tags),
+    ...Object.values(appearance.stages),
+    ...appearance.readerSwitch,
+  ]
+  return [...new Set([...configured, ...Object.values(getVault().notes).flatMap((notes) => notes.map(lookOf))])]
+}
+
+/** A ratio as WCAG writes it, rounded down so that a failing one never reads as passing. */
+const ratioText = (r: number) => `${(Math.floor(r * 10) / 10).toFixed(1)}:1`
+
+/**
+ * Warnings for a `theme.accent` that WCAG AA finds too faint, as link text on the ground of a style in use
+ * (light and dark; a theme pack's style on its base's), or under the text set on it; each names a nearby
+ * accent that passes. `file` is where the accent is set: datme.yaml, or the theme pack's file.
+ */
+export function accentProblems(accent: SiteConfig["theme"]["accent"], styles: readonly StyleName[], file: string): Problem[] {
+  if (!accent) return []
+  const problems: Problem[] = []
+  for (const scheme of ["light", "dark"] as const) {
+    const color = typeof accent === "string" ? accent : accent[scheme]
+    const key = typeof accent === "string" ? "theme.accent" : `theme.accent.${scheme}`
+    const grounds = [...new Set(styles.map((st) => baseStyle(st)))].map((st) => ({ style: st, ground: THEME_COLOR[st][scheme] }))
+    const failing = grounds.flatMap(({ style, ground }) => {
+      const ratio = contrastOf(color, ground)
+      return ratio !== undefined && ratio < AA_TEXT ? [{ style, ground, ratio }] : []
+    })
+    if (failing.length) {
+      const on = failing.map((f) => `${f.style} (${ratioText(f.ratio)} on ${f.ground})`).join(", ")
+      const better = readableAccent(color, failing.map((f) => f.ground))
+      problems.push({
+        level: "warning",
+        file,
+        message: `${key} ${color} is too faint for text on the ${scheme} ground of ${on}: WCAG AA asks for ${AA_TEXT}:1${better ? `; ${better} passes` : ""}`,
+      })
+    }
+    // Buttons and badges set white or near-black text on the accent, whichever reads better.
+    const ink = onAccent(color)
+    const onRatio = ink ? contrastOf(ink, color) : undefined
+    if (ink && onRatio !== undefined && onRatio < AA_TEXT) {
+      problems.push({
+        level: "warning",
+        file,
+        message: `${key} ${color} is too mid-toned for the text set on it (${ratioText(onRatio)} with ${ink}): WCAG AA asks for ${AA_TEXT}:1; a darker or lighter accent reads better`,
+      })
+    }
+  }
+  return problems
+}
+
 /** Every problem of the vault and of datme.yaml, sorted by file. */
 export function checkVault(): Problem[] {
   const vault = getVault()
-  const problems = [...vault.problems, ...routeProblems(), ...(site.check.structure ? structureProblems() : [])]
+  const accentFile = site.pack?.accent ? site.pack.file : "datme.yaml"
+  const problems = [
+    ...vault.problems,
+    ...routeProblems(),
+    ...(site.check.structure ? structureProblems() : []),
+    ...accentProblems(site.theme.accent, stylesInUse(), accentFile),
+  ]
   for (const [list, items] of [["nav", site.nav], ["sidebar", site.sidebar]] as const) {
     for (const item of items) {
       if (item.kind !== "note") continue

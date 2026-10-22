@@ -80,6 +80,9 @@ styles:                     # styles of its own
 Problems with a pack never stop the build: a missing pack, a value datme does
 not take or a stylesheet outside the pack is reported as a warning (by
 `datme check` and `datme dev`), and the site keeps datme's own value.
+`datme check` also warns when the pack's accent is too faint on the grounds of
+the styles in use, pointing at its `theme.yaml` (see [Checking a
+vault](cli.md#checking-a-vault)).
 `examples/themes/datme-theme-ink` in datme's repository is a complete pack to
 start from.
 

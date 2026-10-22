@@ -125,7 +125,7 @@ appearance:
 theme:
   preset: ink                 # a theme pack, see Extending; every value below beats the pack's
   scheme: auto                # light or dark before readers use the toggle; auto follows their system
-  accent: "#7c3aed"           # or { light: …, dark: … }
+  accent: "#7c3aed"           # or { light: …, dark: … }; `datme check` warns below WCAG AA
   fonts: { heading: Fraunces, body: Literata }   # Google Fonts families, unless the theme pack ships them
   css: datme.css              # stylesheet in the vault, loaded after datme's own
   # Themes of embedded tools, one for both colour schemes or { light: …, dark: … };

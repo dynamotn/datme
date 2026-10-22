@@ -91,3 +91,37 @@ export function onAccent(accent: string): string | undefined {
   const dark = luminance(parseColor(DARK_INK)!)
   return contrastRatio(l, 1) >= contrastRatio(l, dark) ? "#fff" : DARK_INK
 }
+
+/** The contrast WCAG AA asks of body text, links included. */
+export const AA_TEXT = 4.5
+
+/** WCAG contrast ratio of two colours; undefined when either cannot be parsed. */
+export function contrastOf(a: string, b: string): number | undefined {
+  const x = parseColor(a)
+  const y = parseColor(b)
+  return x && y ? contrastRatio(luminance(x), luminance(y)) : undefined
+}
+
+/** A colour as #rrggbb. */
+const toHex = (rgb: Rgb) => "#" + rgb.map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0")).join("")
+
+/**
+ * The accent nearest to `accent`, darkened towards black or lightened towards white (whichever moves it away
+ * from the grounds), that reaches `min` on each of `grounds`; undefined when it already does or cannot.
+ */
+export function readableAccent(accent: string, grounds: readonly string[], min = AA_TEXT): string | undefined {
+  const rgb = parseColor(accent)
+  const lums = grounds.map(parseColor).filter((g): g is Rgb => !!g).map(luminance)
+  if (!rgb || !lums.length) return undefined
+  const passes = (c: Rgb) => lums.every((l) => contrastRatio(luminance(c), l) >= min)
+  if (passes(rgb)) return undefined
+  // Grounds lighter than the accent on average want it darker, darker ones want it lighter.
+  const darker = lums.reduce((a, b) => a + b, 0) / lums.length > luminance(rgb)
+  for (let step = 1; step <= 100; step++) {
+    const t = step / 100
+    // Judged as written: rounding to #rrggbb can cost a hair of contrast.
+    const next = toHex(rgb.map((v) => (darker ? v * (1 - t) : v + (255 - v) * t)) as Rgb)
+    if (passes(parseColor(next)!)) return next
+  }
+  return undefined
+}

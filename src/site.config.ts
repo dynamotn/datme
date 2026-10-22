@@ -649,7 +649,15 @@ function withPack(raw: unknown, vault: string) {
     raw: { ...config, theme: { ...fromPack, ...theme, fonts }, ...(style === undefined ? {} : { appearance: { ...appearance, style } }) },
     styles,
     warnings,
-    pack: { dir: pack.dir, css: pack.css, fonts: pack.fonts, ...(pack.templates && { templates: pack.templates }) },
+    // Where the accent comes from, for `datme check` to point at: the pack's file when datme.yaml sets none.
+    pack: {
+      dir: pack.dir,
+      css: pack.css,
+      fonts: pack.fonts,
+      file: pack.file,
+      accent: theme.accent === undefined && fromPack.accent !== undefined,
+      ...(pack.templates && { templates: pack.templates }),
+    },
   }
 }
 
@@ -843,7 +851,10 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     strings: c.strings,
     /** Every style the site knows: the built-in ones, then those of its theme pack. */
     styles: styleNames,
-    /** The theme pack of `theme.preset`: its folder, stylesheets and templates for every page, styles and own fonts. */
+    /**
+     * The theme pack of `theme.preset`: its folder, stylesheets and templates for every page, styles and own fonts,
+     * the file its warnings point at, and whether it gives the site its accent.
+     */
     pack: packed.pack && { ...packed.pack, styles: packStyles },
     /** Problems of the config that do not stop the build, reported by `datme check`. */
     warnings: packed.warnings,

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
-import { contrastRatio, DARK_INK, luminance, onAccent, parseColor } from "../src/lib/contrast"
+import { AA_TEXT, contrastOf, contrastRatio, DARK_INK, luminance, onAccent, parseColor, readableAccent } from "../src/lib/contrast"
 import { themeCss } from "../src/lib/theme"
 import { site } from "../src/site.config"
 
@@ -201,5 +201,27 @@ describe("the palettes of the looks", () => {
       // In cascade order: the dark rules outrank the light season, whatever their place in the file.
       expect(unreadable(`${season} dark`, sheetPalette("garden.css", [light, light + where, dark, dark + where]))).toEqual([])
     }
+  })
+})
+
+describe("an accent readable on its grounds", () => {
+  test("contrastOf: the ratio of two colours, none for a colour not parsed", () => {
+    expect(contrastOf("#000", "#fff")).toBe(21)
+    expect(contrastOf("teal", "#fff")).toBeUndefined()
+  })
+  test("a faint accent is darkened on light grounds, lightened on dark ones, until it passes on each", () => {
+    const darker = readableAccent("#ffcc00", ["#f5f5f0", "#f4ecdb"])!
+    expect(ratio(darker, "#f5f5f0")).toBeGreaterThanOrEqual(AA_TEXT)
+    expect(ratio(darker, "#f4ecdb")).toBeGreaterThanOrEqual(AA_TEXT)
+    expect(luminance(parseColor(darker)!)).toBeLessThan(luminance(parseColor("#ffcc00")!))
+    const lighter = readableAccent("#333333", ["#121211"])!
+    expect(ratio(lighter, "#121211")).toBeGreaterThanOrEqual(AA_TEXT)
+    expect(lighter).toMatch(/^#[0-9a-f]{6}$/)
+  })
+  test("nothing for an accent that passes, one not parsed, or grounds no colour can serve at once", () => {
+    expect(readableAccent("#7c3aed", ["#f5f5f0"])).toBeUndefined()
+    expect(readableAccent("teal", ["#f5f5f0"])).toBeUndefined()
+    expect(readableAccent("#777", ["teal"])).toBeUndefined()
+    expect(readableAccent("#777", ["#fff", "#000", "#777"])).toBeUndefined()
   })
 })

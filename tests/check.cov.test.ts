@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { externalLinks, formatPrivacy, formatReport, gardenShape, privacyReport, structureProblems, type PrivacyReport } from "../src/lib/check"
+import { accentProblems, checkVault, externalLinks, formatPrivacy, formatReport, gardenShape, privacyReport, stylesInUse, structureProblems, type PrivacyReport } from "../src/lib/check"
 import { getVault } from "../src/lib/vault"
 import type { LinkRef } from "../src/lib/obsidian"
 import { site } from "../src/site.config"
@@ -86,5 +86,49 @@ describe("reports", () => {
         "  tiles.example  map tiles",
       ].join("\n"),
     )
+  })
+})
+
+describe("the accent against the grounds of the styles in use", () => {
+  test("the styles of the config and of the notes, once each", () => {
+    // The fixture's site style, its garden folder, and its classic folder through the notes in it.
+    expect(stylesInUse().sort()).toEqual(["classic", "garden", "notebook"])
+  })
+  test("a style the schedule or a language gives is in use too", () => {
+    const { schedule, languages } = site.appearance
+    site.appearance.schedule = [{ style: "lacquer", from: "01-20", to: "02-20" }]
+    site.appearance.languages = { "en-US": "terminal" }
+    try {
+      expect(stylesInUse()).toContain("lacquer")
+      expect(stylesInUse()).toContain("terminal")
+    } finally {
+      Object.assign(site.appearance, { schedule, languages })
+    }
+  })
+  test("the fixture's accent passes", () => {
+    expect(accentProblems(site.theme.accent, stylesInUse(), "datme.yaml")).toEqual([])
+    expect(checkVault().some((p) => p.message.startsWith("theme.accent"))).toBe(false)
+    expect(accentProblems(undefined, ["notebook"], "datme.yaml")).toEqual([])
+  })
+  test("a faint accent is a warning per scheme with its ratio on each ground and one that passes", () => {
+    const [light, dark] = accentProblems("#ffcc00", ["notebook", "lacquer"], "datme.yaml")
+    expect(light).toEqual({
+      level: "warning",
+      file: "datme.yaml",
+      message: "theme.accent #ffcc00 is too faint for text on the light ground of notebook (1.3:1 on #f5f5f0), lacquer (1.2:1 on #f4ecdb): WCAG AA asks for 4.5:1; #826800 passes",
+    })
+    // Gold reads well on black lacquer and the notebook's dark ground.
+    expect(dark).toBeUndefined()
+  })
+  test("one accent per scheme, a pack's style read on its base, and text set on a mid-toned accent", () => {
+    const problems = accentProblems({ light: "#777777", dark: "#333" }, ["garden"], ".datme/themes/ink/theme.yaml")
+    expect(problems.map((p) => p.message)).toEqual([
+      "theme.accent.light #777777 is too faint for text on the light ground of garden (4.0:1 on #f7f3e8): WCAG AA asks for 4.5:1; #6f6f6f passes",
+      "theme.accent.light #777777 is too mid-toned for the text set on it (4.4:1 with #fff): WCAG AA asks for 4.5:1; a darker or lighter accent reads better",
+      "theme.accent.dark #333 is too faint for text on the dark ground of garden (1.4:1 on #121a14): WCAG AA asks for 4.5:1; #818181 passes",
+    ])
+    expect(problems[0].file).toBe(".datme/themes/ink/theme.yaml")
+    // A colour the check cannot read is left alone.
+    expect(accentProblems("teal", ["notebook"], "datme.yaml")).toEqual([])
   })
 })
