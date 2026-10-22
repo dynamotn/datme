@@ -17,12 +17,14 @@ export function pickOption<T extends string>(value: unknown, options: readonly T
 
 type Rules = Pick<SiteConfig["appearance"], "style" | "classic" | "folders">
 type TagRules = Pick<SiteConfig["appearance"], "tags">
+type NoteRules = Rules & TagRules & Pick<SiteConfig["appearance"], "stages">
 
 /** The rule that gave a page its style, for `datme dev` to name. */
 export type LookRule =
   | { kind: "note" }
   | { kind: "layout"; layout: Layout }
   | { kind: "tags"; tag: string }
+  | { kind: "stages"; stage: string }
   | { kind: "folders" | "classic"; folder: string }
   | { kind: "site" }
 
@@ -119,19 +121,25 @@ export function explainTags(tags: readonly string[], appearance: TagRules): Expl
   return undefined
 }
 
-/** What the style of a note's page depends on. */
-type LookNote = Pick<Note, "dir" | "style" | "layout"> & { tags?: readonly string[] }
+/** Style a note gets from its growth stage (a key of `stages`) through `appearance.stages`, and the rule that gave it. */
+export function explainStage(stage: string | undefined, appearance: Pick<SiteConfig["appearance"], "stages">): Explained<StyleName, LookRule> | undefined {
+  const style = stage === undefined ? undefined : appearance.stages[stage]
+  return stage !== undefined && style ? { value: style, rule: { kind: "stages", stage } } : undefined
+}
 
-/** Page style of a note and the rule that chose it: its own `style`, else its layout's, its tags', or its folder's. */
-export function explainLook(note: LookNote | undefined): Explained<StyleName, LookRule> {
-  if (!note) return { value: site.appearance.style, rule: { kind: "site" } }
+/** What the style of a note's page depends on. */
+type LookNote = Pick<Note, "dir" | "style" | "layout"> & { tags?: readonly string[]; stage?: string }
+
+/** Page style of a note and the rule that chose it: its own `style`, else its layout's, its tags', its stage's, or its folder's. */
+export function explainLook(note: LookNote | undefined, appearance: NoteRules = site.appearance): Explained<StyleName, LookRule> {
+  if (!note) return { value: appearance.style, rule: { kind: "site" } }
   if (note.style) return { value: note.style, rule: { kind: "note" } }
   const fromLayout = note.layout && LAYOUT_LOOKS[note.layout]?.style
   if (note.layout && fromLayout) return { value: fromLayout, rule: { kind: "layout", layout: note.layout } }
-  return explainTags(note.tags ?? [], site.appearance) ?? explainDir(note.dir, site.appearance)
+  return explainTags(note.tags ?? [], appearance) ?? explainStage(note.stage, appearance) ?? explainDir(note.dir, appearance)
 }
 
-/** Page style of a note: its own `style`, else its layout's, its tags' or its folder's; the site style when there is no note. */
+/** Page style of a note: its own `style`, else its layout's, its tags', its stage's or its folder's; the site style when there is no note. */
 export function lookOf(note: LookNote | undefined): StyleName {
   return explainLook(note).value
 }

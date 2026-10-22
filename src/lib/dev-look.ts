@@ -143,8 +143,8 @@ export function previewUrl(url: URL, key: keyof typeof PREVIEW_KEYS, value: stri
 
 /** What the page's style and frame come from: a note (its source file), a folder, or neither. */
 export type LookTarget =
-  /** `tag`: the tag `appearance.tags` would give the note its style by, when it has one. */
-  | { kind: "note"; file: string; dir: string; tag?: string }
+  /** `tag`: the tag `appearance.tags` would give the note its style by, when it has one; `stage`: its growth stage. */
+  | { kind: "note"; file: string; dir: string; tag?: string; stage?: string }
   | { kind: "folder"; dir: string; file?: string }
   | { kind: "site" }
 
@@ -157,6 +157,8 @@ export function describeLookRule(rule: LookRule, target: LookTarget): string {
       return `the default of layout: ${rule.layout}`
     case "tags":
       return `appearance.tags → ${rule.tag}`
+    case "stages":
+      return `appearance.stages → ${rule.stage}`
     case "folders":
       return `appearance.folders → ${rule.folder}`
     case "classic":
@@ -224,6 +226,9 @@ export function configLines(target: LookTarget, preview: Preview, shape: Shape =
   if (front && target.kind === "note") lines.push({ where: `frontmatter of ${target.file}`, code: front })
   if (preview.style && target.kind === "note" && target.tag) {
     lines.push({ where: `datme.yaml, for every note tagged ${target.tag}`, code: `appearance:\n  tags:\n    ${yamlKey(target.tag)}: ${preview.style}` })
+  }
+  if (preview.style && target.kind === "note" && target.stage) {
+    lines.push({ where: `datme.yaml, for every note at stage ${target.stage}`, code: `appearance:\n  stages:\n    ${yamlKey(target.stage)}: ${preview.style}` })
   }
   // Only a folder note gives a folder page its chrome; a folder without one gets it by adding one.
   if (front && target.kind === "folder" && target.dir) {

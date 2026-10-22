@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags } from "../src/lib/look"
+import { resolveLook, lookOf, pickOption, CHROMES, frameOf, startsDark, isGarden, LAYOUT_LOOKS, explainDir, explainLook, explainFrame, explainTags, explainStage } from "../src/lib/look"
 import { LAYOUTS } from "../src/lib/vault"
 import { STYLES } from "../src/site.config"
 
@@ -118,6 +118,21 @@ describe("explainTags", () => {
     // The fixture styles no tag: a note's tags leave it to its folder.
     expect(explainLook({ dir: "07_Project", tags: ["poem"] }).rule).toEqual({ kind: "classic", folder: "07_Project" })
     expect(lookOf({ dir: "03_Atomic", layout: "cv", tags: ["poem"] })).toBe("resume")
+  })
+})
+
+describe("explainStage", () => {
+  const rules = { stages: { "01_Fleeting": "notebook" as const, "03_Atomic": "manuscript" as const } }
+  test("the note's stage picks its style", () => {
+    expect(explainStage("03_Atomic", rules)).toEqual({ value: "manuscript", rule: { kind: "stages", stage: "03_Atomic" } })
+    expect(explainStage("07_Project", rules)).toBeUndefined()
+    expect(explainStage(undefined, rules)).toBeUndefined()
+  })
+  test("in explainLook, the stage comes after the tags, before the folder", () => {
+    const appearance = { ...base, folders: { "03_Atomic": "garden" as const }, tags: { poem: "classic" as const }, stages: rules.stages }
+    expect(explainLook({ dir: "03_Atomic", stage: "03_Atomic" }, appearance).rule).toEqual({ kind: "stages", stage: "03_Atomic" })
+    expect(explainLook({ dir: "03_Atomic", stage: "03_Atomic", tags: ["poem"] }, appearance).rule).toEqual({ kind: "tags", tag: "poem" })
+    expect(explainLook({ dir: "03_Atomic" }, appearance).rule).toEqual({ kind: "folders", folder: "03_Atomic" })
   })
 })
 

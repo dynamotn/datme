@@ -214,7 +214,9 @@ To override, set `style` and `chrome` on the note: `style: notebook` and
 `chrome: full` give a `cv` the usual site look. Without them the order is the
 note's `style`, then its layout's, then `appearance.tags` (the first of the
 note's tags, in the order it lists them, that has a style; `poem/haiku` takes
-the style of `poem` unless it has its own), then `appearance.folders` (the longest
+the style of `poem` unless it has its own), then `appearance.stages` (the
+note's growth stage: its `stage` property, else its top folder, as configured
+in `stages`), then `appearance.folders` (the longest
 matching folder), then `appearance.style`; the frame is the note's `chrome`,
 then its layout's, then `full`. An unknown value is reported as a warning at
 build time and ignored. Any folder note (not protected) lends its style and frame
@@ -227,7 +229,8 @@ chrome without touching a file. The preview lives in the address
 (`?style=garden&chrome=minimal`), so it can be reloaded or opened beside the
 original. While one is on, the bar shows the lines that would keep it: the
 note's (or folder note's) frontmatter, or `appearance.tags` (for the tag that
-styles the note, else its first), `appearance.folders` or `appearance.style`
+styles the note, else its first), `appearance.stages` (for the note's stage),
+`appearance.folders` or `appearance.style`
 in `datme.yaml`. Built sites never show the bar and ignore
 the address.
 

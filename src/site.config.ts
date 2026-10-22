@@ -502,6 +502,8 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         folders: z.record(z.string(), z.enum(styles)).default({}),
         /** A style per tag, nested tags included, e.g. { poem: classic }; a note's first matching tag wins. */
         tags: z.record(z.string(), z.enum(styles)).default({}),
+        /** A style per growth stage, a key of `stages`, e.g. { 01_Fleeting: notebook }; after tags, before folders. */
+        stages: z.record(z.string(), z.enum(styles)).default({}),
         /** Folders of short notes whose page shows each note in full, newest first, like a feed. */
         stream: z.array(z.string()).default([]),
         /**
@@ -515,7 +517,7 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         readerSwitch: z.union([z.boolean(), z.array(z.enum(styles)).min(1)]).default(false),
       })
       .strict()
-      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stream: [], seasons: false, readerSwitch: false }),
+      .default({ style: "notebook", classic: [], folders: {}, tags: {}, stages: {}, stream: [], seasons: false, readerSwitch: false }),
     /** Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }. */
     strings: z.record(z.string(), z.record(z.string(), z.string())).default({}),
   })
@@ -709,6 +711,9 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   if (shaped) {
     throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.readerSwitch: ${shaped} lays its pages out its own way, so readers cannot pick it`)
   }
+  for (const key of Object.keys(c.appearance.stages)) {
+    if (!(key in c.stages)) throw new ConfigError(`Invalid datme config in ${vault}:\n  - appearance.stages.${key}: is no stage of \`stages\``)
+  }
   for (const [folder, def] of Object.entries(c.stages)) {
     // A string naming no preset is the stage's label; without one, the folder's name is.
     const preset = typeof def === "string" ? STAGE_PRESETS[def.toLowerCase()] : undefined
@@ -799,6 +804,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
       folders: Object.fromEntries(Object.entries(c.appearance.folders).map(([p, style]) => [p.replace(/^\/+|\/+$/g, ""), style])),
       // Written as in a note's tags: `#poem`, `Poem` and `poem` are the same tag.
       tags: Object.fromEntries(Object.entries(c.appearance.tags).map(([tag, style]): [string, StyleName] => [slugTag(tag.replace(/^#/, "")), style]).filter(([tag]) => tag)),
+      stages: c.appearance.stages,
       stream: c.appearance.stream.map((p) => p.replace(/^\/+|\/+$/g, "")),
       seasons: seasonsOf(c.appearance.seasons),
       readerSwitch: (readerSwitch === true ? styleNames.filter((st) => !PAGE_STYLES.includes(baseOf(st)) && !SHAPED_STYLES.includes(baseOf(st))) : [...new Set(readerSwitch || [])]).filter((st) => !templated(st)),

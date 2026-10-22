@@ -84,8 +84,8 @@ const ownLook = explainLook(note)
 const explained = {
   look: ownLook,
   frame: explainFrame(note),
-  // `datme dev` offers to style every note of its tag: the one that styles it now, else its first.
-  target: { kind: "note", file: note.source.key + ".md", dir: note.dir, tag: ownLook.rule.kind === "tags" ? ownLook.rule.tag : note.tags[0] } as const,
+  // `datme dev` offers to style every note of its tag (the one that styles it now, else its first) and of its stage.
+  target: { kind: "note", file: note.source.key + ".md", dir: note.dir, tag: ownLook.rule.kind === "tags" ? ownLook.rule.tag : note.tags[0], stage: note.stage } as const,
   shape: { layout: own.layout, group: ownGroup(own) },
 }
 const look = preview.style ?? explained.look.value

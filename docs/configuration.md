@@ -108,6 +108,9 @@ appearance:
   tags:                       # a style per tag, nested tags included (poem/haiku follows poem);
     poem: classic             # a note's first tag found here wins, and beats its folder
     til: notebook
+  stages:                     # a style per growth stage, a key of `stages`; after tags, before folders
+    01_Fleeting: notebook
+    03_Permanent: manuscript
   stream: [Thoughts]          # folders of short notes, shown in full, newest first, like a feed
   seasons: false              # true: the garden's colours follow the season; { hemisphere: south } below the equator
   readerSwitch: false         # true: readers pick any style that only recolours pages, in the View menu;

@@ -147,6 +147,7 @@ describe("describeLookRule and describeFrameRule", () => {
     expect(describeLookRule({ kind: "note" }, { kind: "site" })).toBe("style: in the note")
     expect(describeLookRule({ kind: "layout", layout: "cv" }, note)).toBe("the default of layout: cv")
     expect(describeLookRule({ kind: "tags", tag: "poem" }, note)).toBe("appearance.tags → poem")
+    expect(describeLookRule({ kind: "stages", stage: "01_Fleeting" }, note)).toBe("appearance.stages → 01_Fleeting")
     expect(describeLookRule({ kind: "folders", folder: "Writing" }, note)).toBe("appearance.folders → Writing")
     expect(describeLookRule({ kind: "classic", folder: "Writing" }, note)).toBe("appearance.classic → Writing")
     expect(describeLookRule({ kind: "site" }, note)).toBe("appearance.style")
@@ -174,6 +175,15 @@ describe("configLines", () => {
     ])
     // A tag has nothing to say about a chrome.
     expect(configLines({ ...note, tag: "poem" }, { chrome: "minimal" })).toHaveLength(1)
+  })
+  test("a note at a stage: its stage in datme.yaml too, after its tag", () => {
+    expect(configLines({ ...note, tag: "poem", stage: "01_Fleeting" }, { style: "classic" }).map((l) => l.where)).toEqual([
+      "frontmatter of Writing/Essay.md",
+      "datme.yaml, for every note tagged poem",
+      "datme.yaml, for every note at stage 01_Fleeting",
+      "datme.yaml, for the whole folder",
+    ])
+    expect(configLines({ ...note, stage: "01_Fleeting" }, { style: "classic" })[1].code).toBe("appearance:\n  stages:\n    01_Fleeting: classic")
   })
   test("a note at the vault's root: the whole site instead of a folder", () => {
     expect(configLines({ kind: "note", file: "About.md", dir: "" }, { style: "classic" })).toEqual([

@@ -419,6 +419,8 @@ appearance:
 #  seasons: true               # the garden's colours follow the season
   tags: {}                    # a style per tag, before the folder's
 #    poem: classic
+  stages: {}                  # a style per stage of \`stages\`, after the tags, before the folder's
+#    Inbox: notebook
   readerSwitch: false         # true: readers pick a style in the View menu
 
 # A theme pack: .datme/themes/<name> in the vault, or the datme-theme-<name> package.
