@@ -1,0 +1,360 @@
+/*
+ * Zine look: a self-printed zine, cut out, pasted down and run through a
+ * tired photocopier. Titles are cut-out strips in a soft, wonky Fraunces,
+ * section heads a condensed Bricolage stuck at an angle, the text typed in
+ * Space Mono. Quotes, callouts, pictures and code are pasted boxes of
+ * mismatched colours, some held by tape. Every tilt is a multiple of --tilt,
+ * which phones and print set to 0 so the text lines up again. The grain is
+ * an SVG noise filter, a few hundred bytes. Everything is scoped to
+ * [data-look="zine"].
+ */
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/bricolage-grotesque/standard.css";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+
+[data-look="zine"] {
+  --bg: #ecebe6;
+  --surface: #fbfaf6;
+  --surface-2: #e2e0d8;
+  --surface-3: #d6d3c9;
+  --ink: #141414;
+  --ink-2: #2e2d2a;
+  --muted: #55534d;
+  --line: #cfcbc1;
+  --line-strong: #8f8a80;
+  /* Riso pink and blue, as two drums of a duplicator. */
+  --accent: #b8174a;
+  --accent-2: #1d47c2;
+  --accent-soft: rgb(184 23 74 / 0.1);
+  --on-accent: #fff;
+  --clay: #1d47c2;
+  --clay-soft: rgb(29 71 194 / 0.1);
+  /* Pasted boxes: no two the same colour. */
+  --box-1: #fff0a0;
+  --box-2: #ffd6e4;
+  --box-3: #d3e4ff;
+  --box-4: #d8f0d0;
+  --mark: #ffe94d;
+  --tape: rgb(236 226 178 / 0.78);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 -.18'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --title-grad: linear-gradient(100deg, #b8174a 0%, #1d47c2 100%);
+  --shadow: 2px 3px 0 rgb(20 20 20 / 0.14);
+  --font-ui: "Space Mono", ui-monospace, monospace;
+  --font-read: "Space Mono", ui-monospace, monospace;
+  --font-heading: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --font-cut: "Bricolage Grotesque Variable", "Bricolage Grotesque", system-ui, sans-serif;
+  --radius: 0;
+  --radius-sm: 0;
+  --tilt: 1;
+}
+
+[data-look="zine"][data-theme="dark"] {
+  --bg: #161514;
+  --surface: #201f1d;
+  --surface-2: #2b2a27;
+  --surface-3: #36342f;
+  --ink: #f1eee6;
+  --ink-2: #d9d5cb;
+  --muted: #aaa59a;
+  --line: #3a3733;
+  --line-strong: #6a655c;
+  --accent: #ff7aa6;
+  --accent-2: #8eaeff;
+  --accent-soft: rgb(255 122 166 / 0.14);
+  --on-accent: #161514;
+  --clay: #8eaeff;
+  --clay-soft: rgb(142 174 255 / 0.14);
+  /* The same boxes, copied onto black paper. */
+  --box-1: #3a3416;
+  --box-2: #3d2030;
+  --box-3: #1e2b45;
+  --box-4: #213320;
+  --mark: #403a10;
+  --tape: rgb(150 140 105 / 0.5);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .4 -.16'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --title-grad: linear-gradient(100deg, #ff7aa6 0%, #8eaeff 100%);
+  --shadow: 2px 3px 0 rgb(0 0 0 / 0.5);
+}
+
+/* Toner speckle over the whole page, as a photocopy has. */
+[data-look="zine"] body {
+  background: var(--grain), var(--bg);
+  font-family: var(--font-read);
+}
+[data-look="zine"] .prose {
+  font-size: 15.5px;
+  line-height: 1.75;
+}
+[data-look="zine"] .site-header {
+  border-bottom: 2px solid var(--ink);
+}
+[data-look="zine"] .brand-mark {
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--bg);
+  rotate: calc(-4deg * var(--tilt));
+}
+[data-look="zine"] .brand-name {
+  font-family: var(--font-heading);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-weight: 800;
+}
+
+/* ---------- titles: cut-out strips in a wonky hand ---------- */
+[data-look="zine"] .note-title,
+[data-look="zine"] .page-head h1,
+[data-look="zine"] .hero h1 {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.05em 0.3em 0.12em;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-heading);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  rotate: calc(-1.2deg * var(--tilt));
+  box-shadow: var(--shadow);
+}
+[data-look="zine"] .gradient-text {
+  background: none;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+}
+/* Headings keep their own line, each lettered differently, as if cut from different pages. */
+[data-look="zine"] .prose h2 {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.1em 0.4em;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  font-family: var(--font-cut);
+  font-stretch: 75%;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  rotate: calc(0.8deg * var(--tilt));
+  box-shadow: var(--shadow);
+}
+[data-look="zine"] .prose h3 {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0 0.3em;
+  background: var(--box-2);
+  font-family: var(--font-heading);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-style: italic;
+  font-weight: 700;
+  rotate: calc(-0.8deg * var(--tilt));
+}
+[data-look="zine"] .prose h4,
+[data-look="zine"] .prose h5,
+[data-look="zine"] .prose h6 {
+  font-family: var(--font-cut);
+  font-weight: 800;
+  text-decoration: underline wavy var(--accent) 2px;
+  text-underline-offset: 4px;
+}
+[data-look="zine"] .prose a {
+  color: var(--accent);
+  text-decoration-thickness: 2px;
+}
+[data-look="zine"] .prose mark {
+  padding: 0 3px;
+  border-radius: 0;
+  background: var(--mark);
+  color: var(--ink);
+}
+
+/* ---------- pasted boxes ---------- */
+[data-look="zine"] .prose blockquote,
+[data-look="zine"] .prose .callout,
+[data-look="zine"] .prose pre,
+[data-look="zine"] .prose .image-embed img,
+[data-look="zine"] .prose > p > img {
+  position: relative;
+  border-radius: 0;
+  box-shadow: var(--shadow);
+}
+[data-look="zine"] .prose blockquote {
+  margin: 1.6em 0;
+  padding: 0.9em 1.1em;
+  border: 0;
+  background: var(--box-1);
+  color: var(--ink);
+  font-family: var(--font-heading);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-size: 1.2em;
+  font-style: normal;
+  font-weight: 600;
+  rotate: calc(-0.7deg * var(--tilt));
+}
+[data-look="zine"] .prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+[data-look="zine"] .prose blockquote > :first-child {
+  margin-top: 0;
+}
+[data-look="zine"] .prose .callout {
+  --c: 20 20 20;
+  margin: 1.6em 0;
+  border: 2px dashed var(--ink);
+  background: var(--box-3);
+  rotate: calc(0.6deg * var(--tilt));
+}
+[data-look="zine"] .prose .callout:nth-of-type(even) {
+  background: var(--box-4);
+  rotate: calc(-0.5deg * var(--tilt));
+}
+[data-look="zine"] .callout-title {
+  color: var(--ink);
+  font-family: var(--font-cut);
+  font-size: 0.85em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+[data-look="zine"] .prose pre {
+  border: 2px solid var(--ink);
+  rotate: calc(0.4deg * var(--tilt));
+}
+[data-look="zine"] .prose :not(pre) > code {
+  border-radius: 0;
+  background: var(--box-3);
+  color: var(--ink);
+}
+/* A strip of tape across the top of each quote and picture. */
+[data-look="zine"] .prose blockquote::before,
+[data-look="zine"] .prose .image-embed::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 1;
+  width: 5.5rem;
+  height: 20px;
+  margin-left: -2.75rem;
+  background: var(--tape);
+  rotate: calc(-4deg * var(--tilt));
+  pointer-events: none;
+}
+[data-look="zine"] .prose .image-embed {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1.8em auto;
+  rotate: calc(1.2deg * var(--tilt));
+}
+[data-look="zine"] .prose .image-embed img {
+  display: block;
+  border: 6px solid var(--surface);
+  filter: grayscale(1) contrast(1.25);
+}
+[data-look="zine"] .prose hr {
+  height: 0;
+  border: 0;
+  border-top: 3px dotted var(--ink);
+}
+[data-look="zine"] .prose table th {
+  background: var(--box-1);
+  color: var(--ink);
+}
+
+/* ---------- around the note ---------- */
+[data-look="zine"] .chip {
+  border: 1.5px solid var(--ink);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+}
+[data-look="zine"] .chip:nth-of-type(odd) {
+  rotate: calc(-2deg * var(--tilt));
+}
+[data-look="zine"] .chip:nth-of-type(even) {
+  rotate: calc(2deg * var(--tilt));
+}
+[data-look="zine"] .backlinks h2,
+[data-look="zine"] .panel-title {
+  font-family: var(--font-cut);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+[data-look="zine"] .backlink,
+[data-look="zine"] .folder-card,
+[data-look="zine"] .note-list,
+[data-look="zine"] .card,
+[data-look="zine"] .index-card,
+[data-look="zine"] .graph-box {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  box-shadow: var(--shadow);
+}
+/* Cards pasted in a row never sit straight, nor all the same way. */
+[data-look="zine"] .backlink:nth-child(3n + 1),
+[data-look="zine"] .folder-card:nth-child(3n + 1) {
+  rotate: calc(-1deg * var(--tilt));
+  background: var(--box-1);
+}
+[data-look="zine"] .backlink:nth-child(3n + 2),
+[data-look="zine"] .folder-card:nth-child(3n + 2) {
+  rotate: calc(0.8deg * var(--tilt));
+  background: var(--box-2);
+}
+[data-look="zine"] .backlink:nth-child(3n),
+[data-look="zine"] .folder-card:nth-child(3n) {
+  rotate: calc(-0.4deg * var(--tilt));
+  background: var(--box-3);
+}
+[data-look="zine"] .folder-card span,
+[data-look="zine"] .backlink p {
+  color: var(--ink-2);
+}
+[data-look="zine"] .note-row {
+  border-bottom: 1.5px dashed var(--line-strong);
+}
+[data-look="zine"] .note-row .title {
+  font-family: var(--font-heading);
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-size: 1.05em;
+}
+[data-look="zine"] :focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  [data-look="zine"] .backlink,
+  [data-look="zine"] .folder-card {
+    transition: rotate 0.15s, translate 0.15s;
+  }
+  [data-look="zine"] .backlink:hover,
+  [data-look="zine"] .folder-card:hover {
+    rotate: 0deg;
+    translate: 0 -2px;
+  }
+}
+
+/* On a phone every block lies straight, so lines stay whole and nothing overhangs the edge. */
+@media (max-width: 640px) {
+  [data-look="zine"] {
+    --tilt: 0;
+  }
+  [data-look="zine"] .prose {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-look="zine"] .backlink,
+  [data-look="zine"] .folder-card {
+    transition: none;
+  }
+  [data-look="zine"] .backlink:hover,
+  [data-look="zine"] .folder-card:hover {
+    translate: none;
+  }
+}

@@ -58,6 +58,8 @@ function palette() {
     line: v("--line-strong"),
     ink: v("--ink"),
     bg: v("--surface"),
+    // A look can draw links as dashed roads: `--graph-dash: 2 4`, the dash and gap lengths.
+    dash: v("--graph-dash").split(/[\s,]+/).filter(Boolean).map(Number),
   }
 }
 
@@ -225,11 +227,13 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
       const alpha = hover && !on ? 0.25 : on ? 0.9 : l.source.hop > 1 || l.target.hop > 1 ? 0.35 : 0.6
       ctx.globalAlpha = on ? alpha : alpha * Math.min(depthCue(l.source), depthCue(l.target))
       ctx.lineWidth = on ? 1.6 : 1
+      ctx.setLineDash(colors.dash)
       ctx.beginPath()
       ctx.moveTo(l.source.sx, l.source.sy)
       ctx.lineTo(l.target.sx, l.target.sy)
       ctx.stroke()
     }
+    ctx.setLineDash([])
     const order = space ? [...nodes].sort((a, b) => a.near - b.near) : nodes
     for (const n of order) {
       if (!shown(n)) continue

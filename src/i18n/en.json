@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "This decision has been superseded.",
   "glossaryLetters": "Jump to a letter",
   "lessonDone": "Done",
-  "syllabusProgress": "{done} of {total} lessons done"
+  "syllabusProgress": "{done} of {total} lessons done",
+  "region": "Region",
+  "callNumber": "Call no.",
+  "drawer": "Drawer"
 }

@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "この決定は置き換えられました。",
   "glossaryLetters": "文字へ移動",
   "lessonDone": "完了",
-  "syllabusProgress": "{total}レッスン中{done}完了"
+  "syllabusProgress": "{total}レッスン中{done}完了",
+  "region": "地域",
+  "callNumber": "請求記号",
+  "drawer": "引き出し"
 }

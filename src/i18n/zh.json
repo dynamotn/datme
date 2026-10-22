@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "此决策已被取代。",
   "glossaryLetters": "跳转到字母",
   "lessonDone": "完成",
-  "syllabusProgress": "已完成 {done}/{total} 课"
+  "syllabusProgress": "已完成 {done}/{total} 课",
+  "region": "地区",
+  "callNumber": "索书号",
+  "drawer": "抽屉"
 }

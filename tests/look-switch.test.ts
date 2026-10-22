@@ -15,6 +15,7 @@ describe("appearance.readerSwitch", () => {
       "blueprint",
       "manuscript",
       "lacquer",
+      "zine",
     ])
   })
   test("a list of styles, once each", () => {
@@ -27,7 +28,7 @@ describe("appearance.readerSwitch", () => {
     expect(() => resolveConfig({ appearance: { readerSwitch: ["fancy"] } }, "/v")).toThrow()
   })
   test("a style that lays its pages out its own way is an error", () => {
-    for (const style of ["wiki", "broadsheet", "herbarium"]) {
+    for (const style of ["wiki", "broadsheet", "herbarium", "atlas", "catalog"]) {
       expect(() => resolveConfig({ appearance: { readerSwitch: ["classic", style] } }, "/v")).toThrow(`${style} lays its pages out its own way`)
     }
   })

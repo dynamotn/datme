@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "Diese Entscheidung wurde abgelöst.",
   "glossaryLetters": "Zu einem Buchstaben springen",
   "lessonDone": "Erledigt",
-  "syllabusProgress": "{done} von {total} Lektionen erledigt"
+  "syllabusProgress": "{done} von {total} Lektionen erledigt",
+  "region": "Region",
+  "callNumber": "Signatur",
+  "drawer": "Schublade"
 }

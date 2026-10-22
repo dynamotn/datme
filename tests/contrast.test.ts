@@ -170,7 +170,7 @@ function unreadable(name: string, p: Record<string, string>): string[] {
     if (p[fg] && p[bg] && ratio(p[fg], p[bg]) < 4.5) out.push(`${name}: ${fg} on ${bg} is ${ratio(p[fg], p[bg]).toFixed(2)}:1`)
   }
   for (const fg of ["--ink", "--ink-2", "--muted", "--accent", "--earth", "--clay"])
-    for (const bg of ["--bg", "--surface", "--surface-2", "--label"]) check(fg, bg)
+    for (const bg of ["--bg", "--surface", "--surface-2", "--label", "--box-1", "--box-2", "--box-3", "--box-4", "--mark", "--land", "--sea"]) check(fg, bg)
   check("--on-accent", "--accent")
   return out
 }
@@ -178,6 +178,14 @@ function unreadable(name: string, p: Record<string, string>): string[] {
 describe("the palettes of the looks", () => {
   test("herbarium, manuscript and lacquer read at AA in both schemes", () => {
     for (const look of ["herbarium", "manuscript", "lacquer"]) {
+      const light = `[data-look="${look}"]`
+      expect(unreadable(`${look} light`, sheetPalette(`${look}.css`, [light]))).toEqual([])
+      expect(unreadable(`${look} dark`, sheetPalette(`${look}.css`, [light, `${light}[data-theme="dark"]`]))).toEqual([])
+    }
+  })
+
+  test("zine, atlas and catalog read at AA in both schemes, on their boxes, land and sea too", () => {
+    for (const look of ["zine", "atlas", "catalog"]) {
       const light = `[data-look="${look}"]`
       expect(unreadable(`${look} light`, sheetPalette(`${look}.css`, [light]))).toEqual([])
       expect(unreadable(`${look} dark`, sheetPalette(`${look}.css`, [light, `${light}[data-theme="dark"]`]))).toEqual([])

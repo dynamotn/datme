@@ -13,6 +13,9 @@ import broadsheetCss from "~/styles/broadsheet.css?url"
 import herbariumCss from "~/styles/herbarium.css?url"
 import manuscriptCss from "~/styles/manuscript.css?url"
 import lacquerCss from "~/styles/lacquer.css?url"
+import zineCss from "~/styles/zine.css?url"
+import atlasCss from "~/styles/atlas.css?url"
+import catalogCss from "~/styles/catalog.css?url"
 import printCss from "~/styles/print.css?url"
 import katexCss from "katex/dist/katex.min.css?url"
 import { site, type Lang, type Style, type StyleName } from "~/site.config"
@@ -141,6 +144,9 @@ const LOOK_CSS: Partial<Record<Style, string>> = {
   herbarium: herbariumCss,
   manuscript: manuscriptCss,
   lacquer: lacquerCss,
+  zine: zineCss,
+  atlas: atlasCss,
+  catalog: catalogCss,
 }
 // A style draws as its built-in base, with the stylesheets a theme pack adds for it after that one's.
 const draw = (style: StyleName) => {

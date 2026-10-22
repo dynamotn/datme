@@ -19,6 +19,9 @@ export const THEME_COLOR: Record<Style, { light: string; dark: string }> = {
   herbarium: { light: "#e7e0cd", dark: "#17150f" },
   manuscript: { light: "#fffff8", dark: "#151412" },
   lacquer: { light: "#f4ecdb", dark: "#120b08" },
+  zine: { light: "#ecebe6", dark: "#161514" },
+  atlas: { light: "#eadcb8", dark: "#141a1b" },
+  catalog: { light: "#e4d6bb", dark: "#1a1612" },
 }
 
 /** The web app manifest: lets readers install the garden and open it like an app. */

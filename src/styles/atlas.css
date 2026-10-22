@@ -1,0 +1,271 @@
+/*
+ * Atlas look: an old atlas on parchment. Contour lines run under the page,
+ * a compass rose stands in the corner of each sheet, and every top folder
+ * is a region whose name is lettered above its notes and folders. The graph
+ * becomes a map: notes are towns on patches of land in a pale sea, joined by
+ * dotted roads (--graph-dash). Contours and rose are inline SVG, so nothing
+ * is fetched. Everything is scoped to [data-look="atlas"].
+ */
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/fraunces/full-italic.css";
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/literata/opsz-italic.css";
+
+[data-look="atlas"] {
+  --bg: #eadcb8;
+  --surface: #f5ecd3;
+  --surface-2: #e4d3a9;
+  --surface-3: #d9c595;
+  --ink: #2b2214;
+  --ink-2: #463820;
+  --muted: #5e4d30;
+  --line: #d2be8f;
+  --line-strong: #a68b55;
+  /* Roads in red-brown ink, water in teal. */
+  --accent: #8c3410;
+  --accent-2: #1e5568;
+  --accent-soft: rgb(140 52 16 / 0.1);
+  --on-accent: #fff;
+  --clay: #1e5568;
+  --clay-soft: rgb(30 85 104 / 0.1);
+  --land: #e2dcab;
+  --land-2: #d3cd98;
+  --sea: #c9d9cf;
+  --graph-dash: 3 3;
+  --contours: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' fill='none' stroke='%237a5a24' stroke-opacity='.16'%3E%3Cpath d='M120 90c60-30 140-10 160 40s-20 110-90 120-130-30-130-80 20-60 60-80z'/%3E%3Cpath d='M135 115c45-20 100-5 115 30s-15 80-65 85-95-20-95-55 15-45 45-60z'/%3E%3Cpath d='M155 140c28-10 60-2 68 18s-10 45-38 48-55-12-55-32 10-25 25-34z'/%3E%3Cpath d='M330 300c50-20 120 0 130 50s-40 100-100 100-110-30-110-80 30-50 80-70z'/%3E%3Cpath d='M345 330c35-12 80 2 86 35s-28 65-68 64-74-20-72-52 22-34 54-47z'/%3E%3Cpath d='M360 358c20-6 44 2 46 20s-16 34-37 33-39-12-37-28 12-18 28-25z'/%3E%3Cpath d='M-20 400c80-40 160-20 200 40M300-10c20 60 90 90 190 70M-10 250c40-20 70 10 110-5'/%3E%3C/svg%3E");
+  --rose: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -16 100 116'%3E%3Cg fill='none' stroke='%23000'%3E%3Ccircle cx='50' cy='50' r='33' stroke-width='1.5'/%3E%3Ccircle cx='50' cy='50' r='37' stroke-width='.7'/%3E%3Cpath d='M45-3v-10l10 10v-10' stroke-width='2'/%3E%3C/g%3E%3Cpath d='M50 4l6 40 40 6-40 6-6 40-6-40-40-6 40-6z'/%3E%3Cpath d='M50 26l4 20 20 4-20 4-4 20-4-20-20-4 20-4z' transform='rotate(45 50 50)'/%3E%3C/svg%3E");
+  --title-grad: linear-gradient(100deg, #8c3410 0%, #1e5568 100%);
+  --shadow: 0 1px 2px rgb(70 50 20 / 0.1), 0 12px 28px -18px rgb(70 50 20 / 0.45);
+  --font-ui: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --font-read: "Literata Variable", "Literata", Georgia, serif;
+  --font-heading: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --radius: 2px;
+  --radius-sm: 2px;
+}
+
+[data-look="atlas"][data-theme="dark"] {
+  --bg: #141a1b;
+  --surface: #1b2324;
+  --surface-2: #233032;
+  --surface-3: #2c3a3c;
+  --ink: #efe6cf;
+  --ink-2: #d8cdb2;
+  --muted: #a9a088;
+  --line: #2f3c3d;
+  --line-strong: #4d5d5c;
+  --accent: #f0a070;
+  --accent-2: #8cc9cc;
+  --accent-soft: rgb(240 160 112 / 0.12);
+  --on-accent: #141a1b;
+  --clay: #8cc9cc;
+  --clay-soft: rgb(140 201 204 / 0.12);
+  --land: #263127;
+  --land-2: #2f3b2c;
+  --sea: #162629;
+  --contours: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' fill='none' stroke='%23d8c690' stroke-opacity='.1'%3E%3Cpath d='M120 90c60-30 140-10 160 40s-20 110-90 120-130-30-130-80 20-60 60-80z'/%3E%3Cpath d='M135 115c45-20 100-5 115 30s-15 80-65 85-95-20-95-55 15-45 45-60z'/%3E%3Cpath d='M155 140c28-10 60-2 68 18s-10 45-38 48-55-12-55-32 10-25 25-34z'/%3E%3Cpath d='M330 300c50-20 120 0 130 50s-40 100-100 100-110-30-110-80 30-50 80-70z'/%3E%3Cpath d='M345 330c35-12 80 2 86 35s-28 65-68 64-74-20-72-52 22-34 54-47z'/%3E%3Cpath d='M360 358c20-6 44 2 46 20s-16 34-37 33-39-12-37-28 12-18 28-25z'/%3E%3Cpath d='M-20 400c80-40 160-20 200 40M300-10c20 60 90 90 190 70M-10 250c40-20 70 10 110-5'/%3E%3C/svg%3E");
+  --title-grad: linear-gradient(100deg, #f0a070 0%, #8cc9cc 100%);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 28px -18px rgb(0 0 0 / 0.85);
+}
+
+/* Contour lines under everything, as on a survey sheet. */
+[data-look="atlas"] body {
+  background: var(--contours), var(--bg);
+  font-family: var(--font-read);
+}
+[data-look="atlas"] .site-header {
+  border-bottom: 3px double var(--line-strong);
+}
+[data-look="atlas"] .brand-name {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- the sheet: a neatline, a rose in its corner ---------- */
+[data-look="atlas"] article.note {
+  position: relative;
+  padding: clamp(20px, 4vw, 48px) clamp(18px, 4.5vw, 52px);
+  border: 1px solid var(--line-strong);
+  outline: 1px solid var(--line-strong);
+  outline-offset: -7px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+[data-look="atlas"] article.note::after,
+[data-look="atlas"] .page-head::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 64px;
+  height: 74px;
+  background: var(--accent-2);
+  opacity: 0.55;
+  -webkit-mask: var(--rose) center / contain no-repeat;
+  mask: var(--rose) center / contain no-repeat;
+  pointer-events: none;
+}
+[data-look="atlas"] .page-head {
+  position: relative;
+  padding-right: 84px;
+}
+[data-look="atlas"] .note-head {
+  padding-right: 72px;
+}
+
+/* ---------- lettering ---------- */
+[data-look="atlas"] .note-title,
+[data-look="atlas"] .page-head h1,
+[data-look="atlas"] .hero h1 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
+}
+[data-look="atlas"] .gradient-text {
+  background: none;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+}
+[data-look="atlas"] .prose h2 {
+  padding-bottom: 4px;
+  border-bottom: 3px double var(--line-strong);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+}
+[data-look="atlas"] .prose h3,
+[data-look="atlas"] .prose h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.05em;
+}
+[data-look="atlas"] .prose a {
+  color: var(--accent);
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+[data-look="atlas"] .prose blockquote {
+  border-left: 0;
+  padding: 0.6em 1.2em;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+[data-look="atlas"] .prose .callout {
+  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+}
+[data-look="atlas"] .callout-title {
+  color: var(--ink);
+  font-family: var(--font-heading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.05em;
+}
+[data-look="atlas"] .prose img {
+  border: 1px solid var(--line-strong);
+  filter: sepia(0.35);
+}
+
+/* ---------- the region, lettered above the title like a name across a map ---------- */
+[data-look="atlas"] .atlas-region {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 10px;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.32em;
+  color: var(--muted);
+}
+[data-look="atlas"] .atlas-region::before,
+[data-look="atlas"] .atlas-region::after {
+  content: "";
+  flex: 0 1 2.5rem;
+  border-top: 1px solid var(--line-strong);
+}
+[data-look="atlas"] .atlas-region a {
+  color: var(--accent-2);
+  text-decoration: none;
+}
+[data-look="atlas"] .atlas-region a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- regions and places ---------- */
+[data-look="atlas"] .folder-card {
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 2px;
+  background: var(--land);
+  font-family: var(--font-heading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
+}
+[data-look="atlas"] .folder-card span,
+[data-look="atlas"] .note-row .sub,
+[data-look="atlas"] .note-row time {
+  color: var(--ink-2);
+}
+[data-look="atlas"] .note-list {
+  border-color: var(--line-strong);
+  border-radius: 2px;
+}
+[data-look="atlas"] .note-row {
+  border-bottom: 1px dotted var(--line-strong);
+}
+[data-look="atlas"] .note-row .title {
+  font-family: var(--font-heading);
+}
+[data-look="atlas"] .chip {
+  border-radius: 2px;
+}
+[data-look="atlas"] .backlinks h2,
+[data-look="atlas"] .panel-title {
+  font-family: var(--font-heading);
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+}
+[data-look="atlas"] .backlink {
+  border-radius: 2px;
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+/* ---------- the graph as a map: land in a pale sea, notes as towns ---------- */
+[data-look="atlas"] .graph-box,
+[data-look="atlas"] .graph-modal .graph-full {
+  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  background:
+    var(--contours),
+    radial-gradient(38% 30% at 30% 35%, var(--land-2) 0 55%, var(--land) 56% 100%, transparent 101%),
+    radial-gradient(34% 40% at 72% 66%, var(--land-2) 0 50%, var(--land) 51% 100%, transparent 101%),
+    var(--sea);
+  background-size: 240px 240px, auto, auto, auto;
+}
+[data-look="atlas"] .graph-modal .graph-full {
+  background-size: 480px 480px, auto, auto, auto;
+}
+[data-look="atlas"] :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  [data-look="atlas"] article.note::after,
+  [data-look="atlas"] .page-head::after {
+    width: 44px;
+    height: 52px;
+    top: 12px;
+    right: 12px;
+  }
+  [data-look="atlas"] .note-head,
+  [data-look="atlas"] .page-head {
+    padding-right: 52px;
+  }
+}

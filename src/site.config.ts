@@ -29,6 +29,9 @@ export const STYLES = [
   "herbarium",
   "manuscript",
   "lacquer",
+  "zine",
+  "atlas",
+  "catalog",
 ] as const
 export type Style = (typeof STYLES)[number]
 /** Tiles of a bento home, in their default order. */
@@ -39,8 +42,11 @@ export type BentoTile = (typeof BENTO_TILES)[number]
 export type StyleName = string
 /** Styles made for a single page (a résumé, a gallery) rather than a whole site. */
 export const PAGE_STYLES: readonly Style[] = ["resume", "darkroom"]
-/** Styles that lay their pages out their own way (a front page, an infobox, a specimen label), not only colour them. */
-export const SHAPED_STYLES: readonly Style[] = ["broadsheet", "wiki", "herbarium"]
+/**
+ * Styles that lay their pages out their own way (a front page, an infobox, a specimen label, a region, a call
+ * number), not only colour them.
+ */
+export const SHAPED_STYLES: readonly Style[] = ["broadsheet", "wiki", "herbarium", "atlas", "catalog"]
 
 export interface StageDef {
   icon: string
@@ -486,7 +492,8 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
         /**
          * notebook: index cards on dotted paper; classic: the quiet serif blog look; garden: tiles sized by
          * maturity, recently tended first; herbarium: notes as pressed specimens; manuscript: a book page with
-         * notes in its margin; lacquer: vermilion, black and gold leaf.
+         * notes in its margin; lacquer: vermilion, black and gold leaf; zine: a cut-and-paste photocopied zine;
+         * atlas: an old atlas, each top folder a region; catalog: a library card catalogue with call numbers.
          */
         style: z.enum(styles).default("notebook"),
         /** Folders whose notes use the other style, e.g. long-form writing. */

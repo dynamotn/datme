@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "Cette décision a été remplacée.",
   "glossaryLetters": "Aller à une lettre",
   "lessonDone": "Terminé",
-  "syllabusProgress": "{done} leçons terminées sur {total}"
+  "syllabusProgress": "{done} leçons terminées sur {total}",
+  "region": "Région",
+  "callNumber": "Cote",
+  "drawer": "Tiroir"
 }

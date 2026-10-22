@@ -1,0 +1,282 @@
+/*
+ * Catalog look: a library card catalogue. Each note is a typed catalogue
+ * card, a red rule under its heading and a hole punched at its foot for the
+ * drawer's rod, filed under a call number made from its folders (see
+ * src/lib/catalog.ts). A folder is a drawer: its page carries a brass label
+ * holder with its call number, its subfolders are drawer fronts and its
+ * notes a row of cards. Everything is scoped to [data-look="catalog"].
+ */
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+@import "@fontsource-variable/literata/opsz.css";
+@import "@fontsource-variable/literata/opsz-italic.css";
+
+[data-look="catalog"] {
+  --bg: #e4d6bb;
+  --surface: #fdfaf1;
+  --surface-2: #f2ead8;
+  --surface-3: #e7dcc3;
+  --ink: #1f1d1a;
+  --ink-2: #3a3630;
+  --muted: #5b554a;
+  --line: #d9ceb6;
+  --line-strong: #a59572;
+  --accent: #9e2a20;
+  --accent-2: #2b5885;
+  --accent-soft: rgb(158 42 32 / 0.08);
+  --on-accent: #fff;
+  --clay: #2b5885;
+  --clay-soft: rgb(43 88 133 / 0.1);
+  /* The red rule of a printed card, the brass of the drawer, the oak of its front. */
+  --rule: #c0392b;
+  --brass: #8a6a2a;
+  --drawer: #c7a36f;
+  --title-grad: linear-gradient(100deg, #9e2a20 0%, #2b5885 100%);
+  --shadow: 0 1px 1px rgb(60 40 10 / 0.12), 0 8px 18px -12px rgb(60 40 10 / 0.4);
+  --font-ui: "Space Mono", ui-monospace, monospace;
+  --font-read: "Literata Variable", "Literata", Georgia, serif;
+  --font-type: "Space Mono", ui-monospace, monospace;
+  --radius: 4px;
+  --radius-sm: 3px;
+}
+
+[data-look="catalog"][data-theme="dark"] {
+  --bg: #1a1612;
+  --surface: #27221c;
+  --surface-2: #312a22;
+  --surface-3: #3b3329;
+  --ink: #eee6d6;
+  --ink-2: #d5ccb9;
+  --muted: #aea38e;
+  --line: #3b3329;
+  --line-strong: #5f5241;
+  --accent: #f08a7e;
+  --accent-2: #95bce6;
+  --accent-soft: rgb(240 138 126 / 0.12);
+  --on-accent: #1a1612;
+  --clay: #95bce6;
+  --clay-soft: rgb(149 188 230 / 0.12);
+  --rule: #c8584b;
+  --brass: #b89650;
+  --drawer: #3d2f20;
+  --title-grad: linear-gradient(100deg, #f08a7e 0%, #95bce6 100%);
+  --shadow: 0 1px 1px rgb(0 0 0 / 0.4), 0 8px 18px -12px rgb(0 0 0 / 0.8);
+}
+
+[data-look="catalog"] body {
+  font-family: var(--font-read);
+}
+[data-look="catalog"] .site-header {
+  border-bottom: 1px solid var(--line-strong);
+}
+[data-look="catalog"] .brand-name,
+[data-look="catalog"] .note-title,
+[data-look="catalog"] .page-head h1,
+[data-look="catalog"] .hero h1,
+[data-look="catalog"] .prose h1,
+[data-look="catalog"] .prose h2,
+[data-look="catalog"] .prose h3,
+[data-look="catalog"] .prose h4,
+[data-look="catalog"] .backlinks h2,
+[data-look="catalog"] .panel-title {
+  font-family: var(--font-type);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+[data-look="catalog"] .gradient-text {
+  background: none;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* ---------- the card ---------- */
+[data-look="catalog"] article.note {
+  position: relative;
+  padding: clamp(18px, 3.5vw, 36px) clamp(18px, 4vw, 44px) clamp(48px, 6vw, 64px);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+/* The hole punched for the drawer's rod, at the card's foot. */
+[data-look="catalog"] article.note::after {
+  content: "";
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+}
+/* The call number, typed in the card's upper left. */
+[data-look="catalog"] .catalog-call {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0 0 6px;
+  font-family: var(--font-type);
+  font-size: 14px;
+}
+[data-look="catalog"] .catalog-call > span:first-child,
+[data-look="catalog"] .catalog-drawer > span:first-child {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+[data-look="catalog"] .catalog-call-no {
+  font-family: var(--font-type);
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+/* The red rule under the card's heading. */
+[data-look="catalog"] .note-head {
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--rule);
+}
+[data-look="catalog"] .note-meta,
+[data-look="catalog"] .crumbs {
+  font-family: var(--font-type);
+  font-size: 12.5px;
+}
+[data-look="catalog"] .prose h2 {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 1.25em;
+}
+[data-look="catalog"] .prose h3 {
+  font-size: 1.05em;
+}
+[data-look="catalog"] .prose a {
+  color: var(--accent-2);
+}
+[data-look="catalog"] .prose blockquote {
+  border-left-color: var(--rule);
+}
+[data-look="catalog"] .prose .callout {
+  border-radius: 3px;
+}
+[data-look="catalog"] .chip {
+  border-radius: 3px;
+  font-family: var(--font-type);
+}
+
+/* ---------- the drawer: its label, its fronts, its cards ---------- */
+[data-look="catalog"] .catalog-drawer {
+  display: flex;
+  width: fit-content;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 10px 0 4px;
+  padding: 6px 18px 7px;
+  border: 3px solid var(--brass);
+  border-radius: 3px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--font-type);
+}
+[data-look="catalog"] .page-head h1 {
+  font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.3rem);
+}
+[data-look="catalog"] .folder-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: 14px;
+}
+/* A drawer front of oak, its name on a card in a brass holder. */
+[data-look="catalog"] .folder-card {
+  position: relative;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 10px solid var(--drawer);
+  border-bottom-width: 26px;
+  border-radius: 3px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--brass), var(--shadow);
+  text-align: center;
+  font-family: var(--font-type);
+  color: var(--ink);
+}
+[data-look="catalog"] .folder-card svg {
+  display: none;
+}
+[data-look="catalog"] .folder-card .catalog-call-no,
+[data-look="catalog"] .folder-card span {
+  margin: 0;
+  font-size: 12px;
+}
+[data-look="catalog"] .folder-card span {
+  color: var(--ink-2);
+}
+/* The pull, below the label. */
+[data-look="catalog"] .folder-card::after {
+  content: "";
+  position: absolute;
+  bottom: -19px;
+  left: 50%;
+  width: 40px;
+  height: 10px;
+  margin-left: -20px;
+  border: 2px solid var(--brass);
+  border-top: 0;
+  border-radius: 0 0 20px 20px;
+}
+@media (hover: hover) {
+  [data-look="catalog"] .folder-card {
+    transition: translate 0.15s;
+  }
+  [data-look="catalog"] .folder-card:hover {
+    translate: 0 2px;
+  }
+}
+/* A drawer's notes stand on end, one card after the other. */
+[data-look="catalog"] .note-list {
+  display: grid;
+  gap: 8px;
+  border: 0;
+  background: none;
+  overflow: visible;
+}
+[data-look="catalog"] .note-row {
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--rule);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-family: var(--font-type);
+}
+[data-look="catalog"] .note-list li:last-child .note-row {
+  border-bottom: 1px solid var(--line);
+}
+[data-look="catalog"] .note-row .sub,
+[data-look="catalog"] .note-row time {
+  color: var(--ink-2);
+}
+[data-look="catalog"] .backlink {
+  border-radius: 4px;
+  border-top: 2px solid var(--rule);
+  background: var(--surface);
+}
+[data-look="catalog"] .backlink strong {
+  font-family: var(--font-type);
+}
+[data-look="catalog"] :focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-look="catalog"] .folder-card {
+    transition: none;
+  }
+  [data-look="catalog"] .folder-card:hover {
+    translate: none;
+  }
+}

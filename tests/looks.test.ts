@@ -95,6 +95,9 @@ describe("broadsheet look", () => {
       ["/Shell/", "Shell"],
       ["/Plans/", "Plans"],
       ["/Wiki/", "Wiki"],
+      ["/Zine/", "Zine"],
+      ["/Atlas/", "Atlas"],
+      ["/03-Atoms/", "Atoms"],
     ])
     expect(html).toContain('<h3 class="bs-headline"><a class="internal" href="/News/Harbour">Harbour</a></h3>')
   })
@@ -120,10 +123,53 @@ describe("broadsheet look", () => {
   })
 })
 
+describe("zine look", () => {
+  test("a note in a zine folder links its sheet and adds no markup of its own", () => {
+    const html = read("Zine/Cut-and-paste/index.html")
+    expect(html).toContain('data-look="zine"')
+    expect(lookSheet(html)).toBe("zine")
+    expect(html).toContain('<meta name="theme-color" content="#ecebe6" media="(prefers-color-scheme: light)"')
+    expect(html).not.toMatch(/atlas-region|catalog-call/)
+  })
+})
+
+describe("atlas look", () => {
+  test("a note names its region, its top folder, above its title", () => {
+    const html = read("Atlas/North/Harbour-town/index.html")
+    expect(html).toContain('data-look="atlas"')
+    expect(lookSheet(html)).toBe("atlas")
+    expect(html).toContain('<p class="atlas-region"><span>Region</span> <a href="/Atlas/">Atlas</a></p>')
+    expect(html.indexOf('class="atlas-region"')).toBeLessThan(html.indexOf('class="note-title'))
+    expect(read("Wiki/Zettelkasten/index.html")).not.toContain("atlas-region")
+  })
+
+  test("a folder page names its region, unlinked on the region's own page", () => {
+    expect(read("Atlas/North/index.html")).toContain('<p class="atlas-region"><span>Region</span> <a href="/Atlas/">Atlas</a></p>')
+    expect(read("Atlas/index.html")).toContain('<p class="atlas-region"><span>Region</span> Atlas</p>')
+  })
+})
+
+describe("catalog look", () => {
+  test("a note is filed under the call number of its folders", () => {
+    const html = read("03-Atoms/Code/Hash-map/index.html")
+    expect(html).toContain('data-look="catalog"')
+    expect(lookSheet(html)).toBe("catalog")
+    expect(html).toContain('<p class="catalog-call"><span>Call no.</span> <span class="catalog-call-no">03.ATO · Code</span></p>')
+    expect(read("03-Atoms/Atom/index.html")).toContain('<span class="catalog-call-no">03.ATO</span>')
+  })
+
+  test("a folder page is a drawer: its label, and a call number on each drawer inside", () => {
+    const html = read("03-Atoms/index.html")
+    expect(html).toContain('<p class="catalog-drawer"><span>Drawer</span> <span class="catalog-call-no">03.ATO</span></p>')
+    expect(html).toMatch(/<a class="folder-card" href="\/03-Atoms\/Code\/">[\s\S]*?Code<small class="catalog-call-no">03.ATO · Code<\/small><span>1<\/span><\/a>/)
+    expect(read("Atlas/index.html")).not.toContain("catalog-")
+  })
+})
+
 describe("accessibility of the looks", () => {
   const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
   // As tests/a11y.test.ts: serious and critical axe violations of the markup, scripts not run.
-  const PAGES = ["index.html", "Essays/index.html", "Essays/On-walking/index.html", "News/index.html", "Wiki/Zettelkasten/index.html", "Shell/Uptime/index.html", "Plans/Pump/index.html"]
+  const PAGES = ["index.html", "Essays/index.html", "Essays/On-walking/index.html", "News/index.html", "Wiki/Zettelkasten/index.html", "Shell/Uptime/index.html", "Plans/Pump/index.html", "Zine/Cut-and-paste/index.html", "Atlas/index.html", "Atlas/North/Harbour-town/index.html", "03-Atoms/index.html", "03-Atoms/Code/Hash-map/index.html"]
   for (const page of PAGES) {
     test(`${page} has no serious or critical axe violations`, async () => {
       const window = new Window({ url: "https://example.com/", settings: { disableJavaScriptEvaluation: false } })

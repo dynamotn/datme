@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "Quyết định này đã được thay thế.",
   "glossaryLetters": "Chuyển đến chữ cái",
   "lessonDone": "Xong",
-  "syllabusProgress": "Đã xong {done}/{total} bài"
+  "syllabusProgress": "Đã xong {done}/{total} bài",
+  "region": "Vùng",
+  "callNumber": "Ký hiệu xếp giá",
+  "drawer": "Ngăn kéo"
 }

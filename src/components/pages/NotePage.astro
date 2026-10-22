@@ -7,6 +7,7 @@ import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
 import { explainFrame, explainLook, isGarden, baseStyle } from "~/lib/look"
 import { stageOf } from "~/lib/garden"
+import { callNumber } from "~/lib/catalog"
 import { ownGroup, previewNote, previewOf } from "~/lib/dev-look"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
@@ -92,6 +93,9 @@ const frame = preview.chrome ?? explained.frame.value
 const stacks = frame === "full"
 // A broadsheet names the section a story runs in, its top folder, above the headline.
 const section = baseStyle(look) === "broadsheet" && note.dir ? vault.folders[note.lang].get(note.dir.split("/")[0]) : undefined
+// An atlas names the region a note lies in, its top folder; a card catalogue files it under a call number.
+const region = baseStyle(look) === "atlas" && note.dir ? vault.folders[note.lang].get(note.dir.split("/")[0]) : undefined
+const callNo = baseStyle(look) === "catalog" ? callNumber(note.dir, vault.trees[note.lang].folders.map((f) => f.dir)) : undefined
 // A wiki page boxes the note's properties beside its text, with its contents above it.
 const wiki = baseStyle(look) === "wiki"
 // The herbarium is the garden pressed: the same stages and wording, and a label card on each sheet.
@@ -147,6 +151,20 @@ const feed = note.protected
       section && (
         <p class="bs-kicker">
           <a href={section.url}>{section.name}</a>
+        </p>
+      )
+    }
+    {
+      region && (
+        <p class="atlas-region">
+          <span>{s.region}</span> <a href={region.url}>{region.name}</a>
+        </p>
+      )
+    }
+    {
+      callNo && (
+        <p class="catalog-call">
+          <span>{s.callNumber}</span> <span class="catalog-call-no">{callNo}</span>
         </p>
       )
     }

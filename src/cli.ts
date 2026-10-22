@@ -410,7 +410,8 @@ stages: {}
 # wiki: a reference page with an infobox of each note's properties;
 # broadsheet: a newspaper, the home a front page and each top folder a section;
 # herbarium: notes as pressed specimens in a cabinet; manuscript: a book page with sidenotes;
-# lacquer: black lacquer, vermilion and gold leaf.
+# lacquer: black lacquer, vermilion and gold leaf; zine: a photocopied cut-and-paste zine;
+# atlas: an old atlas, each top folder a region; catalog: a card catalogue with call numbers.
 appearance:
   style: notebook
   folders: {}

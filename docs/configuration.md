@@ -96,7 +96,10 @@ appearance:
                               # broadsheet: a newspaper, the home a front page, each top folder a section
                               # herbarium: the garden pressed, each note a specimen sheet;
                               # manuscript: a book page for long reading, notes in the margin;
-                              # lacquer: black lacquer, vermilion and gold leaf, dark first
+                              # lacquer: black lacquer, vermilion and gold leaf, dark first;
+                              # zine: a photocopied zine, pasted blocks, tape and grain;
+                              # atlas: an old atlas, each top folder a region, the graph a map;
+                              # catalog: a card catalogue, each note a card with a call number
                               # resume and darkroom are also valid, but made for a single page (see below)
   folders:                    # a style per folder, subfolders included; the longest match wins
     Writing: classic
@@ -232,6 +235,27 @@ lacquer with vermilion and gold leaf, a gold rule under each title and a
 vermilion lozenge before each section. It opens dark unless the reader chose
 a theme; light mode is eggshell inlay with vermilion and darker gold.
 
+The `zine` style is a self-printed zine run through a tired photocopier:
+toner grain over the page, the title a cut-out strip in a wonky hand, each
+section head lettered differently, and quotes, callouts, pictures and code
+pasted down at a slight angle in boxes of mismatched colours, some held by
+tape. On a phone and on paper everything lies straight again.
+
+The `atlas` style is an old atlas on parchment, contour lines under the
+page and a compass rose in the corner of each note. Each top folder is a
+region: its name is lettered above the title of every note and folder in
+it. The graph is drawn as a map, notes as towns on land in a pale sea,
+joined by dotted roads.
+
+The `catalog` style is a library card catalogue. Each note is a typed card
+with a red rule under its heading and a hole punched at its foot, filed
+under a call number made from its folders: the number the top folder starts
+with (`03 Atoms`), or else its place among the top folders, then three
+letters of its name, then the subfolder, so `03 Atoms/Code` is
+`03.ATO · Code`; notes at the root are `00.GEN`. A folder page is a drawer,
+its call number on a brass label, its subfolders drawer fronts and its notes
+a row of cards.
+
 With `readerSwitch`, the View menu of every page lists the styles you offer,
 and a reader's pick restyles the whole site for them until they choose "As
 the author set it" again. The choice stays in their browser and applies
@@ -239,8 +263,9 @@ before the page first shows, so it never flashes the author's style first;
 only the stylesheet of the chosen style is downloaded. It changes colours,
 type and paper, not what a page holds: a garden home keeps its tiles in the
 classic style. Pages in `resume` or `darkroom` keep their style, and those
-two cannot be offered. Nor can `broadsheet`, `wiki` and `herbarium`, which
-lay a page out their own way (a front page, an infobox, a specimen label):
+two cannot be offered. Nor can `broadsheet`, `wiki`, `herbarium`, `atlas` and
+`catalog`, which lay a page out their own way (a front page, an infobox, a
+specimen label, a region, a call number):
 their pages keep their style, and `true` leaves them out.
 
 `home: bento` lays the home out as a grid of tiles under the home note's

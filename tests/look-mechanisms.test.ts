@@ -133,12 +133,12 @@ describe("the reader's style", () => {
     expect(page).toMatch(/data-look-own="classic"/)
     const looks = JSON.parse(page.match(/data-reader-looks="([^"]*)"/)![1].replaceAll("&quot;", '"')) as Record<string, string[]>
     // The pack's ink style has templates of its own, which a swap of stylesheets cannot draw.
-    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "terminal", "blueprint", "manuscript", "lacquer"])
+    expect(Object.keys(looks)).toEqual(["classic", "notebook", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine"])
     expect(looks.classic).toEqual(["classic"])
     expect(looks.garden[0]).toBe("garden")
     expect(looks.garden[1]).toMatch(/\.css$/)
     const menu = page.split("data-look-switch")[1].split("</div>")[0]
-    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer"])
+    expect([...menu.matchAll(/name="reader-look" value="([^"]*)"/g)].map((m) => m[1])).toEqual(["", "notebook", "classic", "garden", "terminal", "blueprint", "manuscript", "lacquer", "zine"])
     // The script that applies the choice before the first paint, and only the page's own sheet linked.
     expect(page).toContain('localStorage.getItem("look")')
     expect(page.match(/<link[^>]*data-look-css/g)).toBeNull()

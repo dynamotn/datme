@@ -175,6 +175,44 @@ describe("herbarium, manuscript and lacquer looks", () => {
   })
 })
 
+describe("zine, atlas and catalog looks", () => {
+  const css = (file: string) => fs.readFileSync(path.resolve(import.meta.dir, "../src/styles", file), "utf8")
+
+  for (const look of ["zine", "atlas", "catalog"]) {
+    test(`every rule is scoped to the ${look} look`, () => {
+      expectScoped(`${look}.css`, look)
+    })
+  }
+
+  test("each prints black on white, even from dark mode", () => {
+    const print = css("print.css")
+    for (const look of ["zine", "atlas", "catalog"]) expect(print).toContain(`[data-look="${look}"][data-theme="dark"]`)
+    // A zine prints straight and without its tape; a card without its hole.
+    expect(print).toMatch(/\[data-look="zine"\]\[data-theme="dark"\] \{\s*--tilt: 0;/)
+    expect(print).toContain('[data-look="zine"] .prose blockquote::before')
+    expect(print).toContain('[data-look="catalog"] article.note::after {\n    display: none;')
+  })
+
+  test("a zine tilts its blocks by --tilt alone, which a phone sets to 0", () => {
+    const zine = css("zine.css")
+    const rotations = [...zine.matchAll(/rotate: ([^;]+);/g)].map((m) => m[1])
+    expect(rotations.length).toBeGreaterThan(5)
+    for (const r of rotations) expect(r).toMatch(/^calc\(-?[\d.]+deg \* var\(--tilt\)\)$|^0deg$/)
+    expect(zine).toMatch(/@media \(max-width: 640px\) \{\s*\[data-look="zine"\] \{\s*--tilt: 0;/)
+  })
+
+  test("a zine's cards and a catalogue's drawers stop moving for readers who ask for less motion", () => {
+    expect(css("zine.css")).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\[data-look="zine"\] \.backlink,\s*\[data-look="zine"\] \.folder-card \{\s*transition: none;/)
+    expect(css("catalog.css")).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\[data-look="catalog"\] \.folder-card \{\s*transition: none;/)
+  })
+
+  test("an atlas draws the graph's links as dotted roads, on land in a sea", () => {
+    const atlas = css("atlas.css")
+    expect(atlas).toContain("--graph-dash: 3 3;")
+    expect(atlas).toMatch(/\[data-look="atlas"\] \.graph-box,[^{]*\{[^}]*var\(--land\)[^}]*var\(--sea\)/)
+  })
+})
+
 describe("seasonal garden", () => {
   const garden = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/garden.css"), "utf8")
   test("every season has a palette in each scheme, as weak as the look's own", () => {

@@ -25,7 +25,13 @@
   [data-look="manuscript"],
   [data-look="manuscript"][data-theme="dark"],
   [data-look="lacquer"],
-  [data-look="lacquer"][data-theme="dark"] {
+  [data-look="lacquer"][data-theme="dark"],
+  [data-look="zine"],
+  [data-look="zine"][data-theme="dark"],
+  [data-look="atlas"],
+  [data-look="atlas"][data-theme="dark"],
+  [data-look="catalog"],
+  [data-look="catalog"][data-theme="dark"] {
     color-scheme: light;
     --bg: #fff;
     --dots: transparent;
@@ -106,6 +112,57 @@
   [data-look="lacquer"][data-theme="dark"] {
     --gold: #000;
     --vermilion: #000;
+  }
+  /* A zine prints straight, its boxes as outlines and its pictures without tape. */
+  [data-look="zine"],
+  [data-look="zine"][data-theme="dark"] {
+    --tilt: 0;
+    --box-1: #fff;
+    --box-2: #fff;
+    --box-3: #fff;
+    --box-4: #fff;
+    --mark: #fff1a8;
+  }
+  [data-look="zine"] .note-title,
+  [data-look="zine"] .page-head h1 {
+    background: none;
+    color: #000;
+    box-shadow: none;
+  }
+  [data-look="zine"] .prose blockquote,
+  [data-look="zine"] .prose .callout {
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+  [data-look="zine"] .prose blockquote::before,
+  [data-look="zine"] .prose .image-embed::before {
+    display: none;
+  }
+  /* An atlas sheet keeps its rose and neatline in ink, a card its call number and rule. */
+  [data-look="atlas"],
+  [data-look="atlas"][data-theme="dark"] {
+    --land: #fff;
+    --land-2: #fff;
+    --sea: #fff;
+  }
+  [data-look="atlas"] article.note,
+  [data-look="catalog"] article.note {
+    padding: 0;
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+  }
+  [data-look="atlas"] article.note::after {
+    background: #000;
+  }
+  [data-look="catalog"],
+  [data-look="catalog"][data-theme="dark"] {
+    --rule: #000;
+    --brass: #000;
+    --drawer: #fff;
+  }
+  [data-look="catalog"] article.note::after {
+    display: none;
   }
 
   html,

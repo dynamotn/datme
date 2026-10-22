@@ -286,5 +286,8 @@
   "supersededNoticeAlone": "Esta decisión fue reemplazada.",
   "glossaryLetters": "Ir a una letra",
   "lessonDone": "Hecho",
-  "syllabusProgress": "{done} de {total} lecciones hechas"
+  "syllabusProgress": "{done} de {total} lecciones hechas",
+  "region": "Región",
+  "callNumber": "Signatura",
+  "drawer": "Cajón"
 }

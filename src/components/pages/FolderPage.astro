@@ -20,6 +20,7 @@ import GardenBed from "../garden/GardenBed.astro"
 import Front from "../broadsheet/Front.astro"
 import Collection from "../Collection.astro"
 import { isCollection, layoutHtml } from "~/lib/note-layouts"
+import { callNumber } from "~/lib/catalog"
 
 interface Props {
   lang: Lang
@@ -48,6 +49,12 @@ const explained = {
 const look = preview.style ?? explained.look.value
 const frame = preview.chrome ?? explained.frame.value
 const stage = site.stages[folder.segment]
+// An atlas names the region a folder lies in, its top folder; a card catalogue labels it as a drawer.
+const top = folder.dir.split("/")[0]
+const region = baseStyle(look) === "atlas" ? vault.folders[lang].get(top) : undefined
+const tops = vault.trees[lang].folders.map((f) => f.dir)
+const catalog = baseStyle(look) === "catalog"
+const drawer = catalog ? callNumber(folder.dir, tops) : undefined
 // A folder note with a layout lays out its folder too: a collection replaces the list of notes.
 const layout = owner?.layout
 const collection = isCollection(layout) ? layout : undefined
@@ -67,6 +74,20 @@ const stream = isStream(folder.dir)
     {frame !== "minimal" && <Breadcrumbs lang={lang} dir={parent} />}
     <header class="page-head">
       <span class="chip stage">{stage ? `${stage.icon} ${stage.label[lang]}` : s.folder}</span>
+      {
+        region && (
+          <p class="atlas-region">
+            <span>{s.region}</span> {region.dir === folder.dir ? region.name : <a href={region.url}>{region.name}</a>}
+          </p>
+        )
+      }
+      {
+        drawer && (
+          <p class="catalog-drawer">
+            <span>{s.drawer}</span> <span class="catalog-call-no">{drawer}</span>
+          </p>
+        )
+      }
       <h1>{folder.name}</h1>
       <p>{s.notesCount(countNotes(folder))} · <a href={feed}>{s.rss}</a></p>
     </header>
@@ -79,6 +100,7 @@ const stream = isStream(folder.dir)
             <a class="folder-card" href={f.url}>
               {folderIcon(f.dir) ? <Fragment set:html={folderIcon(f.dir)} /> : <Icon name="folder" />}
               {f.name}
+              {catalog && <small class="catalog-call-no">{callNumber(f.dir, tops)}</small>}
               <span>{countNotes(f)}</span>
             </a>
           ))}

@@ -224,6 +224,9 @@ describe("menu and appearance", () => {
   test("the herbarium, manuscript and lacquer styles", () => {
     for (const style of ["herbarium", "manuscript", "lacquer"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
   })
+  test("the zine, atlas and catalog styles", () => {
+    for (const style of ["zine", "atlas", "catalog"] as const) expect(resolveConfig({ appearance: { style } }, "/v").appearance.style).toBe(style)
+  })
 
   test("a style per tag, written as in a note's tags", () => {
     const c = resolveConfig({ appearance: { tags: { "#Poem": "classic", "type/TIL": "garden", "#": "garden" } } }, "/v")

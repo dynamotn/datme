@@ -37,7 +37,7 @@ interface Call {
 function fakeContext() {
   const calls: Call[] = []
   const ctx: Record<string, unknown> = { fillStyle: "", strokeStyle: "", globalAlpha: 1, lineWidth: 1, font: "", textAlign: "" }
-  for (const op of ["setTransform", "clearRect", "beginPath", "moveTo", "lineTo", "stroke", "arc", "fill", "strokeText", "fillText"])
+  for (const op of ["setTransform", "clearRect", "beginPath", "moveTo", "lineTo", "stroke", "arc", "fill", "strokeText", "fillText", "setLineDash"])
     ctx[op] = (...args: unknown[]) => void calls.push({ op, args, fill: ctx.fillStyle as string, stroke: ctx.strokeStyle as string, alpha: ctx.globalAlpha as number })
   return { ctx, calls }
 }
@@ -279,6 +279,18 @@ describe("the graph in the browser", () => {
       expect(c.x).toBeLessThan(400)
     }
     expect(resizers.get(canvas)!.disconnected).toBe(true)
+  })
+
+  test("a look that sets --graph-dash draws its links as dashed roads, and its notes whole", async () => {
+    document.documentElement.style.setProperty("--graph-dash", "2 4")
+    const canvas = makeCanvas("cov-graph")
+    const stop = (await graph.mountGraph(canvas, "local"))!
+    stop()
+    resize(canvas)
+    document.documentElement.style.removeProperty("--graph-dash")
+    const calls = contexts.get(canvas)!.calls
+    const dashes = calls.slice(calls.findLastIndex((c) => c.op === "clearRect")).filter((c) => c.op === "setLineDash").map((c) => c.args[0])
+    expect(dashes).toEqual([[2, 4], []])
   })
 
   test("two links deep, the farther notes stay fainter and long titles are cut", async () => {
