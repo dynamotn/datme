@@ -145,7 +145,7 @@ export function accentProblems(accent: SiteConfig["theme"]["accent"], styles: re
 }
 
 /** The text of a query as a problem names it: its first line, cut short. */
-const queryText = (q: string) => {
+export const queryText = (q: string) => {
   const line = q.trim().split("\n")[0]
   return line.length > 60 ? line.slice(0, 59) + "…" : line
 }
