@@ -231,6 +231,8 @@ export interface PrivacyReport {
   files: string[]
   /** Frontmatter keys shown in the properties block of notes, with the notes showing each. */
   properties: { key: string; files: string[] }[]
+  /** Whether properties.show limits the keys shown to a list. */
+  propertiesListed: boolean
   privateLinks: PrivateLinkUse[]
   hosts: Host[]
 }
@@ -254,6 +256,7 @@ export function privacyReport(): PrivacyReport {
     docs: [...vault.docs.keys()].sort().map((file) => ({ file, url: docUrl(file, lang) })),
     files: [...vault.assets].sort(),
     properties: [...byKey].map(([key, files]) => ({ key, files })).sort((a, b) => a.key.localeCompare(b.key)),
+    propertiesListed: site.properties.show !== undefined,
     privateLinks: [...vault.privateLinks].sort((a, b) => a.file.localeCompare(b.file) || a.target.localeCompare(b.target)),
     hosts: outsideHosts(site, MONO_FONT_CSS, embedded, hasMap),
   }
@@ -276,6 +279,7 @@ export function formatPrivacy(r: PrivacyReport): string {
     "Properties shown",
     r.properties.map((p) => `${p.key}: ${p.files.length === 1 ? p.files[0] : `${p.files.length} notes`}`),
   )
+  if (r.properties.length && !r.propertiesListed) out.push("  Every key not hidden is shown; properties.show in datme.yaml shares only the keys it lists.")
   section(
     "Links to private notes",
     r.privateLinks.map((l) => `${l.file}  "${l.target}" ${l.shown ? `shows "${l.shown}"` : "shows nothing"}`),

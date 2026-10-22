@@ -118,7 +118,7 @@ const LAYOUT_SHOWN: Partial<Record<Layout, string[]>> = {
   lore: ["relations"],
 }
 
-/** The properties block of a note: aliases first, then every other non-hidden key. */
+/** The properties block of a note: aliases first, then every other key not hidden (and listed, with properties.show). */
 export function noteProperties(note: Note): [string, PropValue][] {
   if (note.protected) return []
   const vault = getVault()
@@ -129,13 +129,15 @@ export function noteProperties(note: Note): [string, PropValue][] {
   // What a layout already shows: where a collection's notes come from, the head of a résumé, a paper or a decision.
   const layout = note.layout ? (LAYOUT_SHOWN[note.layout] ?? ["from", "group", "statuses", "fields", "limit"]) : []
   const hidden = new Set([...HIDDEN_PROPERTIES, ...directives, ...stage, ...layout, ...site.properties.hide].map((k) => k.toLowerCase()))
+  // An allow-list, when the author keeps one: a key added to a note later is not published by surprise.
+  const shown = site.properties.show && new Set(site.properties.show.map((k) => k.toLowerCase()))
   const resolve = (target: string) => {
     const s = vault.resolveNote(target, note.dir)
     return s && vault.byKey[note.lang].get(s.key)
   }
   const out: [string, PropValue][] = []
   for (const [key, value] of Object.entries(note.source.fm)) {
-    if (hidden.has(key.toLowerCase())) continue
+    if (hidden.has(key.toLowerCase()) || (shown && !shown.has(key.toLowerCase()))) continue
     const prop = toProp(value, resolve, (target, alias) => vault.privateLink(target, note.dir, alias, note.lang))
     if (prop) out.push([key === "aliases" ? "aliases" : key, prop])
   }

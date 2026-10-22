@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
 
+- `properties.show` in `datme.yaml` lists the only frontmatter keys a note's properties block (and a wiki infobox) may show, so a key added to a note later, such as a phone number, is not published until you list it. `datme check --privacy` suggests it while every key not hidden is shown.
 - An Excalidraw drawing whose frontmatter says `publish: false` or `draft: true` stays private even when a published note embeds or links to it: the embed shows as a link to a private note (following `privateLinks`), and the images exported next to the drawing are not published either.
 
 ### Security

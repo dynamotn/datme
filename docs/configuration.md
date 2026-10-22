@@ -74,6 +74,7 @@ types:                        # icons and labels for type/* tags (common ones bu
 
 properties:
   hide: [rating]              # frontmatter keys left out of the properties block
+  show: [author, source, url] # when set, the only keys the properties block shows
 
 lineBreaks:                   # keep single line breaks, as Obsidian does (poems, lyrics)
   types: [composition]        # also: all: true, folders: [Poems]; frontmatter lineBreaks overrides

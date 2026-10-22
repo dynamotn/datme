@@ -306,6 +306,8 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) => z
       .object({
         /** Frontmatter keys left out of a note's properties block, on top of the built-in ones. */
         hide: z.array(z.string()).default([]),
+        /** When set, the only frontmatter keys a properties block may show; any other key stays home. */
+        show: z.array(z.string()).optional(),
       })
       .strict()
       .default({ hide: [] }),

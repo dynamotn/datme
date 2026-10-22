@@ -24,6 +24,10 @@ public", and gives you several ways to share a little more.
   private note, and the images exported next to it stay home too.
 - **Queries:** Dataview, Tasks, `query` blocks and Bases only see published
   notes.
+- **Properties:** a note's properties block shows every frontmatter key except
+  the ones datme uses itself and those in `properties.hide`. To share only
+  the keys you choose, list them in `properties.show`; a key added to a note
+  later then stays home until you list it.
 - **Comments:** `%%comments%%` and HTML comments never reach the page, nor the
   markdown copies made for `llms.txt`.
 

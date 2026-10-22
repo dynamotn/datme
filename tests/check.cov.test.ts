@@ -61,6 +61,7 @@ describe("reports", () => {
         { key: "one", files: ["a.md"] },
         { key: "many", files: ["a.md", "b.md"] },
       ],
+      propertiesListed: false,
       privateLinks: [{ file: "a.md", target: "Secret", shown: "" }],
       hosts: [{ host: "tiles.example", why: "map tiles" }],
     }
@@ -78,6 +79,7 @@ describe("reports", () => {
         "Properties shown (2)",
         "  one: a.md",
         "  many: 2 notes",
+        "  Every key not hidden is shown; properties.show in datme.yaml shares only the keys it lists.",
         "",
         "Links to private notes (1)",
         '  a.md  "Secret" shows nothing',
@@ -86,6 +88,8 @@ describe("reports", () => {
         "  tiles.example  map tiles",
       ].join("\n"),
     )
+    // With an allow-list, the keys shown are the ones the author chose: no advice.
+    expect(formatPrivacy({ ...r, propertiesListed: true })).not.toContain("properties.show")
   })
 })
 

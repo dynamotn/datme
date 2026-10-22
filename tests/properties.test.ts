@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { toProp, noteProperties } from "../src/lib/properties"
 import { getVault } from "../src/lib/vault"
+import { site } from "../src/site.config"
 
 const none = () => undefined
 
@@ -33,6 +34,17 @@ describe("toProp", () => {
 
 describe("noteProperties", () => {
   const vi = getVault().byKey["vi-VN"]
+
+  test("properties.show keeps only the keys it lists, whatever their case", () => {
+    site.properties.show = ["Website", "location", "publish"]
+    try {
+      // Bookkeeping keys stay hidden even when listed.
+      expect(noteProperties(vi.get("06_Reference/Niklas Luhmann")!).map(([k]) => k)).toEqual(["website", "location"])
+      expect(noteProperties(vi.get("03_Atomic/Zettelkasten")!)).toEqual([])
+    } finally {
+      site.properties.show = undefined
+    }
+  })
 
   test("lists aliases first and hides bookkeeping keys", () => {
     const keys = noteProperties(vi.get("06_Reference/Niklas Luhmann")!).map(([k]) => k)
