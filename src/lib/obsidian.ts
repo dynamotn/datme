@@ -59,6 +59,8 @@ interface Ctx {
   readText?(rel: string): string | undefined
   /** The words a link to a private note leaves ("" for none); undefined when the target is not one. */
   privateLink?(target: string, fromDir: string, alias: string | undefined): string | undefined
+  /** The words a link to a drawing withheld by its own frontmatter leaves; undefined when the target is not one. */
+  withheldDrawing?(target: string, fromDir: string, alias: string | undefined): string | undefined
   /**
    * A note of a neighbour garden, for `[[name:Note]]`: its URL and title; null when the
    * garden has no such note; undefined when `name` is no neighbour, or its index is unknown
@@ -320,6 +322,9 @@ export function preprocess(
 
   // Excalidraw drawings: the SVG/PNG the Obsidian plugin exports next to them, or else drawn by datme.
   const embedDrawing = (file: string, alias: string | undefined, fragment = "", line = ""): string => {
+    // A withheld drawing publishes nothing, not even the images exported next to it.
+    const withheld = ctx.withheldDrawing?.(file, ctx.dir, alias)
+    if (withheld !== undefined) return privateSpan("embed", file, withheld, escapeAttr(withheld))
     const base = file.replace(/\.md$/i, "")
     const find = (suffix: string) => ctx.resolveAsset(base + suffix, ctx.dir)
     const light = find(".light.svg") ?? find(".svg") ?? find(".light.png") ?? find(".png")
@@ -364,7 +369,11 @@ export function preprocess(
     if (!bang && EXCALIDRAW.test(file) && ctx.drawingPage) {
       const rel = ctx.drawingPage(file, ctx.dir)
       const name = escapeAttr(alias ?? file.split("/").pop()!.replace(EXCALIDRAW, ""))
-      if (!rel) return broken("link", file, `<span class="broken-link">${name}</span>`)
+      if (!rel) {
+        const withheld = ctx.withheldDrawing?.(file, ctx.dir, alias)
+        if (withheld !== undefined) return privateSpan("link", file, withheld, escapeAttr(withheld))
+        return broken("link", file, `<span class="broken-link">${name}</span>`)
+      }
       docs.push(rel)
       return `<a href="${docUrl(rel, ctx.lang)}" class="internal doc">${name}</a>`
     }
@@ -455,6 +464,8 @@ export function preprocess(
           docs.push(rel)
           return `<a href="${docUrl(rel, ctx.lang)}" class="internal doc">${text}</a>`
         }
+        const withheld = EXCALIDRAW.test(decoded) ? ctx.withheldDrawing?.(decoded, ctx.dir, text || undefined) : undefined
+        if (withheld !== undefined) return privateSpan("link", decoded, withheld, escapeAttr(withheld))
       }
       const asset = ctx.resolveAsset(decoded, ctx.dir)
       // Only targets that look like files: a bare word may be a route of the site itself.

@@ -48,6 +48,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A code block inside one language's `<!--lang:…-->` block no longer shows on the pages of the other languages.
 
+- An Excalidraw drawing whose frontmatter says `publish: false` or `draft: true` stays private even when a published note embeds or links to it: the embed shows as a link to a private note (following `privateLinks`), and the images exported next to the drawing are not published either.
+
+### Security
+
+- An unlisted note no longer appears in the backlinks of the notes it links to, so its title, URL and the sentence around the link stay with those who have the link.
+- A password-protected note no longer publishes its `banner`, `cover` or `avatar`: they were copied to the site, drawn above the locked page and used as its social card. The page now gets the generated card, as for any note without a banner.
+
 ## [3.1.0] - 2026-10-20
 
 ### Added

@@ -16,7 +16,12 @@ public", and gives you several ways to share a little more.
 - **Files:** only the images and attachments a published note uses are copied
   to the site; those that only encrypted content uses travel inside it.
 - **Canvases and bases:** only those a published note links to or embeds, or
-  all of them with `publish: all`.
+  all of them with `publish: all`. To keep one out whatever links to it, list
+  it (or its folder) in `ignore`.
+- **Drawings:** an Excalidraw drawing is published once a published note
+  embeds or links to it. A drawing whose own frontmatter says
+  `publish: false` or `draft: true` never is: the link shows as a link to a
+  private note, and the images exported next to it stay home too.
 - **Queries:** Dataview, Tasks, `query` blocks and Bases only see published
   notes.
 - **Comments:** `%%comments%%` and HTML comments never reach the page, nor the
@@ -56,8 +61,9 @@ read it through before the first deploy:
 ## Unlisted notes
 
 `unlisted: true` publishes the note but leaves it out of the explorer, folder
-and tag pages, lists, related notes, the site's search, Dataview and Bases
-results, and the markdown copies. People who have the link can still read it.
+and tag pages, lists, related notes, the backlinks of the notes it links to,
+the site's search, Dataview and Bases results, and the markdown copies. People
+who have the link can still read it.
 
 ## Drafts and scheduled notes
 
@@ -85,6 +91,8 @@ password: correct horse battery staple
   Set the number of rounds with `encryption.iterations`.
 - Nothing of the note's content reaches excerpts, search, feeds, embeds, the
   graph, the build cache or the markdown copies.
+- Its `banner`, `cover` and `audio` files are not published either, so the
+  social card is the generated one.
 - The password is removed from the frontmatter before anything renders.
 
 ## Locked parts

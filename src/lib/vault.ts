@@ -483,10 +483,16 @@ function buildVault(version: number): Vault {
     assetByName.set(name, [...(assetByName.get(name) ?? []), rel])
   }
 
-  // Excalidraw sources, published or not: an embed is what makes a drawing public.
+  // Excalidraw sources, published or not: an embed is what makes a drawing public,
+  // unless the drawing itself says `publish: false` or `draft: true`.
   const drawingByPath = new Map<string, string>()
   const drawingByName = new Map<string, string[]>()
+  const withheldDrawings = new Set<string>()
   for (const rel of [...found.md, ...found.files].filter((f) => /\.excalidraw(\.md)?$/i.test(f))) {
+    if (MD_EXT.test(rel)) {
+      const { fm } = parseFrontmatter(fs.readFileSync(path.join(site.vault, rel), "utf8"))
+      if (flag(fm.publish) === false || flag(fm.draft) === true) withheldDrawings.add(rel)
+    }
     const lower = fold(rel)
     drawingByPath.set(lower, rel)
     drawingByPath.set(lower.replace(/\.md$/, ""), rel)
@@ -595,13 +601,27 @@ function buildVault(version: number): Vault {
     return byAlias.get(lower)
   }
 
-  function resolveDrawing(target: string, fromDir: string): string | undefined {
+  /** The drawing a target names, withheld or not. */
+  function findDrawing(target: string, fromDir: string): string | undefined {
     const t = fold(decodeTarget(target.trim()).replace(/^\/+/, ""))
     const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
     const hit = drawingByPath.get(relative) ?? drawingByPath.get(t)
     if (hit) return hit
     const cands = drawingByName.get(path.posix.basename(t).replace(/\.md$/, ""))
     return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
+  }
+
+  /** The drawing a target names, unless it is withheld from publishing. */
+  function resolveDrawing(target: string, fromDir: string): string | undefined {
+    const rel = findDrawing(target, fromDir)
+    return rel && withheldDrawings.has(rel) ? undefined : rel
+  }
+
+  /** The words a link to a withheld drawing leaves, as for a private note; undefined for any other target. */
+  function withheldDrawing(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined {
+    const rel = findDrawing(target, fromDir)
+    if (!rel || !withheldDrawings.has(rel)) return undefined
+    return privateLinkText(site.privateLinks, target.replace(/\.md$/i, "").replace(/\.excalidraw$/i, ""), alias, t(lang).privateNote)
   }
 
   const scenes = new Map<string, Scene>()
@@ -828,9 +848,9 @@ function buildVault(version: number): Vault {
         if (lang === site.defaultLang) report("error", relFile, `${field} "${b}" is not in the vault`)
         return undefined
       }
-      const banner = fileProp("banner")?.href
-      const cover = fileProp("cover")?.href ?? fileProp("avatar")?.href
-      // A protected note's sound is part of what its password guards, so it is not published.
+      // A protected note's pictures and sound are part of what its password guards, so they are not published.
+      const banner = s.password ? undefined : fileProp("banner")?.href
+      const cover = s.password ? undefined : (fileProp("cover")?.href ?? fileProp("avatar")?.href)
       const audio = s.password ? undefined : fileProp("audio")
       // So is a certificate: a file of the vault named by a protected note stays out of the site.
       const certificate = s.password ? undefined : fileProp("certificate")
@@ -898,6 +918,7 @@ function buildVault(version: number): Vault {
         drawingPage: resolveDrawing,
         readText,
         privateLink: (target: string, fromDir: string, alias: string | undefined) => privateLink(target, fromDir, alias, lang),
+        withheldDrawing: (target: string, fromDir: string, alias: string | undefined) => withheldDrawing(target, fromDir, alias, lang),
         gardenLink: (name: string, target: string) => gardenLink(name, target, lang),
       }
       const pre = preprocess(body, { ...prepare, slides })
@@ -1054,6 +1075,7 @@ function buildVault(version: number): Vault {
               drawingPage: resolveDrawing,
               readText,
               privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
+              withheldDrawing: (target, fromDir, alias) => withheldDrawing(target, fromDir, alias, lang),
               gardenLink: (name, target) => gardenLink(name, target, lang),
             })
             pre.assets.forEach((a) => assets.add(a))
@@ -1116,8 +1138,8 @@ function buildVault(version: number): Vault {
     const tg = new Map<string, Note[]>()
     for (const n of notes[lang]) {
       const seen = new Set<string>()
-      // What a protected note links to is part of its secret content.
-      for (const l of n.protected ? [] : n.links) {
+      // What a protected note links to is part of its secret content; an unlisted one is found only by its link.
+      for (const l of n.protected || n.unlisted ? [] : n.links) {
         if (l.key === n.key || seen.has(l.key)) continue
         seen.add(l.key)
         bl.set(l.key, [...(bl.get(l.key) ?? []), { note: n, context: l.context }])
