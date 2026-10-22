@@ -7,9 +7,9 @@ import { renderNote } from "./markdown"
 import { langPrefix } from "./i18n"
 import { sluggify } from "./slug"
 import { gardenChanges } from "./changes"
-import { t } from "./i18n"
+import { formatDate, t } from "./i18n"
 import { collectionOf, episodeNumber, field, releasesOf, specOf, textOf, whenOf } from "./note-layouts"
-import { audioType } from "./collection-views"
+import { audioType, digestOf } from "./collection-views"
 import { escapeAttr } from "./html"
 
 /** What a feed covers: the whole site, a folder (with its subfolders) or a tag (with its subtags). */
@@ -151,5 +151,34 @@ export async function releasesFeed(note: Note): Promise<Response> {
         pubDate: r.date ? new Date(`${r.date}T00:00:00Z`) : undefined,
         description: textOf(r.body),
       })),
+  })
+}
+
+/** Path of the feed of a `digest`, next to its page: Garden/digest.xml. */
+export function digestPath(note: Note): string {
+  const dir = note.slug.replace(/(^|\/)index$/, "")
+  return dir ? `${dir}/digest.xml` : "digest.xml"
+}
+
+/** RSS of a digest: each week an item, at its anchor on the page, with the notes planted and tended in it. */
+export function digestFeed(note: Note): Promise<Response> {
+  const s = t(note.lang)
+  const weeks = digestOf(note, collectionOf(note, specOf(note, "digest")).flatMap((g) => g.notes))
+  const titles = (list: { note: Note }[]) => list.map((e) => e.note.title).join(", ")
+  return rss({
+    title: `${note.title} · ${site.title[note.lang]}`,
+    description: note.description ?? site.tagline[note.lang],
+    site: site.url ?? "http://localhost:4321",
+    customData: `<language>${note.lang}</language>`,
+    items: weeks.map((w) => ({
+      title: `${w.label} (${formatDate(new Date(`${w.start}T00:00:00Z`), note.lang)} – ${formatDate(new Date(`${w.end}T00:00:00Z`), note.lang)})`,
+      // Absolute already, so RSS adds no slash after the anchor.
+      link: new URL(`${note.url}#${w.id.toLowerCase()}`, site.url ?? "http://localhost:4321").href,
+      // The latest change of the week dates it, so the item moves up while the week goes on.
+      pubDate: [...w.planted, ...w.tended].map((e) => e.date).sort((a, b) => b.getTime() - a.getTime())[0],
+      description: [w.planted.length ? `${s.planted}: ${titles(w.planted)}` : "", w.tended.length ? `${s.tended}: ${titles(w.tended)}` : ""]
+        .filter(Boolean)
+        .join(" · "),
+    })),
   })
 }

@@ -6130,6 +6130,225 @@ summary.ntn-col-head {
     display: none;
   }
 }
+/* Courses: a row each, with how far along it is and its certificate. */
+.course-list,
+.question-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.course {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 12rem);
+  align-items: center;
+  gap: 8px 24px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.course-body,
+.question-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+:is(.course-meta, .question-meta) {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+:is(.course-meta, .question-meta) > * + *::before {
+  content: "·";
+  margin: 0 6px;
+}
+:is(.course-desc, .question-desc) {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.course-cert {
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.course-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.course-progress progress {
+  flex: 1;
+  min-width: 4rem;
+  height: 8px;
+  accent-color: var(--accent);
+}
+.item-progress {
+  max-width: 18rem;
+  margin-top: 10px;
+}
+@media (max-width: 560px) {
+  .course {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A wishlist: cards with their price and priority, and what each group comes to. */
+.wish-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wish-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 4px 0;
+  font-family: var(--font-ui);
+}
+.wish-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.wish-total {
+  margin: -8px 0 16px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quotebook: the wall of quotes, each with where it comes from. */
+.quotebook-wall {
+  margin-top: 0;
+}
+.collection-quotebook .quote-card blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-read);
+  font-size: 1.08em;
+  font-style: italic;
+}
+.collection-quotebook .quote-card blockquote > :first-child {
+  margin-top: 0;
+}
+.collection-quotebook .quote-card figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+}
+/* The dash goes before who said it only, not before where it comes from. */
+.collection-quotebook .quote-card figcaption::before {
+  content: none;
+}
+.collection-quotebook .quote-who::before {
+  content: "— ";
+}
+.collection-quotebook .quote-card figcaption > * + *::before {
+  content: "·";
+  margin: 0 6px;
+}
+.quote-link {
+  color: var(--muted);
+}
+
+/* Questions: open ones first, each marked, with what answers it. */
+.question {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 4px 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.question-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-weight: 700;
+}
+.question.is-answered .question-mark {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.question-answer {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.item-answer {
+  margin-top: 10px;
+}
+
+/* A digest: each week what was planted and what was tended. */
+.digest-range {
+  margin: -10px 0 14px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+}
+.digest-parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px 32px;
+}
+.digest-kind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.digest-kind .count {
+  font-weight: 400;
+  color: var(--muted);
+}
+.digest-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.digest-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.digest-list time,
+.digest-meta {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+}
 /* A paper: authors under the title, the abstract in a box, the text in two columns where it fits. */
 .layout-paper {
   --measure: 60rem;

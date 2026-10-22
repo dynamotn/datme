@@ -41,7 +41,7 @@ import PaperHead from "../PaperHead.astro"
 import DecisionHead from "../DecisionHead.astro"
 import { isOutdated } from "~/scripts/outdated"
 import { hasHistory, historyUrl, noteVersions } from "~/lib/history"
-import { episodesPath } from "~/lib/feed"
+import { digestPath, episodesPath } from "~/lib/feed"
 import { slugToUrl } from "~/lib/slug"
 
 interface Props {
@@ -108,14 +108,16 @@ const nowSince = note.layout === "now" ? (note.updated ?? note.created) : undefi
 const NOW_STALE_YEARS = 0.25
 // The theme pack's footer of a note: what the note's head shows of it, never its text.
 const packFooter = drawSlot("note-footer", look, note.lang, noteFields(note, { title, date: note.updated ?? note.created, words: r.words, tags: note.tags }))
-// Podcast apps find the feed of a collection of episodes from its page, and a changelog has a feed of its versions.
+// Podcast apps find the feed of a collection of episodes from its page, a changelog has a feed of its versions and a digest of its weeks.
 const feed = note.protected
   ? undefined
   : note.layout === "episodes"
     ? slugToUrl(episodesPath(note))
     : note.layout === "changelog"
       ? releasesUrl(note)
-      : undefined
+      : note.layout === "digest"
+        ? slugToUrl(digestPath(note))
+        : undefined
 ---
 
 <Base noindex={note.draft || note.unlisted} mdAlternate={hasMarkdown(note) ? mdUrl(note) : undefined} oembed={embeddable(note) ? oembedUrl(note) : undefined} lang={note.lang} title={note.title} description={r.description} image={image} feed={feed} alternates={alternates} look={look} explained={explained} jsonLd={jsonLd} translatedIn={translatedIn} canonicalUrl={original?.url} frame={frame} rail={frame === "full"}>

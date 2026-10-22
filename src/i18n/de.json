@@ -289,5 +289,20 @@
   "syllabusProgress": "{done} von {total} Lektionen erledigt",
   "region": "Region",
   "callNumber": "Signatur",
-  "drawer": "Schublade"
+  "drawer": "Schublade",
+  "statusCompleted": "Abgeschlossen",
+  "statusDropped": "Abgebrochen",
+  "statusWanted": "Gewünscht",
+  "statusBought": "Gekauft",
+  "statusGifted": "Geschenkt",
+  "statusOpen": "Offen",
+  "statusAnswered": "Beantwortet",
+  "courseProgress": "Fortschritt",
+  "certificate": "Zertifikat",
+  "wishlistTotal": "Summe {amount}",
+  "quoteInContext": "Im Zusammenhang lesen",
+  "questionAnswer": "Antwort",
+  "digestWeek": "KW {week}, {year}",
+  "digestFeed": "Wochenrückblick (RSS)",
+  "wishPriority": "Priorität"
 }

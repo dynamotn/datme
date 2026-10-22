@@ -298,8 +298,23 @@
   .snippet,
   .person,
   .episode,
-  .bookmark {
+  .bookmark,
+  .course,
+  .wish,
+  .question,
+  .quote-card,
+  .digest-part {
     break-inside: avoid;
+  }
+  /* A feed link means nothing on paper; a progress bar keeps its number beside it, in ink. */
+  .collection-feed {
+    display: none;
+  }
+  .course-progress progress {
+    accent-color: #000;
+  }
+  .wish-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .prose .media-link {
     display: inline;

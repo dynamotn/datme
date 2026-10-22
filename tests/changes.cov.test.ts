@@ -6,6 +6,7 @@ import { site } from "../src/site.config"
 import { getVault, type Note } from "../src/lib/vault"
 import { gardenChanges, hasChanges, noteChanges, TRIVIAL_WORDS, wordsChanged } from "../src/lib/changes"
 import { hasHistory, historyUrl, noteVersions } from "../src/lib/history"
+import { digestOf } from "../src/lib/collection-views"
 
 // A small vault of its own, in git, so the history is known exactly.
 const tmpRoot = os.tmpdir()
@@ -121,6 +122,19 @@ describe("one note's changes", () => {
     } finally {
       site.history = true
     }
+  })
+})
+
+describe("a digest from history", () => {
+  test("with `history: true`, every public version counts, linked to the history page", () => {
+    const digest = { ...note("Garden"), source: { ...note("Garden").source, fm: { history: true } } }
+    const weeks = digestOf(digest, [note("Garden"), note("Beds/Bed")])
+    expect(weeks.map((w) => [w.id, w.planted.map((e) => e.note.key).sort(), w.tended.map((e) => e.note.key).sort()])).toEqual([
+      ["2026-W21", [], ["Beds/Bed"]],
+      ["2026-W20", [], ["Beds/Bed", "Garden"]],
+      ["2026-W19", ["Beds/Bed", "Garden"], []],
+    ])
+    expect(weeks[1].tended.find((e) => e.note.key === "Garden")!.url).toBe(historyUrl(note("Garden")))
   })
 })
 

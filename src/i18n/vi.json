@@ -289,5 +289,20 @@
   "syllabusProgress": "Đã xong {done}/{total} bài",
   "region": "Vùng",
   "callNumber": "Ký hiệu xếp giá",
-  "drawer": "Ngăn kéo"
+  "drawer": "Ngăn kéo",
+  "statusCompleted": "Đã hoàn thành",
+  "statusDropped": "Đã bỏ",
+  "statusWanted": "Muốn có",
+  "statusBought": "Đã mua",
+  "statusGifted": "Được tặng",
+  "statusOpen": "Chưa trả lời",
+  "statusAnswered": "Đã trả lời",
+  "courseProgress": "Tiến độ",
+  "certificate": "Chứng chỉ",
+  "wishlistTotal": "Tổng {amount}",
+  "quoteInContext": "Đọc trong ngữ cảnh",
+  "questionAnswer": "Câu trả lời",
+  "digestWeek": "Tuần {week}, {year}",
+  "digestFeed": "Bản tin hằng tuần (RSS)",
+  "wishPriority": "Ưu tiên"
 }

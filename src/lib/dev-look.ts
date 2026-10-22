@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 import { site, type Lang, type StyleName } from "../site.config"
 import { CHROMES, pickOption, type Chrome, type FrameRule, type LookRule } from "./look"
 import { LAYOUTS, type FolderNode, type Layout, type Note } from "./vault"
-import { isCollection, presetGroup } from "./note-layouts"
+import { isCollection, presetGroup, presetGroups } from "./note-layouts"
 
 /** Query keys of the switcher of `datme dev`, named like the note properties they stand in for. */
 export const PREVIEW_KEYS = { style: "style", chrome: "chrome", layout: "layout", group: "group" } as const
@@ -72,9 +72,9 @@ export function shownLayout(own: Layout | undefined, preview: Preview): Layout |
 export const groupOf = (layout: Layout, group: string | undefined): string | undefined =>
   isCollection(layout) ? (group ?? presetGroup(layout)) : undefined
 
-/** The groupings worth offering a collection: the usual ones, its default, and the one it has. */
+/** The groupings worth offering a collection: its default, the usual ones (or those of its kind), and the one it has. */
 export function groupChoices(layout: Layout, own: string | undefined): string[] {
-  return isCollection(layout) ? [...new Set([presetGroup(layout), ...GROUPS, ...(own ? [own] : [])])] : []
+  return isCollection(layout) ? [...new Set([presetGroup(layout), ...(presetGroups(layout) ?? GROUPS), ...(own ? [own] : [])])] : []
 }
 
 /** The note's `group:` as written, when it is one. */

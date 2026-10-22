@@ -32,6 +32,28 @@ const scale = site.conventions.ratingScale
         </p>
       )
     }
+    {
+      item.progress && (
+        <div class="course-progress item-progress">
+          <progress max="100" value={item.progress.percent} aria-label={s.courseProgress} />
+          <span>{item.progress.label}</span>
+        </div>
+      )
+    }
+    {
+      item.answer && (
+        <p class="question-answer item-answer">
+          {s.questionAnswer}:{" "}
+          {item.answer.href ? (
+            <a class:list={{ internal: !/^https?:/.test(item.answer.href) }} href={item.answer.href} rel={/^https?:/.test(item.answer.href) ? "noopener" : undefined}>
+              {item.answer.text}
+            </a>
+          ) : (
+            item.answer.text
+          )}
+        </p>
+      )
+    }
     {item.audio && <audio class="item-audio" src={item.audio} controls preload="none" aria-label={note.title} />}
     {
       item.links.length > 0 && (

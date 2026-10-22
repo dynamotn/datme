@@ -36,6 +36,11 @@ export type Collection =
   | "people"
   | "snippets"
   | "episodes"
+  | "courses"
+  | "wishlist"
+  | "quotebook"
+  | "questions"
+  | "digest"
 const COLLECTIONS: Collection[] = [
   "projects",
   "books",
@@ -49,6 +54,11 @@ const COLLECTIONS: Collection[] = [
   "people",
   "snippets",
   "episodes",
+  "courses",
+  "wishlist",
+  "quotebook",
+  "questions",
+  "digest",
 ]
 
 export const isCollection = (layout: Layout | undefined): layout is Collection => COLLECTIONS.includes(layout as Collection)
@@ -81,13 +91,43 @@ const STATUSES: Partial<Record<Collection, [key: string, label: StatusLabel, spe
     ["read", "statusRead", ["read", "done", "finished", "seen"]],
     ["archived", "statusArchived", ["archived", "archive"]],
   ],
+  courses: [
+    ["in-progress", "statusActive", ["in-progress", "active", "ongoing", "current", "doing", "taking", "enrolled", "started", "wip"]],
+    ["planned", "statusPlanned", ["planned", "to-do", "todo", "want", "next", "idea", "wishlist"]],
+    ["completed", "statusCompleted", ["completed", "done", "finished", "passed", "certified", "graduated"]],
+    ["dropped", "statusDropped", ["dropped", "abandoned", "quit", "withdrawn", "paused"]],
+  ],
+  wishlist: [
+    ["wanted", "statusWanted", ["wanted", "want", "wish", "to-buy", "todo", "planned", "saving"]],
+    ["bought", "statusBought", ["bought", "got", "purchased", "owned", "have", "done"]],
+    ["gifted", "statusGifted", ["gifted", "gift", "received", "given"]],
+    ["dropped", "statusDropped", ["dropped", "skipped", "abandoned", "cancelled", "canceled", "no-longer-wanted"]],
+  ],
+  questions: [
+    ["open", "statusOpen", ["open", "unanswered", "pending", "todo", "new", "asked"]],
+    ["answered", "statusAnswered", ["answered", "resolved", "solved", "closed", "done"]],
+  ],
 }
 
 /**
  * How a collection looks: cards, a shelf of covers, a list of dated rows, or
- * the page of its own kind (a journal, a reading list, faces, code, episodes).
+ * the page of its own kind (a journal, a reading list, faces, code, episodes,
+ * courses, a wishlist, quotes, questions, a digest of the weeks).
  */
-export type Look = "cards" | "shelf" | "rows" | "daily" | "bookmarks" | "people" | "snippets" | "episodes"
+export type Look =
+  | "cards"
+  | "shelf"
+  | "rows"
+  | "daily"
+  | "bookmarks"
+  | "people"
+  | "snippets"
+  | "episodes"
+  | "courses"
+  | "wishlist"
+  | "quotebook"
+  | "questions"
+  | "digest"
 
 /** A collection as its note sets it up: the preset of its layout under `group`, `statuses` and `fields`. */
 export interface Spec {
@@ -100,7 +140,8 @@ export interface Spec {
   fields: string[]
 }
 
-const PRESETS: Record<Collection, { look: Look; group: string; fields: string[] }> = {
+/** `groups`: the groupings a kind takes, when not the usual status, year, month and none. */
+const PRESETS: Record<Collection, { look: Look; group: string; fields: string[]; groups?: string[] }> = {
   projects: { look: "cards", group: "status", fields: [] },
   books: { look: "shelf", group: "status", fields: ["author|authors", "year|published"] },
   movies: { look: "shelf", group: "status", fields: ["director|directors", "released|year"] },
@@ -113,10 +154,20 @@ const PRESETS: Record<Collection, { look: Look; group: string; fields: string[] 
   people: { look: "people", group: "none", fields: ["role|job|position", "org|company|organization|affiliation"] },
   snippets: { look: "snippets", group: "none", fields: [] },
   episodes: { look: "episodes", group: "season|year", fields: ["guests|guest"] },
+  courses: { look: "courses", group: "status", fields: ["provider|platform", "instructor|instructors|teacher"] },
+  wishlist: { look: "wishlist", group: "status", fields: ["brand|store|shop"] },
+  // A quotebook groups its quotes, not its notes: by who said them, or by the note they are in.
+  quotebook: { look: "quotebook", group: "author", fields: [], groups: ["author", "source", "none"] },
+  questions: { look: "questions", group: "status", fields: [] },
+  // A digest is by week, whatever its note says.
+  digest: { look: "digest", group: "week", fields: [], groups: [] },
 }
 
 /** What a collection groups by when its note says nothing: `status` for books, `year` for talks… */
 export const presetGroup = (kind: Collection): string => PRESETS[kind].group
+
+/** The groupings a kind of collection takes; undefined for the usual ones. */
+export const presetGroups = (kind: Collection): string[] | undefined => PRESETS[kind].groups
 
 const normalize = (v: string) => v.trim().toLowerCase().replace(/[\s_]+/g, "-")
 
@@ -157,7 +208,11 @@ export function field(n: Note, names: string): string {
   return ""
 }
 
-/** Where a collection takes its notes from: `from` (folders and #tags), else the note's own folder. */
+/**
+ * Where a collection takes its notes from: `from` (folders and #tags), else
+ * the note's own folder; questions are the notes tagged #question, and a
+ * digest is of the whole garden.
+ */
 export function sourcesOf(note: Note): { folders: string[]; tags: string[] } {
   const raw = note.source.fm.from
   const list = (Array.isArray(raw) ? raw : raw == null || raw === "" ? [] : [raw]).map((x) => plain(x))
@@ -167,7 +222,10 @@ export function sourcesOf(note: Note): { folders: string[]; tags: string[] } {
     if (item.startsWith("#")) tags.push(slugTag(item.slice(1)))
     else folders.push(item.replace(/^\/+|\/+$/g, ""))
   }
-  if (!folders.length && !tags.length) folders.push(note.dir)
+  if (!folders.length && !tags.length) {
+    if (note.layout === "questions") tags.push("question")
+    else folders.push(note.layout === "digest" ? "" : note.dir)
+  }
   return { folders, tags }
 }
 
@@ -212,6 +270,74 @@ export function whenOf(n: Note): Date | undefined {
   }
   const day = nameDay(n)
   return day ? new Date(`${day}T00:00:00Z`) : n.created
+}
+
+/** How much a wish matters: `priority` high, medium or low (or 1, 2, 3…), as written; rank 0 first, unknown last. */
+export function priorityOf(n: Note): { rank: number; label: string } {
+  const label = plain(n.source.fm.priority)
+  const v = normalize(label)
+  const known = [
+    ["high", "urgent", "must", "must-have", "top", "p1"],
+    ["medium", "normal", "mid", "p2"],
+    ["low", "someday", "nice-to-have", "p3"],
+  ].findIndex((spellings) => spellings.includes(v))
+  const rank = known >= 0 ? known : /^\d+$/.test(v) ? Number(v) - 1 : Infinity
+  return { rank, label }
+}
+
+/** Headings of the section that answers a question, in the languages of the UI. */
+const ANSWERS = /^(answers?|trả lời|câu trả lời|lời giải|antworten?|réponses?|respuestas?|回答|答え|答案|解答)$/i
+
+/** A published note to show: not unlisted, not a draft, not protected. */
+function visibleNote(lang: Lang, key: string): Note | undefined {
+  const n = getVault().byKey[lang].get(key)
+  return n && !n.unlisted && !n.draft && !n.protected ? n : undefined
+}
+
+/**
+ * Whether a question is answered, and by what: `status: answered` (or
+ * resolved…), an `answer` property (a note, a URL or words), or a link to a
+ * note in a section named Answers. A note that is unlisted, a draft or
+ * protected answers it without being named.
+ */
+export function questionOf(n: Note): { answered: boolean; answer?: Ref } {
+  const fm = n.source.fm
+  const vault = getVault()
+  let answer: Ref | undefined
+  let answered = false
+  const raw = Array.isArray(fm.answer) ? fm.answer[0] : fm.answer
+  const text = typeof raw === "string" ? raw.trim() : raw == null ? "" : plain(raw)
+  const link = text.match(/^\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]$/)
+  if (link) {
+    answered = true
+    const s = vault.resolveNote(link[1], n.dir)
+    const target = s && visibleNote(n.lang, s.key)
+    if (target) answer = { text: link[2] ?? target.title, href: target.url }
+  } else if (text) {
+    answered = true
+    answer = /^https?:\/\//.test(text) ? { text: new URL(text).hostname.replace(/^www\./, ""), href: text } : { text }
+  }
+  if (!answered) {
+    // The links under a heading named Answers, up to the next heading as high.
+    const lines = n.md.split("\n")
+    const at = lines.findIndex((l) => /^#{1,6}\s/.test(l) && ANSWERS.test(l.replace(/^#+\s*/, "").trim()))
+    if (at >= 0) {
+      const level = lines[at].match(/^#+/)![0].length
+      const end = lines.findIndex((l, i) => i > at && /^#{1,6}\s/.test(l) && l.match(/^#+/)![0].length <= level)
+      const body = lines.slice(at + 1, end < 0 ? undefined : end).join("\n")
+      for (const m of body.matchAll(/data-key="([^"]*)"/g)) {
+        const target = visibleNote(n.lang, unescape(m[1]))
+        if (target && target.key !== n.key) {
+          answered = true
+          answer = { text: target.title, href: target.url }
+          break
+        }
+      }
+    }
+  }
+  const status = normalize(plain(fm.status))
+  if (!answered) answered = STATUSES.questions![1][2].includes(status)
+  return { answered, answer }
 }
 
 // ---------- bases ----------
@@ -267,10 +393,14 @@ export function runBase(note: Note, ref: BaseRef): BaseResult {
 
 /** Each rendered base of a note, in order, replaced by what `by` makes of it. */
 function replaceBases(html: string, by: (i: number) => string): string {
+  return replaceDivs(html, /<div class="base-embed[^"]*">/g, by)
+}
+
+/** Each div that `open` matches the opening tag of, whole, in order, replaced by what `by` makes of it. */
+export function replaceDivs(html: string, open: RegExp, by: (i: number) => string): string {
   let out = ""
   let at = 0
   let i = 0
-  const open = /<div class="base-embed[^"]*">/g
   for (let m = open.exec(html); m; m = open.exec(html)) {
     // The end of this div: count the divs opened and closed inside it.
     const tags = /<div\b|<\/div>/g
@@ -337,6 +467,12 @@ function groupOf(n: Note, spec: Spec, statusOf: (value: string) => Spec["statuse
       const label = when.toLocaleDateString(lang, { month: "long", year: "numeric", timeZone: "UTC" })
       return { key: `${year}-${String(month + 1).padStart(2, "0")}`, label, order: year * 12 + month }
     }
+    // A question is answered by its status, its `answer` or a link under Answers; open ones come first.
+    if (name === "status" && spec.kind === "questions") {
+      const answered = questionOf(n).answered
+      const key = answered ? "answered" : "open"
+      return { key, label: statusOf(key)?.label ?? t(lang)[answered ? "statusAnswered" : "statusOpen"], order: answered ? 0 : 1 }
+    }
     const value = field(n, name)
     if (!value) continue
     const status = name === "status" ? statusOf(value) : undefined
@@ -363,13 +499,17 @@ export function collectionOf(note: Note, spec: Spec): CollectionGroup[] {
     })
   }
   const newest = (a: Note, b: Note) => (whenOf(b)?.getTime() ?? 0) - (whenOf(a)?.getTime() ?? 0) || collator.compare(a.title, b.title)
-  // People go by name, episodes by number, everything else newest first.
+  // People go by name, episodes by number, wishes by priority, questions oldest first, everything else newest first.
   const order =
     spec.kind === "people"
       ? (a: Note, b: Note) => collator.compare(a.title, b.title)
       : spec.kind === "episodes"
         ? (a: Note, b: Note) => episodeNumber(b) - episodeNumber(a) || newest(a, b)
-        : newest
+        : spec.kind === "wishlist"
+          ? (a: Note, b: Note) => priorityOf(a).rank - priorityOf(b).rank || newest(a, b)
+          : spec.kind === "questions"
+            ? (a: Note, b: Note) => -newest(a, b)
+            : newest
   const notes = found.sorted ? found.notes : [...found.notes].sort(order)
   if (spec.group === "none") return notes.length ? [{ key: "", label: "", notes }] : []
   const groups = new Map<string, CollectionGroup & { order?: number }>()
@@ -414,7 +554,8 @@ export function collectionKindOf(n: Note): Collection | undefined {
   if (!map) {
     map = new Map()
     for (const c of listed(n.lang)) {
-      if (!isCollection(c.layout) || c.protected) continue
+      // A quotebook and a digest gather passages and weeks of their notes: the notes stay as they are.
+      if (!isCollection(c.layout) || c.protected || c.layout === "quotebook" || c.layout === "digest") continue
       for (const item of notesOf(c).notes) if (!map.has(item.key)) map.set(item.key, c.layout)
     }
     memberships.set(id, map)
@@ -493,6 +634,47 @@ export function recipeFacts(n: Note): string[] {
   return [time && `⏱ ${time}`, servings && `🍽 ${servings}`].filter(Boolean)
 }
 
+/** How far into a course: `progress` as 0–100, "45%" or "3/10", capped at 100. */
+export function progressOf(n: Note): { percent: number; label: string } | undefined {
+  const text = plain(n.source.fm.progress)
+  const part = text.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/)
+  if (part && Number(part[2]) > 0) return { percent: Math.min(100, (Number(part[1]) / Number(part[2])) * 100), label: `${part[1]}/${part[2]}` }
+  const pct = text.match(/^(\d+(?:\.\d+)?)\s*%?$/)
+  if (!pct) return undefined
+  const percent = Math.min(100, Number(pct[1]))
+  return { percent, label: `${+percent.toFixed(1)}%` }
+}
+
+/** Currencies a price may be written with instead of a `currency`. */
+const CURRENCY_SIGNS: Record<string, string> = { $: "USD", "€": "EUR", "£": "GBP", "¥": "JPY", "₫": "VND", "₩": "KRW", "₹": "INR" }
+
+/**
+ * The price of a wish: `price` as a number or as written ("1,299.50",
+ * "1.299,50", "$12"), in `currency` (an ISO code), else the sign it is written with.
+ */
+export function priceOf(n: Note): { amount: number; currency?: string } | undefined {
+  const v = n.source.fm.price
+  const text = typeof v === "number" ? String(v) : plain(v)
+  const digits = text.match(/\d[\d.,\s]*/)?.[0].replace(/\s+/g, "").replace(/[.,]$/, "")
+  if (!digits) return undefined
+  // The last of a dot or a comma followed by one or two digits is the decimal point; the others group thousands.
+  const decimal = digits.match(/[.,](\d{1,2})$/)
+  const whole = (decimal ? digits.slice(0, -decimal[0].length) : digits).replace(/[.,]/g, "")
+  const amount = Number(decimal ? `${whole}.${decimal[1]}` : whole)
+  const sign = Object.keys(CURRENCY_SIGNS).find((c) => text.includes(c))
+  const currency = plain(n.source.fm.currency).toUpperCase() || (sign && CURRENCY_SIGNS[sign]) || undefined
+  return { amount, currency }
+}
+
+/** An amount in a language's way, with its currency when it has one; a code Intl does not know is written after it. */
+export function formatPrice(amount: number, currency: string | undefined, lang: Lang): string {
+  try {
+    return new Intl.NumberFormat(lang, currency ? { style: "currency", currency } : { maximumFractionDigits: 2 }).format(amount)
+  } catch {
+    return `${amount.toLocaleString(lang)} ${currency}`
+  }
+}
+
 /** What the head of a note's own page shows when it is an item of a collection, or has a cover. */
 export interface Item {
   kind?: Collection
@@ -505,6 +687,10 @@ export interface Item {
   byline: string[]
   rating?: number
   status?: string
+  /** How far into a course. */
+  progress?: { percent: number; label: string }
+  /** What answers a question. */
+  answer?: Ref
   links: { label: string; href: string }[]
 }
 
@@ -530,6 +716,12 @@ function bylineOf(n: Note, kind: Collection | undefined): (string | undefined)[]
       return [field(n, "language")]
     case "episodes":
       return [episodeNumber(n) ? `#${field(n, "number|episode|ep")}` : "", formatDate(when, n.lang), field(n, "duration|length"), field(n, "guests|guest")]
+    case "courses":
+      return [...preset.fields.map((f) => field(n, f)), periodOf(n, n.lang)]
+    case "wishlist": {
+      const price = priceOf(n)
+      return [price && formatPrice(price.amount, price.currency, n.lang), ...preset.fields.map((f) => field(n, f)), priorityOf(n).label]
+    }
     case undefined:
       return ["author|authors|director|creator", "year|published|released"].map((f) => field(n, f))
     default:
@@ -549,6 +741,8 @@ export function itemOf(n: Note): Item | undefined {
   // Where highlights come from: a URL to link, or a name such as Kindle.
   const source = highlights ? plain(n.source.fm.source) : ""
   const sourceUrl = /^https?:\/\//.test(source)
+  const question = kind === "questions" ? questionOf(n) : undefined
+  const certificate = kind === "courses" && n.certificate ? [{ label: t(n.lang).certificate, href: n.certificate.href }] : []
   return {
     kind,
     upright: preset.look === "shelf",
@@ -556,8 +750,14 @@ export function itemOf(n: Note): Item | undefined {
     audio: kind === "episodes" ? n.audio?.href : undefined,
     byline: [...bylineOf(n, kind), sourceUrl ? "" : source].filter((x): x is string => !!x),
     rating: ratingOf(n),
-    status: kind ? statusLabelOf(n, kind) : plain(n.source.fm.status) || undefined,
-    links: [...(sourceUrl ? [{ label: new URL(source).hostname.replace(/^www\./, ""), href: source }] : []), ...linksOf(n)].filter(
+    status: question
+      ? t(n.lang)[question.answered ? "statusAnswered" : "statusOpen"]
+      : kind
+        ? statusLabelOf(n, kind)
+        : plain(n.source.fm.status) || undefined,
+    progress: kind === "courses" ? progressOf(n) : undefined,
+    answer: question?.answer,
+    links: [...(sourceUrl ? [{ label: new URL(source).hostname.replace(/^www\./, ""), href: source }] : []), ...certificate, ...linksOf(n)].filter(
       (l, i, all) => all.findIndex((o) => o.href === l.href) === i,
     ),
   }
@@ -710,12 +910,8 @@ export function quotesHtml(html: string): string {
   for (const part of html.split(/(<blockquote>[\s\S]*?<\/blockquote>)/)) {
     const inner = part.match(/^<blockquote>([\s\S]*)<\/blockquote>$/)?.[1]
     if (inner !== undefined) {
-      // "— Name" as the last paragraph, or as the last line of the only one.
-      const own = inner.match(/<p>\s*(?:—|–|--)\s*([^<]*?)\s*<\/p>\s*$/)
-      const line = own ? null : inner.match(/(?:<br>)?\n\s*(?:—|–|--)\s*([^<\n]*?)\s*<\/p>\s*$/)
-      const text = own ? inner.slice(0, own.index) : line ? inner.slice(0, line.index) + "</p>" : inner
-      const who = own?.[1] ?? line?.[1]
-      wall.push(`<figure class="quote-card"><blockquote>${text.trim()}</blockquote>${who ? `<figcaption>${who}</figcaption>` : ""}</figure>`)
+      const { text, who } = quoteOf(inner)
+      wall.push(`<figure class="quote-card"><blockquote>${text}</blockquote>${who ? `<figcaption>${who}</figcaption>` : ""}</figure>`)
     } else if (part.trim() || !wall.length) {
       flush()
       out.push(part)
@@ -723,6 +919,36 @@ export function quotesHtml(html: string): string {
   }
   flush()
   return out.join("")
+}
+
+/** What a quote says and who said it (HTML): "— Name" as the last paragraph, or as the last line of the only one. */
+export function quoteOf(inner: string): { text: string; who?: string } {
+  const own = inner.match(/<p>\s*(?:—|–|--)\s*([^<]*?)\s*<\/p>\s*$/)
+  const line = own ? null : inner.match(/(?:<br>)?\n\s*(?:—|–|--)\s*([^<\n]*?)\s*<\/p>\s*$/)
+  const text = own ? inner.slice(0, own.index) : line ? inner.slice(0, line.index) + "</p>" : inner
+  return { text: text.trim(), who: (own?.[1] ?? line?.[1]) || undefined }
+}
+
+/** A quote found in a note: its text, who said it, and the block id of its blockquote, if it has one. */
+export interface FoundQuote {
+  text: string
+  who: string
+  id?: string
+}
+
+/**
+ * The quotes of a rendered note, as the `quotes` layout reads them: each
+ * blockquote whose last line names who said it. Quotes embedded from other
+ * notes belong to those, and a locked part is only ciphertext, so neither counts.
+ */
+export function quotesOf(html: string): FoundQuote[] {
+  const own = replaceDivs(html, /<div class="transclude"[^>]*>/g, () => "")
+  return topLevel(own, ["blockquote"]).flatMap((b) => {
+    if (!b.tag) return []
+    const { text, who } = quoteOf(innerOf(b.html))
+    const id = b.html.match(/^<blockquote\b[^>]*\sid="([^"]*)"/)?.[1]
+    return who ? [{ text, who, id: id && unescape(id) }] : []
+  })
 }
 
 /** A recipe: its ingredients (a section named so) beside its steps, each ingredient to tick off. */

@@ -289,5 +289,20 @@
   "syllabusProgress": "{total}レッスン中{done}完了",
   "region": "地域",
   "callNumber": "請求記号",
-  "drawer": "引き出し"
+  "drawer": "引き出し",
+  "statusCompleted": "修了",
+  "statusDropped": "中断",
+  "statusWanted": "欲しい",
+  "statusBought": "購入済み",
+  "statusGifted": "贈り物",
+  "statusOpen": "未回答",
+  "statusAnswered": "回答済み",
+  "courseProgress": "進捗",
+  "certificate": "修了証",
+  "wishlistTotal": "合計 {amount}",
+  "quoteInContext": "前後を読む",
+  "questionAnswer": "回答",
+  "digestWeek": "{year}年 第{week}週",
+  "digestFeed": "週間ダイジェスト (RSS)",
+  "wishPriority": "優先度"
 }

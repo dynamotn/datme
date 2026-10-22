@@ -289,5 +289,20 @@
   "syllabusProgress": "{done} of {total} lessons done",
   "region": "Region",
   "callNumber": "Call no.",
-  "drawer": "Drawer"
+  "drawer": "Drawer",
+  "statusCompleted": "Completed",
+  "statusDropped": "Dropped",
+  "statusWanted": "Wanted",
+  "statusBought": "Bought",
+  "statusGifted": "Gifted",
+  "statusOpen": "Open",
+  "statusAnswered": "Answered",
+  "courseProgress": "Progress",
+  "certificate": "Certificate",
+  "wishlistTotal": "Total {amount}",
+  "quoteInContext": "Read in context",
+  "questionAnswer": "Answer",
+  "digestWeek": "Week {week}, {year}",
+  "digestFeed": "Weekly digest (RSS)",
+  "wishPriority": "Priority"
 }

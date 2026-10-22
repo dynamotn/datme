@@ -626,9 +626,112 @@ describe("page layouts", () => {
     expect(read("Locked-interview/index.html")).not.toContain("secret-face.png")
   })
 
+  test("courses: by status, each with its progress and certificate", () => {
+    const html = article("Courses/Courses/index.html")
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["in-progress", "planned", "completed"])
+    expect(html).toContain('<progress max="100" value="30" aria-label="Progress: Rust basics"></progress><span>3/10</span>')
+    expect(html).toContain('<p class="course-meta"><span>Coursera</span><span>Ann Teacher</span><span>2024 – now</span></p>')
+    expect(html).toContain('<a class="course-cert" href="/assets/_assets/cert.pdf" rel="noopener">Certificate ↗</a>')
+    expect(read("assets/_assets/cert.pdf")).toStartWith("%PDF")
+    const course = article("Courses/Distributed-systems/index.html")
+    expect(course).toContain('<div class="course-progress item-progress"><progress max="100" value="100" aria-label="Progress"></progress><span>100%</span></div>')
+    expect(course).toContain('<a href="/assets/_assets/cert.pdf" rel="noopener">Certificate ↗</a>')
+  })
+
+  test("a protected course's certificate stays out of the site", () => {
+    expect(fs.existsSync(path.join(out, "assets/_assets/locked-cert.pdf"))).toBe(false)
+    expect(read("Courses/Courses/index.html")).not.toContain("Locked course")
+    expect(read("Courses/Locked-course/index.html")).not.toContain("locked-cert")
+  })
+
+  test("a wishlist: wishes by status and priority, prices and a total per group", () => {
+    const html = article("Wishlist/Wishlist/index.html")
+    expect([...html.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["wanted", "bought", "gifted"])
+    expect(html).toContain('<p class="wish-total">Total $179.99</p>')
+    expect(html).toContain('<span class="wish-price">$149.99</span><span class="chip wish-priority">Priority: high</span>')
+    expect(html.indexOf("Keyboard")).toBeLessThan(html.indexOf("Desk lamp"))
+    expect(html).toContain('<p class="wish-total">Total ₫1,299,000</p>')
+    expect(html).toContain('<a href="https://shop.example/keyboard" rel="noopener">shop.example ↗</a>')
+    expect(article("Wishlist/Headphones/index.html")).toContain('<a href="/Uses" class="internal" data-key="Uses">Uses</a>')
+  })
+
+  test("a quotebook: every signed quote of its notes, by who said it or by note, linked to its passage", () => {
+    const html = article("Quotebook/Quotebook/index.html")
+    expect([...html.matchAll(/<h2 class="collection-title">([^<]+) </g)].map((m) => m[1])).toEqual(["Donald Knuth", "Edsger Dijkstra", "Kent Beck"])
+    expect(html).toContain('<a class="quote-link" href="/Quotebook/Reading-notes#^simple">Read in context</a>')
+    expect(html).toContain('href="/Quotebook/Talk-notes#:~:text=Premature%20optimization%20is%20the%20root%20of%20all%20evil."')
+    expect(html).not.toContain("Nobody signed")
+    const bySource = article("Quotebook/By-source/index.html")
+    expect([...bySource.matchAll(/data-group="([^"]+)"/g)].map((m) => m[1])).toEqual(["Quotebook/Talk notes", "Quotebook/Reading notes"])
+    expect(bySource).toContain('<span class="quote-who">Edsger Dijkstra</span>')
+    // A quoted note keeps its own page.
+    expect(read("Quotebook/Reading-notes/index.html")).not.toContain("item-head")
+  })
+
+  test("a quotebook gathers nothing from protected notes, locked parts or unlisted notes", () => {
+    for (const page of ["Quotebook/Quotebook/index.html", "Quotebook/By-source/index.html"]) {
+      const html = read(page)
+      for (const secret of ["SECRET QUOTE", "LOCKED QUOTE", "UNLISTED QUOTE", "Spy", "Locksmith", "Ghost"]) expect(html).not.toContain(secret)
+    }
+  })
+
+  test("questions: open ones first, oldest first, then the answered with what answers them", () => {
+    const html = article("Questions/Questions/index.html")
+    const groups = [...html.matchAll(/data-group="([^"]+)"[\s\S]*?<\/section>/g)].map((m) => [m[1], [...m[0].matchAll(/class="talk-title internal" href="([^"]+)"/g)].map((x) => x[1])])
+    expect(groups).toEqual([
+      ["open", ["/Questions/Old-question", "/Questions/Why-gardens"]],
+      ["answered", ["/Questions/How-to-link", "/Questions/What-is-a-stub", "/Questions/Secret-answer"]],
+    ])
+    expect(html).toContain('<p class="question-answer">Answer: <a class="internal" href="/Zettelkasten">Zettelkasten</a></p>')
+    expect(html).toContain('<p class="question-answer">Answer: <a class="internal" href="/Sketchbook">Sketchbook</a></p>')
+    expect(article("Questions/How-to-link/index.html")).toContain('<span class="chip item-status">Answered</span>')
+    expect(article("Questions/Why-gardens/index.html")).toContain('<span class="chip item-status">Open</span>')
+  })
+
+  test("questions name no unlisted answer and no protected question", () => {
+    const html = read("Questions/Questions/index.html")
+    expect(html).not.toContain("HIDDEN ANSWER TITLE")
+    expect(article("Questions/Questions/index.html")).not.toContain("LOCKED QUESTION TITLE")
+    expect(article("Questions/Secret-answer/index.html")).not.toContain("item-answer")
+  })
+
+  test("a digest: each ISO week what was planted and tended, newest first, with a feed of the weeks", () => {
+    const html = article("Digest/Digest/index.html")
+    expect([...html.matchAll(/<section class="collection-group digest-week" id="([^"]+)"/g)].map((m) => m[1])).toEqual(["2024-w10", "2024-w09", "2024-w07"])
+    expect(html).toContain('<h2 class="collection-title">Week 10, 2024 <span class="count">1</span></h2><p class="digest-range"><time datetime="2024-03-04">Mar 4, 2024</time> – <time datetime="2024-03-10">Mar 10, 2024</time></p>')
+    expect(html).toMatch(/<div class="digest-part is-tended">[\s\S]*?href="\/Questions\/How-to-link"/)
+    expect(html).toContain('<a href="/Digest/Digest/digest.xml" type="application/rss+xml">Weekly digest (RSS)</a>')
+    for (const hidden of ["HIDDEN ANSWER TITLE", "LOCKED QUESTION TITLE", "Hidden-answer", "Locked-question"]) expect(html).not.toContain(hidden)
+    expect(read("Digest/Digest/index.html")).toContain('<link rel="alternate" type="application/rss+xml" title="Digest · Layouts" href="/Digest/Digest/digest.xml">')
+    const xml = read("Digest/Digest/digest.xml")
+    expect([...xml.matchAll(/<link>([^<]+)<\/link>/g)].map((m) => m[1]).slice(1)).toEqual([
+      "http://localhost:4321/Digest/Digest#2024-w10",
+      "http://localhost:4321/Digest/Digest#2024-w09",
+      "http://localhost:4321/Digest/Digest#2024-w07",
+    ])
+    expect(xml).toContain("<description>Planted: Why gardens</description>")
+    expect(xml).not.toContain("HIDDEN")
+    expect(xml).not.toContain("LOCKED")
+  })
+
   test("the new collections have no serious or critical axe violations", async () => {
     const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
-    for (const page of ["Journal/Journal/index.html", "Clippings/Clippings/index.html", "People/People/index.html", "Snippets/Snippets/index.html", "Podcast/Podcast/index.html", "Podcast/Pilot/index.html"]) {
+    for (const page of [
+      "Journal/Journal/index.html",
+      "Clippings/Clippings/index.html",
+      "People/People/index.html",
+      "Snippets/Snippets/index.html",
+      "Podcast/Podcast/index.html",
+      "Podcast/Pilot/index.html",
+      "Courses/Courses/index.html",
+      "Courses/Distributed-systems/index.html",
+      "Wishlist/Wishlist/index.html",
+      "Quotebook/Quotebook/index.html",
+      "Quotebook/By-source/index.html",
+      "Questions/Questions/index.html",
+      "Questions/How-to-link/index.html",
+      "Digest/Digest/index.html",
+    ]) {
       const window = new Window({ url: "https://garden.example/", settings: { disableJavaScriptEvaluation: false } })
       window.document.write(read(page).replace(/<script\b[\s\S]*?<\/script>/g, ""))
       window.eval(axeSource)
@@ -638,5 +741,5 @@ describe("page layouts", () => {
       const serious = res.violations.filter((v) => v.impact === "serious" || v.impact === "critical")
       expect({ page, found: serious.map((v) => `${v.id} at ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`) }).toEqual({ page, found: [] })
     }
-  }, 60_000)
+  }, 120_000)
 })

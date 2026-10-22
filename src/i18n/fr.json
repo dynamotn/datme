@@ -289,5 +289,20 @@
   "syllabusProgress": "{done} leçons terminées sur {total}",
   "region": "Région",
   "callNumber": "Cote",
-  "drawer": "Tiroir"
+  "drawer": "Tiroir",
+  "statusCompleted": "Terminé",
+  "statusDropped": "Abandonné",
+  "statusWanted": "Souhaité",
+  "statusBought": "Acheté",
+  "statusGifted": "Offert",
+  "statusOpen": "Ouverte",
+  "statusAnswered": "Répondue",
+  "courseProgress": "Progression",
+  "certificate": "Certificat",
+  "wishlistTotal": "Total {amount}",
+  "quoteInContext": "Lire dans son contexte",
+  "questionAnswer": "Réponse",
+  "digestWeek": "Semaine {week}, {year}",
+  "digestFeed": "Résumé hebdomadaire (RSS)",
+  "wishPriority": "Priorité"
 }

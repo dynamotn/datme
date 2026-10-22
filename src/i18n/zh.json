@@ -289,5 +289,20 @@
   "syllabusProgress": "已完成 {done}/{total} 课",
   "region": "地区",
   "callNumber": "索书号",
-  "drawer": "抽屉"
+  "drawer": "抽屉",
+  "statusCompleted": "已完成",
+  "statusDropped": "已放弃",
+  "statusWanted": "想要",
+  "statusBought": "已购买",
+  "statusGifted": "已获赠",
+  "statusOpen": "待解答",
+  "statusAnswered": "已解答",
+  "courseProgress": "进度",
+  "certificate": "证书",
+  "wishlistTotal": "合计 {amount}",
+  "quoteInContext": "查看上下文",
+  "questionAnswer": "答案",
+  "digestWeek": "{year}年第{week}周",
+  "digestFeed": "每周摘要 (RSS)",
+  "wishPriority": "优先级"
 }

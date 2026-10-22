@@ -361,6 +361,44 @@ A collection lists other notes:
   `season`, else by year. The collection has a podcast feed next to its
   page (`episodes.xml`), each `audio` as an enclosure that podcast apps can
   play; a sound elsewhere on the web is listed with an unknown length (0).
+- **`courses`**: courses you took, take or mean to take, grouped by
+  `status`: in progress, planned, completed, dropped (`doing`, `enrolled`,
+  `todo`, `finished`, `passed`, `quit`, …). Each row shows its `provider`
+  (or `platform`), `instructor` and years (`start`, `end`), a bar of its
+  `progress` (`45`, `45%` or `3/10`) and a link to its `certificate`: a URL,
+  or a file of the vault (`certificate: "[[cert.pdf]]"`), which is then
+  published. A course's own page shows the same bar and link.
+- **`wishlist`**: things you would like to get, grouped by `status`:
+  wanted, bought, gifted, dropped (`want`, `to-buy`, `got`, `purchased`,
+  `gift`, `skipped`, …), each group with what its wishes cost together.
+  Each wish is a card with its `price`, written as the note's language
+  writes money in its `currency` (an ISO code such as `USD`, else the sign
+  in the price, `$12`), its `priority` (`high`, `medium`, `low` or `1`, `2`,
+  `3`; the most wanted come first) and its `url`. A bought item can link to
+  where it is in use, such as your `uses` page, with an ordinary link.
+- **`quotebook`**: every quote of the listed notes, on one page. A quote is
+  a `>` blockquote whose last line names who said it (`— Ada Lovelace`), as
+  in the `quotes` layout; unsigned quotes are left out. Quotes are grouped
+  by who said them (`group: author`, the default, A–Z), by the note they
+  are in (`group: source`) or not at all (`group: none`), and each links
+  back to its passage: to its block id when it has one (a `^id` line after
+  it), else to its first words with a text fragment. Quotes a note embeds
+  from another, in a protected note or in a locked part are never
+  gathered. The quoted notes keep their usual page.
+- **`questions`**: open questions. Lists the notes tagged `#question` (or
+  those of `from`), open ones first, the oldest first. A question is
+  answered by `status: answered` (or `resolved`, `solved`, `closed`…), by
+  an `answer` property (a note, a URL or a few words), or by a link to a
+  note in a section named *Answers*; the answer is linked from the list and
+  from the question's own page. An answer that is unlisted, a draft or
+  protected still answers it, without being named.
+- **`digest`**: a weekly digest of the garden. Each ISO week, newest first,
+  lists the notes planted (created) and tended (updated) in it, for the
+  last `limit` weeks (8 by default). It covers the whole garden, or the
+  folders and `#tags` of `from`. With `history: true`, and `history` on for
+  the site, every public version from git counts and links to its history
+  page, as on the changes page. The weeks also make an RSS feed at
+  `digest.xml` next to the page, linked from it.
 - **`shelf`**: a shelf of anything else: games, records, podcasts. Name its
   statuses and the properties to show under each title:
 
@@ -376,7 +414,7 @@ fields: [platform, year]
 ```
 
 A collection lists the notes in its note's folder, or the folders and
-`#tags` given in `from`. Projects, books and movies are grouped by
+`#tags` given in `from` (questions and digests have the defaults above). Projects, books and movies are grouped by
 `status`: projects go in progress, planned, paused, done, archived; books
 go reading, to read, read, abandoned; movies go watching, to watch,
 watched, abandoned. Usual spellings of each status count (`ongoing`,
@@ -404,7 +442,8 @@ a `timeline`, those notes at their dates.
 
 A note listed by a collection shows its `cover` beside its title, with what
 it is (author, years, date and event…), its status, rating and links. A
-person's page shows their face round, and an episode's its player. A
+person's page shows their face round, an episode's its player, a course's
+its progress and certificate, and a question's whether it is answered. A
 recipe's page puts its ingredients (a section named *Ingredients* or
 *Nguyên liệu*) beside its steps, each one to tick off. Any note with a
 `cover` gets the same head.

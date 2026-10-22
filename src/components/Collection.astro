@@ -4,27 +4,36 @@ import { site } from "~/site.config"
 import { renderNote } from "~/lib/markdown"
 import { formatDate, t } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
-import { episodesPath } from "~/lib/feed"
+import { digestPath, episodesPath } from "~/lib/feed"
 import {
   bookmarkOf,
   dailyDays,
+  digestOf,
   firstParagraph,
   initials,
   listOf,
   peopleTies,
+  priceTotals,
+  quotebookOf,
   snippetOf,
   trackCharts,
   trackedOf,
+  type DigestWeek,
 } from "~/lib/collection-views"
 import ActivityCalendar from "./ActivityCalendar.astro"
 import {
   collectionOf,
   episodeNumber,
   field,
+  formatPrice,
   linksOf,
   periodOf,
   placesOf,
   plain,
+  priceOf,
+  priorityOf,
+  progressOf,
+  questionOf,
   ratingOf,
   recipeFacts,
   specOf,
@@ -40,7 +49,9 @@ const { note, kind } = Astro.props
 const s = t(note.lang)
 const scale = site.conventions.ratingScale
 const spec = specOf(note, kind)
-const all = collectionOf(note, spec)
+// A quotebook groups quotes and a digest weeks, not notes: both take the notes in their order.
+const gathers = spec.look === "quotebook" || spec.look === "digest"
+const all = collectionOf(note, gathers ? { ...spec, group: "none" } : spec)
 // A journal lists its latest entries only (`limit`, 30 by default); its calendar and charts show every day.
 const asked = Number(note.source.fm.limit)
 let left = spec.look !== "daily" ? Infinity : asked > 0 ? asked : 30
@@ -55,9 +66,11 @@ const shown = groups.flatMap((g) => g.notes)
 // Bookmarks quote their first paragraph and snippets show their code: their text is needed, not only a description.
 const needsText = spec.look === "bookmarks" || spec.look === "snippets"
 const rendered = new Map(
-  await Promise.all(shown.map(async (n) => [n.key, n.description && !needsText ? undefined : await renderNote(n)] as const)),
+  await Promise.all(
+    (gathers ? [] : shown).map(async (n) => [n.key, n.description && !needsText ? undefined : await renderNote(n)] as const),
+  ),
 )
-const described = new Map(shown.map((n) => [n.key, n.description ?? rendered.get(n.key)!.description]))
+const described = new Map(shown.map((n) => [n.key, n.description ?? rendered.get(n.key)?.description]))
 const html = (n: Note) => rendered.get(n.key)?.html ?? ""
 const fieldsOf = (n: Note) => spec.fields.map((f) => field(n, f)).filter(Boolean)
 const days = spec.look === "daily" ? dailyDays(all.flatMap((g) => g.notes)) : undefined
@@ -67,6 +80,18 @@ const snippets = new Map(spec.look === "snippets" ? shown.map((n) => [n.key, sni
 const languages = [...new Set([...snippets.values()].map((x) => x.language).filter(Boolean))].sort()
 const feed = spec.look === "episodes" && !note.protected ? slugToUrl(episodesPath(note)) : undefined
 const map = kind === "places" ? placesOf(groups) : []
+const quotes = spec.look === "quotebook" ? await quotebookOf(note, spec, shown) : []
+const bySource = spec.group === "source"
+const weeks = spec.look === "digest" ? digestOf(note, shown) : []
+const digestFeed = spec.look === "digest" && !note.protected ? slugToUrl(digestPath(note)) : undefined
+const empty = spec.look === "quotebook" ? quotes.length === 0 : spec.look === "digest" ? weeks.length === 0 : groups.length === 0
+const day = (d: string) => formatDate(new Date(`${d}T00:00:00Z`), note.lang)
+// What grew in a week: the notes planted, then those tended.
+const partsOf = (w: DigestWeek) =>
+  [
+    { kind: "planted", icon: "🌱", label: s.planted, list: w.planted },
+    { kind: "tended", icon: "🪴", label: s.tended, list: w.tended },
+  ].filter((p) => p.list.length)
 // The meta line of a card: the years of a project, the facts of a recipe, the place and date of a trip.
 const metaOf = (n: Note) =>
   kind === "recipes"
@@ -128,16 +153,226 @@ const metaOf = (n: Note) =>
       </div>
     )
   }
-  {groups.length === 0 && <p class="empty">{s.emptyCollection}</p>}
   {
-    groups.map((g) => (
+    digestFeed && (
+      <p class="collection-feed">
+        <a href={digestFeed} type="application/rss+xml">
+          {s.digestFeed}
+        </a>
+      </p>
+    )
+  }
+  {empty && <p class="empty">{s.emptyCollection}</p>}
+  {
+    quotes.map((g) => (
+      <section class="collection-group" data-group={g.key || undefined}>
+        {g.label && (
+          <h2 class="collection-title">
+            {g.note ? (
+              <a class="internal" href={g.note.url}>
+                {g.label}
+              </a>
+            ) : (
+              g.label
+            )}{" "}
+            <span class="count">{g.quotes.length}</span>
+          </h2>
+        )}
+        <div class="quote-wall quotebook-wall">
+          {g.quotes.map((q) => {
+            const meta = fieldsOf(q.note)
+            return (
+              <figure class="quote-card">
+                <blockquote set:html={q.text} />
+                <figcaption>
+                  {(bySource || !g.label) && <span class="quote-who" set:html={q.who} />}
+                  {!bySource && (
+                    <a class="internal quote-source" href={q.note.url}>
+                      {q.note.title}
+                    </a>
+                  )}
+                  {meta.length > 0 && <span class="quote-meta">{meta.join(", ")}</span>}
+                  <a class="quote-link" href={q.href}>
+                    {s.quoteInContext}
+                  </a>
+                </figcaption>
+              </figure>
+            )
+          })}
+        </div>
+      </section>
+    ))
+  }
+  {
+    weeks.map((w) => (
+      <section class="collection-group digest-week" id={w.id.toLowerCase()}>
+        <h2 class="collection-title">
+          {w.label} <span class="count">{w.planted.length + w.tended.length}</span>
+        </h2>
+        <p class="digest-range">
+          <time datetime={w.start}>{day(w.start)}</time> – <time datetime={w.end}>{day(w.end)}</time>
+        </p>
+        <div class="digest-parts">
+          {partsOf(w).map((part) => (
+              <div class:list={["digest-part", `is-${part.kind}`]}>
+                <h3 class="digest-kind">
+                  <span aria-hidden="true">{part.icon}</span> {part.label} <span class="count">{part.list.length}</span>
+                </h3>
+                <ul class="digest-list">
+                  {part.list.map((e) => {
+                    const meta = fieldsOf(e.note)
+                    return (
+                      <li>
+                        <a class="internal" href={e.url}>
+                          {e.note.title}
+                        </a>
+                        <time datetime={e.date.toISOString()}>{formatDate(e.date, note.lang)}</time>
+                        {meta.length > 0 && <span class="digest-meta">{meta.join(" · ")}</span>}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+  {
+    !gathers && groups.map((g) => (
       <section class="collection-group" data-group={g.key || undefined}>
         {g.label && (
           <h2 class="collection-title">
             {g.label} <span class="count">{g.notes.length}</span>
           </h2>
         )}
-        {spec.look === "cards" ? (
+        {spec.look === "wishlist" && priceTotals(g.notes, note.lang).length > 0 && (
+          <p class="wish-total">{s.wishlistTotal.replace("{amount}", priceTotals(g.notes, note.lang).join(" + "))}</p>
+        )}
+        {spec.look === "courses" ? (
+          <ol class="course-list">
+            {g.notes.map((n) => {
+              const progress = progressOf(n)
+              const meta = [...fieldsOf(n), periodOf(n, note.lang)].filter(Boolean)
+              return (
+                <li class="course">
+                  <div class="course-body">
+                    <a class="talk-title internal" href={n.url}>
+                      {n.title}
+                    </a>
+                    {meta.length > 0 && (
+                      <p class="course-meta">
+                        {meta.map((m) => (
+                          <span>{m}</span>
+                        ))}
+                      </p>
+                    )}
+                    {described.get(n.key) && <p class="course-desc">{described.get(n.key)}</p>}
+                    {n.certificate && (
+                      <a class="course-cert" href={n.certificate.href} rel="noopener">
+                        {s.certificate} ↗
+                      </a>
+                    )}
+                  </div>
+                  {progress && (
+                    <div class="course-progress">
+                      <progress max="100" value={progress.percent} aria-label={`${s.courseProgress}: ${n.title}`} />
+                      <span>{progress.label}</span>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ol>
+        ) : spec.look === "wishlist" ? (
+          <ul class="wish-grid">
+            {g.notes.map((n) => {
+              const price = priceOf(n)
+              const priority = priorityOf(n)
+              const meta = fieldsOf(n)
+              const links = linksOf(n)
+              return (
+                <li class="card wish">
+                  {n.cover && (
+                    <a class="card-media internal" href={n.url} tabindex="-1" aria-hidden="true">
+                      <img src={n.cover} alt="" loading="lazy" />
+                    </a>
+                  )}
+                  <div class="card-body">
+                    <h3 class="card-title">
+                      <a class="internal" href={n.url}>{n.title}</a>
+                    </h3>
+                    {(price || priority.label) && (
+                      <p class="wish-facts">
+                        {price && <span class="wish-price">{formatPrice(price.amount, price.currency, note.lang)}</span>}
+                        {priority.label && (
+                          <span class="chip wish-priority">
+                            {s.wishPriority}: {priority.label}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {meta.length > 0 && <p class="project-meta">{meta.join(" · ")}</p>}
+                    {described.get(n.key) && <p class="card-desc">{described.get(n.key)}</p>}
+                    {links.length > 0 && (
+                      <p class="project-links">
+                        {links.map((l) => (
+                          <a href={l.href} rel="noopener">
+                            {l.label} ↗
+                          </a>
+                        ))}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        ) : spec.look === "questions" ? (
+          <ol class="question-list">
+            {g.notes.map((n) => {
+              const q = questionOf(n)
+              const meta = fieldsOf(n)
+              return (
+                <li class:list={["question", q.answered ? "is-answered" : "is-open"]}>
+                  <span class="question-mark" aria-hidden="true">
+                    {q.answered ? "✓" : "?"}
+                  </span>
+                  <div class="question-body">
+                    <a class="talk-title internal" href={n.url}>
+                      {n.title}
+                    </a>
+                    {(n.created || meta.length > 0) && (
+                      <p class="question-meta">
+                        {n.created && <time datetime={n.created.toISOString()}>{formatDate(n.created, note.lang)}</time>}
+                        {meta.map((m) => (
+                          <span>{m}</span>
+                        ))}
+                      </p>
+                    )}
+                    {described.get(n.key) && <p class="question-desc">{described.get(n.key)}</p>}
+                    {q.answer && (
+                      <p class="question-answer">
+                        {s.questionAnswer}:{" "}
+                        {q.answer.href ? (
+                          <a
+                            class:list={{ internal: !/^https?:/.test(q.answer.href) }}
+                            href={q.answer.href}
+                            rel={/^https?:/.test(q.answer.href) ? "noopener" : undefined}
+                          >
+                            {q.answer.text}
+                          </a>
+                        ) : (
+                          q.answer.text
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        ) : spec.look === "cards" ? (
           <div class="card-grid project-grid">
             {g.notes.map((n) => {
               const meta = metaOf(n)

@@ -93,6 +93,11 @@ export const LAYOUT_LOOKS: Partial<Record<Layout, LayoutLook>> = {
   people: { frame: "full-norail" },
   snippets: { frame: "full-norail" },
   episodes: { frame: "full-norail" },
+  courses: { frame: "full-norail" },
+  wishlist: { frame: "full-norail" },
+  quotebook: { frame: "full-norail" },
+  questions: { frame: "full-norail" },
+  digest: { frame: "full-norail" },
 }
 
 /**

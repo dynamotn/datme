@@ -65,6 +65,11 @@ export const LAYOUTS = [
   "people",
   "snippets",
   "episodes",
+  "courses",
+  "wishlist",
+  "quotebook",
+  "questions",
+  "digest",
 ] as const
 export type Layout = (typeof LAYOUTS)[number]
 
@@ -87,6 +92,8 @@ export interface Note {
   cover?: string
   /** Sound of an episode (`audio` property): a URL, or a file of the vault (`file`, vault-relative) that is then published. */
   audio?: { href: string; file?: string }
+  /** A course's `certificate`: a URL, or a file of the vault (`file`, vault-relative) that is then published. */
+  certificate?: { href: string; file?: string }
   /** How the page is laid out (`layout` property): a page of its own text reshaped, or a collection of notes. */
   layout?: Layout
   /** Pictures of the speakers of a dialogue, by name (its `speakers` property). */
@@ -812,6 +819,8 @@ function buildVault(version: number): Vault {
       const cover = fileProp("cover")?.href ?? fileProp("avatar")?.href
       // A protected note's sound is part of what its password guards, so it is not published.
       const audio = s.password ? undefined : fileProp("audio")
+      // So is a certificate: a file of the vault named by a protected note stays out of the site.
+      const certificate = s.password ? undefined : fileProp("certificate")
       const layoutField = typeof s.fm.layout === "string" ? s.fm.layout.trim().toLowerCase() : undefined
       const layout = LAYOUTS.find((l) => l === layoutField)
       if (layoutField && !layout && lang === site.defaultLang) {
@@ -925,6 +934,7 @@ function buildVault(version: number): Vault {
         bannerPos: `${pos(s.fm.banner_x)} ${pos(s.fm.banner_y)}`,
         cover: cover ?? banner,
         audio,
+        certificate,
         layout,
         speakers,
         style,
