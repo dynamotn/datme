@@ -248,6 +248,16 @@ playwright install chromium` once). `bun run screenshots readme` or `styles`
 makes one set; run `styles` again after adding a style.
 `bun run dev docs` previews the documentation itself.
 
+Every layout and collection is checked in every style: `tests/fixtures/layouts`
+is built once per style, set site-wide. The unit tests check those pages'
+markup and axe rules (`tests/look-matrix.test.ts`); `bun run matrix` opens them
+in Chromium at 1280 and 390 px and fails on a page that scrolls sideways, on
+content of a layout that a style hides, and on text of a layout below AA
+contrast, light or dark. It takes a minute or two, so it runs on its own; run
+it after changing a style or a layout. `bun run matrix wiki zine` checks some
+styles, and `--shots <dir>` also saves a contact sheet per page, every style
+side by side.
+
 A map of the code:
 
 | Path | What it holds |

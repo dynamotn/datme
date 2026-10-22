@@ -47,7 +47,8 @@
     "lint": "biome ci",
     "format": "biome format --write",
     "test": "bun test --coverage",
-    "screenshots": "bun tools/screenshots.ts"
+    "screenshots": "bun tools/screenshots.ts",
+    "matrix": "bun tools/matrix.ts"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
