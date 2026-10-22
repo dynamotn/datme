@@ -277,6 +277,25 @@ describe("chips: the accent on its own soft tint", () => {
   })
 })
 
+describe("layouts in a look", () => {
+  test("a map's credits in the dark sit on the card, where the links and words of every look read", () => {
+    const css = fs.readFileSync(path.resolve(import.meta.dir, "../src/styles/global.css"), "utf8")
+    const rule = css.match(/:root\[data-theme="dark"\] \.leaflet-container \.leaflet-control-attribution \{([^}]*)\}/)![1]
+    expect(rule).toContain("background: var(--surface);")
+    expect(rule).toContain("color: var(--ink-2);")
+    expect(css).toMatch(/:root\[data-theme="dark"\] \.leaflet-container \.leaflet-control-attribution a \{\s*color: var\(--accent\);/)
+    const out: string[] = []
+    const dark = sheetPalette("global.css", [":root", ':root[data-theme="dark"]'])
+    for (const look of STYLES) {
+      const own = `[data-look="${look}"]`
+      const p = look === "classic" ? dark : sheetPalette(`${look}.css`, [own, `${own}[data-theme="dark"]`], dark)
+      for (const fg of ["--accent", "--ink-2"])
+        if (contrast(p, fg, "--surface") < AA_TEXT) out.push(`${look}: ${fg} ${contrast(p, fg, "--surface").toFixed(2)}:1`)
+    }
+    expect(out).toEqual([])
+  })
+})
+
 describe("an accent readable on its grounds", () => {
   test("contrastOf: the ratio of two colours, none for a colour not parsed", () => {
     expect(contrastOf("#000", "#fff")).toBe(21)
