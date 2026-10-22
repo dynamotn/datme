@@ -2,7 +2,8 @@ import type { APIRoute, GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
 import { getVault, type Note } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { renderOg, OG_SOURCE } from "~/lib/og"
+import { cardSpec, renderOg, OG_SOURCE } from "~/lib/og"
+import { baseStyle, lookOf } from "~/lib/look"
 import { readCache, writeCache } from "~/lib/render-cache"
 import { formatDate, langPrefix, t } from "~/lib/i18n"
 
@@ -34,11 +35,14 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
       logo: site.logo,
     }
   }
-  // Drawing a card is the slowest step of a build; an unchanged card is reused.
-  const key = [JSON.stringify(card)]
+  // The card is drawn in the page's style: the home's is the site's, a note's its own.
+  const accent = site.theme.accent
+  const spec = cardSpec(baseStyle(note ? lookOf(note) : site.appearance.style), typeof accent === "object" ? accent.light : accent)
+  // Drawing a card is the slowest step of a build; an unchanged card in an unchanged style is reused.
+  const key = [JSON.stringify(card), JSON.stringify(spec)]
   let png = readCache("og", OG_SOURCE, key)
   if (!png) {
-    png = await renderOg(card)
+    png = await renderOg(card, spec)
     writeCache("og", OG_SOURCE, key, png)
   }
   return new Response(new Uint8Array(png), { headers: { "content-type": "image/png" } })

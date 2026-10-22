@@ -377,7 +377,8 @@ webmentions: {}               # receive mentions via webmention.io ({ domain } d
 subscribe:                    # a form for new notes by email, under notes and on folder and tag pages
   provider: buttondown        # buttondown { username } or form { action, field?, topicField? }
   username: me
-ogImages: true                # social cards for the home page and notes without a banner
+ogImages: true                # social cards for the home page and notes without a banner,
+                              # drawn in the page's style (see below)
 activitypub: bridgy           # fediverse: bridgy (followable through Bridgy Fed), or { username }
                               # for a static actor that is found but not followed; needs site.url
 neighbours: {}                # other datme gardens by name: [[name:Note]] links to one of their notes
@@ -388,6 +389,17 @@ stats: { hide: [] }           # garden health left off /stats: density, structur
 outdated: { after: 2 }        # say so on notes not updated for this many years (off by default)
 offline: true                 # installable app; pages a reader opened stay readable offline
 ```
+
+A social card follows the style of its page, a note's own or the site's for
+the home: an index card for `notebook`, cream paper between two rules for
+`classic`, a leafy tile for `garden`, a taped specimen sheet with its label
+for `herbarium`, terraces mirrored in water for `paddy`, a phosphor prompt for
+`terminal` (in `theme.accent` when it reads on black), a drawing with its
+title block for `blueprint`, gold leaf on lacquer for `lacquer`, a masthead
+for `broadsheet`, a sidenote in the margin for `manuscript`, a print between
+film strips for `darkroom` and a grey e-reader page for `eink`. Other styles
+(`wiki`, `resume`) get a plain white card in `theme.accent`, or their own
+accent. Cards use the fonts bundled with datme, not `theme.fonts`.
 
 ## Hosting
 
