@@ -6,7 +6,7 @@ import { renderNote } from "~/lib/markdown"
 import { t, formatDate } from "~/lib/i18n"
 import { isStream } from "~/lib/nav"
 import { explainDir, explainFrame, explainLook, isGarden, baseStyle } from "~/lib/look"
-import { previewOf } from "~/lib/dev-look"
+import { folderStandIn, ownGroup, previewNote, previewOf, shownLayout } from "~/lib/dev-look"
 import { feedPath } from "~/lib/feed"
 import { withBase } from "~/lib/base"
 import Subscribe from "../Subscribe.astro"
@@ -30,13 +30,21 @@ const s = t(lang)
 const vault = getVault()
 const intro = folder.folderNote ? await renderNote(folder.folderNote) : undefined
 // Any unprotected folder note gives its folder its look and frame: its own style/chrome or its layout's defaults.
-const owner = folder.folderNote && !folder.folderNote.protected ? folder.folderNote : undefined
+const ownNote = folder.folderNote && !folder.folderNote.protected ? folder.folderNote : undefined
+// `datme dev` can lay the folder out another way, and try a collection on a folder that has no folder note yet.
+const preview = previewOf(Astro.url)
+const owner = ownNote
+  ? previewNote(ownNote, preview)
+  : !folder.folderNote && isCollection(shownLayout(undefined, preview))
+    ? previewNote(folderStandIn(folder, lang), preview)
+    : undefined
 const explained = {
   look: owner ? explainLook(owner) : explainDir(folder.dir, site.appearance),
   frame: owner ? explainFrame(owner) : explainFrame(undefined),
-  target: { kind: "folder", dir: folder.dir, file: owner && owner.source.key + ".md" } as const,
+  target: { kind: "folder", dir: folder.dir, file: ownNote && ownNote.source.key + ".md" } as const,
+  // A protected folder note keeps its folder as it is.
+  shape: folder.folderNote?.protected ? undefined : { layout: ownNote?.layout, group: ownNote && ownGroup(ownNote) },
 }
-const preview = previewOf(Astro.url)
 const look = preview.style ?? explained.look.value
 const frame = preview.chrome ?? explained.frame.value
 const stage = site.stages[folder.segment]
@@ -62,8 +70,8 @@ const stream = isStream(folder.dir)
       <h1>{folder.name}</h1>
       <p>{s.notesCount(countNotes(folder))} · <a href={feed}>{s.rss}</a></p>
     </header>
-    {intro && <div class="prose" style="margin-bottom: 36px" set:html={layout ? layoutHtml(folder.folderNote!, intro.html) : intro.html} />}
-    {collection && folder.folderNote && <Collection note={folder.folderNote} kind={collection} />}
+    {intro && <div class="prose" style="margin-bottom: 36px" set:html={layout && ownNote ? layoutHtml(owner!, intro.html) : intro.html} />}
+    {collection && owner && <Collection note={owner} kind={collection} />}
     {
       folder.folders.length > 0 && (
         <div class="folder-grid">

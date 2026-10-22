@@ -60,8 +60,9 @@ garden, in its first language:
 plugin lists them too when its *Show notices* setting is on.
 
 `build` prints a one-line summary of the problems `check` would report.
-`datme dev` also shows a note's problems on its page, and a style switcher to
-preview any page in another style or chrome (see
+`datme dev` also shows a note's problems on its page, and a switcher to
+preview any page in another style or chrome, and a note or folder in another
+layout or collection (see
 [Writing](writing.md#page-layouts)).
 
 Dead external links found by `check --external` are remembered. The next

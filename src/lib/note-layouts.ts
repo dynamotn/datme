@@ -115,6 +115,9 @@ const PRESETS: Record<Collection, { look: Look; group: string; fields: string[] 
   episodes: { look: "episodes", group: "season|year", fields: ["guests|guest"] },
 }
 
+/** What a collection groups by when its note says nothing: `status` for books, `year` for talks… */
+export const presetGroup = (kind: Collection): string => PRESETS[kind].group
+
 const normalize = (v: string) => v.trim().toLowerCase().replace(/[\s_]+/g, "-")
 
 /** A value written once or per language. */

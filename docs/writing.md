@@ -227,6 +227,15 @@ styles the note, else its first), `appearance.folders` or `appearance.style`
 in `datme.yaml`. Built sites never show the bar and ignore
 the address.
 
+On a note or a folder page the bar also names the page's layout and tries
+another one: any layout of a note's own text, any collection, or `none` to see
+the note without its layout (`?layout=books`). A collection can be regrouped
+by status, year, month, none or its layout's default (`?group=year`, or any
+property). A folder without a folder note tries collections only, of the
+notes in that folder, and the bar gives the frontmatter of the folder note to
+create. A previewed layout brings its own style and frame, as it would once
+written, and the lines to copy start with `layout:` and `group:`.
+
 ### Layouts of a note's own text
 
 - **`cv`**: a résumé. The title is your name, and `role`, `location`,

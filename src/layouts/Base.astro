@@ -19,7 +19,7 @@ import { site, type Lang, type Style, type StyleName } from "~/site.config"
 import { THEME_COLOR } from "~/lib/pwa"
 import { seasonOf } from "~/lib/garden"
 import { baseStyle, startsDark, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
-import { previewOf, type LookTarget } from "~/lib/dev-look"
+import { previewOf, type LookTarget, type Shape } from "~/lib/dev-look"
 import { LOOK_SCRIPT, readerLooks } from "~/lib/look-switch"
 import { t, langMeta, langPrefix, langDir } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
@@ -67,8 +67,11 @@ interface Props {
   oembed?: string
   /** Keep the page out of search engines, e.g. a draft built for preview. */
   noindex?: boolean
-  /** The page's own style and frame with the rules that chose them, for the style switcher of `datme dev`. */
-  explained?: { look: Explained<StyleName, LookRule>; frame: Explained<Frame, FrameRule>; target: LookTarget }
+  /**
+   * The page's own style and frame with the rules that chose them, for the switcher of `datme dev`;
+   * `shape` is its layout, on the pages that can take one.
+   */
+  explained?: { look: Explained<StyleName, LookRule>; frame: Explained<Frame, FrameRule>; target: LookTarget; shape?: Shape }
 }
 const {
   lang,

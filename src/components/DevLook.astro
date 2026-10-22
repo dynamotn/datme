@@ -1,28 +1,57 @@
 ---
 import { site, type StyleName } from "~/site.config"
 import { CHROMES, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
-import { configLines, describeFrameRule, describeLookRule, pageUrl, previewOf, previewUrl, type LookTarget } from "~/lib/dev-look"
+import { isCollection } from "~/lib/note-layouts"
+import {
+  LAYOUT_PREVIEWS,
+  configLines,
+  describeFrameRule,
+  describeGroup,
+  describeLayout,
+  describeLookRule,
+  groupChoices,
+  groupOf,
+  pageUrl,
+  previewOf,
+  previewUrl,
+  resetUrl,
+  shownLayout,
+  type LookTarget,
+  type Shape,
+} from "~/lib/dev-look"
 
 interface Props {
   /** The page's own style and frame, before any preview, with the rules that chose them. */
   look: Explained<StyleName, LookRule>
   frame: Explained<Frame, FrameRule>
   target: LookTarget
+  /** The page's own layout, on the pages that can take one. */
+  shape?: Shape
 }
-const { look, frame, target } = Astro.props
+const { look, frame, target, shape } = Astro.props
 // Only `datme dev` shows the switcher: it helps the writer choose, the reader never sees it.
 const dev = Boolean(process.env.DATME_DEV)
 const preview = previewOf(Astro.url, dev)
-const shown = { style: preview.style ?? look.value, chrome: preview.chrome ?? frame.value }
+const layout = shape && shownLayout(shape.layout, preview)
+const ownGroup = layout && groupOf(layout, shape?.group)
+const shown = { style: preview.style ?? look.value, chrome: preview.chrome ?? frame.value, layout, group: preview.group ?? ownGroup }
 // A preview of what the page already has changes nothing, so there is nothing to copy for it.
 const changed = {
   style: preview.style !== look.value ? preview.style : undefined,
   chrome: preview.chrome !== frame.value ? preview.chrome : undefined,
+  layout: shape && layout !== shape.layout ? preview.layout : undefined,
+  group: ownGroup && preview.group !== ownGroup ? preview.group : undefined,
 }
-const previewing = Boolean(changed.style || changed.chrome)
-const lines = configLines(target, changed)
+const previewing = Boolean(changed.style || changed.chrome || changed.layout || changed.group)
+const lines = configLines(target, changed, shape)
 const chromeKept = !changed.chrome || lines.some((l) => l.code.includes("chrome:"))
 const url = pageUrl(Astro.url)
+// A folder without a folder note can only try a collection of its notes: there is no text to lay out.
+const layouts = LAYOUT_PREVIEWS.filter((l) => !(target.kind === "folder" && !target.file) || isCollection(l === "none" ? undefined : l))
+const textLayouts = layouts.filter((l) => l === "none" || !isCollection(l))
+const collections = layouts.filter((l) => l !== "none" && isCollection(l))
+// Back to the page's own layout drops the key, as for a style.
+const layoutHref = (l: (typeof LAYOUT_PREVIEWS)[number]) => previewUrl(url, "layout", l === (shape?.layout ?? "none") ? undefined : l)
 ---
 
 {
@@ -30,6 +59,7 @@ const url = pageUrl(Astro.url)
     <details class="dev-look" open={previewing} data-previewing={previewing ? "" : undefined}>
       <summary>
         <span aria-hidden="true">🎨</span> {shown.style} · {shown.chrome}
+        {shape && <> · {shown.layout ?? "no layout"}</>}
         {previewing && <em>preview</em>}
       </summary>
       <div class="dev-look-body">
@@ -53,6 +83,43 @@ const url = pageUrl(Astro.url)
             </a>
           ))}
         </nav>
+        {shape && (
+          <>
+            <p>
+              Layout <strong>{shape.layout ?? "none"}</strong> from <code>{describeLayout(shape, target)}</code>
+            </p>
+            {textLayouts.length > 0 && (
+              <nav aria-label="Preview a layout">
+                {textLayouts.map((l) => (
+                  <a href={layoutHref(l)} aria-current={l === (shown.layout ?? "none") ? "true" : undefined} data-astro-reload>
+                    {l}
+                  </a>
+                ))}
+              </nav>
+            )}
+            <nav aria-label="Preview a collection">
+              {collections.map((l) => (
+                <a href={layoutHref(l)} aria-current={l === shown.layout ? "true" : undefined} data-astro-reload>
+                  {l}
+                </a>
+              ))}
+            </nav>
+          </>
+        )}
+        {shape && layout && ownGroup && (
+          <>
+            <p>
+              Grouped by <strong>{ownGroup}</strong> from <code>{describeGroup(layout, shape, target)}</code>
+            </p>
+            <nav aria-label="Preview a grouping">
+              {groupChoices(layout, shape.group).map((g) => (
+                <a href={previewUrl(url, "group", g === ownGroup ? undefined : g)} aria-current={g === shown.group ? "true" : undefined} data-astro-reload>
+                  {g}
+                </a>
+              ))}
+            </nav>
+          </>
+        )}
         {previewing && (
           <>
             <p>To keep it, copy one of these:</p>
@@ -63,7 +130,7 @@ const url = pageUrl(Astro.url)
               </figure>
             ))}
             {!chromeKept && <p>This page takes its chrome from no setting; only notes and folder notes choose one.</p>}
-            <a class="dev-look-reset" href={previewUrl(new URL(previewUrl(url, "style", undefined), url), "chrome", undefined)} data-astro-reload>
+            <a class="dev-look-reset" href={resetUrl(url)} data-astro-reload>
               Back to the page's own look
             </a>
           </>

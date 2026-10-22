@@ -7,7 +7,7 @@ import { site } from "~/site.config"
 import { t, langMeta, formatDate } from "~/lib/i18n"
 import { explainFrame, explainLook, isGarden, baseStyle } from "~/lib/look"
 import { stageOf } from "~/lib/garden"
-import { previewOf } from "~/lib/dev-look"
+import { ownGroup, previewNote, previewOf } from "~/lib/dev-look"
 import { relatedNotes, unlinkedMentions } from "~/lib/related"
 import { ogPath } from "~/lib/og-url"
 import { noteLd } from "~/lib/jsonld"
@@ -45,7 +45,10 @@ import { slugToUrl } from "~/lib/slug"
 interface Props {
   note: Note
 }
-const { note } = Astro.props
+// Under `datme dev` the address can lay the note out another way: everything below draws it so.
+const preview = previewOf(Astro.url)
+const own = Astro.props.note
+const note = previewNote(own, preview)
 const vault = getVault()
 const r = await renderNote(note)
 const title = r.h1 ?? note.title
@@ -81,8 +84,8 @@ const explained = {
   frame: explainFrame(note),
   // `datme dev` offers to style every note of its tag: the one that styles it now, else its first.
   target: { kind: "note", file: note.source.key + ".md", dir: note.dir, tag: ownLook.rule.kind === "tags" ? ownLook.rule.tag : note.tags[0] } as const,
+  shape: { layout: own.layout, group: ownGroup(own) },
 }
-const preview = previewOf(Astro.url)
 const look = preview.style ?? explained.look.value
 const frame = preview.chrome ?? explained.frame.value
 const stacks = frame === "full"
