@@ -16,6 +16,7 @@ first preview to every setting there is. If you're new, start at the top.
 8. [Deploying](deploying.md): GitHub, GitLab, Netlify, Cloudflare or any static host.
 9. [Coming from another publisher](migrating.md): Obsidian Publish, the Digital Garden plugin or Quartz, in one command.
 10. [Extending](extending.md): your own stylesheet and markdown plugins, and a map of the code for contributors.
+11. [Theme gallery](themes.md): every built-in style, in light and dark.
 
 This documentation is itself a datme garden. The [Showcase](showcase/Showcase.md)
 shows what datme does with real notes: callouts, a slide deck, flashcards, a

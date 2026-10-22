@@ -86,6 +86,9 @@ archiveDeadLinks: true        # dead links found by `check --external` point to 
 
 ## Look and navigation
 
+The [Theme gallery](themes.md) shows every style below on the same note, in
+light and dark.
+
 ```yaml
 appearance:
   style: notebook             # notebook: index cards on dotted paper; classic: a quiet serif blog;

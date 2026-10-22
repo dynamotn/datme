@@ -242,7 +242,10 @@ bun run test            # unit tests, end-to-end builds of tests/fixtures and ax
 ```
 
 `bun run screenshots` rebuilds the screenshots of the README from this
-documentation garden (it needs `bunx playwright install chromium` once).
+documentation garden, and those of the [Theme gallery](themes.md): a note in
+every built-in style, light and dark, as small WebP files (it needs `bunx
+playwright install chromium` once). `bun run screenshots readme` or `styles`
+makes one set; run `styles` again after adding a style.
 `bun run dev docs` previews the documentation itself.
 
 A map of the code:
