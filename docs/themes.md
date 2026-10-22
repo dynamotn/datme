@@ -113,3 +113,48 @@ opens dark.
 | Light | Dark |
 | --- | --- |
 | ![The lacquer style in light mode](assets/screenshots/styles/lacquer-light.webp) | ![The lacquer style in dark mode](assets/screenshots/styles/lacquer-dark.webp) |
+
+## zine
+
+A self-printed zine on grainy photocopy paper: a cut-out title, blocks
+pasted down at an angle under tape, in boxes of mismatched colours.
+
+| Light | Dark |
+| --- | --- |
+| ![The zine style in light mode](assets/screenshots/styles/zine-light.webp) | ![The zine style in dark mode](assets/screenshots/styles/zine-dark.webp) |
+
+## atlas
+
+An old atlas on parchment, with contour lines and a compass rose; each top
+folder is a region, and the graph is drawn as a map.
+
+| Light | Dark |
+| --- | --- |
+| ![The atlas style in light mode](assets/screenshots/styles/atlas-light.webp) | ![The atlas style in dark mode](assets/screenshots/styles/atlas-dark.webp) |
+
+## catalog
+
+A library card catalogue: each note a typed card filed under a call number
+made from its folders, each folder a drawer.
+
+| Light | Dark |
+| --- | --- |
+| ![The catalog style in light mode](assets/screenshots/styles/catalog-light.webp) | ![The catalog style in dark mode](assets/screenshots/styles/catalog-dark.webp) |
+
+## eink
+
+An e-reader's page: greys only, nothing moving, large type; readers can
+turn a note page by page.
+
+| Light | Dark |
+| --- | --- |
+| ![The eink style in light mode](assets/screenshots/styles/eink-light.webp) | ![The eink style in dark mode](assets/screenshots/styles/eink-dark.webp) |
+
+## paddy
+
+The garden as terraced rice fields, each stage the rice from seedling to
+golden harvest.
+
+| Light | Dark |
+| --- | --- |
+| ![The paddy style in light mode](assets/screenshots/styles/paddy-light.webp) | ![The paddy style in dark mode](assets/screenshots/styles/paddy-dark.webp) |
