@@ -268,27 +268,23 @@ describe("notes like this one", () => {
 })
 
 describe("searching by meaning", () => {
-  test("a failed download leaves the toggle off and says why on the console", async () => {
+  test("a failed download or query leaves the toggle off and says why on the console", async () => {
     const { dialog, input, list } = make({ model: true })
     const toggle = dialog.querySelector<HTMLButtonElement>("[data-search-meaning]")!
     const warn = console.warn
     const warned: unknown[] = []
     console.warn = (...a: unknown[]) => void warned.push(a[0])
+    // A model downloaded by an earlier test file is kept: then its first query fails instead.
     model.failNext = true
-    // A model downloaded by an earlier test is kept; only a fresh download can fail.
-    const fresh = model.downloads === 0
+    model.failQuery = true
     try {
       type(input, "slip")
       await settled(list)
       toggle.click()
       await until(() => !toggle.hasAttribute("aria-busy"))
       await settle(20)
-      if (fresh) {
-        expect(toggle.getAttribute("aria-pressed")).toBe("false")
-        expect(warned).toEqual(["[datme] search by meaning is unavailable:"])
-      } else {
-        expect(toggle.getAttribute("aria-pressed")).toBe("true")
-      }
+      expect(toggle.getAttribute("aria-pressed")).toBe("false")
+      expect(warned).toEqual(["[datme] search by meaning is unavailable:"])
       expect(dom.document.activeElement).toBe(input)
       expect(hrefs(list)).toEqual(["/notes/b", "/notes/a"])
       // A toggle that is on turns off at once, and searches again by the words.
@@ -301,6 +297,7 @@ describe("searching by meaning", () => {
     } finally {
       console.warn = warn
       model.failNext = false
+      model.failQuery = false
     }
   })
 

@@ -11,6 +11,8 @@ export const TRANSFORMERS = "https://cdn.jsdelivr.net/npm/@huggingface/transform
 export const model = {
   /** The next download of the model fails. */
   failNext: false,
+  /** The next query fails, even with a model downloaded by an earlier test file. */
+  failQuery: false,
   downloads: 0,
   /** The models asked for, by name. */
   asked: [] as string[],
@@ -27,8 +29,12 @@ mock.module(TRANSFORMERS, () => ({
       model.failNext = false
       throw new Error("download failed")
     }
-    return async (texts: string[], o: { pooling: string; normalize: boolean }) => ({
-      tolist: () => texts.map((t) => (o.pooling === "mean" && o.normalize ? embed(t) : [])),
-    })
+    return async (texts: string[], o: { pooling: string; normalize: boolean }) => {
+      if (model.failQuery) {
+        model.failQuery = false
+        throw new Error("query failed")
+      }
+      return { tolist: () => texts.map((t) => (o.pooling === "mean" && o.normalize ? embed(t) : [])) }
+    }
   },
 }))
