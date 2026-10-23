@@ -1,19 +1,17 @@
-import { beforeAll, describe, expect, test } from "bun:test"
-import { Window } from "happy-dom"
-
-// The lightbox runs in a browser; happy-dom stands in for one.
-const happy = new Window({ url: "https://garden.example/note" })
-// Typed as the DOM the script is written against.
-const window = happy as unknown as globalThis.Window & typeof globalThis
-const document = window.document
-beforeAll(() => {
-  Object.assign(globalThis, { document, window, HTMLElement: window.HTMLElement })
-})
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { installDom, type Dom } from "./client-dom"
 
 const dialog = () => document.querySelector<HTMLDialogElement>("dialog.lightbox")!
-const click = (el: Element) => el.dispatchEvent(new window.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }))
+const click = (el: Element) => el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }))
 
 describe("lightbox", () => {
+  // The script binds its listener to the document once, so it runs on the shared page.
+  let dom: Dom
+  beforeAll(() => {
+    dom = installDom("https://garden.example/note")
+  })
+  afterAll(() => dom.restore())
+
   test("a click on a note image opens its original file, captioned by its alt", async () => {
     document.body.dataset.close = "Đóng"
     document.body.innerHTML = `<div class="prose">
@@ -35,7 +33,7 @@ describe("lightbox", () => {
     const d = dialog()
     click(d.querySelector(".lightbox-next")!)
     expect(d.querySelector("figcaption")!.textContent).toBe("Second")
-    d.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+    d.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
     expect(d.querySelector("figcaption")!.textContent).toBe("First")
   })
 
