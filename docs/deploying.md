@@ -97,6 +97,15 @@ Hand-written equivalents live in [`examples/deploy/`](https://gitlab.com/dynamo-
 Both fetch the full git history, so notes without `created` or `updated` get
 their real dates.
 
+## Shallow clones
+
+CI services clone only the last commits by default (GitLab fetches 20, GitHub
+Actions one), and a note older than the clone then gets the clone's date. The
+pipelines above fetch everything; in a pipeline of your own, set `GIT_DEPTH: 0`
+under `variables:` on GitLab, or `fetch-depth: 0` under `with:` of
+`actions/checkout` on GitHub. `datme check` warns about a shallow clone, and
+about a git that fails, so `--strict` stops such a build.
+
 ## Project sites under a path
 
 GitHub and GitLab serve a project's site under its name, as

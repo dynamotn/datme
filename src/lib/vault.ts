@@ -1,6 +1,8 @@
 import fs from "node:fs"
+import os from "node:os"
 import path from "node:path"
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawnSync } from "node:child_process"
+import { StringDecoder } from "node:string_decoder"
 import { parseYaml } from "./yaml"
 import { site, type Lang, type StyleName } from "../site.config"
 import { pickOption, CHROMES, type Chrome } from "./look"
@@ -439,37 +441,79 @@ export function filterLanguage(src: string, lang: Lang): string {
   return out.join("\n")
 }
 
-/** Created/updated dates from git history, keyed by vault-relative path. */
-function gitDates(): Map<string, { created: Date; updated: Date }> {
+/** Calls `onLine` with each line of an open file, read a chunk at a time, so its size is no limit. */
+export function eachLine(fd: number, onLine: (line: string) => void, chunk = 1 << 20): void {
+  const buf = Buffer.alloc(chunk)
+  // A character split between two chunks is decoded whole, with the second.
+  const decoder = new StringDecoder("utf8")
+  let rest = ""
+  for (let pos = 0; ; ) {
+    const n = fs.readSync(fd, buf, 0, chunk, pos)
+    if (n === 0) break
+    pos += n
+    const lines = (rest + decoder.write(buf.subarray(0, n))).split("\n")
+    rest = lines.pop()!
+    for (const line of lines) onLine(line)
+  }
+  onLine(rest + decoder.end())
+}
+
+/** Where problems of the vault's git repository are reported. */
+const GIT_FILE = ".git"
+
+/**
+ * Created/updated dates from git history, keyed by vault-relative path. A vault
+ * outside any repository has none, as expected; a git that fails, or a shallow
+ * clone whose history is cut, is reported, since every note would get a wrong date.
+ */
+function gitDates(report: (level: Problem["level"], file: string, message: string) => void): Map<string, { created: Date; updated: Date }> {
   const dates = new Map<string, { created: Date; updated: Date }>()
+  // stderr ignored: outside a repository git would print "fatal: not a git repository".
+  const run = (...args: string[]) => execFileSync("git", ["-C", site.vault, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
+  let top: string
   try {
-    // stderr ignored: outside a repository git would print "fatal: not a git repository".
-    const top = execFileSync("git", ["-C", site.vault, "rev-parse", "--show-toplevel"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim()
+    top = run("rev-parse", "--show-toplevel")
+  } catch {
+    // not a git repository: fall back to the filesystem
+    return dates
+  }
+  // The log goes to a file and is read back a chunk at a time: a buffer would cap how long a history can be.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-git-"))
+  const fd = fs.openSync(path.join(tmp, "log"), "w+")
+  try {
+    if (run("rev-parse", "--is-shallow-repository") === "true") {
+      report(
+        "warning",
+        GIT_FILE,
+        "shallow clone: notes older than the clone get its date; fetch the whole history (GIT_DEPTH: 0 on GitLab, fetch-depth: 0 on GitHub)",
+      )
+    }
     // git names files with "/", on Windows too.
     const prefix = path.relative(top, site.vault).split(path.sep).join("/")
-    const log = execFileSync("git", ["-C", site.vault, "-c", "core.quotepath=off", "log", "--format=%x00%ct", "--name-only", "--", "*.md"], {
+    const log = spawnSync("git", ["-C", site.vault, "-c", "core.quotepath=off", "log", "--format=%x00%ct", "--name-only", "--", "*.md"], {
       encoding: "utf8",
-      maxBuffer: 64 * 1024 * 1024,
-      stdio: ["ignore", "pipe", "ignore"],
+      stdio: ["ignore", fd, "pipe"],
     })
+    if (log.status !== 0) throw new Error(log.error?.message || log.stderr.trim().split("\n")[0] || `exit code ${log.status}`)
     let ts = 0
-    for (const line of log.split("\n")) {
+    eachLine(fd, (line) => {
       if (line.startsWith("\0")) {
         ts = Number(line.slice(1)) * 1000
-        continue
+        return
       }
-      if (!line) continue
+      if (!line) return
       const rel = prefix ? path.posix.relative(prefix, line) : line
       const d = new Date(ts)
       const cur = dates.get(rel)
       if (!cur) dates.set(rel, { created: d, updated: d })
       else cur.created = d
-    }
-  } catch {
-    // not a git repository: fall back to the filesystem
+    })
+  } catch (e) {
+    dates.clear()
+    report("warning", GIT_FILE, `dates come from file times: git failed (${(e as Error).message})`)
+  } finally {
+    fs.closeSync(fd)
+    fs.rmSync(tmp, { recursive: true, force: true })
   }
   return dates
 }
@@ -785,7 +829,7 @@ function buildVault(version: number): Vault {
   }
   const missingCitations = new Set<string>()
 
-  const git = gitDates()
+  const git = gitDates(report)
   const assets = new Set<string>()
   const docRefs = new Set<string>(site.publish === "all" ? found.files.filter((f) => DOC.test(f)) : [])
   const notes = {} as Vault["notes"]

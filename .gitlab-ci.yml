@@ -17,6 +17,9 @@ cache:
 
 test:
   <<: *git
+  # The full history: a shallow clone is a warning, and the documentation must pass --strict.
+  variables:
+    GIT_DEPTH: 0
   script:
     - bun install --frozen-lockfile
     # The findings as a code quality report on merge requests, and readable in the log when there are any.
