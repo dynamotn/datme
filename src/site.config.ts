@@ -431,9 +431,11 @@ const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) =>
           structure: z.boolean().default(true),
           /** Notices suggesting a layout for notes and folders whose text or properties look like one. */
           layouts: z.boolean().default(true),
+          /** Warnings for passwords that are easy to guess, or written in notes of a vault kept in git. */
+          passwords: z.boolean().default(true),
         })
         .strict()
-        .default({ structure: true, layouts: true }),
+        .default({ structure: true, layouts: true, passwords: true }),
       /** Point links that `datme check --external` found dead at the Internet Archive's copy. */
       archiveDeadLinks: z.boolean().default(true),
       /** Link the first mention of a term (a note tagged type/term) to its note. */

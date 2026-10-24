@@ -21,3 +21,5 @@ footer:
   GitLab: https://gitlab.com/dynamo-brain/datme
   npm: https://www.npmjs.com/package/@dynamotn/datme
 history: true
+# The showcase's locked part tells its password on purpose.
+check: { passwords: false }

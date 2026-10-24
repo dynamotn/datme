@@ -18,6 +18,8 @@ import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import { visit } from "unist-util-visit"
 import { suggestLayouts } from "./layout-hints"
+import { publishedSources } from "./doctor"
+import { inGit, passwordProblems } from "./passwords"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -201,6 +203,7 @@ export function checkVault(): Problem[] {
     ...(site.check.layouts ? layoutProblems() : []),
     ...accentProblems(site.theme.accent, stylesInUse(), accentFile),
     ...queryProblems(),
+    ...(site.check.passwords ? passwordProblems(publishedSources(), process.env, inGit(site.vault)) : []),
   ]
   for (const [list, items] of [
     ["nav", site.nav],

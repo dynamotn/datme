@@ -46,7 +46,7 @@ export function meets(version: string, range: string | undefined): boolean {
 }
 
 /** The published notes of the vault, as written: what decides the packages and passwords a build needs. */
-function publishedSources(): { rel: string; fm: Record<string, unknown>; body: string }[] {
+export function publishedSources(): { rel: string; fm: Record<string, unknown>; body: string }[] {
   return markdownFiles().flatMap((rel) => {
     const { fm, body } = parseFrontmatter(fs.readFileSync(path.join(site.vault, rel), "utf8"))
     return isPublished(fm, site.publish, new Date(), site.drafts) ? [{ rel, fm, body }] : []

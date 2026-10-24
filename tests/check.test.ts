@@ -81,3 +81,31 @@ describe("hubs", () => {
     expect(structureProblems().filter((p) => p.message.startsWith("hub:"))).toEqual([])
   })
 })
+
+describe("password warnings", () => {
+  const warned = (file: string) => messages(file).filter((m) => /password/.test(m))
+
+  test("a common password is a warning naming the note and its part, never the password", () => {
+    expect(warned("07_Project/Blog post.md")).toContain(
+      "warning: locked part 1 is among the passwords tried first: a published page can be tried offline without limit, so a long passphrase of several words holds better",
+    )
+    expect(JSON.stringify(problems)).not.toMatch(/open sesame|fixture-not-a-real-secret|tester-password/)
+  })
+
+  test("in a vault kept in git, a password written in a note is a warning; a group is not", () => {
+    expect(warned("06_Reference/Secret.md")).toEqual([
+      'warning: a password is written in the note, so the vault\'s git history keeps it in plain text; a group (password: "@friends", <!--lock:@friends-->) reads it from a DATME_LOCK_… environment variable instead',
+    ])
+    expect(warned("06_Reference/Club.md").some((m) => m.startsWith("warning:"))).toBe(false)
+  })
+
+  test("check.passwords: false leaves them out", () => {
+    const before = site.check.passwords
+    site.check.passwords = false
+    try {
+      expect(checkVault().some((p) => /tried offline|written in the note/.test(p.message))).toBe(false)
+    } finally {
+      site.check.passwords = before
+    }
+  })
+})

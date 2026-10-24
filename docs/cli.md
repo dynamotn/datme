@@ -16,7 +16,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `datme dev [vault]` | Live preview that reloads when a note changes. `--port`, `--host` |
 | `datme build [vault]` | Builds into `--out` (default `./dist`). An existing directory is replaced only if datme created it. |
 | `datme preview [vault]` | Builds, then serves the result |
-| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases, invalid frontmatter and Dataview queries that cannot run; exits 1 on errors |
+| `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases, invalid frontmatter, Dataview queries that cannot run and passwords that are easy to guess; exits 1 on errors |
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push (see [Deploying](deploying.md)) |
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or a printable page |
 | `datme doctor [vault]` | Checks the machine and the vault before a build: the Bun or Node version, the optional packages the vault's notes need (D2, Typst, transformers.js), git and a shallow clone (which gives old notes the clone's date), the `DATME_LOCK_…` variables of group passwords, and `site.url`. Each problem comes with the command that fixes it; exits 1 if one must be fixed |
@@ -129,6 +129,14 @@ blocks and inline `` `= …` `` alike. One that cannot run is an error, since th
 page would show the error instead of a result; one that datme does not
 support yet, such as `CALENDAR`, is a warning. Either way `--strict` stops the
 build before a broken query goes live.
+
+`check` warns about the passwords of protected notes and locked parts (see
+[Privacy](privacy.md#choosing-a-password)): one shorter than 12 characters,
+only digits, or among the passwords tried first, and, when the vault is in a
+git repository, every note that writes its password out instead of naming a
+group. A group's password is checked when its variable is set. The warnings
+name the note and the part, never the password. `check: { passwords: false }`
+in `datme.yaml` turns them off.
 
 `build` prints a one-line summary of the problems `check` would report.
 `datme dev` also shows a note's problems on its page, and a switcher to

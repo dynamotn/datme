@@ -95,7 +95,7 @@ the browser:
 ```markdown
 ---
 publish: true
-password: correct horse battery staple
+password: rusty lantern under the willow
 ---
 ```
 
@@ -116,7 +116,7 @@ To protect only a passage, wrap it the way language blocks are written:
 ```markdown
 Anyone can read this.
 
-<!--lock:correct horse battery staple-->
+<!--lock:rusty lantern under the willow-->
 ## Just for friends
 Only readers with the password see this, links and all.
 <!--lock:*-->
@@ -160,6 +160,26 @@ Changing a group's password is then one setting, for every note that uses it.
 If the variable is missing, nothing is published in the clear: a locked part
 is left out of the page, a protected note is not published at all, and
 `datme check` reports it as an error.
+
+## Choosing a password
+
+A published page can be copied and tried offline, as fast and as long as
+anyone likes: the PBKDF2 rounds slow each guess, but `password: garden` still
+falls in seconds. Choose a passphrase of several unrelated words, and keep it
+out of the vault with a [group](#group-passwords-kept-out-of-the-vault).
+
+`datme check` warns, so that `--strict` fails, when a password:
+
+- is shorter than 12 characters, only digits, or among the passwords tried
+  first (`password`, `qwerty`, `letmein`, `correct horse battery staple`…,
+  whatever their case, spacing or trailing digits);
+- is written in a note of a vault kept in git, whose history keeps it in plain
+  text even after you change it.
+
+A group's password is checked once its variable is set. The warnings name the
+note and the part (`locked part 2`), never the password, not even in part.
+`check: { passwords: false }` in `datme.yaml` turns them off, for a garden
+whose passwords are public on purpose.
 
 ## Files of encrypted content
 

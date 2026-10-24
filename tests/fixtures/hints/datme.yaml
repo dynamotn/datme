@@ -4,3 +4,5 @@ site:
   title: Hints test
 languages: [en-US]
 publish: all
+# The protected note's password is not what this vault tests.
+check: { passwords: false }

@@ -47,6 +47,7 @@ privateLinks: text            # links to private notes: text, placeholder or hid
 check:
   structure: true             # datme check notices orphan notes, dead ends and hubs
   layouts: true               # datme check suggests layouts for notes and folders
+  passwords: true             # datme check warns of weak passwords, and of those written in notes
 encryption:
   iterations: 600000          # PBKDF2 rounds for passwords (at least 100000)
 ```
