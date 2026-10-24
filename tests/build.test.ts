@@ -292,6 +292,22 @@ describe("static build", () => {
     expect(index.links.length).toBeGreaterThan(0)
   })
 
+  test("a note's local graph reads its own neighbourhood file, written next to the whole graph", () => {
+    const page = read("03_Atomic/Zettelkasten/index.html")
+    const hood = page.match(/<canvas data-graph="local"[^>]*data-hood="([^"]+)"/)![1]
+    expect(hood).toMatch(/^\/static\/graph\/vi-VN\/[0-9a-f]{16}\.json$/)
+    const file = JSON.parse(read(hood))
+    expect(file.notes[0].u).toBe("/03_Atomic/Zettelkasten")
+    expect(file.deg).toHaveLength(file.notes.length)
+    // The whole graph stays for the global graph, walks and random notes.
+    expect(exists("static/graph.vi-VN.json")).toBe(true)
+    // An unlisted note is in no graph: its page fetches nothing for it.
+    expect(read("08_Journal/Unlisted/index.html")).toMatch(/<canvas data-graph="local"[^>]*data-hood(="")? /)
+    const files = fs.readdirSync(path.join(out, "static/graph/vi-VN"))
+    const index = JSON.parse(read("static/graph.vi-VN.json"))
+    expect(files).toHaveLength(index.notes.length)
+  })
+
   test("notes use the notebook look, except folders listed as classic", () => {
     expect(read("03_Atomic/Zettelkasten/index.html")).toContain('data-look="notebook"')
     expect(read("07_Project/Blog-post/index.html")).toContain('data-look="classic"')

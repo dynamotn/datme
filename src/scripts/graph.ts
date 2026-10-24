@@ -1,7 +1,7 @@
 import type { Simulation, SimulationNodeDatum } from "d3-force"
 import { applyForces, unpackPositions, type Forces, type LayoutRequest } from "./graph-sim"
 import { navigate } from "astro:transitions/client"
-import { loadGraph, samePath, matchesFilter, readFilters, type NoteFilter } from "./data"
+import { loadGraph, loadHood, samePath, matchesFilter, readFilters, type GraphNote, type HoodIndex, type NoteFilter } from "./data"
 import { groupColors } from "./graph-colors"
 import { freshness } from "./outdated"
 import { hasVisited, readFootprints } from "./footprints"
@@ -82,7 +82,10 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const { depth = 1, space = false } = opts
   const lang = canvas.dataset.lang!
   const current = canvas.dataset.current ?? location.pathname
-  const data = await loadGraph(lang)
+  // A note's local graph reads its own neighbourhood (none for a page outside the graph); the rest, the whole graph.
+  const hood = mode === "local" ? canvas.dataset.hood : undefined
+  const data: { notes: (HoodIndex["notes"][number] & Partial<GraphNote>)[]; links: [number, number][]; deg?: number[] } =
+    hood === undefined ? await loadGraph(lang) : hood ? await loadHood(hood) : { notes: [], links: [] }
   if (!canvas.isConnected) return
 
   const colorBy = canvas.dataset.colorBy
@@ -91,9 +94,9 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
   const footprints = colorBy === "visited" ? readFootprints() : undefined
   const groupOf = (n: (typeof data.notes)[number]) =>
     colorBy === "type"
-      ? (n.y[0] ?? "")
+      ? (n.y?.[0] ?? "")
       : colorBy === "folder"
-        ? n.p
+        ? (n.p ?? "")
         : colorBy === "stage"
           ? (n.st ?? "")
           : colorBy === "topic"
@@ -120,15 +123,17 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
         near: 1,
       }) as GNode,
   )
-  for (const [a, b] of data.links) all[a].deg++, all[b].deg++
+  // A neighbourhood counts each note's links in the whole graph, most of which it leaves out.
+  if (data.deg) data.deg.forEach((d, i) => (all[i].deg = d))
+  else for (const [a, b] of data.links) all[a].deg++, all[b].deg++
   const cur = all.find((n) => samePath(n.u, current))
 
-  let keep = new Set(all.filter((n) => matchesFilter(data.notes[n.i], filter)).map((n) => n.i))
+  let keep: Set<number>
   if (mode === "local") {
     const hops = cur ? neighbourhood(data.links, cur.i, depth) : new Map<number, number>()
     hops.forEach((hop, i) => (all[i].hop = hop))
     keep = new Set(hops.keys())
-  }
+  } else keep = new Set(all.filter((n) => matchesFilter(data.notes[n.i] as GraphNote, filter)).map((n) => n.i))
   const nodes = all.filter((n) => keep.has(n.i))
   nodes.forEach((n) => (n.r = 3 + Math.sqrt(n.deg) * 1.6))
   const links: GLink[] = data.links.filter(([a, b]) => keep.has(a) && keep.has(b)).map(([a, b]) => ({ source: all[a], target: all[b] }))

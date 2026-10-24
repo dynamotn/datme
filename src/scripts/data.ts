@@ -34,14 +34,21 @@ export interface GraphIndex<N extends GraphNote = GraphNote> {
 }
 export type ContentIndex = GraphIndex<IndexNote>
 
-const cache = new Map<string, Promise<GraphIndex<GraphNote>>>()
+/** The neighbourhood of one note, as its local graph draws it: the note first, and how many links each note has in the whole graph. */
+export interface HoodIndex {
+  notes: Pick<GraphNote, "u" | "t">[]
+  links: [number, number][]
+  deg: number[]
+}
+
+const cache = new Map<string, Promise<unknown>>()
 
 function load<I>(url: string): Promise<I> {
   let hit = cache.get(url)
   if (!hit) {
     hit = fetch(url).then((r) => {
       if (!r.ok) throw new Error(`${r.status} ${url}`)
-      return r.json() as Promise<GraphIndex<GraphNote>>
+      return r.json()
     })
     // A failure, such as being offline, is not kept: the next call tries again.
     hit.catch(() => cache.delete(url))
@@ -53,8 +60,11 @@ function load<I>(url: string): Promise<I> {
 /** Every note of a language with its text: only search needs it, as it is by far the larger file. */
 export const loadIndex = (lang: string) => load<ContentIndex>(withBase(`/static/contentIndex.${lang}.json`))
 
-/** Every note of a language and their links, without their text: for the graph, walks and random notes. */
+/** Every note of a language and their links, without their text: for the global graph, walks and random notes. */
 export const loadGraph = (lang: string) => load<GraphIndex>(withBase(`/static/graph.${lang}.json`))
+
+/** The neighbourhood of a note, from the path its page names: all a local graph needs, a small part of the whole graph. */
+export const loadHood = (path: string) => load<HoodIndex>(withBase(path))
 
 /** Compare URL paths regardless of percent-encoding and trailing slashes. */
 export function samePath(a: string, b: string): boolean {

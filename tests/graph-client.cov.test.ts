@@ -26,6 +26,21 @@ const LINKS: [number, number][] = [
   [2, 3],
 ]
 
+/** The neighbourhood file of A: the notes two links out, with their links in the whole graph. */
+const HOOD = {
+  notes: [
+    { u: "/en-US/a", t: "A" },
+    { u: "/en-US/b", t: "B" },
+    { u: "/en-US/c", t: LONG },
+  ],
+  links: [
+    [0, 1],
+    [1, 2],
+  ],
+  deg: [1, 9, 2],
+}
+const fetched: string[] = []
+
 interface Call {
   op: string
   args: unknown[]
@@ -70,6 +85,8 @@ describe("the graph in the browser", () => {
   beforeAll(async () => {
     dom = installDom("https://garden.example/en-US/a")
     globalThis.fetch = (async (url: string) => {
+      fetched.push(String(url))
+      if (String(url).includes("/static/graph/")) return new Response(JSON.stringify(HOOD))
       if (String(url).includes("undated")) return new Response(JSON.stringify({ notes: NOTES.map((n) => ({ ...n, k: null })), links: LINKS }))
       return new Response(JSON.stringify({ notes: NOTES, links: LINKS }))
     }) as unknown as typeof fetch
@@ -324,6 +341,33 @@ describe("the graph in the browser", () => {
     const stop = (await graph.mountGraph(canvas, "local"))!
     stop()
     resize(canvas)
+    expect(frame(canvas).circles).toHaveLength(0)
+  })
+
+  test("a note's local graph reads only its neighbourhood file, its notes sized by their links in the whole graph", async () => {
+    fetched.length = 0
+    const canvas = makeCanvas("cov-hood", { hood: "/static/graph/cov-hood/abc.json" })
+    const stop = (await graph.mountGraph(canvas, "local"))!
+    stop()
+    resize(canvas)
+    expect(fetched).toEqual(["/static/graph/cov-hood/abc.json"])
+    const f = frame(canvas)
+    expect(f.labels).toEqual(["A", "B"])
+    const [a, b] = f.circles
+    expect(b.r / a.r).toBeCloseTo((3 + Math.sqrt(9) * 1.6) / (3 + 1.6))
+    const deeper = (await graph.mountGraph(makeCanvas("cov-hood", { hood: "/static/graph/cov-hood/abc.json" }), "local", {}, { depth: 2 }))!
+    deeper()
+    // The file is fetched once and shared.
+    expect(fetched).toEqual(["/static/graph/cov-hood/abc.json"])
+  })
+
+  test("a page outside the graph, which has no neighbourhood file, fetches nothing and draws an empty graph", async () => {
+    fetched.length = 0
+    const canvas = makeCanvas("cov-hood", { hood: "" })
+    const stop = (await graph.mountGraph(canvas, "local"))!
+    stop()
+    resize(canvas)
+    expect(fetched).toEqual([])
     expect(frame(canvas).circles).toHaveLength(0)
   })
 

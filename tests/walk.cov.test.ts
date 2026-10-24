@@ -18,6 +18,7 @@ const index: ContentIndex = {
   ],
 }
 const LANG = "cov-walk"
+const fetched: string[] = []
 let copied: string[] = []
 let clipboardFails = false
 beforeAll(async () => {
@@ -26,7 +27,7 @@ beforeAll(async () => {
     get: () => ({ writeText: async (s: string) => (clipboardFails ? Promise.reject(new Error("denied")) : void copied.push(s)) }),
     configurable: true,
   })
-  globalThis.fetch = (async () => new Response(JSON.stringify(index))) as unknown as typeof fetch
+  globalThis.fetch = (async (url: string) => (fetched.push(String(url)), new Response(JSON.stringify(index)))) as unknown as typeof fetch
   walk = await import("../src/scripts/walk")
   // The button that opens the picker is listened for on the document of the first setup: the shared page.
   page()
@@ -61,6 +62,21 @@ describe("generated walks", () => {
     expect(walk.matchNotes(index, "third", "/notes/a").map((i) => index.notes[i].t)).toEqual(["Gamma"])
     expect(walk.matchNotes(index, "  ", "/notes/a")).toEqual([])
     expect(walk.matchNotes(index, "alp", "/notes/a/")).toEqual([4])
+  })
+
+  test("a note page shows the button without fetching the whole graph; opening the picker fetches it", async () => {
+    at("/notes/a")
+    dom.window.sessionStorage.clear()
+    page()
+    dom.document.documentElement.dataset.lang = "cov-walk-lazy"
+    fetched.length = 0
+    await walk.setupWalk()
+    expect(dom.document.querySelector<HTMLElement>("[data-walk-open]")!.hidden).toBe(false)
+    expect(fetched).toEqual([])
+    dom.document.querySelector<HTMLElement>("[data-walk-open]")!.click()
+    await until(() => dom.document.querySelector("dialog"))
+    expect(fetched).toEqual(["/static/graph.cov-walk-lazy.json"])
+    dom.document.querySelector("dialog")!.remove()
   })
 
   test("the picker finds a note, walks the shortest path there and opens its first stop", async () => {

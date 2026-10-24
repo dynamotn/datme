@@ -201,9 +201,12 @@ export async function setupWalk(): Promise<void> {
   const s = (button ?? article).dataset
   const walk = active()
   if (!button && !walk) return
-  const index = await loadGraph(lang)
   if (button) button.hidden = false
-  if (walk) render(article, walk, new Map(index.notes.map((n) => [n.u, n.t])), s)
+  // The whole graph only for a walk under way or the picker: not on every note page.
+  if (walk) {
+    const index = await loadGraph(lang)
+    render(article, walk, new Map(index.notes.map((n) => [n.u, n.t])), s)
+  }
   if (!bound) {
     bound = true
     document.addEventListener("click", (e) => {
