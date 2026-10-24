@@ -3,35 +3,27 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import * as cache from "../src/lib/render-cache"
 import { site } from "../src/site.config"
 
 /**
- * The cache directory is read when the module loads, so this file loads its
- * own copy of the module (a query string makes it a module of its own) with
- * DATME_CACHE pointing at a temporary directory. The copy every other module
- * imports is left alone, so no other test caches into it and mocks of it hold.
+ * The cache is off in tests: the directory is read when the module loads, before any test sets it.
+ * This file points the shared module at a temporary directory while it runs, and turns it off again.
  */
 const TMP = os.tmpdir()
 const MODULE = path.resolve(import.meta.dir, "../src/lib/render-cache.ts")
-type CacheModule = typeof import("../src/lib/render-cache")
 
 let dir = ""
 let cacheDir = ""
-let cache: CacheModule
-beforeAll(async () => {
+let was: string | undefined
+beforeAll(() => {
   fs.mkdirSync(TMP, { recursive: true })
   dir = fs.mkdtempSync(path.join(TMP, "render-cache-"))
   cacheDir = path.join(dir, "cache")
-  const before = process.env.DATME_CACHE
-  process.env.DATME_CACHE = cacheDir
-  try {
-    cache = (await import(`${MODULE}?cache-on`)) as CacheModule
-  } finally {
-    if (before === undefined) delete process.env.DATME_CACHE
-    else process.env.DATME_CACHE = before
-  }
+  was = cache.useCacheDir(cacheDir)
 })
 afterAll(() => {
+  cache.useCacheDir(was)
   fs.rmSync(dir, { recursive: true, force: true })
 })
 

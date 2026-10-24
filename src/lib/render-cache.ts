@@ -11,7 +11,18 @@ import { configSalt } from "./cache-salt"
  * the entries a build did not touch, so the cache stays the size of one build.
  * Nothing derived from a protected note is ever written here.
  */
-const dir = process.env.DATME_CACHE || undefined
+let dir = process.env.DATME_CACHE || undefined
+
+/**
+ * Point the cache at another directory, or turn it off with undefined; returns the one it replaces.
+ * The directory is read once, at load, so tests use this rather than a copy of the module of their own,
+ * which bun's coverage does not count once another file has loaded the shared one.
+ */
+export function useCacheDir(to: string | undefined): string | undefined {
+  const was = dir
+  dir = to
+  return was
+}
 
 const salts = new Map<string, string>()
 /**

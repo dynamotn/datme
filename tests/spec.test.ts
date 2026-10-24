@@ -117,9 +117,15 @@ function normalize(html: string): string {
 
 // A bare URL would become a card read from the network: the specs are about markdown, offline.
 const linkPreviews = site.linkPreviews
-beforeAll(() => {
+// The first block in a language loads its grammar, which can pass a test's 5 s on a slow CI runner:
+// every language the examples name is highlighted once here, so no example pays for it.
+const languages = [...Object.values(commonmark), ...Object.values(gfm)]
+  .flat()
+  .flatMap((e) => [...e.markdown.matchAll(/^ {0,3}(?:`{3,}|~{3,})[ \t]*([\w+#-]+)/gm)].map((m) => m[1]))
+beforeAll(async () => {
   site.linkPreviews = false
-})
+  await datme([...new Set(languages)].map((lang) => `\`\`\`\`${lang}\nx\n\`\`\`\``).join("\n\n"))
+}, 120_000)
 afterAll(() => {
   site.linkPreviews = linkPreviews
 })
