@@ -26,6 +26,22 @@ jobs:
       - run: bunx astro check
       - run: bun test --coverage
 
+  # Known advisories in the locked dependencies (bun audit reads bun.lock; nothing is installed).
+  # The whole report prints first; a high or critical advisory then fails the run.
+  # bun audit cannot tell dev dependencies from those users install, so a dev-only one fails it too.
+  # One that cannot be fixed yet is skipped with --ignore=GHSA-…, as in .gitlab-ci.yml, with a
+  # comment saying why it is safe to skip and which issue tracks it, removed once it is fixed.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - name: Every advisory, low and moderate included
+        run: bun audit || true
+      - run: bun audit --audit-level=high
+
   # The package as npm users get it: packed, installed from its tarball and run under
   # each Node that `engines` allows.
   package:
