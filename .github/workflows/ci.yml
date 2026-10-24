@@ -107,7 +107,9 @@ jobs:
           else
             echo "npm=latest" >> "$GITHUB_OUTPUT"
           fi
-      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes ${{ steps.kind.outputs.gh }} ./*.tgz
+      # The notes are the tag's section of CHANGELOG.md, as on GitLab; a tag without one stops here.
+      - run: bun tools/release-notes.ts "$GITHUB_REF_NAME" > release-notes.md
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --notes-file release-notes.md ${{ steps.kind.outputs.gh }} ./*.tgz
         env:
           GH_TOKEN: ${{ github.token }}
       # npm trusted publishing: the job's OIDC token (id-token: write) stands in for a

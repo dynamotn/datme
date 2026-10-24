@@ -61,7 +61,8 @@ scripts/release.sh --version 3.0.0
 The script runs the checks above, stamps `package.json`, turns
 `[Unreleased]` into the release, commits `chore: release v3.0.0`, tags it and
 pushes the branch and the tag to `origin` (GitLab) and `gh` (GitHub). The tag
-does the rest: GitLab makes its release, and GitHub makes its release and
+does the rest: GitLab and GitHub each make a release described by the
+version's section of `CHANGELOG.md` (`tools/release-notes.ts`), and GitHub
 publishes the package to npm by trusted publishing, with no npm token. A
 pre-release such as `3.0.0-rc.2` goes to npm's `next` dist-tag. Without
 `--version`, the version comes from the Conventional Commits since the last
