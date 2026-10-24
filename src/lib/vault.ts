@@ -748,7 +748,17 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     byStem.set(stem, [home, ...(byStem.get(stem) ?? [])])
   }
 
+  // Notes of a folder link the same targets, and a reused note asks its links again: each answer is worked out once.
+  const resolved = new Map<string, SourceNote | undefined>()
   function resolveNote(target: string, fromDir: string): SourceNote | undefined {
+    const id = `${fromDir}\0${target}`
+    if (resolved.has(id)) return resolved.get(id)
+    const hit = findNote(target, fromDir)
+    resolved.set(id, hit)
+    return hit
+  }
+
+  function findNote(target: string, fromDir: string): SourceNote | undefined {
     const t = target.trim().replace(MD_EXT, "").replace(/^\/+/, "")
     if (!t) return undefined
     const lower = fold(t)
@@ -1359,14 +1369,19 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
       for (const l of n.protected || n.unlisted ? [] : n.links) {
         if (l.key === n.key || seen.has(l.key)) continue
         seen.add(l.key)
-        bl.set(l.key, [...(bl.get(l.key) ?? []), { note: n, context: l.context }])
+        // Added in place: copying the list for each link made a note linked from thousands cost millions of copies.
+        const list = bl.get(l.key)
+        if (list) list.push({ note: n, context: l.context })
+        else bl.set(l.key, [{ note: n, context: l.context }])
       }
       if (n.unlisted) continue
       for (const tag of n.tags) {
         const parts = tag.split("/")
         for (let i = 1; i <= parts.length; i++) {
           const t = parts.slice(0, i).join("/")
-          tg.set(t, [...(tg.get(t) ?? []), n])
+          const list = tg.get(t)
+          if (list) list.push(n)
+          else tg.set(t, [n])
         }
       }
     }
