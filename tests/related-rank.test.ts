@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { rankRelated, type RankedNote } from "../src/lib/related"
+import { rankRelated, relatedRanker, type RankedNote } from "../src/lib/related"
 
 /** The ranking as it compared every pair of notes, kept as the reference the indexed one must match. */
 function allPairs(notes: RankedNote[], out: Map<string, Set<string>>, typePrefix: string, count: number, lang: string) {
@@ -62,4 +62,16 @@ describe("ranking related notes", () => {
       }
     })
   }
+})
+
+describe("ranking one note at a time", () => {
+  test("gives each note the list ranking them all gives it, and nothing for a note not ranked", () => {
+    const { notes, out } = vault(300, 3)
+    const opts = { lang: "en-US", count: 5, typePrefix: "type/" }
+    const all = rankRelated(notes, out, opts)
+    const rank = relatedRanker(notes, out, opts)
+    // Asked in reverse, so no answer leans on an earlier one.
+    for (const n of [...notes].reverse()) expect(rank(n.key)).toEqual(all.get(n.key)!)
+    expect(rank("not-a-note")).toBeUndefined()
+  })
 })
