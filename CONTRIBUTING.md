@@ -30,6 +30,18 @@ vault with that copy under Node, as CI does on every Node `engines` allows.
 
 Record anything a user could notice in `CHANGELOG.md`, under `[Unreleased]`.
 
+## Benchmarks
+
+`bun tools/bench.ts --notes 1000` builds a generated vault (`tools/bench-vault.ts`:
+the same notes for the same `--seed`) twice, cold and from the cache, starts
+`datme dev` and saves a note, then prints the times, peak memory, output size
+and what a note page loads; `--install` adds the installed size, `--json`
+writes the result and `--compare` checks it against a baseline (`--help` lists
+the rest). The `bench` job runs 10,000 notes on the default branch and on a
+schedule, 1,000 on a branch with an open merge request, and keeps
+`bench.json`; it compares with `tools/bench-baseline.json` once one taken on
+the CI runners is committed.
+
 ## Dependency updates
 
 [Renovate](https://docs.renovatebot.com) opens the merge requests that update

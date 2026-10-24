@@ -1,0 +1,41 @@
+# Mirror of the bench job of .gitlab-ci.yml: how datme scales (tools/bench.ts) on a generated
+# vault, kept as an artifact. 10,000 notes on main and weekly, with the installed size too;
+# 1,000 on pull requests. A workflow of its own, so the schedule never reruns CI, and it
+# only warns: hosted runners time loosely.
+name: Benchmark
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 20 * * 0"
+  workflow_dispatch:
+
+# Third-party actions are pinned to commits; the comment names the release.
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      BENCH_NOTES: ${{ github.event_name == 'pull_request' && '1000' || '10000' }}
+      BENCH_FLAGS: ${{ github.event_name == 'pull_request' && ' ' || '--install' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - run: bun install --frozen-lockfile
+      - run: bun tools/bench.ts --notes "$BENCH_NOTES" $BENCH_FLAGS --json bench.json --compare tools/bench-baseline.json
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: bench
+          path: bench.json
