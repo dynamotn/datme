@@ -82,12 +82,18 @@ bench:
     when: always
     paths: [bench.json]
     expire_in: 90 days
+  # This project's CI minutes are limited and the 10,000-note run takes most of an hour, so it runs
+  # on a schedule only; elsewhere it waits to be started by hand. GitHub, where minutes are free for
+  # a public repository, runs it on every push to main (.github/workflows/bench.yml).
   rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_OPEN_MERGE_REQUESTS
+      when: manual
       variables:
         BENCH_NOTES: "1000"
         BENCH_FLAGS: ""
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
 
 # The documentation is a datme garden; the default branch publishes it on GitLab Pages.
 pages:

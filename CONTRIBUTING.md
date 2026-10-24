@@ -37,10 +37,12 @@ the same notes for the same `--seed`) twice, cold and from the cache, starts
 `datme dev` and saves a note, then prints the times, peak memory, output size
 and what a note page loads; `--install` adds the installed size, `--json`
 writes the result and `--compare` checks it against a baseline (`--help` lists
-the rest). The `bench` job runs 10,000 notes on the default branch and on a
-schedule, 1,000 on a branch with an open merge request, and keeps
-`bench.json`; it compares with `tools/bench-baseline.json` once one taken on
-the CI runners is committed.
+the rest). On GitHub the benchmark runs 10,000 notes on every push to the
+default branch and weekly, 1,000 on pull requests. On GitLab, where CI minutes
+are limited, the `bench` job runs on a pipeline schedule only, and waits to be
+started by hand on the default branch (10,000) and on a branch with an open
+merge request (1,000). Both keep `bench.json`, and compare with
+`tools/bench-baseline.json` once one taken on the CI runners is committed.
 
 ## Dependency updates
 
