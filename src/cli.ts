@@ -627,6 +627,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
         }
       },
       gitTop: (dir) => git(dir, "rev-parse", "--show-toplevel"),
+      gitShallow: (dir) => git(dir, "rev-parse", "--is-shallow-repository") === "true",
     })
     console.log(formatDiagnosis(findings))
     if (findings.some((f) => f.level === "fail")) throw new CliError("doctor found something to fix.")

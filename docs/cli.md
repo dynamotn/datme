@@ -19,7 +19,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `datme check [vault]` | Lists broken links, missing files, clashing URLs or aliases, invalid frontmatter and Dataview queries that cannot run; exits 1 on errors |
 | `datme deploy <host> [vault]` | Writes a CI config that publishes the vault on every push (see [Deploying](deploying.md)) |
 | `datme export <folder> [vault]` | Turns a folder (`.` for the whole vault) into an EPUB book, or a printable page |
-| `datme doctor [vault]` | Checks the machine and the vault before a build: the Bun or Node version, the optional packages the vault's notes need (D2, Typst, transformers.js), git, the `DATME_LOCK_…` variables of group passwords, and `site.url`. Each problem comes with the command that fixes it; exits 1 if one must be fixed |
+| `datme doctor [vault]` | Checks the machine and the vault before a build: the Bun or Node version, the optional packages the vault's notes need (D2, Typst, transformers.js), git and a shallow clone (which gives old notes the clone's date), the `DATME_LOCK_…` variables of group passwords, and `site.url`. Each problem comes with the command that fixes it; exits 1 if one must be fixed |
 | `datme init [vault]` | Writes a starter `datme.yaml`; never overwrites one |
 | `datme mcp [vault]` | Serves the published notes to AI assistants over the Model Context Protocol (stdio); see [AI assistants](#ai-assistants) |
 | `datme migrate <from> [vault]` | Lists what switching from `publish` (Obsidian Publish), `digital-garden` or `quartz` changes; `--write` applies it (see [Coming from another publisher](migrating.md)) |

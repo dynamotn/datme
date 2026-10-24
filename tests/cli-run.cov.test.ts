@@ -307,6 +307,8 @@ describe("run, commands that need no build", () => {
     expect(first?.message).toBe("doctor found something to fix.")
     expect(printed()).toContain("DATME_LOCK_NOBODY is not set")
     expect(printed()).not.toContain("git is not installed")
+    // CI fetches the whole history, as datme's own pipelines tell it to.
+    expect(printed()).not.toContain("shallow clone")
     log.mockClear()
     // Semantic notes need a package, resolved by name; without git, dates come from the file system.
     setSite({ related: { ...site.related, semantic: { model: "m", threshold: 0.5 } } })

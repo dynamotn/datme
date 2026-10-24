@@ -11,6 +11,7 @@ const machine = (over: Partial<Machine> = {}): Machine => ({
   which: () => true,
   git: () => "git version 2.50.0",
   gitTop: () => "/repo",
+  gitShallow: () => false,
   ...over,
 })
 const levels = (m: Machine) => diagnose(m).map((f) => `${f.level}: ${f.message}`)
@@ -97,6 +98,18 @@ describe("datme doctor", () => {
   test("without git, or outside a repository, dates come from the file system", () => {
     expect(levels(machine({ git: () => undefined }))).toContain("warn: git is not installed: dates come from the file system")
     expect(levels(machine({ gitTop: () => undefined })).some((l) => l.startsWith("warn: the vault is not in a git repository"))).toBe(true)
+  })
+
+  test("a shallow clone gives old notes its date, and says how to fetch the whole history", () => {
+    const shallow = diagnose(machine({ gitShallow: () => true })).filter((f) => f.message.includes("shallow"))
+    expect(shallow).toEqual([
+      {
+        level: "warn",
+        message: "the repository at /repo is a shallow clone: notes older than the clone get its date",
+        fix: "fetch the whole history: GIT_DEPTH: 0 in the variables of GitLab CI, fetch-depth: 0 under actions/checkout on GitHub, or git fetch --unshallow",
+      },
+    ])
+    expect(levels(machine()).some((l) => l.includes("shallow"))).toBe(false)
   })
 
   test("a missing site.url is to look at", () => {

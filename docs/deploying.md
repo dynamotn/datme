@@ -104,7 +104,8 @@ Actions one), and a note older than the clone then gets the clone's date. The
 pipelines above fetch everything; in a pipeline of your own, set `GIT_DEPTH: 0`
 under `variables:` on GitLab, or `fetch-depth: 0` under `with:` of
 `actions/checkout` on GitHub. `datme check` warns about a shallow clone, and
-about a git that fails, so `--strict` stops such a build.
+about a git that fails, so `--strict` stops such a build; `datme doctor` says
+how to fix it.
 
 ## Project sites under a path
 

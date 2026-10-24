@@ -26,6 +26,8 @@ export interface Machine {
   git(): string | undefined
   /** The top of the git repository holding the vault, or undefined. */
   gitTop(vault: string): string | undefined
+  /** Whether the repository holding the vault is a shallow clone, with its history cut. */
+  gitShallow(vault: string): boolean
 }
 
 /** Whether a version meets an `engines` requirement: `>=x.y.z` or `^x.y.z` alternatives joined by `||`. */
@@ -103,6 +105,12 @@ export function diagnose(m: Machine): Finding[] {
     need(
       `the vault is not in a git repository: dates come from the file system${site.history ? ", and history: true needs one" : ""}`,
       `git -C "${site.vault}" init`,
+    )
+  } else if (m.gitShallow(site.vault)) {
+    // CI clones only the last commits unless told otherwise.
+    warn(
+      `the repository at ${top} is a shallow clone: notes older than the clone get its date`,
+      "fetch the whole history: GIT_DEPTH: 0 in the variables of GitLab CI, fetch-depth: 0 under actions/checkout on GitHub, or git fetch --unshallow",
     )
   } else ok(`${git}, and the vault is in the repository at ${top}`)
 
