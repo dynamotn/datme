@@ -284,6 +284,8 @@ export function formatReport(problems: Problem[], verbose = false): string {
 /** Everything that leaves the vault when the site is built, for `datme check --privacy`. */
 export interface PrivacyReport {
   notes: { file: string; url: string; protected: boolean; unlisted: boolean }[]
+  /** What a protected note shows to anyone: everything around its text, which alone is encrypted. */
+  protectedNotes: ProtectedShown[]
   /** Canvases, bases and drawings published as pages. */
   docs: { file: string; url: string }[]
   /** Vault files copied to the site. */
@@ -295,6 +297,26 @@ export interface PrivacyReport {
   privateLinks: PrivateLinkUse[]
   hosts: Host[]
 }
+
+/** The public face of a protected note, for `datme check --privacy`. */
+export interface ProtectedShown {
+  file: string
+  url: string
+  title: string
+  aliases: string[]
+  tags: string[]
+  description?: string
+  /** Its stage, as the page labels it. */
+  stage?: string
+  /** Days, as YYYY-MM-DD. */
+  created?: string
+  updated?: string
+  /** Published notes whose links to it show its title. */
+  linkedFrom: string[]
+}
+
+const day = (d: Date | undefined) => d?.toISOString().slice(0, 10)
+const byFile = (a: { file: string }, b: { file: string }) => a.file.localeCompare(b.file)
 
 export function privacyReport(): PrivacyReport {
   const vault = getVault()
@@ -309,7 +331,23 @@ export function privacyReport(): PrivacyReport {
   }
   const hasMap = notes.some((n) => !n.protected && parseLocation(n.source.fm.location ?? n.source.fm.coordinates))
   return {
-    notes: notes.map((n) => ({ file: n.key + ".md", url: n.url, protected: n.protected, unlisted: n.unlisted })).sort((a, b) => a.file.localeCompare(b.file)),
+    notes: notes.map((n) => ({ file: n.key + ".md", url: n.url, protected: n.protected, unlisted: n.unlisted })).sort(byFile),
+    protectedNotes: notes
+      .filter((n) => n.protected)
+      .map((n) => ({
+        file: n.key + ".md",
+        url: n.url,
+        title: n.title,
+        aliases: n.aliases,
+        tags: n.tags,
+        description: n.description,
+        stage: n.stage && site.stages[n.stage].label[lang],
+        created: day(n.created),
+        updated: day(n.updated),
+        // A protected note's own links are part of its secret, so only the others count.
+        linkedFrom: [...new Set((vault.backlinks[lang].get(n.key) ?? []).filter((b) => !b.note.protected).map((b) => b.note.key + ".md"))].sort(),
+      }))
+      .sort(byFile),
     docs: [...vault.docs.keys()].sort().map((file) => ({ file, url: docUrl(file, lang) })),
     files: [...vault.assets].sort(),
     properties: [...byKey].map(([key, files]) => ({ key, files })).sort((a, b) => a.key.localeCompare(b.key)),
@@ -322,14 +360,37 @@ export function privacyReport(): PrivacyReport {
 /** The report of `datme check --privacy`, one section per kind of thing published. */
 export function formatPrivacy(r: PrivacyReport): string {
   const out: string[] = []
-  const section = (title: string, lines: string[]) => {
-    out.push("", `${title} (${lines.length})`)
+  // `count` is the number of things listed, when each takes several lines.
+  const section = (title: string, lines: string[], count = lines.length) => {
+    out.push("", `${title} (${count})`)
     out.push(...(lines.length ? lines.map((l) => `  ${l}`) : ["  none"]))
   }
   section(
     "Published notes",
     r.notes.map((n) => `${n.file}  ${n.url}${n.protected ? "  [password]" : ""}${n.unlisted ? "  [unlisted]" : ""}`),
   )
+  section(
+    "What protected notes still show",
+    r.protectedNotes.flatMap((n) => {
+      const shown: [string, string | undefined][] = [
+        ["title", n.title],
+        ["aliases", n.aliases.join(", ")],
+        ["tags", n.tags.map((t) => "#" + t).join(" ")],
+        ["description", n.description],
+        ["stage", n.stage],
+        ["created", n.created],
+        ["updated", n.updated],
+        ["linked from", n.linkedFrom.join(", ")],
+      ]
+      return [`${n.file}  ${n.url}`, ...shown.filter(([, v]) => v).map(([k, v]) => `  ${k}: ${v}`)]
+    }),
+    r.protectedNotes.length,
+  )
+  if (r.protectedNotes.length) {
+    out.push(
+      "  Only their text, links and files are encrypted. Titles, aliases and tags also reach search, feeds, social cards and the explorer; keep out of them what the password should guard.",
+    )
+  }
   section(
     "Canvases, bases and drawings",
     r.docs.map((d) => `${d.file}  ${d.url}`),

@@ -101,9 +101,44 @@ describe("reports", () => {
     expect(r.docs.length).toBeGreaterThan(0)
   })
 
+  test("the privacy report shows what a protected note still makes public, and which public notes link to it", () => {
+    const vault = getVault()
+    const backlinks = vault.backlinks[site.defaultLang]
+    const notes = vault.byKey[site.defaultLang]
+    const before = backlinks.get("06_Reference/Secret")
+    // Links from a protected note are its own secret, and a note linking twice is named once.
+    const from = (key: string) => ({ note: notes.get(key)!, context: "" })
+    backlinks.set("06_Reference/Secret", [from("index"), from("03_Atomic/Code"), from("index"), from("06_Reference/Secret")])
+    try {
+      const [secret] = privacyReport().protectedNotes
+      expect(secret).toMatchObject({ file: "06_Reference/Secret.md", url: "/06_Reference/Secret", title: "Secret", aliases: [], tags: [] })
+      expect(secret.created).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(secret.stage).toBe(site.stages["06_Reference"].label[site.defaultLang])
+      expect(secret.linkedFrom).toEqual(["03_Atomic/Code.md", "index.md"])
+    } finally {
+      if (before) backlinks.set("06_Reference/Secret", before)
+      else backlinks.delete("06_Reference/Secret")
+    }
+  })
+
   test("the privacy text marks protected and unlisted notes, counts shared properties, and says none when empty", () => {
     const r: PrivacyReport = {
       notes: [{ file: "a.md", url: "/a", protected: true, unlisted: true }],
+      protectedNotes: [
+        {
+          file: "a.md",
+          url: "/a",
+          title: "Job interview at X",
+          aliases: ["X", "Interview"],
+          tags: ["career", "type/meeting"],
+          description: "How it went",
+          stage: "Seedling",
+          created: "2026-01-02",
+          updated: "2026-03-04",
+          linkedFrom: ["b.md", "c.md"],
+        },
+        { file: "d.md", url: "/d", title: "d", aliases: [], tags: [], linkedFrom: [] },
+      ],
       docs: [{ file: "Map.canvas", url: "/Map" }],
       files: [],
       properties: [
@@ -118,6 +153,20 @@ describe("reports", () => {
       [
         "Published notes (1)",
         "  a.md  /a  [password]  [unlisted]",
+        "",
+        "What protected notes still show (2)",
+        "  a.md  /a",
+        "    title: Job interview at X",
+        "    aliases: X, Interview",
+        "    tags: #career #type/meeting",
+        "    description: How it went",
+        "    stage: Seedling",
+        "    created: 2026-01-02",
+        "    updated: 2026-03-04",
+        "    linked from: b.md, c.md",
+        "  d.md  /d",
+        "    title: d",
+        "  Only their text, links and files are encrypted. Titles, aliases and tags also reach search, feeds, social cards and the explorer; keep out of them what the password should guard.",
         "",
         "Canvases, bases and drawings (1)",
         "  Map.canvas  /Map",
@@ -139,6 +188,8 @@ describe("reports", () => {
     )
     // With an allow-list, the keys shown are the ones the author chose: no advice.
     expect(formatPrivacy({ ...r, propertiesListed: true })).not.toContain("properties.show")
+    // Without protected notes, nothing to warn of.
+    expect(formatPrivacy({ ...r, protectedNotes: [] })).toContain("What protected notes still show (0)\n  none\n\nCanvases")
   })
 })
 

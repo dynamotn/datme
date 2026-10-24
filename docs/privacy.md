@@ -62,6 +62,8 @@ private note that still shows its name.
 read it through before the first deploy:
 
 - the published notes and their URLs, marked when protected or unlisted
+- what each protected note still shows to anyone: its title, aliases, tags,
+  description, stage and dates, and the public notes whose links name it
 - the canvases, bases and drawings published as pages
 - every file copied to the site
 - the frontmatter keys shown in properties blocks, and the notes showing each
@@ -106,6 +108,11 @@ password: rusty lantern under the willow
 - Its `banner`, `cover` and `audio` files are not published either, so the
   social card is the generated one.
 - The password is removed from the frontmatter before anything renders.
+- Only the text is encrypted. The note's URL, title, aliases, tags,
+  description, stage and dates stay public: they reach the explorer, search,
+  feeds, the social card and timelines, and the notes linking to it show its
+  title. Keep out of them what the password should guard;
+  `datme check --privacy` lists them for every protected note.
 
 ## Locked parts
 
