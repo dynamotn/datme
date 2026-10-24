@@ -9,7 +9,7 @@
   "semanticCommitType": "build",
   "semanticCommitScope": "deps",
   "rangeStrategy": "bump",
-  "minimumReleaseAge": "3 days",
+  "minimumReleaseAge": "7 days",
   "ignorePaths": ["**/node_modules/**", "**/tests/**"],
   "constraints": {
     "bun": "1.4.2"
