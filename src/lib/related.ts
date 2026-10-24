@@ -18,7 +18,7 @@ export interface Mention {
   context: string
 }
 
-const cache = new Map<string, Promise<{ related: Map<string, Related[]>; mentions: Map<string, Mention[]> }>>()
+const cache = new Map<string, Promise<{ related: ByNote<Related[]>; mentions: ByNote<Mention[]> }>>()
 
 /** Plain text of a note's markdown, without HTML, links' targets or markup. */
 function plain(md: string): string {
@@ -68,6 +68,20 @@ export function rankRelated<N extends RankedNote>(
   out: Map<string, Set<string>>,
   opts: { lang: string; count: number; typePrefix: string; semantic?: { threshold: number; vectors: Map<string, number[]> } },
 ): Map<string, Ranked<N>[]> {
+  const rank = relatedRanker(notes, out, opts)
+  return new Map(notes.map((n) => [n.key, rank(n.key)!]))
+}
+
+/**
+ * The ranking of `rankRelated`, one note at a time: the indexes are built
+ * once, and a note is ranked only when asked for. A page served by `datme dev`
+ * needs its own note's suggestions, not those of the whole vault.
+ */
+export function relatedRanker<N extends RankedNote>(
+  notes: N[],
+  out: Map<string, Set<string>>,
+  opts: { lang: string; count: number; typePrefix: string; semantic?: { threshold: number; vectors: Map<string, number[]> } },
+): (key: string) => Ranked<N>[] | undefined {
   const { lang, typePrefix, semantic } = opts
   const inbound = new Map<string, Set<string>>()
   for (const [from, targets] of out) for (const to of targets) inbound.set(to, (inbound.get(to) ?? new Set()).add(from))
@@ -94,8 +108,7 @@ export function rankRelated<N extends RankedNote>(
     return [...found].sort((x, y) => x - y).map((i) => notes[i])
   }
 
-  const related = new Map<string, Ranked<N>[]>()
-  for (const a of notes) {
+  function rank(a: N): Ranked<N>[] {
     const scored: Ranked<N>[] = []
     // Closeness in meaning can relate any two notes, so then every pair is compared.
     for (const b of semantic ? notes : candidates(a)) {
@@ -118,12 +131,25 @@ export function rankRelated<N extends RankedNote>(
       }
     }
     scored.sort((x, y) => y.score - x.score || x.note.title.localeCompare(y.note.title, lang))
-    related.set(a.key, scored.slice(0, opts.count))
+    return scored.slice(0, opts.count)
   }
-  return related
+
+  const ranked = new Map<string, Ranked<N>[]>()
+  return (key) => {
+    const i = index.get(key)
+    if (i === undefined) return undefined
+    let hit = ranked.get(key)
+    if (!hit) ranked.set(key, (hit = rank(notes[i])))
+    return hit
+  }
 }
 
-/** Related notes and mentions of a language, computed afresh (data() caches them per build). */
+/** Values of a language's notes by key, each worked out the first time it is asked for. */
+export interface ByNote<V> {
+  get(key: string): V | undefined
+}
+
+/** Related notes and mentions of a language, each note's worked out when asked for (data() caches them per build). */
 export async function computeRelated(lang: Lang) {
   const vault = getVault()
   const notes = vault.notes[lang].filter((n) => !n.isHome && !n.unlisted)
@@ -137,27 +163,35 @@ export async function computeRelated(lang: Lang) {
     : new Map<string, number[]>()
   const linksOf = (n: Note) => new Set(n.protected ? [] : n.links.map((l) => l.key))
   const out = new Map(notes.map((n) => [n.key, linksOf(n)]))
-  const related = rankRelated(notes, out, {
+  const rank = relatedRanker(notes, out, {
     lang,
     count: site.related.count,
     typePrefix: site.conventions.typePrefix,
     ...(semantic ? { semantic: { threshold: semantic.threshold, vectors } } : {}),
   })
+  const related: ByNote<Related[]> = { get: rank }
 
-  const mentions = new Map<string, Mention[]>()
-  const texts = new Map(notes.filter((n) => !n.protected).map((n) => [n.key, plain(n.md)]))
+  const byKey = new Map(notes.map((n) => [n.key, n]))
+  // The texts and the word index are made once, on the first note whose mentions are asked for.
+  let texts: Map<string, string> | undefined
   // The notes holding each word: a whole-word mention needs every word of the name, so the
   // regex runs only on notes holding its rarest one instead of on every note.
   const holders = new Map<string, Set<string>>()
-  for (const [key, text] of texts) {
-    for (const w of words(text)) {
-      if (!holders.has(w)) holders.set(w, new Set())
-      holders.get(w)!.add(key)
+  function index(): Map<string, string> {
+    if (texts) return texts
+    texts = new Map(notes.filter((n) => !n.protected).map((n) => [n.key, plain(n.md)]))
+    for (const [key, text] of texts) {
+      for (const w of words(text)) {
+        if (!holders.has(w)) holders.set(w, new Set())
+        holders.get(w)!.add(key)
+      }
     }
+    return texts
   }
-  for (const target of notes) {
+  function mentionsOf(target: Note): Mention[] | undefined {
     const names = [...new Set([target.title, ...target.aliases].map((s) => s.trim()).filter((s) => s.length >= 4))]
-    if (!names.length) continue
+    if (!names.length) return undefined
+    const texts = index()
     // Whole words only, so "Git" does not match inside "GitLab" and diacritics count as letters.
     const re = new RegExp(`(?<![\\p{L}\\p{N}])(${names.map(escapeRe).join("|")})(?![\\p{L}\\p{N}])`, "iu")
     const rarest = names.map(
@@ -178,10 +212,17 @@ export async function computeRelated(lang: Lang) {
       const end = Math.min(text.length, m.index + m[0].length + 70)
       found.push({ note: source, context: (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "") })
     }
-    mentions.set(
-      target.key,
-      found.sort((x, y) => x.note.title.localeCompare(y.note.title, lang)),
-    )
+    return found.sort((x, y) => x.note.title.localeCompare(y.note.title, lang))
+  }
+  const found = new Map<string, Mention[] | undefined>()
+  const mentions: ByNote<Mention[]> = {
+    get(key) {
+      if (!found.has(key)) {
+        const target = byKey.get(key)
+        found.set(key, target && mentionsOf(target))
+      }
+      return found.get(key)
+    },
   }
   return { related, mentions }
 }
