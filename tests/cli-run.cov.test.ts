@@ -568,18 +568,18 @@ describe("bin/datme.ts", () => {
   })
 
   test("any other error is thrown as is", async () => {
-    const vault = dir("read-only")
-    fs.chmodSync(vault, 0o555)
+    // datme.yaml links into a folder that does not exist: writing it fails, even as root, as CI runs.
+    const vault = dir("dangling")
+    fs.symlinkSync(path.join(vault, "gone", "datme.yaml"), path.join(vault, "datme.yaml"))
     const exit = spyOn(process, "exit").mockImplementation((() => undefined) as unknown as typeof process.exit)
     try {
       const e = await failure(bin("init", vault))
       expect(e).toBeInstanceOf(Error)
       expect(e).not.toBeInstanceOf(CliError)
-      expect((e as NodeJS.ErrnoException).code).toBe("EACCES")
+      expect((e as NodeJS.ErrnoException).code).toBe("ENOENT")
       expect(exit).not.toHaveBeenCalled()
     } finally {
       exit.mockRestore()
-      fs.chmodSync(vault, 0o755)
     }
   })
 

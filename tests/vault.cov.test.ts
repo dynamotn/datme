@@ -160,7 +160,6 @@ beforeAll(() => {
       friend: { url: "https://friend.example", fetchedAt: 0, notes: { "en-US": [{ u: "/known", t: "Known" }] } },
     }),
   })
-  fs.chmodSync(unreadable, 0o000)
   fs.symlinkSync(path.join(ROOT, "does-not-exist.md"), path.join(main, "dead.md"))
 
   write(path.join(ROOT, "explicit"), { "datme.yaml": "publish: explicit", "Draft.md": "Not published." })
@@ -168,7 +167,6 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  if (fs.existsSync(unreadable)) fs.chmodSync(unreadable, 0o644)
   for (const k of Object.keys(site)) delete (site as Record<string, unknown>)[k]
   Object.assign(site, saved)
   if (savedNeighbours === undefined) delete process.env.DATME_NEIGHBOURS
@@ -179,7 +177,15 @@ afterAll(() => {
 describe("a vault full of mistakes", () => {
   let vault: Vault
   let warned: string[]
+  // A transcript that cannot be read. chmod would not stop root, as CI runs, so reading it fails here instead.
+  const read = fs.readFileSync
+  const locked = spyOn(fs, "readFileSync")
+  afterAll(() => locked.mockRestore())
   beforeAll(() => {
+    locked.mockImplementation(((file: fs.PathOrFileDescriptor, ...rest: unknown[]) => {
+      if (file === unreadable) throw Object.assign(new Error(`EACCES: permission denied, open '${file}'`), { code: "EACCES" })
+      return (read as (...args: unknown[]) => unknown)(file, ...rest)
+    }) as typeof fs.readFileSync)
     process.env.DATME_NEIGHBOURS = path.join(main, "neighbours.json")
     const warn = spyOn(console, "warn").mockImplementation(() => {})
     try {
