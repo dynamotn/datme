@@ -84,7 +84,7 @@
     "markmap-view": "^0.18.12",
     "mermaid": "^12.0.0",
     "minisearch": "^7.2.0",
-    "pagefind": "^1",
+    "pagefind": "^1.5.2",
     "perfect-freehand": "^1.2.3",
     "property-information": "^7",
     "rehype-autolink-headings": "^7.1.0",
@@ -98,7 +98,7 @@
     "remark-rehype": "^11.1.2",
     "roughjs": "^4.6.6",
     "satori": "^0.33.5",
-    "sharp": "^0.35.4",
+    "sharp": "^0.35.5",
     "shiki": "^4.4.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0"
