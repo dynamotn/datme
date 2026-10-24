@@ -69,6 +69,23 @@ describe("build cache", () => {
     expect(build("fifth", "--verbose")).toMatch(/, 0 rendered,/)
   }, 240_000)
 
+  test("an edit of datme.yaml that only changes the menus keeps every cached note and card", () => {
+    const config = path.join(vault, "datme.yaml")
+    const before = fs.readFileSync(config, "utf8")
+    const entries = files(cache)
+    try {
+      fs.writeFileSync(
+        config,
+        before.replace("en-US: About Luhmann", "en-US: On Luhmann").replace("footer:\n", "footer:\n  Mastodon: https://mastodon.example/@tester\n"),
+      )
+      expect(build("menus", "--verbose")).toMatch(/, 0 rendered,/)
+      expect(page("menus", "en-US/index.html")).toContain("On Luhmann")
+      expect(files(cache).filter((f) => !entries.includes(f))).toEqual([])
+    } finally {
+      fs.writeFileSync(config, before)
+    }
+  }, 240_000)
+
   test("--fresh starts from an empty cache", () => {
     const marker = path.join(cache, "notes", "stale")
     fs.writeFileSync(marker, "")

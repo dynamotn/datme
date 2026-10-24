@@ -63,6 +63,21 @@ describe("render cache", () => {
     expect(years).toEqual([2001, 2001, new Date().getFullYear()])
   })
 
+  test("a config edit that cannot change a note keeps the entries; one that can does not", () => {
+    // Salts are worked out once per source and process, so each config gets a source of its own.
+    cache.writeCache("salted", "virtual:as-is", ["a"], "kept")
+    const { nav, footer, theme } = site
+    try {
+      site.nav = [{ kind: "url", target: "https://example.com", label: { "en-US": "Elsewhere" } }]
+      site.footer = []
+      expect(cache.readCache("salted", "virtual:menus", ["a"])?.toString()).toBe("kept")
+      site.theme = { ...theme, code: { light: "nord", dark: "nord" } }
+      expect(cache.readCache("salted", "virtual:code-theme", ["a"])).toBeUndefined()
+    } finally {
+      Object.assign(site, { nav, footer, theme })
+    }
+  })
+
   test("a cache that cannot be written only goes without", () => {
     // A file where the kind's directory should be: no entry can be made below it.
     fs.writeFileSync(path.join(cacheDir, "blocked"), "not a directory")

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The page layouts have their own pages in the documentation: an overview of every layout and collection, and for each one its properties, a short example, a screenshot and a live example page. *Writing notes* keeps a short section on `layout`, `style` and `chrome`.
+- Editing `datme.yaml` no longer renders the whole vault again on the next build: only the settings that can change a note's HTML do, such as `languages`, `publish`, `privateLinks`, `ignore`, `stages`, `strings`, `images`, `map`, `site.url`, and the `theme.code` and `theme.d2` themes. Changing the menus (`nav`, `sidebar`, `footer`), the site's title, tagline, author or logo, the style, accent, fonts or Mermaid theme, analytics, comments, subscriptions, related notes, search, the graph or the files written beside the pages keeps every cached note, and the social cards that do not show what changed.
 
 ### Fixed
 

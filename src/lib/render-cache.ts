@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { site } from "../site.config"
+import { configSalt } from "./cache-salt"
 
 /**
  * A disk cache for the slow parts of a build: rendered notes and social cards.
@@ -14,7 +15,8 @@ const dir = process.env.DATME_CACHE || undefined
 
 const salts = new Map<string, string>()
 /**
- * Anything that changes the output: datme's version, the config, and the code
+ * Anything that changes the output: datme's version, the keys of the config
+ * that can reach a cached value (see cache-salt.ts), and the code
  * of the module producing the value (`import.meta.url` of the caller), which
  * after bundling changes whenever datme's code does.
  */
@@ -23,7 +25,7 @@ function saltOf(source: string): string {
   if (!salt) {
     const h = crypto.createHash("sha256")
     h.update(process.env.DATME_VERSION ?? "")
-    h.update(JSON.stringify(site))
+    h.update(configSalt(site))
     try {
       h.update(fs.readFileSync(fileURLToPath(source)))
     } catch {
