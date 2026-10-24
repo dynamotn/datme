@@ -1,15 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { Window } from "happy-dom"
+import { installDom, type Dom } from "./client-dom"
 
-// Stacked notes run in a browser; happy-dom stands in for one.
-const happy = new Window({ url: "https://garden.example/note" })
-// Typed as the DOM the script is written against.
-const window = happy as unknown as globalThis.Window & typeof globalThis
-const document = window.document
+// The script keeps the root element of the document it is first imported with, so it runs on the shared page.
+let dom: Dom
 const fetched: string[] = []
 const realFetch = globalThis.fetch
 beforeAll(() => {
-  Object.assign(globalThis, { document, location: window.location, history: window.history, DOMParser: window.DOMParser })
+  dom = installDom("https://garden.example/note")
   globalThis.fetch = (async (url: string) => {
     fetched.push(url)
     return new Response(`<div data-stack-col data-url="${url}">evil</div>`)
@@ -17,6 +14,8 @@ beforeAll(() => {
 })
 afterAll(() => {
   globalThis.fetch = realFetch
+  document.body.innerHTML = ""
+  dom.restore()
 })
 
 describe("stacked notes", () => {
@@ -28,7 +27,7 @@ describe("stacked notes", () => {
     for (const url of ["https://evil.example/x", "javascript:alert(1)", "//evil.example/x"]) await openColumn(row, first, url, () => {})
     expect(fetched).toEqual([])
     expect(row.children).toHaveLength(1)
-    expect(window.location.href).toBe("https://garden.example/note")
+    expect(location.href).toBe("https://garden.example/note")
     await openColumn(row, first, "/other", () => {})
     expect(fetched).toEqual(["/other"])
     expect(row.children).toHaveLength(2)
