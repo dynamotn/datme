@@ -30,6 +30,29 @@ vault with that copy under Node, as CI does on every Node `engines` allows.
 
 Record anything a user could notice in `CHANGELOG.md`, under `[Unreleased]`.
 
+## Dependency updates
+
+[Renovate](https://docs.renovatebot.com) opens the merge requests that update
+dependencies, on GitLab only (the GitHub copy is a mirror), as configured in
+`.gitlab/renovate.json`: once a month, with Astro, Shiki, Fontsource, Marp and
+the type definitions each in one merge request, and the lockfile refreshed the
+same day. Patches and minors of dev dependencies come weekly and merge on their
+own once the pipeline passes; the rest waits for a review. Every Bun pin (the
+CI images, `setup-bun`, the pipelines `datme deploy` writes and their examples)
+moves in one merge request, never merged unread. An advisory gets its merge
+request at once, outside the schedule. A merge request that a user could notice
+still needs its line in `CHANGELOG.md`.
+
+The `audit` job runs `bun audit` on `bun.lock`: it prints every advisory and
+fails on a high or critical one, dev dependencies included, since `bun audit`
+cannot tell them apart. `bun audit fix` updates what the ranges allow; for the
+rest, raise the dependency or add an entry to `overrides` in `package.json`.
+An override is a last resort: it holds a patched release under a parent's pin,
+and only in datme's own install, never in a project that installs datme. When
+nothing can be fixed yet, add `--ignore=GHSA-…` to the job in both
+`.gitlab-ci.yml` and `.github/workflows/ci.yml`, with a comment saying why it
+is safe to skip and which issue tracks it.
+
 ## Adding a language to the interface
 
 The interface texts live in `src/i18n`, one JSON file per language, named by

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Renovate runs on GitLab only, where datme lives; the GitHub copy is a mirror and gets no bot of its own.",
+  "extends": ["config:recommended", ":maintainLockFilesMonthly"],
+  "timezone": "Asia/Ho_Chi_Minh",
+  "schedule": ["* 0-3 1 * *"],
+  "labels": ["dependencies"],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "build",
+  "semanticCommitScope": "deps",
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+  "ignorePaths": ["**/node_modules/**", "**/tests/**"],
+  "constraints": {
+    "bun": "1.4.2"
+  },
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"]
+  },
+  "packageRules": [
+    {
+      "description": "Optional peers widen their range, so users keep the versions they have.",
+      "matchDepTypes": ["peerDependencies"],
+      "rangeStrategy": "widen"
+    },
+    {
+      "description": "engines is the support policy, changed by hand.",
+      "matchDepTypes": ["engines"],
+      "enabled": false
+    },
+    {
+      "description": "An override holds a patched release under a parent's pin: it moves inside its range only, and past it by hand.",
+      "matchDepTypes": ["overrides"],
+      "rangeStrategy": "in-range-only"
+    },
+    {
+      "description": "A bare major on purpose: a release inside it comes with the lockfile, not a pin.",
+      "matchPackageNames": ["typescript"],
+      "rangeStrategy": "replace"
+    },
+    {
+      "groupName": "Astro",
+      "matchPackageNames": ["astro", "@astrojs/**"]
+    },
+    {
+      "groupName": "Shiki",
+      "matchPackageNames": ["shiki", "@shikijs/**"]
+    },
+    {
+      "groupName": "Fontsource",
+      "matchPackageNames": ["@fontsource/**", "@fontsource-variable/**"]
+    },
+    {
+      "groupName": "Marp",
+      "matchPackageNames": ["@marp-team/**"]
+    },
+    {
+      "groupName": "type definitions",
+      "matchPackageNames": ["@types/**"]
+    },
+    {
+      "description": "Dev-only patches and minors merge once the pipeline passes, weekly.",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "schedule": ["* 0-3 * * 1"],
+      "automerge": true
+    },
+    {
+      "description": "CI images and actions: ci(deps) commits.",
+      "matchManagers": ["gitlabci", "github-actions"],
+      "semanticCommitType": "ci"
+    },
+    {
+      "description": "Bun is kept by the custom manager below, so every pin moves in one merge request.",
+      "matchManagers": ["gitlabci", "github-actions", "renovate-config"],
+      "matchDepNames": ["oven/bun", "bun"],
+      "enabled": false
+    },
+    {
+      "description": "Coverage counts lines differently across Bun releases: never merged unread.",
+      "groupName": "Bun",
+      "matchDepNames": ["bun"],
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "Bun pins: CI images and installs, the setup-bun actions, the pipelines `datme deploy` writes and their examples, and Renovate's own constraint.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.gitlab-ci\\.yml$/",
+        "/^\\.github/workflows/[^/]+\\.ya?ml$/",
+        "/^examples/deploy/[^/]+\\.ya?ml$/",
+        "/^src/lib/deploy\\.ts$/",
+        "/^\\.gitlab/renovate\\.json$/"
+      ],
+      "matchStrings": [
+        "oven/bun:(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "bun@(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "bun-version: (?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "BUN_VERSION = \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\"",
+        "\"bun\": \"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "depNameTemplate": "bun",
+      "datasourceTemplate": "npm"
+    }
+  ]
+}
