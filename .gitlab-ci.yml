@@ -58,6 +58,37 @@ package:
     - bun install --frozen-lockfile
     - bun tools/pack-check.ts
 
+# How datme scales (tools/bench.ts): builds, dev rebuilds, output and page weight on a generated
+# vault, kept as bench.json. 10,000 notes take a while, so they run on the default branch and on
+# a pipeline schedule, with the installed size too; a branch with an open merge request gets
+# 1,000 notes, enough to catch a step change. It runs beside the tests, never delaying them, and
+# only warns: shared runners time loosely. It compares with tools/bench-baseline.json once one
+# taken on these runners is committed (a run or a list of runs, matched by --notes).
+bench:
+  needs: []
+  image: node:24
+  cache: []
+  timeout: 90 minutes
+  allow_failure: true
+  variables:
+    BENCH_NOTES: "10000"
+    BENCH_FLAGS: --install
+  before_script:
+    - npm install --global --no-audit --no-fund bun@1.4.2
+  script:
+    - bun install --frozen-lockfile
+    - bun tools/bench.ts --notes "$BENCH_NOTES" $BENCH_FLAGS --json bench.json --compare tools/bench-baseline.json
+  artifacts:
+    when: always
+    paths: [bench.json]
+    expire_in: 90 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_OPEN_MERGE_REQUESTS
+      variables:
+        BENCH_NOTES: "1000"
+        BENCH_FLAGS: ""
+
 # The documentation is a datme garden; the default branch publishes it on GitLab Pages.
 pages:
   <<: *git
