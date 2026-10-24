@@ -70,7 +70,9 @@ gets a copy button; neither ends up in what you copy.
 
 - A paragraph that is only a pasted URL becomes a card with the page's title,
   description and image. It's read once at build time and cached; set
-  `linkPreviews: false` to keep plain links.
+  `linkPreviews: false` to keep plain links. The build reads only pages on the
+  public web: a link, or a redirect, to the build machine or a private network
+  stays a plain link.
 - `![](https://…)` embeds YouTube (privacy-enhanced, `t=` kept), Vimeo, tweets
   from twitter.com or x.com, and remote video or audio files. `![Title|640](…)`
   sets the width, as in Obsidian. Printed pages show the link instead.

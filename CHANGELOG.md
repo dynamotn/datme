@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text in the accent on its pale tint (links between notes, the stack of a `projects` card, the current page in the menus) reads at WCAG AA in the `notebook` style in dark mode, `herbarium` in light mode and `lacquer` in dark mode.
 - Red words read at WCAG AA in every style: warnings, the *Cons* of a `compare` layout and other text drawn in the clay colour were too light in the `notebook` style's light mode (3.3:1) and just short in the `classic` one. Text now uses a `--clay-text` colour that a style or theme can set apart from its decorative `--clay`.
 
+### Security
+
+- Link previews can no longer be steered to the build machine or its network by DNS rebinding: each page is read from the very address that was checked, with the link's own name in the Host header and the TLS check, so a name that answers a public address first and a private one next never reaches the private one. Every redirect is checked the same way, a name that does not resolve is no longer fetched, and NAT64, 6to4, Teredo, IPv4-compatible, site-local and documentation addresses are refused along with loopback, private, link-local and CGNAT ones.
+
 ## [3.2.0] - 2026-10-23
 
 ### Added

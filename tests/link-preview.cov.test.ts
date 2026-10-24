@@ -1,7 +1,9 @@
-import { afterAll, afterEach, beforeAll, describe, expect, mock, test } from "bun:test"
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, mock, spyOn, test } from "bun:test"
+import dns from "node:dns"
 import * as renderCache from "../src/lib/render-cache"
 import type { Element, Text } from "hast"
 import type * as LinkPreview from "../src/lib/link-preview"
+import { type Answer, page, stubWeb } from "./web-stub"
 
 // The build cache is off in tests (DATME_CACHE is read once, at import), so it is stood in for by a
 // map while these tests run; everywhere else the real functions keep answering, untouched.
@@ -18,16 +20,14 @@ mock.module("../src/lib/render-cache", () => ({
 }))
 
 let lp: typeof LinkPreview
-const realFetch = globalThis.fetch
-let fetched: string[] = []
-/** Stub fetch with a function answering each URL. */
-const stubFetch = (answer: (url: string) => unknown) => {
-  globalThis.fetch = (async (input: string | URL | Request) => {
-    fetched.push(String(input))
-    return answer(String(input))
-  }) as unknown as typeof fetch
+let web: ReturnType<typeof stubWeb> | undefined
+let fetched: () => string[] = () => []
+/** Stub the web with a function answering each URL. */
+const stubFetch = (answer: (url: string) => Answer) => {
+  web = stubWeb(answer)
+  fetched = web.urls
 }
-const html = (body: string, headers: Record<string, string> = { "content-type": "text/html; charset=utf-8" }) => new Response(body, { headers })
+const html = (body: string, headers: Record<string, string> = { "content-type": "text/html; charset=utf-8" }) => ({ ...page(body), headers })
 const cached = (url: string) => {
   const hit = store.get(id("preview", [url]))
   return hit ? JSON.parse(hit.toString("utf8")) : undefined
@@ -37,13 +37,19 @@ beforeAll(async () => {
   lp = await import("../src/lib/link-preview")
   useStore = true
 })
+// lp-cov.example stands on the public web.
+let lookup: ReturnType<typeof spyOn>
+beforeEach(() => {
+  lookup = spyOn(dns.promises, "lookup").mockResolvedValue([{ address: "93.184.215.14", family: 4 }] as never)
+})
 afterEach(() => {
-  globalThis.fetch = realFetch
-  fetched = []
+  web?.restore()
+  web = undefined
+  fetched = () => []
+  lookup.mockRestore()
 })
 afterAll(() => {
   useStore = false
-  globalThis.fetch = realFetch
 })
 
 describe("parsePreview", () => {
@@ -82,7 +88,7 @@ describe("linkPreview", () => {
     const [a, b] = await Promise.all([lp.linkPreview(url), lp.linkPreview(url)])
     expect(a).toEqual({ title: "Page", description: undefined, image: undefined, site: "lp-cov.example" })
     expect(b).toBe(a)
-    expect(fetched).toEqual([url])
+    expect(fetched()).toEqual([url])
     expect(cached(url)).toEqual({ preview: a })
   })
 
@@ -90,19 +96,13 @@ describe("linkPreview", () => {
     const url = "https://lp-cov.example/stream"
     const enc = new TextEncoder()
     let pulled = 0
-    stubFetch(
-      () =>
-        new Response(
-          new ReadableStream({
-            pull(c) {
-              pulled++
-              // Never ends on its own: only the reader stopping ends it.
-              c.enqueue(enc.encode(pulled === 1 ? "<title>Big" : "x".repeat(300 * 1024)))
-            },
-          }),
-          { headers: { "content-type": "text/html" } },
-        ),
-    )
+    stubFetch(() => ({
+      headers: { "content-type": "text/html" },
+      body: (function* () {
+        // Never ends on its own: only the reader stopping ends it.
+        for (;;) yield enc.encode(pulled++ === 0 ? "<title>Big" : "x".repeat(300 * 1024))
+      })(),
+    }))
     const p = await lp.linkPreview(url)
     // The title never closes within the limit, so there is nothing to show.
     expect(p).toBeUndefined()
@@ -122,26 +122,26 @@ describe("linkPreview", () => {
       u.endsWith("/json")
         ? html("{}", { "content-type": "application/json" })
         : u.endsWith("/404")
-          ? { ok: false, headers: new Headers(), body: { cancel: () => Promise.reject(new Error("closed")) } }
-          : u.endsWith("/nobody")
-            ? { ok: true, headers: new Headers({ "content-type": "text/html" }), body: null }
-            : html("", { "content-type": "" }),
+          ? { status: 404, headers: { "content-type": "text/html" }, body: "<title>Not found</title>" }
+          : u.endsWith("/moved-nowhere")
+            ? { status: 301, headers: { "content-type": "text/html" }, body: "<title>Moved</title>" }
+            : u.endsWith("/info")
+              ? { status: 199, headers: { "content-type": "text/html" } }
+              : u.endsWith("/notype")
+                ? { headers: {}, body: "<title>T</title>" }
+                : html(""),
     )
-    for (const tail of ["/json", "/404", "/nobody", "/notype"]) {
+    for (const tail of ["/json", "/404", "/moved-nowhere", "/info", "/notype", "/blank"]) {
       const url = "https://lp-cov.example" + tail
       expect(await lp.linkPreview(url)).toBeUndefined()
       expect(cached(url).failedAt).toBeGreaterThanOrEqual(before)
     }
   })
 
-  test("a reader that cannot be cancelled, and a fetch that throws, do not break the build", async () => {
-    const reader = {
-      read: async () => ({ done: true, value: undefined }),
-      cancel: () => Promise.reject(new Error("locked")),
-    }
+  test("an empty page, and a request that fails, do not break the build", async () => {
     stubFetch((u) => {
-      if (u.endsWith("/throws")) throw new Error("ENOTFOUND")
-      return { ok: true, headers: new Headers({ "content-type": "text/html" }), body: { getReader: () => reader } }
+      if (u.endsWith("/throws")) throw new Error("ECONNRESET")
+      return { headers: { "content-type": "text/html" } }
     })
     expect(await lp.linkPreview("https://lp-cov.example/empty")).toBeUndefined()
     expect(await lp.linkPreview("https://lp-cov.example/throws")).toBeUndefined()
@@ -157,12 +157,12 @@ describe("linkPreview", () => {
     const recent = "https://lp-cov.example/recent-failure"
     store.set(id("preview", [recent]), Buffer.from(JSON.stringify({ failedAt: Date.now() - 1000 })))
     expect(await lp.linkPreview(recent)).toBeUndefined()
-    expect(fetched).toEqual([])
+    expect(fetched()).toEqual([])
 
     const old = "https://lp-cov.example/old-failure"
     store.set(id("preview", [old]), Buffer.from(JSON.stringify({ failedAt: Date.now() - 8 * 86_400_000 })))
     expect((await lp.linkPreview(old))!.title).toBe("Fresh")
-    expect(fetched).toEqual([old])
+    expect(fetched()).toEqual([old])
     expect(cached(old).preview.title).toBe("Fresh")
   })
 })
