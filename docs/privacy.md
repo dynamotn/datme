@@ -131,7 +131,9 @@ And this is public again.
 - A note can hold several parts, each with its own password or
   [group](#group-passwords-kept-out-of-the-vault). A password that
   opens one part also opens the others it fits.
-- Once a password works, it's remembered for the rest of the session.
+- Once a password works, it opens the parts and protected notes it fits on
+  the next pages too, until a reload. See
+  [What the browser keeps](#what-the-browser-keeps).
 - Locked parts work inside language blocks. Keep them at the top level of the
   note, not inside a callout or a list.
 
@@ -160,6 +162,17 @@ Changing a group's password is then one setting, for every note that uses it.
 If the variable is missing, nothing is published in the clear: a locked part
 is left out of the page, a protected note is not published at all, and
 `datme check` reports it as an error.
+
+## What the browser keeps
+
+The password a reader types is never stored. As the reader moves through
+the site, it is kept in memory, as a key the page's scripts cannot read back,
+and tried on the locked parts and protected notes of the next pages; a reload
+forgets it. What survives a reload, in the tab's `sessionStorage`, is the AES
+key of each part the reader opened: it opens that part again, and nothing
+else, and tells nothing of the password. Closing the tab forgets both.
+Passwords that older versions of datme stored there are removed, unread, on
+the next page.
 
 ## Choosing a password
 

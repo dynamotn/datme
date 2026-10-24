@@ -42,13 +42,17 @@ describe("unlocking locked parts", () => {
     expect(revealed).toBeGreaterThan(0)
   })
 
-  test("passwords that worked are remembered for the page, alongside the old single one", async () => {
-    expect(JSON.parse(window.sessionStorage.getItem("datme:pw:/note")!)).toEqual(["pw"])
+  test("the page keeps the keys of the parts that opened, never the password; an old stored password is dropped unread", async () => {
+    const keys = Object.values(JSON.parse(window.sessionStorage.getItem("datme:keys:/note")!) as Record<string, string>)
+    expect(keys).toHaveLength(3)
+    for (const key of keys) expect(key).toMatch(/^[A-Za-z0-9+/]{43}=$/)
     window.sessionStorage.setItem("datme:pw:/note", "other")
     document.body.innerHTML = `<div class="prose">${await form(0, "<p>again</p>", "other")}</div>`
-    const { setupLocked } = await import("../src/scripts/locked")
+    const { forgetPasswords, setupLocked } = await import("../src/scripts/locked")
     setupLocked(() => {})
     await settle()
-    expect(document.querySelector(".prose")!.textContent).toContain("again")
+    expect(document.querySelector(".prose")!.textContent).not.toContain("again")
+    expect(window.sessionStorage.getItem("datme:pw:/note")).toBeNull()
+    forgetPasswords()
   })
 })

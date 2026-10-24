@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Link previews can no longer be steered to the build machine or its network by DNS rebinding: each page is read from the very address that was checked, with the link's own name in the Host header and the TLS check, so a name that answers a public address first and a private one next never reaches the private one. Every redirect is checked the same way, a name that does not resolve is no longer fetched, and NAT64, 6to4, Teredo, IPv4-compatible, site-local and documentation addresses are refused along with loopback, private, link-local and CGNAT ones.
 
+### Security
+
+- The browser no longer stores the passwords of protected notes and locked parts. A password that works is kept in memory as a key that scripts cannot read back, and still opens the other parts it fits, on this page and the next ones, until a reload or the tab is closed; after a reload, each part the reader opened comes back with its own AES key, kept in `sessionStorage`, which opens nothing else and tells nothing of the password. Before, the password itself sat there in plain text, readable by any script of the site, such as the raw HTML a note embeds. Passwords stored by earlier versions are removed, unread.
+
 ## [3.2.0] - 2026-10-23
 
 ### Added

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
 import { installDom, settle } from "./client-dom"
 import { encrypt } from "../src/lib/encrypt"
+import { passwordKey, payloadKey, saltOf } from "../src/scripts/decrypt"
 
 // The whole page script (src/scripts/app.ts); happy-dom stands in for a browser. The script binds its listeners to
 // the document once, when first imported, so this is the one test file that imports it, on the one shared test
@@ -687,7 +688,8 @@ CDEF|</pre><figure class="markmap" data-markmap="{}"></figure></div>
 
     test("unlocked content gets its code blocks and diagrams set up", async () => {
       const payload = await encrypt(`<div class="prose"><pre><code>secret code</code></pre><pre class="mermaid">graph S</pre></div>`, "pw", 1000)
-      sessionStorage.setItem("datme:pw:/en-US/a", JSON.stringify(["pw"]))
+      // The part was opened before this reload: its key is kept for the page.
+      sessionStorage.setItem("datme:keys:/en-US/a", JSON.stringify({ [saltOf(payload)]: await payloadKey(payload, await passwordKey("pw"), 1000) }))
       document.body.innerHTML = `<form class="locked" data-payload="${payload}" data-iterations="1000"><input><button>Open</button></form><div hidden></div>`
       pageLoad()
       await until(() => document.querySelector(".copy-btn"))
