@@ -158,9 +158,11 @@ page instead, ready to print as a PDF.
 ## The build cache
 
 Builds are incremental. Rendered notes and social cards are cached and reused
-as long as their content, the config and datme stay the same; a 300-note vault
-goes from about 23 s to 2.5 s. Protected notes and locked parts are never written
-to the cache.
+as long as their content, the config and datme stay the same. On an Apple M4
+Pro, a generated vault of 1,000 notes builds in 30 s from scratch and 14 s
+from the cache; one of 10,000 notes in 6.3 and 4.0 minutes
+(`bun tools/bench.ts`, in the repository, measures it). Protected notes and
+locked parts are never written to the cache.
 
 Notes that embed others or run queries are cached too, keyed by what they read:
 

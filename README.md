@@ -63,9 +63,9 @@ by side, hover a link to preview it, replay how the garden grew on the graph,
 or jump to a random note.
 
 ⚡ **Fast, static, yours.** The output is plain HTML that any host can serve.
-Builds are incremental (a 300-note vault rebuilds in about 2.5 s), pages work
-offline, and one command sets up deployment to GitHub, GitLab, Netlify or
-Cloudflare.
+Builds are incremental (on an Apple M4 Pro, a generated 1,000-note vault
+builds in 30 s from scratch and 14 s from the cache), pages work offline, and
+one command sets up deployment to GitHub, GitLab, Netlify or Cloudflare.
 
 ## Quick start
 
