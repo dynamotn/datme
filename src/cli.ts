@@ -751,6 +751,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     if (args.verbose) {
       const { cacheStats, formatCacheStats } = await import("./lib/render-cache.ts")
       console.log(formatCacheStats(cacheStats()))
+      const { clientDataSizes, formatClientData } = await import("./lib/client-data.ts")
+      console.log(formatClientData(clientDataSizes(out)))
     }
     return
   }

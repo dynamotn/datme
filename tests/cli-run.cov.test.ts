@@ -453,6 +453,8 @@ describe("run, Astro commands", () => {
     build = spyOn(astro, "build").mockImplementation((async (config: { outDir: string }) => {
       fs.mkdirSync(config.outDir, { recursive: true })
       fs.writeFileSync(path.join(config.outDir, "index.html"), "<p>built</p>")
+      fs.mkdirSync(path.join(config.outDir, "static"))
+      fs.writeFileSync(path.join(config.outDir, "static", "graph.en-US.json"), "{}")
     }) as unknown as typeof astro.build)
     dev = spyOn(astro, "dev").mockResolvedValue({} as Awaited<ReturnType<typeof astro.dev>>)
     preview = spyOn(astro, "preview").mockResolvedValue({} as Awaited<ReturnType<typeof astro.preview>>)
@@ -489,6 +491,7 @@ describe("run, Astro commands", () => {
     expect(fs.existsSync(staging)).toBe(false)
     expect(printed()).toContain(`Site written to ${out}`)
     expect(printed()).toMatch(/cache/i)
+    expect(printed()).toContain("Client data, per language:\n  en-US: 2 B in 1 file\n    graph.en-US.json  2 B")
   }, 60_000)
 
   test("a failed build leaves the previous site and drops the staging directory", async () => {

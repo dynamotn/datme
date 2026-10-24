@@ -34,7 +34,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `--drafts` | dev, build, preview | Also builds drafts and scheduled notes, marked as such and kept out of search engines |
 | `--strict` | check, build | Fails on warnings too, for CI |
 | `--fresh` | build | Ignores the build cache and starts from scratch |
-| `--verbose` | check, build | Also lists links to unpublished notes, and scheduled notes; with build, how many notes came from the cache |
+| `--verbose` | check, build | Also lists links to unpublished notes, and scheduled notes; with build, how many notes came from the cache and the size of the data readers' browsers fetch |
 | `--json` | check | Prints every problem, notices included, as JSON for other tools |
 | `--privacy` | check | Lists what leaves the vault instead of the problems (see [Privacy](privacy.md#auditing-what-leaves-the-vault)); JSON with `--json` |
 | `--suggest` | check | Lists only the layouts that would suit notes and folders, each with the `layout:` line to add (see [Suggested layouts](#suggested-layouts)); JSON with `--json` |
@@ -172,7 +172,22 @@ Notes that embed others or run queries are cached too, keyed by what they read:
 - A query that reads `today` is rendered again each day. One that reads `now`,
   or a Typst block that reads files, is never cached.
 
-`datme build --verbose` ends with how many notes came from the cache.
+`datme build --verbose` ends with how many notes came from the cache, and
+the size of the data readers' browsers fetch from `/static`, per language: the
+total, the three largest files, and the neighbourhood files of the local
+graphs, of which a note page fetches one:
+
+```text
+Client data, per language:
+  en-US: 12.6 MB in 3 files; 3001 neighbourhood files for the local graph, 5.3 kB on average, 13.7 kB at most
+    contentIndex.en-US.json  11.8 MB
+    graph.en-US.json  573 kB
+    explorer.en-US.html  198 kB
+```
+
+The search index (`contentIndex`) is fetched whole on a reader's first
+search; when it grows to megabytes, [Pagefind](configuration.md#search-images-and-maps)
+loads only what a query needs.
 
 Each vault has its own cache in the system's cache directory: `datme/<vault
 name>-<id>` under `$XDG_CACHE_HOME` (or `~/.cache`) on Linux,
