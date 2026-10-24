@@ -1479,11 +1479,26 @@ let cached: Vault | undefined
 /** Kept between builds by `datme dev`, which indexes the vault again after each edit; a build indexes it once. */
 const indexCache = process.env.DATME_DEV ? newIndexCache() : undefined
 
+/**
+ * Where a build keeps its vault index for every copy of this module in the process:
+ * `datme build` checks the vault with the CLI's copy, then Astro renders the pages with
+ * the copy it bundles, and both would otherwise index the whole vault.
+ */
+const SHARED = Symbol.for("datme.vault")
+
 /** The vault index, rebuilt in dev whenever the watcher bumps the version. */
 export function getVault(): Vault {
   const version = (globalThis as { __vaultVersion?: number }).__vaultVersion ?? 0
-  if (!cached || cached.version !== version) cached = buildVault(version, indexCache)
+  if (!cached || cached.version !== version) cached = indexCache ? buildVault(version, indexCache) : sharedVault(version)
   return cached
+}
+
+/** The index another copy of this module built, when it was built for the same version with the same config. */
+function sharedVault(version: number): Vault {
+  const g = globalThis as { [SHARED]?: { key: string; vault: Vault } }
+  const key = JSON.stringify([version, site])
+  if (g[SHARED]?.key !== key) g[SHARED] = { key, vault: buildVault(version) }
+  return g[SHARED].vault
 }
 
 /**
