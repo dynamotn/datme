@@ -1,6 +1,6 @@
 import { site } from "../site.config"
 import type { Lang, SiteConfig, StyleName } from "../site.config"
-import { getVault, type Note, type PrivateLinkUse, type Problem } from "./vault"
+import { getVault, listed, type Note, type PrivateLinkUse, type Problem } from "./vault"
 import { externalUrls } from "./links"
 import { docUrl } from "./obsidian"
 import { noteProperties } from "./properties"
@@ -20,6 +20,7 @@ import { visit } from "unist-util-visit"
 import { suggestLayouts } from "./layout-hints"
 import { publishedSources } from "./doctor"
 import { inGit, passwordProblems } from "./passwords"
+import { formatBytes } from "./client-data"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -192,6 +193,41 @@ export function queryProblems(): Problem[] {
   return problems
 }
 
+/** Above this many bytes in a language, the MiniSearch index is worth trading for Pagefind. */
+export const SEARCH_INDEX_LIMIT = 2_000_000
+/** Characters of each note's text the MiniSearch index holds. */
+export const SEARCH_TEXT = 6000
+/** Bytes each note takes in the index besides its text: URL, title, tags, dates… */
+const NOTE_OVERHEAD = 300
+
+/**
+ * About how many bytes the MiniSearch index of a language weighs, without
+ * rendering a note: each listed note's Markdown, cut where the index cuts its
+ * text, and nothing of a protected note, whose text is encrypted.
+ */
+export function searchIndexBytes(lang: Lang): number {
+  return listed(lang).reduce((sum, n) => sum + NOTE_OVERHEAD + (n.protected ? 0 : Buffer.byteLength(n.md.slice(0, SEARCH_TEXT))), 0)
+}
+
+/**
+ * A notice for each language whose MiniSearch index has grown past `limit`: every reader downloads it whole on
+ * their first search, where Pagefind loads only what a query needs. A notice, so `--strict` still passes.
+ */
+export function searchProblems(limit = SEARCH_INDEX_LIMIT): Problem[] {
+  if (site.search.engine !== "minisearch") return []
+  return site.langs.flatMap((lang) => {
+    const bytes = searchIndexBytes(lang)
+    if (bytes <= limit) return []
+    return [
+      {
+        level: "info" as const,
+        file: "datme.yaml",
+        message: `search index of ${lang}: about ${formatBytes(bytes)}, which every reader downloads whole on their first search; search.engine: pagefind loads only what a query needs`,
+      },
+    ]
+  })
+}
+
 /** Every problem of the vault and of datme.yaml, sorted by file. */
 export function checkVault(): Problem[] {
   const vault = getVault()
@@ -203,6 +239,7 @@ export function checkVault(): Problem[] {
     ...(site.check.layouts ? layoutProblems() : []),
     ...accentProblems(site.theme.accent, stylesInUse(), accentFile),
     ...queryProblems(),
+    ...searchProblems(),
     ...(site.check.passwords ? passwordProblems(publishedSources(), process.env, inGit(site.vault)) : []),
   ]
   for (const [list, items] of [

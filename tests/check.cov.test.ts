@@ -8,6 +8,8 @@ import {
   gardenShape,
   layoutProblems,
   privacyReport,
+  searchIndexBytes,
+  searchProblems,
   stylesInUse,
   structureProblems,
   type PrivacyReport,
@@ -235,5 +237,48 @@ describe("the accent against the grounds of the styles in use", () => {
     expect(problems[0].file).toBe(".datme/themes/ink/theme.yaml")
     // A colour the check cannot read is left alone.
     expect(accentProblems("teal", ["notebook"], "datme.yaml")).toEqual([])
+  })
+})
+
+describe("the size of the search index", () => {
+  test("above the limit, a notice suggests Pagefind for each language, never a warning", () => {
+    const notices = searchProblems(1000)
+    expect(notices.map((p) => p.level)).toEqual(["info", "info"])
+    expect(notices.map((p) => p.file)).toEqual(["datme.yaml", "datme.yaml"])
+    const [vi, en] = notices
+    expect(vi.message).toMatch(
+      /^search index of vi-VN: about \d+(\.\d)? kB, which every reader downloads whole on their first search; search\.engine: pagefind loads only what a query needs$/,
+    )
+    expect(en.message).toContain("search index of en-US: about")
+  })
+
+  test("below it, or with Pagefind, there is nothing to say", () => {
+    expect(searchProblems()).toEqual([])
+    const saved = site.search
+    site.search = { ...saved, engine: "pagefind" }
+    try {
+      expect(searchProblems(1000)).toEqual([])
+    } finally {
+      site.search = saved
+    }
+  })
+
+  test("the estimate counts what the index holds: each listed note's text, cut at 6,000 characters, nothing of protected notes", () => {
+    const vault = getVault()
+    const talk = vault.byKey["vi-VN"].get("07_Project/Talk")!
+    const secret = vault.byKey["vi-VN"].get("06_Reference/Secret")!
+    const before = searchIndexBytes("vi-VN")
+    const { md } = talk
+    const secretMd = secret.md
+    talk.md = "x".repeat(50_000)
+    secret.md = "y".repeat(50_000)
+    try {
+      const grown = searchIndexBytes("vi-VN")
+      expect(grown - before).toBe(6000 - Buffer.byteLength(md.slice(0, 6000)))
+    } finally {
+      talk.md = md
+      secret.md = secretMd
+    }
+    expect(checkVault().some((p) => p.message.startsWith("search index"))).toBe(false)
   })
 })

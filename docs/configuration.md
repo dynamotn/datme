@@ -344,6 +344,13 @@ map:                          # tiles of /map (OpenStreetMap by default)
   darkTiles: https://…/{z}/{x}/{y}.png   # for the dark theme; else the light tiles are darkened
 ```
 
+With `minisearch`, the search index holds up to 6,000 characters of each
+note's text, and a reader's browser downloads it whole on their first search:
+a few hundred kilobytes for a small garden, megabytes for thousands of notes.
+`pagefind` indexes the built pages instead and loads only the parts a query
+needs. `datme check --verbose` suggests it, as a notice that never fails
+`--strict`, once a language's index would pass about 2 MB.
+
 ## Audio in your voice
 
 ```yaml

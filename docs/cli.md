@@ -60,6 +60,11 @@ garden, in its first language:
 `check: { structure: false }` in `datme.yaml` turns these off. The Obsidian
 plugin lists them too when its *Show notices* setting is on.
 
+With the default `minisearch` engine, `check --verbose` also notes a
+language whose search index would pass about 2 MB, which every reader
+downloads whole on their first search, and suggests `search.engine: pagefind`
+(see [Search](configuration.md#search-images-and-maps)).
+
 ### Suggested layouts
 
 `check --verbose` also suggests a [layout](writing.md#page-layouts) for
