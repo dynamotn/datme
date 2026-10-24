@@ -16,7 +16,10 @@ describe("highlighting with grammars loaded on demand", () => {
     for (const lang of ["markdown", "ts", "jsx", "vue", "html", "angular-ts", "mdx"]) {
       const lazy = await createHighlighter({ themes, langs: [] })
       await loadLanguages(lazy, [lang])
-      expect(lazy.codeToHtml(sample, { lang, ...options })).toBe(full.codeToHtml(sample, { lang, ...options }))
+      // A grammar compiles its patterns on its first line, which a busy machine can take past Shiki's
+      // 500 ms a line: the rest of the line would stay uncoloured, in either highlighter.
+      const html = (h: typeof full) => h.codeToHtml(sample, { lang, ...options, tokenizeTimeLimit: 0 })
+      expect(html(lazy)).toBe(html(full))
       lazy.dispose()
     }
     full.dispose()
