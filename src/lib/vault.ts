@@ -22,6 +22,7 @@ import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, 
 import { assetUrl, urlPlaceholder, type DrawnDrawing } from "./obsidian"
 import { findInGarden } from "./neighbours"
 import { privateLinkText, showsName } from "./privacy"
+import { CONFIG_FILES } from "./config-files"
 
 /** A published markdown file of the vault, independent of language. */
 export interface SourceNote {
@@ -520,7 +521,81 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
   return dates
 }
 
-function buildVault(version: number): Vault {
+/** A markdown file as last read: its frontmatter (without the password), the password's spec, and its body. */
+interface ParsedFile {
+  /** Size, times and inode of the file when it was read; another value means it changed. */
+  stamp: string
+  fm: Record<string, unknown>
+  spec?: string
+  body: string
+  error?: string
+}
+
+/** What the vault is asked while one note is indexed in one language, and the answer it gave. */
+type Dep = [kind: "note" | "asset" | "drawing" | "private" | "garden" | "password" | "git", args: unknown[], answer: unknown]
+/** What indexing one note in one language did to the rest of the index: problems reported, files published. */
+type Effect = [kind: "report" | "link" | "citation" | "asset" | "doc", args: unknown[]]
+
+/** One note indexed in one language, with what it depended on, so a later build can take it as it is. */
+interface Unit {
+  source: SourceNote
+  deps: Dep[]
+  effects: Effect[]
+  /** The note before its links get URLs and a clashing permalink is dropped; each build works on a copy. */
+  note: Note
+}
+
+/**
+ * What one build of the vault index keeps for the next, in `datme dev`: each
+ * markdown file as parsed, and each note as indexed in each language with what
+ * it asked of the rest of the vault. A note is indexed again when its file
+ * changed or when one of those answers did (a link now resolving elsewhere, a
+ * picture removed, a commit dating it); a note drawing a drawing or reading a
+ * transcript always is. Anything else changing, the config above all, starts
+ * over from nothing. Links, backlinks, tags and folders are always worked out
+ * again from the notes.
+ */
+export interface IndexCache {
+  /** The config and the files it reads, as of the last build. */
+  fingerprint?: string
+  files: Map<string, ParsedFile>
+  sources: Map<string, SourceNote>
+  units: Map<string, Unit>
+  /** Counts of the last build: files read, notes indexed again and notes reused. */
+  stats: { read: number; built: number; reused: number }
+}
+
+export function newIndexCache(): IndexCache {
+  return { files: new Map(), sources: new Map(), units: new Map(), stats: { read: 0, built: 0, reused: 0 } }
+}
+
+/** Size, times and inode of a file: what changes when it is written, moved over or replaced. */
+function stampOf(st: fs.Stats): string {
+  return `${st.size}:${st.mtimeMs}:${st.ctimeMs}:${st.birthtimeMs}:${st.ino}`
+}
+
+/** The stamps of a file or of every file under a folder; "" for nothing there. */
+function stampsUnder(abs: string): string {
+  let st: fs.Stats
+  try {
+    st = fs.statSync(abs)
+  } catch {
+    return ""
+  }
+  if (!st.isDirectory()) return stampOf(st)
+  return fs
+    .readdirSync(abs)
+    .sort()
+    .map((name) => `${name}=${stampsUnder(path.join(abs, name))}`)
+    .join(";")
+}
+
+/**
+ * Builds the vault index. With a cache, as `datme dev` keeps between edits, it
+ * reads only the files that changed and reuses each note whose file and answers
+ * from the rest of the vault are the same; the index is the same as one built afresh.
+ */
+export function buildVault(version: number, cache: IndexCache = newIndexCache()): Vault {
   const found = { md: [] as string[], files: [] as string[], broken: [] as string[] }
   walk(site.vault, found)
 
@@ -566,12 +641,44 @@ function buildVault(version: number): Vault {
     anyNote.add(path.posix.basename(key))
   }
 
+  // Every bibliography of the config, merged; a later file wins for a key both define.
+  const bib = new Map<string, BibEntry>()
+  for (const rel of site.bibliography) {
+    try {
+      for (const e of parseBibtex(fs.readFileSync(path.join(site.vault, rel), "utf8"))) bib.set(e.key, e)
+    } catch {
+      report("error", "datme.yaml", `bibliography "${rel}" cannot be read`)
+    }
+  }
+
+  // The config, and what it is read from, decide everything below: when any of it changed, nothing is reused.
+  const fingerprint = JSON.stringify([
+    site,
+    [...bib],
+    CONFIG_FILES.map((f) => stampsUnder(path.join(site.vault, f))),
+    stampsUnder(path.join(site.vault, ".datme")),
+    site.pack ? stampsUnder(site.pack.dir) : "",
+  ])
+  if (cache.fingerprint !== fingerprint) Object.assign(cache, newIndexCache(), { fingerprint })
+  const stats = { read: 0, built: 0, reused: 0 }
+  const files = new Map<string, ParsedFile>()
+
   const sources = new Map<string, SourceNote>()
   let homeTarget: string | undefined
   for (const rel of found.md) {
     const abs = path.join(site.vault, rel)
-    const src = fs.readFileSync(abs, "utf8")
-    const { fm, body, error } = parseFrontmatter(src)
+    const stamp = stampOf(fs.statSync(abs))
+    let parsed = cache.files.get(rel)
+    if (parsed?.stamp !== stamp) {
+      const { fm, body, error } = parseFrontmatter(fs.readFileSync(abs, "utf8"))
+      // The password never stays in the frontmatter, so nothing can render it by accident.
+      const spec = fm.password != null && fm.password !== "" ? String(fm.password) : undefined
+      delete fm.password
+      parsed = { stamp, fm, spec, body, error }
+      stats.read++
+    }
+    files.set(rel, parsed)
+    const { fm, spec, body, error } = parsed
     // Without its frontmatter a note cannot say `publish: true`, so it silently disappears.
     if (error) report("warning", rel, `frontmatter is not valid YAML, so it is ignored: ${error}`)
     if (!isPublished(fm, site.publish, new Date(), site.drafts)) {
@@ -581,9 +688,6 @@ function buildVault(version: number): Vault {
       }
       continue
     }
-    // The password never stays in the frontmatter, so nothing can render it by accident.
-    const spec = fm.password != null && fm.password !== "" ? String(fm.password) : undefined
-    delete fm.password
     const { password, variable } = spec ? resolvePassword(spec) : {}
     // A note whose group password is missing would otherwise go out in the clear.
     if (spec && !password) {
@@ -599,16 +703,23 @@ function buildVault(version: number): Vault {
         // not a symlink
       }
     }
-    sources.set(key, {
+    // The same file read the same way is the same source, so the notes made from it can be reused.
+    const before = cache.sources.get(key)
+    sources.set(
       key,
-      file: abs,
-      stem: path.posix.basename(key),
-      dir: path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel),
-      fm,
-      raw: body,
-      isHome,
-      password,
-    })
+      before && before.fm === fm && before.isHome === isHome && before.password === password && before.file === abs
+        ? before
+        : {
+            key,
+            file: abs,
+            stem: path.posix.basename(key),
+            dir: path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel),
+            fm,
+            raw: body,
+            isHome,
+            password,
+          },
+    )
   }
   const home = [...sources.values()].find((s) => s.isHome)
   // A symlinked home note would otherwise be published twice.
@@ -832,16 +943,12 @@ function buildVault(version: number): Vault {
     }
   }
 
-  // Every bibliography of the config, merged; a later file wins for a key both define.
-  const bib = new Map<string, BibEntry>()
-  for (const rel of site.bibliography) {
-    try {
-      for (const e of parseBibtex(fs.readFileSync(path.join(site.vault, rel), "utf8"))) bib.set(e.key, e)
-    } catch {
-      report("error", "datme.yaml", `bibliography "${rel}" cannot be read`)
-    }
-  }
   const missingCitations = new Set<string>()
+  function missingCitation(relFile: string, key: string): void {
+    if (missingCitations.has(`${relFile}\0${key}`)) return
+    missingCitations.add(`${relFile}\0${key}`)
+    report("error", relFile, `citation @${key} is not in the bibliography`)
+  }
 
   const git = gitDates(report)
   const assets = new Set<string>()
@@ -849,10 +956,81 @@ function buildVault(version: number): Vault {
   const notes = {} as Vault["notes"]
   const byKey = {} as Vault["byKey"]
 
+  // A note indexed in a language asks the rest of the vault through `ask` and changes the index through `did`:
+  // both are noted, so the next build can tell whether the answers still hold and replay what it did.
+  let rec: { deps: Dep[]; effects: Effect[]; pure: boolean } | undefined
+  const effects = {
+    report,
+    link: linkProblem,
+    citation: missingCitation,
+    asset: (a: string) => void assets.add(a),
+    doc: (d: string) => void docRefs.add(d),
+  } satisfies Record<Effect[0], (...args: never[]) => void>
+  const datesOf = (file: string) => {
+    const d = git.get(file)
+    return d && `${d.created.getTime()}:${d.updated.getTime()}`
+  }
+  const answers: Record<Dep[0], (...args: never[]) => unknown> = {
+    note: (target: string, fromDir: string) => resolveNote(target, fromDir)?.key,
+    asset: resolveAsset,
+    drawing: resolveDrawing,
+    private: privateLink,
+    garden: (name: string, target: string, lang: Lang) => JSON.stringify(gardenLink(name, target, lang)),
+    password: (spec: string) => JSON.stringify(resolvePassword(spec)),
+    git: datesOf,
+  }
+  function ask<T>(kind: Dep[0], args: unknown[], answer: T, noted: unknown = answer): T {
+    rec?.deps.push([kind, args, noted])
+    return answer
+  }
+  function did<K extends Effect[0]>(kind: K, ...args: Parameters<(typeof effects)[K]>): void {
+    rec?.effects.push([kind, args])
+    ;(effects[kind] as (...a: unknown[]) => void)(...args)
+  }
+  /** What a note gets of the vault while it is indexed: every answer noted, and drawings and transcripts never reused. */
+  const unitNote = (target: string, fromDir: string) => {
+    const hit = resolveNote(target, fromDir)
+    return ask("note", [target, fromDir], hit, hit?.key)
+  }
+  const unitAsset = (target: string, fromDir: string) => ask("asset", [target, fromDir], resolveAsset(target, fromDir))
+  const unitDrawing = (target: string, fromDir: string) => ask("drawing", [target, fromDir], resolveDrawing(target, fromDir))
+  const unitPassword = (spec: string) => {
+    const r = resolvePassword(spec)
+    return ask("password", [spec], r, JSON.stringify(r))
+  }
+  const impure =
+    <A extends unknown[], R>(fn: (...args: A) => R) =>
+    (...args: A): R => {
+      if (rec) rec.pure = false
+      return fn(...args)
+    }
+  const unitDraw = impure(drawDrawing)
+  const unitReadText = impure(readText)
+  /** A note as the next build gets it: the parts a build changes afterwards are its own. */
+  const copyNote = (n: Note): Note => ({
+    ...n,
+    lockedParts: n.lockedParts.map((p) => ({ ...p })),
+    translation: n.translation && { ...n.translation },
+  })
+  const units = new Map<string, Unit>()
+
   for (const lang of site.langs) {
     notes[lang] = []
     byKey[lang] = new Map()
     for (const s of sources.values()) {
+      const id = `${lang}\0${s.key}`
+      const unit = cache.units.get(id)
+      if (unit && unit.source === s && unit.deps.every(([kind, args, answer]) => (answers[kind] as (...a: unknown[]) => unknown)(...args) === answer)) {
+        for (const [kind, args] of unit.effects) (effects[kind] as (...a: unknown[]) => void)(...args)
+        // Whether a scheduled note is still a draft depends on the day, not on the vault.
+        const note = { ...copyNote(unit.note), draft: site.drafts && isDraft(s.fm) }
+        units.set(id, unit)
+        stats.reused++
+        notes[lang].push(note)
+        byKey[lang].set(s.key, note)
+        continue
+      }
+      rec = { deps: [], effects: [], pure: true }
       const titleField = s.fm.title
       const titleMap = titleField && typeof titleField === "object" ? (titleField as Record<string, string>) : undefined
       const langTitle = titleMap?.[lang]
@@ -873,20 +1051,21 @@ function buildVault(version: number): Vault {
       const tags = [...new Set(toArray(s.fm.tags ?? s.fm.tag).map((x) => slugTag(x.replace(/^#/, ""))))].filter(Boolean)
       const relFile = s.key + ".md"
       const stat = fs.statSync(s.file)
-      const created = toDate(s.fm.created ?? s.fm.date) ?? git.get(relFile)?.created ?? stat.birthtime
-      const updated = toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? git.get(relFile)?.updated ?? stat.mtime
+      const dates = ask("git", [relFile], git.get(relFile), datesOf(relFile))
+      const created = toDate(s.fm.created ?? s.fm.date) ?? dates?.created ?? stat.birthtime
+      const updated = toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? dates?.updated ?? stat.mtime
 
       // A picture or sound property: a URL, or a file of the vault that is then published.
       const fileProp = (field: string, v: unknown = s.fm[field]): { href: string; file?: string } | undefined => {
         if (typeof v !== "string" || !v) return undefined
         const b = v.replace(/^!?\[\[|\]\]$/g, "").replace(/\|.*$/, "")
         if (/^https?:\/\//.test(b)) return { href: b }
-        const asset = resolveAsset(b, s.dir)
+        const asset = unitAsset(b, s.dir)
         if (asset) {
-          assets.add(asset)
+          did("asset", asset)
           return { href: assetUrl(asset), file: asset }
         }
-        if (lang === site.defaultLang) report("error", relFile, `${field} "${b}" is not in the vault`)
+        if (lang === site.defaultLang) did("report", "error", relFile, `${field} "${b}" is not in the vault`)
         return undefined
       }
       // A protected note's pictures and sound are part of what its password guards, so they are not published.
@@ -899,7 +1078,7 @@ function buildVault(version: number): Vault {
       const layout = LAYOUTS.find((l) => l === layoutField)
       // `layout: none` keeps the usual page, and `datme check` from suggesting a layout.
       if (layoutField && layoutField !== "none" && !layout && lang === site.defaultLang) {
-        report("warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
+        did("report", "warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
       }
       // A dialogue's `speakers` map names to pictures, published like a cover; a protected dialogue keeps them.
       const speakers =
@@ -919,11 +1098,11 @@ function buildVault(version: number): Vault {
           : undefined
       const { value: style, invalid: badStyle } = pickOption(s.fm.style, site.styles)
       if (badStyle && lang === site.defaultLang) {
-        report("warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`)
+        did("report", "warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`)
       }
       const { value: chrome, invalid: badChrome } = pickOption(s.fm.chrome, CHROMES)
       if (badChrome && lang === site.defaultLang) {
-        report("warning", relFile, `chrome "${badChrome}" is not one of ${CHROMES.join(", ")}, so the note keeps its usual frame`)
+        did("report", "warning", relFile, `chrome "${badChrome}" is not one of ${CHROMES.join(", ")}, so the note keeps its usual frame`)
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 
@@ -944,51 +1123,51 @@ function buildVault(version: number): Vault {
       if (body.includes("@")) {
         const cited = cite(body, bib, t(lang).references)
         body = cited.md
-        for (const key of cited.missing) {
-          if (missingCitations.has(`${relFile}\0${key}`)) continue
-          missingCitations.add(`${relFile}\0${key}`)
-          report("error", relFile, `citation @${key} is not in the bibliography`)
-        }
+        for (const key of cited.missing) did("citation", relFile, key)
       }
       // How every piece of the note's markdown is made ready: its text, its locked parts, a poem's translation.
       const prepare = {
         lang,
         dir: s.dir,
-        resolveNote,
-        resolveAsset,
-        drawDrawing,
-        drawingPage: resolveDrawing,
-        readText,
-        privateLink: (target: string, fromDir: string, alias: string | undefined) => privateLink(target, fromDir, alias, lang),
-        gardenLink: (name: string, target: string) => gardenLink(name, target, lang),
+        resolveNote: unitNote,
+        resolveAsset: unitAsset,
+        drawDrawing: unitDraw,
+        drawingPage: unitDrawing,
+        readText: unitReadText,
+        privateLink: (target: string, fromDir: string, alias: string | undefined) =>
+          ask("private", [target, fromDir, alias, lang], privateLink(target, fromDir, alias, lang)),
+        gardenLink: (name: string, target: string) => {
+          const found = gardenLink(name, target, lang)
+          return ask("garden", [name, target, lang], found, JSON.stringify(found))
+        },
       }
       const pre = preprocess(body, { ...prepare, slides })
       // A protected note's files travel inside its ciphertext, and the canvases and bases it links stay unpublished.
       if (!s.password) {
-        pre.assets.forEach((a) => assets.add(a))
-        pre.docs.forEach((d) => docRefs.add(d))
+        for (const a of pre.assets) did("asset", a)
+        for (const d of pre.docs) did("doc", d)
       }
       // A locked part's links stay out of backlinks and the graph, and its files out of the site.
       const lockedParts = parts.map((part) => {
-        const { password, variable } = resolvePassword(part.password)
+        const { password, variable } = unitPassword(part.password)
         if (!password) {
           if (lang === site.defaultLang) {
-            report("error", relFile, `locked part ${part.password} needs the ${variable} environment variable; it is left out`)
+            did("report", "error", relFile, `locked part ${part.password} needs the ${variable} environment variable; it is left out`)
           }
           return { md: "" }
         }
         const p = preprocess(part.md, prepare)
-        for (const problem of p.problems) linkProblem(relFile, problem)
+        for (const problem of p.problems) did("link", relFile, problem)
         return { password, md: p.md }
       })
       const directives = slides
         ? slideDirectives(s.fm, (target) => {
-            const asset = resolveAsset(target, s.dir)
-            if (asset) assets.add(asset)
+            const asset = unitAsset(target, s.dir)
+            if (asset) did("asset", asset)
             return asset && assetUrl(asset)
           })
         : undefined
-      for (const p of pre.problems) linkProblem(relFile, p)
+      for (const p of pre.problems) did("link", relFile, p)
       // A poem beside its translation: the blocks of its `bilingual` language (the original's, on that language's
       // own page), made ready like the note's text. A protected poem keeps them.
       const asked = layout === "poem" && typeof s.fm.bilingual === "string" ? s.fm.bilingual.trim() : ""
@@ -996,12 +1175,12 @@ function buildVault(version: number): Vault {
       const original = typeof s.fm.lang === "string" ? s.fm.lang : sourceLang
       const pairLang = asked && (asked !== contentLang ? asked : original !== contentLang ? original : "")
       if (asked && !texts.includes(asked) && lang === site.defaultLang) {
-        report("warning", relFile, `bilingual "${asked}" has no <!--lang:${asked}--> block holding text, so the poem is shown alone`)
+        did("report", "warning", relFile, `bilingual "${asked}" has no <!--lang:${asked}--> block holding text, so the poem is shown alone`)
       }
       let translation: Note["translation"]
       if (pairLang && texts.includes(pairLang) && !s.password) {
         const other = preprocess(keepIndent(splitLocked(filterLanguage(s.raw, pairLang)).md), prepare)
-        for (const a of other.assets) assets.add(a)
+        for (const a of other.assets) did("asset", a)
         // A locked part of the translation stays out, as it does of the note.
         translation = { lang: pairLang, md: other.md.replace(/<div class="locked-part" data-lock="\d+"><\/div>/g, "") }
       }
@@ -1062,10 +1241,14 @@ function buildVault(version: number): Vault {
         slides: directives,
         source: s,
       }
+      if (rec.pure) units.set(id, { source: s, deps: rec.deps, effects: rec.effects, note: copyNote(note) })
+      rec = undefined
+      stats.built++
       notes[lang].push(note)
       byKey[lang].set(s.key, note)
     }
   }
+  Object.assign(cache, { files, sources, units, stats })
 
   // Links are resolved to keys during preprocessing; URLs need the slugs computed above.
   function noteUrl(key: string, lang: Lang): string {
@@ -1278,11 +1461,13 @@ export function countNotes(f: FolderNode): number {
 }
 
 let cached: Vault | undefined
+/** Kept between builds by `datme dev`, which indexes the vault again after each edit; a build indexes it once. */
+const indexCache = process.env.DATME_DEV ? newIndexCache() : undefined
 
 /** The vault index, rebuilt in dev whenever the watcher bumps the version. */
 export function getVault(): Vault {
   const version = (globalThis as { __vaultVersion?: number }).__vaultVersion ?? 0
-  if (!cached || cached.version !== version) cached = buildVault(version)
+  if (!cached || cached.version !== version) cached = buildVault(version, indexCache)
   return cached
 }
 
