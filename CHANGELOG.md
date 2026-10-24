@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Notes no longer quietly take the file times as their dates when git fails: `datme check` (and so `--strict`) warns "dates come from file times: git failed (…)", and warns about a shallow clone, where every note older than the clone got its date, with the `GIT_DEPTH: 0` or `fetch-depth: 0` that fixes it. A vault outside any git repository still takes the file times without a word. The history is read a piece at a time, so a long one no longer goes over a 64 MB limit and drops every date.
 - `datme check` (and so `--strict`) warns about what a build used to skip without a word: a broken symlink in the vault, a drawing inside another drawing that cannot be drawn (it was simply missing from the outer one), and a transcript next to a video or a sound that cannot be read (its player showed no captions).
 - A page the sitemap cannot read back after the build is left out of it, with a warning, instead of listed: it could be a page kept out of search engines.
+- `datme dev` shows a note as it is saved again: the page reloaded, but kept showing the note as it was when the server started, until a restart.
 
 ### Security
 

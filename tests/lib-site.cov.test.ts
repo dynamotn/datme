@@ -429,13 +429,15 @@ describe("the Astro integration", () => {
     expect(fs.readFileSync(path.join(out, "_headers"), "utf8").split("\n\n")[0]).not.toContain("Content-Security-Policy")
   })
 
-  test("in dev, notes are watched and a change rebuilds the index and reloads the page", () => {
+  test("in dev, notes are watched and a change rebuilds the index, drops Astro's cached routes and reloads the page", () => {
     const watched: string[] = []
     const handlers: Record<string, (file: string) => void> = {}
     const sent: unknown[] = []
     const server = {
       watcher: { add: (p: string) => void watched.push(p), on: (ev: string, fn: (file: string) => void) => void (handlers[ev] = fn) },
       hot: { send: (msg: unknown) => void sent.push(msg) },
+      // Astro keeps each page's props from getStaticPaths until its server hears this; the note is in them.
+      environments: { ssr: { hot: { send: (event: string) => void sent.push(event) } } },
       middlewares: { use: () => {} },
     }
     setSite({ ignore: [...site.ignore, "07_Project"] })
@@ -450,7 +452,7 @@ describe("the Astro integration", () => {
       handlers.change(path.join(site.vault, "07_Project/Talk.md"))
       expect(sent).toEqual([])
       handlers.add(path.join(site.vault, "New.md"))
-      expect(sent).toEqual([{ type: "full-reload" }])
+      expect(sent).toEqual(["astro:content-changed", { type: "full-reload" }])
       expect(g.__vaultVersion).toBe((before ?? 0) + 1)
     } finally {
       if (before === undefined) delete g.__vaultVersion

@@ -96,6 +96,9 @@ export default function vaultWatcher(): AstroIntegration {
           if (inVault(file) === undefined || ignoredInVault(file)) return
           const g = globalThis as { __vaultVersion?: number }
           g.__vaultVersion = (g.__vaultVersion ?? 0) + 1
+          // Astro keeps each page's props from getStaticPaths, the note itself included, until its
+          // server hears of a content change: without this the reload would show the old note.
+          server.environments.ssr.hot.send("astro:content-changed", {})
           server.hot.send({ type: "full-reload" })
         }
         server.watcher.on("change", onChange)
