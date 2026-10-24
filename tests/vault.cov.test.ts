@@ -191,8 +191,9 @@ describe("a vault full of mistakes", () => {
   })
   const messages = (file: string) => vault.problems.filter((p) => p.file === file).map((p) => `${p.level}: ${p.message}`)
 
-  test("a broken symlink is skipped; markdownFiles lists every note, published or not", () => {
+  test("a broken symlink is skipped with a warning; markdownFiles lists every note, published or not", () => {
     expect(vault.sources.has("dead")).toBe(false)
+    expect(messages("dead.md")).toEqual(["warning: broken symlink: what it points to is missing, so it is skipped"])
     expect(markdownFiles().sort()).toEqual([
       "A/Gamma.md",
       "Alpha.md",
@@ -261,6 +262,10 @@ describe("a vault full of mistakes", () => {
     const m = messages("Alpha.md")
     expect(m).toContain('warning: drawing "Gone.excalidraw" is not in the vault, so it is not shown')
     expect(messages("Bad.excalidraw.md")).toEqual(["warning: drawing cannot be drawn: no drawing found; is it an Excalidraw file?"])
+    // Once, however many times the outer drawing is drawn.
+    expect(messages("Outer.excalidraw.md")).toEqual([
+      "warning: drawing Bad.excalidraw.md inside Outer.excalidraw.md cannot be drawn: no drawing found; is it an Excalidraw file?",
+    ])
     const md = vault.byKey["en-US"].get("Alpha")!.md
     // The outer drawing is drawn: a published note shows as a linked card, a private one as a lock.
     expect(md).toContain("📄 Alpha")
@@ -273,6 +278,7 @@ describe("a vault full of mistakes", () => {
     expect(md).toContain("Spoken words")
     expect(md).not.toContain("Never read")
     expect(md).toContain('<audio src="/assets/locked.mp3" controls></audio>')
+    expect(messages("locked.vtt")).toEqual(["warning: transcript cannot be read (EACCES), so its player shows no captions"])
   })
 
   test("an invalid canvas is reported and not published", () => {

@@ -250,7 +250,7 @@ export function isIgnored(rel: string): boolean {
   })
 }
 
-function walk(dir: string, out: { md: string[]; files: string[] }, rel = ""): void {
+function walk(dir: string, out: { md: string[]; files: string[]; broken?: string[] }, rel = ""): void {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const childRel = rel ? `${rel}/${entry.name}` : entry.name
     if (isIgnored(childRel) || entry.name.startsWith(".")) continue
@@ -260,6 +260,8 @@ function walk(dir: string, out: { md: string[]; files: string[] }, rel = ""): vo
       try {
         isDir = fs.statSync(abs).isDirectory()
       } catch {
+        // pointing nowhere: skipped, and reported by the vault
+        out.broken?.push(childRel)
         continue
       }
     }
@@ -519,7 +521,7 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
 }
 
 function buildVault(version: number): Vault {
-  const found = { md: [] as string[], files: [] as string[] }
+  const found = { md: [] as string[], files: [] as string[], broken: [] as string[] }
   walk(site.vault, found)
 
   // Index every asset by path and by basename, for Obsidian's shortest-path lookup.
@@ -545,8 +547,17 @@ function buildVault(version: number): Vault {
 
   const problems: Problem[] = []
   const report = (level: Problem["level"], file: string, message: string) => void problems.push({ level, file, message })
+  // What is read once per language, such as a drawing inside another or a transcript, is reported once.
+  const reported = new Set<string>()
+  const reportOnce: typeof report = (level, file, message) => {
+    const id = `${file}\0${message}`
+    if (!reported.has(id)) report(level, file, message)
+    reported.add(id)
+  }
   // The config's own, such as a theme pack that could not be used.
   for (const w of site.warnings) report("warning", w.file, w.message)
+  // A note behind a broken symlink would otherwise vanish from the site unseen.
+  for (const rel of found.broken) report("warning", rel, "broken symlink: what it points to is missing, so it is skipped")
   // Every note of the vault, published or not, to tell a private link target from a missing one.
   const anyNote = new Set<string>()
   for (const rel of found.md) {
@@ -699,7 +710,8 @@ function buildVault(version: number): Vault {
           const inner = sceneOf(nested)
           const parts = renderParts(inner, { ...drawingContext(nested, inner, used, depth + 1), idPrefix: `ex${depth + 1}-${hash(nested)}` })
           return { kind: "drawing", viewBox: parts.viewBox, body: parts.body }
-        } catch {
+        } catch (e) {
+          reportOnce("warning", rel, `drawing ${nested} inside ${rel} cannot be drawn: ${(e as Error).message}`)
           return undefined
         }
       }
@@ -750,7 +762,9 @@ function buildVault(version: number): Vault {
   function readText(rel: string): string | undefined {
     try {
       return fs.readFileSync(path.join(site.vault, rel), "utf8")
-    } catch {
+    } catch (e) {
+      const why = (e as NodeJS.ErrnoException).code ?? (e as Error).message
+      reportOnce("warning", rel, `transcript cannot be read (${why}), so its player shows no captions`)
       return undefined
     }
   }
