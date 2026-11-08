@@ -1315,6 +1315,48 @@ details.callout[open] > summary::after {
 .callout-content > :last-child {
   margin-bottom: 0.9em;
 }
+/* ---------- spoilers and content warnings ---------- */
+.spoiler {
+  filter: blur(0.35em);
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.spoiler:not(.revealed):not(:focus) {
+  user-select: none;
+}
+.spoiler:focus,
+.spoiler.revealed {
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spoiler {
+    transition: none;
+  }
+}
+@media print {
+  .spoiler {
+    filter: none;
+  }
+}
+details.cw > summary {
+  cursor: pointer;
+  padding: 0.6em 1em;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+}
+details.cw[open] > summary {
+  margin-bottom: 1em;
+}
+.cw-label {
+  font-weight: 600;
+}
+.cw-open {
+  opacity: 0.8;
+  margin-left: 0.5em;
+}
+details.cw[open] .cw-open {
+  display: none;
+}
 .callout {
   --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E");
 }

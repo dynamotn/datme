@@ -9,6 +9,7 @@ import { getVault, type Note } from "./vault"
 import { chartHtml } from "./charts"
 import { profileOf } from "./footer"
 import { renderNote } from "./markdown"
+import { beforeWarning } from "./spoilers"
 import { noteChanges } from "./changes"
 import { t } from "./i18n"
 import { field, formatPrice, noteDay, plain, priceOf, quotesOf, textOf, type Spec } from "./note-layouts"
@@ -99,7 +100,7 @@ export function bookmarkOf(n: Note): Bookmark {
  * entities kept, so it goes back into a page as HTML; "" when it has none.
  */
 export function firstParagraph(html: string): string {
-  for (const m of html.matchAll(/<p>([\s\S]*?)<\/p>/g)) {
+  for (const m of beforeWarning(html).matchAll(/<p>([\s\S]*?)<\/p>/g)) {
     const text = m[1].replace(/<[^>]*>/g, "").trim()
     if (text) return text
   }
@@ -140,7 +141,7 @@ export interface Snippet {
 }
 
 export function snippetOf(n: Note, html: string): Snippet {
-  const code = html.match(/<pre class="shiki[\s\S]*?<\/pre>/)?.[0]
+  const code = beforeWarning(html).match(/<pre class="shiki[\s\S]*?<\/pre>/)?.[0]
   const named = code?.match(/<code class="language-([^"\s]+)/)?.[1]
   const language = field(n, "language") || (named && named !== "text" ? named : "")
   return { code, language }

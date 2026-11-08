@@ -34,7 +34,7 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
     card = {
       title: r.h1 ?? note.title,
       kicker,
-      meta: [formatDate(note.created, lang), stage, minutes].filter(Boolean).join(" · "),
+      meta: [formatDate(note.created, lang), stage, minutes, note.warning && `${t(lang).contentWarning}: ${note.warning}`].filter(Boolean).join(" · "),
       tags: note.tags.map((x) => (x.startsWith(site.conventions.typePrefix) ? x.slice(site.conventions.typePrefix.length) : x)),
       logo: site.logo,
       // An atlas letters the note's region, a catalogue card its call number; other cards leave them out of the cache key.

@@ -107,14 +107,15 @@ export async function llmsTxt(): Promise<string> {
   return lines.join("\n")
 }
 
-/** The site's /llms-full.txt: the markdown copy of every note in one file, each after the URL of its page. */
+/** The site's /llms-full.txt: the markdown copy of every note in one file, each after the URL of its page; a note with a content warning gives the warning. */
 export function llmsFullTxt(): string {
   const lines = intro()
   for (const l of site.langs) {
     const notes = plainNotes(l)
     if (!notes.length) continue
     lines.push(notesHeading(l), "")
-    for (const n of notes) lines.push("---", "", `Source: ${absUrl(n.url)}`, "", noteMarkdown(n))
+    for (const n of notes)
+      lines.push("---", "", `Source: ${absUrl(n.url)}`, "", n.warning ? `# ${n.title}\n\n> ${t(n.lang).contentWarning}: ${n.warning}\n` : noteMarkdown(n))
   }
   return lines.join("\n")
 }

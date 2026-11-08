@@ -37,6 +37,7 @@ import { renderLeafletBlock } from "./leaflet-block"
 import { remarkDiagrams, READS_FILES } from "./diagrams"
 import { encrypt } from "./encrypt"
 import { lockedPlaceholder } from "./locked"
+import { remarkSpoilers, warned } from "./spoilers"
 import { inlineAssets } from "./inline-assets"
 import { imageSize, stamp, variantPath, variantWidths, placeholder, SIZES } from "./images"
 import { withBase } from "./base"
@@ -86,7 +87,8 @@ const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
     if (!m) return
     const raw = m[1].toLowerCase()
     const kind = CALLOUT_ALIASES[raw] ?? raw
-    const fold = m[2]
+    // A spoiler stays folded until the reader opens it, without scripts.
+    const fold = m[2] || (kind === "spoiler" ? "-" : "")
     const color = (node.data as { calloutColor?: string } | undefined)?.calloutColor
     head.value = head.value.slice(m[0].length)
 
@@ -293,7 +295,8 @@ function deadLinks(): Set<string> {
 }
 
 // A drawing's labels make a poor description of the note around it.
-const SKIP_CLASSES = ["heading-anchor", "katex-mathml", "block-id", "drawing"]
+// A spoiler stays out of excerpts and search, as it stays out of sight.
+const SKIP_CLASSES = ["heading-anchor", "katex-mathml", "block-id", "drawing", "spoiler"]
 
 /**
  * Text a reader would see, for search and descriptions: leaves out code blocks
@@ -306,7 +309,7 @@ function readable(node: HastRoot | ElementContent): string {
     else if (n.type === "element") {
       if (n.tagName === "pre" || n.tagName === "script" || n.tagName === "style") return
       const cls = (n.properties.className as string[] | undefined) ?? []
-      if (cls.some((c) => SKIP_CLASSES.includes(c))) return
+      if (cls.some((c) => SKIP_CLASSES.includes(c)) || n.properties.dataCallout === "spoiler") return
       n.children.forEach(walk)
       // Block elements end a word even without whitespace between them.
       if (/^(p|li|h[1-6]|div|td|th|blockquote)$/.test(n.tagName)) parts.push(" ")
@@ -716,6 +719,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
     .use(remarkAdmonitions)
     .use(remarkTaskStatuses)
     .use(remarkHardBreaks, { enabled: hardBreaks })
+    .use(remarkSpoilers, { lang })
     .use(remarkMath)
     .use(remarkInlineDisplayMath)
     .use(remarkCallouts)
@@ -874,8 +878,12 @@ const SEALED: Rendered = { html: "", headings: [], text: "", words: 0, descripti
  * A protected note renders as empty here, so its content cannot leak anywhere;
  * only renderSecret hands it out, to be encrypted.
  */
-export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
-  return note.protected ? Promise.resolve(SEALED) : renderFull(note, stack)
+export async function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
+  if (note.protected) return SEALED
+  const r = await renderFull(note, stack)
+  // A content warning stands in for the text everywhere but the page, where it opens onto it.
+  const { warning } = note
+  return warning ? { ...r, html: warned(r.html, warning, note.url, note.lang), text: warning, description: warning } : r
 }
 
 /** The translation a poem is shown beside, rendered like the poem; undefined without one. */

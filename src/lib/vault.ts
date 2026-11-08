@@ -641,6 +641,8 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
 
       const { typePrefix, blogTags, mapTags } = site.conventions
       const types = tags.filter((x) => x.startsWith(typePrefix)).map((x) => x.slice(typePrefix.length))
+      const cw = s.fm.cw ?? s.fm.contentWarning
+      const warning = typeof cw === "string" && cw.trim() ? cw.trim() : undefined
       const note: Note = {
         key: s.key,
         lang,
@@ -665,7 +667,9 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
         chrome,
         // A board or a deck needs the width of the page.
         cssclasses: [...toArray(s.fm.cssclasses ?? s.fm.cssclass), ...(board ? ["kanban-board"] : []), ...(slides ? ["slide-deck"] : [])],
-        description: typeof s.fm.description === "string" ? s.fm.description : undefined,
+        // The warning stands in for the description: every excerpt starts from it.
+        description: warning ?? (typeof s.fm.description === "string" ? s.fm.description : undefined),
+        warning,
         // A `stage` property naming a configured stage wins over the top-level folder.
         stage: typeof s.fm.stage === "string" && site.stages[s.fm.stage] ? s.fm.stage : site.stages[s.dir.split("/")[0]] ? s.dir.split("/")[0] : undefined,
         types,

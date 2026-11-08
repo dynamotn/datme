@@ -4,6 +4,7 @@ import { setupPopovers, hidePopover } from "./popover"
 import { samePath } from "./data"
 import { base, withBase } from "./base"
 import { setupLocked } from "./locked"
+import { setupSpoilers } from "./spoiler"
 import { setupCanvas } from "./canvas"
 import { setupStack } from "./stack"
 import { setupWebmentions } from "./webmentions"
@@ -330,6 +331,7 @@ document.addEventListener("astro:before-swap", () => {
 
 // ---- protected notes and locked parts: set up what unlocking reveals ----
 function revealed() {
+  setupSpoilers()
   setupMedia()
   setupCode()
   setupPopovers()
@@ -343,6 +345,7 @@ document.addEventListener("astro:page-load", () => {
   setupLocked(revealed)
   setupCanvas()
   setupStack(() => {
+    setupSpoilers()
     setupCode()
     bindListen()
     setupPopovers()
@@ -378,6 +381,7 @@ document.addEventListener("astro:page-load", () => {
   setupHighlights()
   setupSyllabus()
   setupChecklist()
+  setupSpoilers()
   if (document.querySelector(".drawing.generated")) void import("./excalifont").then((m) => m.loadDrawingFonts())
   // Chart.js is only fetched on pages with a chart.
   if (document.querySelector("figure.chart")) void import("./chart").then((m) => m.setupCharts())

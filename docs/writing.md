@@ -16,6 +16,7 @@ All of this works the same as in the app:
 - `![[embeds]]` of whole notes, sections, blocks, images, audio, video and
   PDFs, which open at `#page=3` and take `#height=400`.
 - Callouts (`> [!tip]`), folded with `> [!tip]-`.
+- Spoilers: `> [!spoiler]` is a callout that stays folded until a reader opens it, and `||text||` inside a line is blurred until it is clicked, focused or opened with Enter or Space. Screen readers hear "Spoiler, press to reveal" in place of the text. Without scripts a click or Tab still reveals the inline kind, and the callout is a plain `<details>`. Pipes in code, maths and table cells, and `a || b` with spaces around it, are left alone. A spoiler stays out of the note's excerpt and the search index.
 - `==highlights==`, `%%comments%%`, `#tags` and `^block-ids`. A colour emoji
   right after the opening `==` colours the highlight, as in Obsidian 1.14:
   `==🔴Important==`, with 🔴 🟠 🟡 🟢 🔵 🟣. A `^block-id` on a line of its
@@ -43,6 +44,7 @@ that folder's page.
 | `created`, `updated` | Dates; without them datme uses the git history, then the file's times |
 | `banner` | An image across the top (`banner_x`, `banner_y` from 0 to 1 set its focus) |
 | `description` | The excerpt for cards, feeds and search engines |
+| `cw`, `contentWarning` | A content warning, such as `violence`: the page shows it in a box above the note, which a reader opens to read it (and it stays open for them on later visits, remembered in their browser). The excerpt, meta description, social card, feeds, search results, popover previews and `llms.txt` carry the warning instead of the text, and the note has no history page |
 | `layout` | A page made for what the note holds: `cv`, `gallery`, `projects`, `books`… see [Page layouts](layouts.md) |
 | `style` | The look of this page: `notebook`, `classic`, `garden`, `herbarium`, `paddy`, `manuscript`, `lacquer`, `zine`, `atlas`, `catalog`, `eink`, `terminal`, `blueprint`, `wiki`, `broadsheet`, `resume`, `darkroom` or a style of the theme pack. See [Page layouts](#page-layouts) |
 | `chrome` | The frame around the page: `full`, or `minimal` for a thin bar with no menu, search or sidebars |

@@ -294,7 +294,7 @@ export function noteVersions(note: Note): Version[] {
 
 /** Whether a note gets a history page: the site and the note allow it, and it changed since it was planted. */
 export function hasHistory(note: Note): boolean {
-  if (!site.history || note.protected || note.source.fm.history === false || note.draft) return false
+  if (!site.history || note.protected || note.warning || note.source.fm.history === false || note.draft) return false
   return noteVersions(note).length > 1
 }
 

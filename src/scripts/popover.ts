@@ -42,6 +42,13 @@ async function show(link: HTMLAnchorElement) {
       n.setAttribute("data-id", n.id)
       n.removeAttribute("id")
     })
+    // A note with a content warning shows the warning, not its text.
+    prose.querySelectorAll("details.cw").forEach((d) => {
+      const warning = document.createElement("p")
+      warning.className = "cw-label"
+      warning.textContent = d.querySelector(".cw-label")?.textContent ?? ""
+      d.replaceWith(warning)
+    })
     attachDecks(prose)
     el.append(prose)
   }

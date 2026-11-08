@@ -78,6 +78,21 @@ describe("previews of notes of this garden", () => {
     expect(asked.filter((r) => r.url === "/notes/two")).toHaveLength(1)
   })
 
+  test("a note with a content warning previews the warning, not its text", async () => {
+    pages.set(
+      "/notes/cw",
+      note(
+        "Tale",
+        `<details class="cw" data-cw="/notes/cw"><summary><span class="cw-label">Content warning: violence</span> <span class="cw-open">Press</span></summary><div class="cw-body"><p>The butler did it.</p></div></details>`,
+      ),
+    )
+    const [a] = page(`<a class="internal" href="/notes/cw">Tale</a>`)
+    enter(a)
+    await until(() => popover())
+    expect(popover()!.textContent).toContain("Content warning: violence")
+    expect(popover()!.textContent).not.toContain("butler")
+  })
+
   test("a note without prose shows its title alone; one without a title an empty heading", async () => {
     pages.set("/notes/bare", html(`<article class="note"><p>no prose</p></article>`))
     const [a] = page(`<a class="internal" href="/notes/bare#x">Bare</a>`)

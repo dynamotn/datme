@@ -17,6 +17,8 @@ export const HIDDEN_PROPERTIES = [
   "unlisted",
   "password",
   "description",
+  "cw",
+  "contentwarning",
   "created",
   "updated",
   "modified",

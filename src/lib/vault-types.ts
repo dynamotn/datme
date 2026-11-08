@@ -99,6 +99,8 @@ export interface Note {
   chrome?: Chrome
   cssclasses: string[]
   description?: string
+  /** Content warning (`cw` or `contentWarning` property): shown before the text, which no excerpt, card, feed or search result carries. */
+  warning?: string
   /** Configured stage of the note: its `stage` property, else its top-level folder. */
   stage?: string
   types: string[]

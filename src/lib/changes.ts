@@ -54,7 +54,7 @@ function plain(md: string, max = 160): string {
 }
 
 /** Whether a note's changes may be shown: the same rules as its history page. */
-const tracked = (n: Note) => site.history && !n.isHome && !n.protected && !n.draft && n.source.fm.history !== false
+const tracked = (n: Note) => site.history && !n.isHome && !n.protected && !n.warning && !n.draft && n.source.fm.history !== false
 
 /** The public changes of one note, oldest first, trivial edits left out. */
 export function noteChanges(note: Note): GardenChange[] {
