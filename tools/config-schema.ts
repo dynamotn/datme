@@ -81,8 +81,12 @@ export function generateSchema(): Json {
 
 export const render = (): string => `${JSON.stringify(generateSchema(), null, 2)}\n`
 
-if (import.meta.main) {
-  fs.mkdirSync(path.dirname(SCHEMA_FILE), { recursive: true })
-  fs.writeFileSync(SCHEMA_FILE, render())
-  console.log(`Wrote ${path.relative(root, SCHEMA_FILE)}`)
+/** Writes the schema file; the exit code. */
+export function cli(file = SCHEMA_FILE): number {
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, render())
+  console.log(`Wrote ${path.relative(root, file)}`)
+  return 0
 }
+
+if (import.meta.main) process.exitCode = cli()

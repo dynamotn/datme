@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import fs from "node:fs"
-import { render, SCHEMA_FILE } from "../tools/config-schema"
+import os from "node:os"
+import path from "node:path"
+import { cli, render, SCHEMA_FILE } from "../tools/config-schema"
 import { starterConfig } from "../src/cli"
 import { SCHEMA_URL } from "../src/lib/config-files"
 
@@ -17,4 +19,10 @@ test("the schema describes keys from their doc comments", () => {
 
 test("a new datme.yaml points editors at the schema", () => {
   expect(starterConfig("/v").split("\n")[0]).toBe(`# yaml-language-server: $schema=${SCHEMA_URL}`)
+})
+
+test("cli writes the schema file", () => {
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "schema-")), "out/datme.schema.json")
+  expect(cli(file)).toBe(0)
+  expect(fs.readFileSync(file, "utf8")).toBe(render())
 })
