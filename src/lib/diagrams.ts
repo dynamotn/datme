@@ -13,7 +13,8 @@ import { site } from "../site.config"
  *   model: without them the block shows its source with a notice.
  * - ```abc (sheet music, abcjs) and ```markmap / ```mindmap (mind maps) are
  *   drawn in the browser, which loads their library only on pages that have
- *   one. A mind map is parsed here, so the page ships data, not a parser.
+ *   one. A mind map is parsed here, so the page ships data, not a parser; the
+ *   parser, markmap-lib, is optional too.
  */
 
 export const DIAGRAM_LANGS = ["d2", "typst", "abc", "markmap", "mindmap"]
@@ -46,6 +47,7 @@ export function setOptionalImport(fn: ((name: string) => Promise<unknown>) | und
   importer = fn ?? importPackage
   d2 = undefined
   typst = undefined
+  transformer = undefined
 }
 
 /** Whether an import failed because the package is not there, rather than broken once found. */
@@ -201,12 +203,14 @@ interface MarkmapNode {
   children: MarkmapNode[]
 }
 
-let transformer: Promise<{ transform(md: string): { root: MarkmapNode } }> | undefined
+let transformer: Promise<{ transform(md: string): { root: MarkmapNode } } | undefined> | undefined
 
 /** The tree of a mind map, parsed from its markdown: headings and nested lists. */
 export async function markmapTree(source: string): Promise<MarkmapNode> {
-  transformer ??= import("markmap-lib").then((m) => new m.Transformer())
-  const { root } = (await transformer).transform(source)
+  transformer ??= optional<typeof import("markmap-lib")>("markmap-lib").then((m) => m && new m.Transformer())
+  const parser = await transformer
+  if (!parser) throw new DiagramUnavailable("markmap-lib")
+  const { root } = parser.transform(source)
   // Line numbers are the parser's bookkeeping; the browser only needs the tree.
   const strip = (n: MarkmapNode): MarkmapNode => ({ content: n.content, children: n.children.map(strip) })
   return strip(root)
@@ -279,7 +283,11 @@ export const remarkDiagrams: Plugin<[], MdRoot> = () => async (tree) => {
     }
     if (lang === "abc") put(`<pre class="abc" role="img" aria-label="Sheet music">${escapeAttr(node.value)}</pre>`)
     else if (lang === "markmap" || lang === "mindmap") {
-      jobs.push(renderMarkmap(node.value).then(put, (e) => put(error("Mind map", (e as Error).message))))
+      jobs.push(
+        renderMarkmap(node.value).then(put, (e) =>
+          put(e instanceof DiagramUnavailable ? unavailable("Mind map", e.message, node.value) : error("Mind map", (e as Error).message)),
+        ),
+      )
     } else jobs.push(drawn(lang, node.value).then(put))
   })
   await Promise.all(jobs)

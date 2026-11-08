@@ -73,6 +73,7 @@ export function diagnose(m: Machine): Finding[] {
   const needs: [string, string][] = []
   if (sources.some((s) => fence(s.body, "d2"))) needs.push(["@terrastruct/d2", "```d2 diagrams"])
   if (sources.some((s) => fence(s.body, "typst"))) needs.push(["@myriaddreamin/typst-ts-node-compiler", "```typst blocks"])
+  if (sources.some((s) => fence(s.body, "markmap") || fence(s.body, "mindmap"))) needs.push(["markmap-lib", "```markmap and ```mindmap blocks"])
   if (sources.some((s) => isSlides(s.fm))) needs.push(["@marp-team/marp-core", "Marp slide decks (marp: true)"])
   if (site.related.semantic) needs.push(["@huggingface/transformers", "related.semantic"])
   for (const [pkg, why] of needs) {

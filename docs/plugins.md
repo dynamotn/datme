@@ -313,12 +313,14 @@ page that fits their content, in the text colour of the page; `#image("…")`
 and other file reads look in the vault. A mind map is also given as an
 outline, for screen readers and print.
 
-D2 and Typst are optional dependencies, installed next to datme only when a
-vault uses them. Without them, the block shows its source with a notice:
+D2, Typst and markmap-lib (which reads mind maps) are optional dependencies,
+installed next to datme only when a vault uses them. Without them, the block
+shows its source with a notice:
 
 ```bash
 bun add @terrastruct/d2                          # ```d2
 bun add @myriaddreamin/typst-ts-node-compiler    # ```typst
+bun add markmap-lib                              # ```markmap and ```mindmap
 ```
 
 ## Tabs

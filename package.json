@@ -80,7 +80,6 @@
     "katex": "^0.18.9",
     "leaflet": "^1.9.4",
     "lz-string": "^1.5.0",
-    "markmap-lib": "^0.18.12",
     "markmap-view": "^0.18.12",
     "mermaid": "^12.0.0",
     "minisearch": "^7.2.0",
@@ -119,6 +118,7 @@
     "axe-core": "^4.13.0",
     "happy-dom": "^21.0.4",
     "lucide-static": "^1.52.0",
+    "markmap-lib": "^0.18.12",
     "playwright": "^1.63.0",
     "typescript": "6"
   },
@@ -126,7 +126,8 @@
     "@huggingface/transformers": "^4.3.1",
     "@marp-team/marp-core": "^4.4.0",
     "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
-    "@terrastruct/d2": "^0.1.33"
+    "@terrastruct/d2": "^0.1.33",
+    "markmap-lib": "^0.18.12"
   },
   "peerDependenciesMeta": {
     "@huggingface/transformers": {
@@ -139,6 +140,9 @@
       "optional": true
     },
     "@terrastruct/d2": {
+      "optional": true
+    },
+    "markmap-lib": {
       "optional": true
     }
   },

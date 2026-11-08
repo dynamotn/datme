@@ -186,7 +186,10 @@ describe("renderers that are not installed", () => {
       expect(await renderMarkdown("```typst\ncov-missing typst\n```", "en-US", "x")).toContain(
         "Typst needs @myriaddreamin/typst-ts-node-compiler: install it next to datme",
       )
-      expect(asked).toEqual(["@terrastruct/d2", "@myriaddreamin/typst-ts-node-compiler"])
+      const map = await renderMarkdown("```mindmap\n# cov-missing map\n```", "en-US", "x")
+      expect(map).toContain("Mind map needs markmap-lib: install it next to datme (bun add markmap-lib).")
+      expect(map).toContain("# cov-missing map")
+      expect(asked).toEqual(["@terrastruct/d2", "@myriaddreamin/typst-ts-node-compiler", "markmap-lib"])
     } finally {
       setOptionalImport(undefined)
     }

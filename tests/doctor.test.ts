@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import { diagnose, formatDiagnosis, meets, type Machine } from "../src/lib/doctor"
 import { site } from "../src/site.config"
 import { parseArgs } from "../src/cli"
@@ -71,10 +74,20 @@ describe("datme doctor", () => {
     }
   })
 
-  test("Marp slide decks of the vault need Marp Core", () => {
-    // The fixture vault has a deck (07_Project/Talk).
-    const missing = diagnose(machine({ resolves: (p) => p !== "@marp-team/marp-core" })).find((f) => f.message.includes("marp-core"))!
-    expect(missing).toMatchObject({ level: "fail", fix: "bun add @marp-team/marp-core   (next to datme)" })
+  test("slide decks and mind maps need Marp Core and markmap-lib", () => {
+    const vault = fs.mkdtempSync(path.join(os.tmpdir(), "datme-doctor-"))
+    fs.writeFileSync(path.join(vault, "Deck.md"), "---\npublish: true\nmarp: true\n---\n# One\n")
+    fs.writeFileSync(path.join(vault, "Map.md"), "---\npublish: true\n---\n```mindmap\n# Root\n```\n")
+    const before = site.vault
+    site.vault = vault
+    try {
+      const findings = diagnose(machine({ resolves: (p) => p !== "@marp-team/marp-core" && p !== "markmap-lib" }))
+      expect(findings.find((f) => f.message.includes("marp-core"))).toMatchObject({ level: "fail", fix: "bun add @marp-team/marp-core   (next to datme)" })
+      expect(findings.find((f) => f.message.includes("markmap-lib"))).toMatchObject({ level: "fail", fix: "bun add markmap-lib   (next to datme)" })
+    } finally {
+      site.vault = before
+      fs.rmSync(vault, { recursive: true, force: true })
+    }
   })
 
   test("tts needs uv and a voice clip, each with its fix; without tts there is nothing to check", () => {
