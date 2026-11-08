@@ -131,3 +131,41 @@ describe("elements with nothing to show", () => {
     expect(svg).toBe(alone)
   })
 })
+
+describe("lines", () => {
+  const line = (over: Partial<ExElement>) => renderScene(scene([{ id: "l", type: "line", x: 0, y: 0, width: 40, height: 40, seed: 1, ...over }]))
+  const three: [number, number][] = [
+    [0, 0],
+    [40, 0],
+    [40, 40],
+  ]
+
+  test("a line is a path through its points; a line of one point draws nothing", () => {
+    expect(
+      line({
+        points: [
+          [0, 0],
+          [40, 40],
+        ],
+      }),
+    ).toContain('<path d="M0 0 C')
+    const rect: ExElement = { id: "r", type: "rectangle", x: 0, y: 0, width: 50, height: 50, seed: 1 }
+    const stub: ExElement = { id: "l", type: "line", x: 0, y: 0, width: 0, height: 0, points: [[0, 0]] }
+    expect(renderScene(scene([rect, stub]))).toBe(renderScene(scene([rect])))
+  })
+
+  test("a polygon, or a line ending where it began, is closed; an open one is not", () => {
+    const open = line({ points: three })
+    const polygon = line({ points: three, polygon: true })
+    const looped = line({ points: [...three, [0, 0]] })
+    expect(polygon).not.toBe(open)
+    expect(polygon.length).toBeGreaterThan(open.length)
+    expect(looped.length).toBeGreaterThan(open.length)
+  })
+
+  test("a rounded line with three points is a curve through them", () => {
+    const curve = line({ points: three, roundness: { type: 2 } })
+    expect(curve).not.toBe(line({ points: three }))
+    expect(curve).toContain("<path")
+  })
+})

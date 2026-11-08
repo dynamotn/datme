@@ -211,6 +211,9 @@ describe("functions of the Dataview reference", () => {
     // A lambda sees the row too, and is nothing outside a function.
     expect(ev("filter(list(4, 5, 6), (x) => x > rating)")).toEqual([6])
     expect(ev("map(list(1, 2), () => rating)")).toEqual([5, 5])
+    // Further parameters of a lambda are null: a list passes its items one at a time.
+    expect(ev("map(list(1, 2), (x, y) => y)")).toEqual([null, null])
+    expect(ev("map(list(1, 2), (x, y) => x)")).toEqual([1, 2])
     expect(() => ev("(x) => x")).toThrow(DataviewError)
     expect(ev("(rating)")).toBe(5)
     // Without a list, or without a lambda, there is nothing to filter.

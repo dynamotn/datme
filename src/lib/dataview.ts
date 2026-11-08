@@ -756,10 +756,9 @@ function evaluate(e: Expr, row: Row, engine: Engine): Value {
           return arithmetic(e.op, a, b)
         case "*":
           return typeof a === "number" && typeof b === "number" ? a * b : null
-        case "/":
+        default: // "/", the last operator the parser makes
           return typeof a === "number" && typeof b === "number" && b !== 0 ? a / b : null
       }
-      return null
     }
     case "call": {
       // date(today) names a moment, not a field: Dataview writes it without quotes.

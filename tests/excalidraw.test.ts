@@ -19,6 +19,15 @@ describe("reading drawings", () => {
     expect(s.exportOptions).toEqual({ transparent: false, dark: false, padding: 20 })
   })
 
+  test("an embedded file listed as a URL is an embed; any other text after the id is not", () => {
+    const json = JSON.stringify({ elements: [{ id: "a", type: "ellipse", x: 0, y: 0, width: 10, height: 10 }] })
+    const id = (c: string) => c.repeat(20)
+    const s = parseDrawing(`\`\`\`json\n${json}\n\`\`\`\n${id("a")}: https://example.com/pic.png\n${id("b")}: just some words\n${id("c")}: $$\n`)
+    expect(s.files[id("a")]).toEqual({ embed: { kind: "url", url: "https://example.com/pic.png" } })
+    expect(s.files[id("b")]).toBeUndefined()
+    expect(s.files[id("c")]).toBeUndefined()
+  })
+
   test("plain JSON, in a ```json block or a .excalidraw file", () => {
     const json = JSON.stringify({ elements: [{ id: "a", type: "ellipse", x: 0, y: 0, width: 10, height: 10 }], appState: { viewBackgroundColor: "#fff9db" } })
     expect(parseDrawing("# Drawing\n```json\n" + json + "\n```").background).toBe("#fff9db")
