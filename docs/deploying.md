@@ -22,7 +22,14 @@ to upgrade. On GitHub, GitLab and Cloudflare it also keeps the build cache
 between runs, and on GitHub only the deploy job may write to Pages.
 When the vault turns on `related.semantic`, the pipeline installs datme and
 transformers.js (pinned too) in one global `bun add` and runs that datme, since
-`bunx` keeps each package apart.
+`bunx` keeps each package apart. It does the same for the other optional
+packages `datme doctor` lists for the vault: Marp Core for slide decks,
+markmap-lib for mind maps, D2 and Typst for their blocks, and Pagefind for
+`search.engine: pagefind`, each at the version datme declares for it. Drafts
+and scheduled notes count, as previews and the daily build publish them. The
+list is worked out when `deploy` runs: after adding the first deck, mind map,
+D2 or Typst block, or switching to Pagefind, remove the pipeline file and run
+`deploy` again, and do the same after upgrading datme.
 `deploy` never overwrites a file, and
 `--branch` picks the branch to publish from (by default, the current one).
 

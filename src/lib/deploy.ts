@@ -26,6 +26,8 @@ export interface DeployOpts {
   semantic?: boolean
   /** Whether every merge or pull request is also built as a preview, with its drafts and out of search engines. */
   previews?: boolean
+  /** Optional packages the vault needs (Marp Core, markmap-lib, Pagefind, D2, Typst), installed next to datme. */
+  packages?: string[]
 }
 
 /** Shell-safe argument, quoted only when needed. */
@@ -40,15 +42,21 @@ export const BUN_VERSION = "1.4.2"
 /** transformers.js for related.semantic, pinned like datme: the version the search page loads too. */
 export const TRANSFORMERS_VERSION = "4.3.1"
 
+/** An optional package at the version datme's peerDependencies name, so CI runs what datme was tested with. */
+export const pinned = (name: string) => `${name}@${(pkg.peerDependencies as Record<string, string>)[name].replace(/^[\^~]/, "")}`
+
 /**
  * The build command, with the cache kept where CI can save it between runs; `bun` is the path of
- * Bun where it is not on the PATH. With related.semantic, datme and transformers.js go in one global
- * install: bunx would put each package in a directory of its own, where datme cannot find the other.
+ * Bun where it is not on the PATH. With related.semantic or another optional package, datme and the
+ * packages go in one global install: bunx would put each package in a directory of its own, where
+ * datme cannot find the others.
  */
-const build = (o: DeployOpts, out: string, bun = "") =>
-  o.semantic
-    ? `${bun}bun add --global @dynamotn/datme@${version} @huggingface/transformers@${TRANSFORMERS_VERSION} && "$(${bun}bun pm bin -g)/datme" build ${arg(o.vault)} --out ${out}`
+const build = (o: DeployOpts, out: string, bun = "") => {
+  const extra = [...(o.semantic ? [`@huggingface/transformers@${TRANSFORMERS_VERSION}`] : []), ...(o.packages ?? []).map(pinned)]
+  return extra.length
+    ? `${bun}bun add --global @dynamotn/datme@${version} ${extra.join(" ")} && "$(${bun}bun pm bin -g)/datme" build ${arg(o.vault)} --out ${out}`
     : `${bun}bunx @dynamotn/datme@${version} build ${arg(o.vault)} --out ${out}`
+}
 
 /** The build of a preview at `site`: drafts included, every page out of search engines. */
 const previewBuild = (o: DeployOpts, out: string, site: string, bun = "") => `${build(o, out, bun)} --drafts --noindex --site ${site}`

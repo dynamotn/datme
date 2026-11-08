@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import * as childProcess from "node:child_process"
 import * as astro from "astro"
-import { parseArgs, run, dropWork, pruneCache, claimCache, deploy, pipelineNeeds, PACKAGE_ROOT, CliError, type Args } from "../src/cli"
+import { parseArgs, run, dropWork, pruneCache, claimCache, deploy, optionalPackages, pipelineNeeds, PACKAGE_ROOT, CliError, type Args } from "../src/cli"
 import { site, type SiteConfig } from "../src/site.config"
 import * as mcp from "../src/lib/mcp"
 import * as doctor from "../src/lib/doctor"
@@ -208,6 +208,28 @@ describe("deploy", () => {
     fs.writeFileSync(path.join(vault, "datme.yaml"), "related: [unclosed\n")
     expect(pipelineNeeds(vault)).toEqual({ tts: false, semantic: false })
     expect(pipelineNeeds(dir("deploy-no-config"))).toEqual({ tts: false, semantic: false })
+  })
+
+  test("a vault with decks, mind maps, diagrams or Pagefind gets the packages doctor lists, drafts included", async () => {
+    const vault = dir("deploy-optional")
+    const env: NodeJS.ProcessEnv = {}
+    expect(await optionalPackages(vault, env)).toEqual([])
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "search:\n  engine: pagefind\nrelated:\n  semantic: { threshold: 0.6 }\n")
+    fs.writeFileSync(path.join(vault, "Deck.md"), "---\npublish: true\nmarp: true\n---\n# One\n")
+    fs.writeFileSync(path.join(vault, "Map.md"), "---\npublish: true\ndraft: true\n---\n```mindmap\n# Root\n```\n")
+    fs.writeFileSync(path.join(vault, "Later.md"), "---\npublish: true\npublish_date: 2999-01-01\n---\n```d2\na -> b\n```\n")
+    fs.writeFileSync(path.join(vault, "Hidden.md"), "```typst\n$x$\n```\n")
+    const vaultBefore = (await import("../src/site.config")).site.vault
+    // transformers.js is semantic's; an unpublished note needs nothing.
+    expect(await optionalPackages(vault, env)).toEqual(["@terrastruct/d2", "markmap-lib", "@marp-team/marp-core", "pagefind"])
+    expect((await import("../src/site.config")).site.vault).toBe(vaultBefore)
+    await run({ command: "deploy", target: "gitlab", vault }, {}, tmp)
+    const ci = fs.readFileSync(path.join(vault, ".gitlab-ci.yml"), "utf8")
+    expect(ci).toContain("@huggingface/transformers@")
+    expect(ci).toContain(" @terrastruct/d2@0.1.33 markmap-lib@0.18.12 @marp-team/marp-core@4.4.0 pagefind@1.5.2 && ")
+    // A config that does not load needs none.
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "search: [unclosed\n")
+    expect(await optionalPackages(vault, env)).toEqual([])
   })
 
   test("netlify with tts warns that its builds make no audio, and writes the file with DATME_TTS off", async () => {

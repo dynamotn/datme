@@ -56,6 +56,18 @@ export function publishedSources(): { rel: string; fm: Record<string, unknown>; 
 
 const fence = (body: string, lang: string) => new RegExp(`^\\s*(\`{3,}|~{3,})\\s*${lang}\\b`, "im").test(body)
 
+/** The optional packages the vault needs, each with what needs it: what doctor checks and deploy installs. */
+export function optionalNeeds(sources = publishedSources()): [string, string][] {
+  const needs: [string, string][] = []
+  if (sources.some((s) => fence(s.body, "d2"))) needs.push(["@terrastruct/d2", "```d2 diagrams"])
+  if (sources.some((s) => fence(s.body, "typst"))) needs.push(["@myriaddreamin/typst-ts-node-compiler", "```typst blocks"])
+  if (sources.some((s) => fence(s.body, "markmap") || fence(s.body, "mindmap"))) needs.push(["markmap-lib", "```markmap and ```mindmap blocks"])
+  if (sources.some((s) => isSlides(s.fm))) needs.push(["@marp-team/marp-core", "Marp slide decks (marp: true)"])
+  if (site.search.engine === "pagefind") needs.push(["pagefind", "search.engine: pagefind"])
+  if (site.related.semantic) needs.push(["@huggingface/transformers", "related.semantic"])
+  return needs
+}
+
 /** Why a build of this vault on this machine might fail or come out poorer, each with its fix. */
 export function diagnose(m: Machine): Finding[] {
   const out: Finding[] = []
@@ -70,14 +82,7 @@ export function diagnose(m: Machine): Finding[] {
   else fail(`Node ${m.runtime.node} is too old (needs ${m.engines.node})`, "install Node 22.18 or later, or run datme with Bun: bunx @dynamotn/datme")
 
   const sources = publishedSources()
-  const needs: [string, string][] = []
-  if (sources.some((s) => fence(s.body, "d2"))) needs.push(["@terrastruct/d2", "```d2 diagrams"])
-  if (sources.some((s) => fence(s.body, "typst"))) needs.push(["@myriaddreamin/typst-ts-node-compiler", "```typst blocks"])
-  if (sources.some((s) => fence(s.body, "markmap") || fence(s.body, "mindmap"))) needs.push(["markmap-lib", "```markmap and ```mindmap blocks"])
-  if (sources.some((s) => isSlides(s.fm))) needs.push(["@marp-team/marp-core", "Marp slide decks (marp: true)"])
-  if (site.search.engine === "pagefind") needs.push(["pagefind", "search.engine: pagefind"])
-  if (site.related.semantic) needs.push(["@huggingface/transformers", "related.semantic"])
-  for (const [pkg, why] of needs) {
+  for (const [pkg, why] of optionalNeeds(sources)) {
     if (m.resolves(pkg)) ok(`${pkg} is installed, for ${why}`)
     else fail(`${pkg} is not installed, and ${why} need it`, `bun add ${pkg}   (next to datme)`)
   }

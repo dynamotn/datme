@@ -11,6 +11,19 @@ const tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "datme-deploy-
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }))
 const opts = { vault: "notes/My Vault", branch: "trunk", project: "my-garden" }
 
+type Job = { script?: string[]; steps?: { run?: string }[] }
+/** The build commands of a generated file, read from its parsed YAML or TOML. */
+function buildCommands(file: { path: string; content: string }): string[] {
+  if (file.path.endsWith(".toml")) {
+    const toml = Bun.TOML.parse(file.content) as { build: { command: string }; context?: { "deploy-preview": { command: string } } }
+    return [toml.build.command, ...(toml.context ? [toml.context["deploy-preview"].command] : [])]
+  }
+  const doc = loadYaml(file.content) as { jobs?: Record<string, Job> } & Record<string, Job>
+  return Object.values(doc.jobs ?? doc)
+    .flatMap((j) => [...(j.script ?? []), ...(j.steps ?? []).map((s) => s.run ?? "")])
+    .filter((c) => c.includes(" build "))
+}
+
 describe("deployFiles", () => {
   test("every host gets a valid configuration that builds the vault on its branch", () => {
     for (const target of TARGETS) {
@@ -74,6 +87,33 @@ describe("deployFiles", () => {
       expect(file.content).not.toContain("bunx")
     }
     for (const target of TARGETS) expect(deployFiles(target, { ...opts, semantic: false })[0].content).toBe(deployFiles(target, opts)[0].content)
+  })
+
+  test("optional packages are installed with datme, pinned to its peerDependencies, in every job that builds", () => {
+    const packages = ["@marp-team/marp-core", "markmap-lib", "pagefind", "@terrastruct/d2", "@myriaddreamin/typst-ts-node-compiler"]
+    const peers = pkg.peerDependencies as Record<string, string>
+    const versions = packages.map((p) => `${p}@${peers[p].slice(1)}`)
+    expect(versions).toContain("markmap-lib@0.18.12")
+    for (const extra of [{}, { semantic: true }]) {
+      const install = `bun add --global @dynamotn/datme@${pkg.version} ${"semantic" in extra ? `@huggingface/transformers@${TRANSFORMERS_VERSION} ` : ""}${versions.join(" ")} && `
+      for (const target of TARGETS) {
+        const bun = target === "netlify" ? "~/.bun/bin/" : ""
+        const command = `${bun}${install}"$(${bun}bun pm bin -g)/datme" build 'notes/My Vault' --out`
+        const files = deployFiles(target, { ...opts, ...extra, packages, previews: target !== "github" })
+        for (const file of files) {
+          // Every build: the published site's and the previews'.
+          const commands = buildCommands(file)
+          expect(commands.length).toBe([".gitlab-ci.yml", "netlify.toml"].includes(file.path) ? 2 : 1)
+          for (const c of commands) expect(c).toContain(command)
+          expect(file.content).not.toContain("bunx")
+        }
+      }
+    }
+    // None needed: the files are what they were.
+    for (const target of TARGETS) {
+      expect(deployFiles(target, { ...opts, packages: [], previews: true })).toEqual(deployFiles(target, { ...opts, previews: true }))
+      expect(deployFiles(target, { ...opts, packages: [] })).toEqual(deployFiles(target, opts))
+    }
   })
 
   test("tts: false leaves every pipeline exactly as it was", () => {

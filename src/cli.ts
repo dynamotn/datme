@@ -9,6 +9,7 @@ import { CONFIG_FILES, SCHEMA_URL } from "./lib/config-files.ts"
 import { parseYaml } from "./lib/yaml.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
 import { PACKAGE_ROOT } from "./lib/package-root.ts"
+import type { SiteConfig } from "./lib/config-resolve.ts"
 import { NEIGHBOURS_FILE } from "./lib/neighbours.ts"
 import { SOURCES, applyMigration, describePlan, planMigration, type Source } from "./lib/migrate.ts"
 
@@ -460,8 +461,46 @@ export function pipelineNeeds(vault: string): { tts: boolean; semantic: boolean 
   return { tts: false, semantic: false }
 }
 
+/**
+ * The optional packages the vault's pipeline must install, found as `datme doctor` finds them, but for
+ * transformers.js, which `semantic` installs. Drafts and scheduled notes count: previews build them, and
+ * a daily build publishes them on their day. A config that does not load needs none; the build says why.
+ */
+export async function optionalPackages(vault: string, env: NodeJS.ProcessEnv): Promise<string[]> {
+  let site: SiteConfig
+  let next: SiteConfig
+  try {
+    const config = await import("./site.config.ts")
+    site = config.site
+    next = config.loadConfig(vault, { ...env, DATME_DRAFTS: "1" })
+  } catch {
+    return []
+  }
+  const { optionalNeeds } = await import("./lib/doctor.ts")
+  // doctor reads the shared site config: point it at this vault for the call, in place, as reloadSite does.
+  const swap = (to: object) => {
+    for (const k of Object.keys(site)) delete (site as Record<string, unknown>)[k]
+    Object.assign(site, to)
+  }
+  const before = { ...site }
+  swap(next)
+  try {
+    return optionalNeeds()
+      .map(([name]) => name)
+      .filter((name) => name !== "@huggingface/transformers")
+  } finally {
+    swap(before)
+  }
+}
+
 /** Write the CI configuration for a host at the root of the vault's repository. */
-export function deploy(target: Target, dir: string, branch?: string, needs = { tts: false, semantic: false }, previews = false): void {
+export function deploy(
+  target: Target,
+  dir: string,
+  branch?: string,
+  needs: { tts: boolean; semantic: boolean; packages?: string[] } = { tts: false, semantic: false },
+  previews = false,
+): void {
   // git answers with resolved paths, so the vault must be resolved too to get its place in the repository.
   const vault = fs.realpathSync(dir)
   const root = git(vault, "rev-parse", "--show-toplevel") ?? vault
@@ -636,7 +675,12 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return void console.log(`Wrote ${file}`)
   }
 
-  if (args.command === "deploy") return deploy(args.target!, vault, args.branch, pipelineNeeds(vault), args.previews)
+  if (args.command === "deploy") {
+    // Read by the site config when it is first loaded.
+    env.DATME_VAULT = vault
+    const needs = { ...pipelineNeeds(vault), packages: await optionalPackages(vault, env) }
+    return deploy(args.target!, vault, args.branch, needs, args.previews)
+  }
 
   if (args.command === "migrate") {
     const plan = planMigration(vault, args.from!)
