@@ -42,6 +42,8 @@ A change to `package.json` (`files`, dependencies, `engines`) or to how the
 CLI starts should also pass `bun tools/pack-check.ts`: it packs datme,
 installs the tarball with npm in an empty project and builds the fixture
 vault with that copy under Node, as CI does on every Node `engines` allows.
+It prints the installed size and fails once `node_modules` passes
+`MAX_INSTALL_MIB` in that script: raise it only for a dependency worth it.
 
 Record anything a user could notice in `CHANGELOG.md`, under `[Unreleased]`.
 

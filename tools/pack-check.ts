@@ -6,7 +6,10 @@
  * `files`, a dependency left in devDependencies, or a Node that cannot load
  * what Bun can. Run with `bun tools/pack-check.ts`; CI runs it on each Node
  * that `engines` allows. It also prints the size of the tarball and of the
- * `node_modules` it installs; `tools/bench.ts --install` measures them too.
+ * `node_modules` it installs, and fails when that passes MAX_INSTALL_MIB, so a
+ * heavy dependency is added on purpose; `tools/bench.ts --install` measures
+ * them too. In CI the size is also kept as a GitLab metrics report
+ * (`metrics.txt`) and a GitHub job summary.
  */
 import { execFileSync } from "node:child_process"
 import fs from "node:fs"
@@ -15,6 +18,8 @@ import path from "node:path"
 
 const root = path.resolve(import.meta.dir, "..")
 const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: "" }
+/** The most `node_modules` may weigh once npm installs datme; raise it on purpose only. */
+const MAX_INSTALL_MIB = 480
 const run = (cmd: string, args: string[], cwd: string) => execFileSync(cmd, args, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] })
 
 /** Packs datme into `work` and installs the tarball with npm in an empty project there. */
@@ -50,7 +55,16 @@ function main(): void {
     const expected = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version
     if (installed !== expected) throw new Error(`the installed datme says ${installed}, not ${expected}`)
     const mib = (bytes: number) => `${(bytes / 1024 ** 2).toFixed(1)} MiB`
-    console.log(`Tarball: ${mib(tarballBytes)}; installed node_modules: ${mib(bytesUnder(path.join(project, "node_modules")))}.`)
+    const modules = path.join(project, "node_modules")
+    const installedBytes = bytesUnder(modules)
+    const packages = Object.keys(JSON.parse(fs.readFileSync(path.join(modules, ".package-lock.json"), "utf8")).packages).filter(Boolean).length
+    const size = `installed node_modules: ${mib(installedBytes)} in ${packages} packages`
+    console.log(`Tarball: ${mib(tarballBytes)}; ${size}.`)
+    if (process.env.GITLAB_CI)
+      fs.writeFileSync(path.join(root, "metrics.txt"), `install_mib ${(installedBytes / 1024 ** 2).toFixed(1)}\ninstall_packages ${packages}\n`)
+    if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Node ${version}: ${size}.\n`)
+    if (installedBytes > MAX_INSTALL_MIB * 1024 ** 2)
+      throw new Error(`the installed node_modules weighs ${mib(installedBytes)}, over the ${MAX_INSTALL_MIB} MiB of MAX_INSTALL_MIB`)
     const site = path.join(work, "site")
     run(node, [datme, "build", path.join(root, "tests/fixtures/vault"), "--out", site], project)
     for (const page of ["index.html", "03_Atomic/Zettelkasten/index.html", "sitemap-index.xml"]) {
