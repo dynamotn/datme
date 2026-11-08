@@ -1,4 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test"
+import { site } from "../src/site.config"
 import { parseBase, runView } from "../src/lib/bases"
 import { mapMarkers, renderMapView } from "../src/lib/base-map"
 import { parsePinned, renderNotionBoard, renderNotionFeed, renderNotionList, renderNotionTable, textOf } from "../src/lib/base-notion"
@@ -67,6 +68,16 @@ describe("map centre", () => {
     expect(mapOf('mapTiles: "https://a.example/{z}/{x}/{y}.png"')).not.toContain("data-tiles-dark")
   })
 
+  test("the site's tiles carry no dark set when the site has none", () => {
+    const before = site.map.darkTiles
+    site.map.darkTiles = ""
+    try {
+      expect(mapOf("")).not.toContain("data-tiles-dark")
+    } finally {
+      site.map.darkTiles = before
+    }
+  })
+
   test("markers with an unknown icon have none; numbers as text bound the zoom", () => {
     const { base, res } = run("views: [{ type: map, markerIcon: note.icon }]")
     expect(mapMarkers(res, base, engine, "en")[0].icon).toBeUndefined()
@@ -115,6 +126,14 @@ describe("Notion views", () => {
     // An empty list is no pill; nested lists are one pill.
     expect(html).toContain('<span class="ntn-pill" style="--pill-bg:')
     expect(html).toContain(">nested, list</span>")
+  })
+
+  test("a link pill points at its note when the link has a URL", () => {
+    const linked = [page("Places/Hanoi", { related: { kind: "link", key: "Places/Hue", title: "Hue", url: "/places/hue" } })]
+    const eng: Engine = { pages: linked, resolve: () => undefined }
+    const { res } = run("views: [{ type: bases, order: [file.name, related], pillProperties: [related] }]", eng)
+    expect(renderNotionTable(res, "en")).toContain('<a class="ntn-pill internal" style="--pill-bg:')
+    expect(renderNotionTable(res, "en")).toContain('href="/places/hue" data-key="Places/Hue">Hue</a>')
   })
 
   test("a pinned colour with partial opacity fades only its background", () => {
