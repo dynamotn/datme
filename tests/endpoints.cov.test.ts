@@ -19,6 +19,7 @@ import * as og from "../src/pages/og/[...slug].png"
 import * as robots from "../src/pages/robots.txt"
 import * as cards from "../src/pages/static/cards.[lang].json"
 import * as contentIndex from "../src/pages/static/contentIndex.[lang].json"
+import * as explorer from "../src/pages/static/explorer.[lang].html"
 import * as graphIndex from "../src/pages/static/graph.[lang].json"
 import * as vectors from "../src/pages/static/vectors.[lang].json"
 import * as history from "../src/lib/history"
@@ -317,6 +318,15 @@ describe("graph index", () => {
     expect(slim.notes).toEqual(full.notes.map(({ c: _c, d: _d, ...rest }: Record<string, unknown>) => rest))
     for (const n of slim.notes) expect(Object.keys(n).sort()).toEqual(["a", "f", "g", "k", "m", "p", "s", "st", "t", "tp", "u", "y"])
   }, 60_000)
+})
+
+describe("explorer tree", () => {
+  test("one per language: the whole tree as HTML", async () => {
+    expect(explorer.getStaticPaths()).toEqual([{ params: { lang: "vi-VN" } }, { params: { lang: "en-US" } }])
+    const r = await call(explorer.GET, { lang: "en-US" })
+    expect(type(r)).toBe("text/html; charset=utf-8")
+    expect(await r.text()).toContain('<details data-dir="07_Project">')
+  })
 })
 
 describe("note vectors", () => {

@@ -6,6 +6,7 @@ import { renderNote, renderTranslation } from "../src/lib/markdown"
 import { audioType, bookmarkOf, dailyDays, firstParagraph, initials, listOf, peopleTies, snippetOf, trackCharts, trackedOf } from "../src/lib/collection-views"
 import { episodesFeed, episodesPath } from "../src/lib/feed"
 import * as episodesRoute from "../src/pages/[...path]/episodes.xml"
+import * as releasesRoute from "../src/pages/[...path]/releases.xml"
 import { noteProperties } from "../src/lib/properties"
 import { releasesFeed } from "../src/lib/feed"
 import {
@@ -629,6 +630,10 @@ describe("layouts of a note's own text, from its properties", () => {
     expect(xml).toContain(`<link>http://localhost:4321${n.url}#v2.0.0</link>`)
     expect(xml).toContain("<pubDate>Fri, 02 Jan 2026 00:00:00 GMT</pubDate>")
     expect(xml).toContain("<description>Added Big thing.</description>")
+
+    const paths = releasesRoute.getStaticPaths().filter((p) => p.props.note.lang === lang)
+    expect(paths.map((p) => p.params.path)).toEqual(["Texts/Changes"])
+    expect(await (await releasesRoute.GET({ props: paths[0].props })).text()).toBe(xml)
   })
 
   test("a dialogue's speakers: a map to their pictures, published like a cover, or a list of names", () => {
