@@ -1,5 +1,13 @@
 import rehypeShikiFromHighlighter, { type RehypeShikiCoreOptions } from "@shikijs/rehype/core"
-import { bundledLanguages, bundledLanguagesInfo, createHighlighter, type BundledLanguage, type Highlighter, type LanguageRegistration } from "shiki"
+import {
+  bundledLanguages,
+  bundledLanguagesInfo,
+  createHighlighter,
+  type BundledLanguage,
+  type BundledTheme,
+  type Highlighter,
+  type LanguageRegistration,
+} from "shiki"
 import type { Plugin } from "unified"
 import type { Root, Element } from "hast"
 import { visit } from "unist-util-visit"
@@ -66,6 +74,17 @@ async function closure(lang: BundledLanguage): Promise<BundledLanguage[]> {
   return [...seen]
 }
 
+// Shiki skips an empty line, so the warm-up line holds a bit of every kind of token.
+const WARM_UP = `a1 "b" 'c' \`d\` /e/ #f // g -- (h) {i} [j] <k> = ; : , . @ $ % \\ ! ? ~ | & + * ^`
+
+/**
+ * Tokenizes one line without Shiki's time limit, so the grammar's setup and the first patterns it
+ * compiles (some tens of ms idle, past the 500 ms limit on a loaded machine) never cut off a real line.
+ */
+function warmUp(h: Highlighter, lang: BundledLanguage): void {
+  h.codeToTokensBase(WARM_UP, { lang, theme: h.getLoadedThemes()[0] as BundledTheme, tokenizeTimeLimit: 0 })
+}
+
 /** Loads `langs` and everything they can embed, once per highlighter; unknown names stay unloaded. */
 export function loadLanguages(h: Highlighter, langs: Iterable<string>): Promise<void> {
   let done = loads.get(h)
@@ -75,7 +94,9 @@ export function loadLanguages(h: Highlighter, langs: Iterable<string>): Promise<
     if (!known(lang)) continue
     let p = done.get(lang)
     if (!p) {
-      p = closure(lang).then((ids) => h.loadLanguage(...ids))
+      p = closure(lang)
+        .then((ids) => h.loadLanguage(...ids))
+        .then(() => warmUp(h, lang))
       done.set(lang, p)
     }
     pending.push(p)
