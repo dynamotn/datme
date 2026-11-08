@@ -23,7 +23,8 @@ describe("highlighting with grammars loaded on demand", () => {
       lazy.dispose()
     }
     full.dispose()
-  }, 30_000)
+    // Loading every bundled grammar takes 35–40 s on GitLab's shared runners.
+  }, 120_000)
 
   test("highlights the blocks of a page, and falls back to plain text for unknown languages", async () => {
     const run = async (html: string) => {
