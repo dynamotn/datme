@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { site, type Lang } from "../src/site.config"
 import { glossary } from "../src/lib/glossary"
 import { renderNote, renderMarkdown } from "../src/lib/markdown"
 import { getVault } from "../src/lib/vault"
@@ -7,6 +8,19 @@ describe("glossary", () => {
   test("notes tagged type/term are terms, under their title and aliases", () => {
     const { terms } = glossary("vi-VN")
     expect(terms).toEqual([{ key: "03_Atomic/Zettelkasten", url: "/03_Atomic/Zettelkasten", names: ["Zettelkasten", "Slip box"] }])
+  })
+
+  test("a site that turns the glossary off has no terms and no pattern", () => {
+    const before = site.glossary
+    site.glossary = false
+    try {
+      // A language of its own, as the glossary is cached per language.
+      const g = glossary("off-OFF" as Lang)
+      expect(g.terms).toEqual([])
+      expect(g.pattern).toBeUndefined()
+    } finally {
+      site.glossary = before
+    }
   })
 
   test("the first mention links to the term, whole words and any case; later ones stay text", async () => {

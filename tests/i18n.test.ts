@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { builtin, t, langPrefix, formatDate, langMeta, type StringKey } from "../src/lib/i18n"
 import { dayKey } from "../src/lib/calendar"
-import { site } from "../src/site.config"
+import { site, type Lang } from "../src/site.config"
 
 describe("i18n", () => {
   test("the default language lives at the root", () => {
@@ -61,6 +61,8 @@ describe("i18n", () => {
   test("langMeta names languages natively", () => {
     expect(langMeta("vi-VN")).toEqual({ short: "VI", name: "Tiếng Việt", html: "vi-VN" })
     expect(langMeta("fr-FR").name).toBe("Français")
+    // A tag the runtime cannot parse is shown as it is.
+    expect(langMeta("not a tag" as Lang)).toEqual({ short: "NOT A TAG", name: "Not a tag", html: "not a tag" })
   })
 
   test("formatDate is localised and tolerates a missing date", () => {

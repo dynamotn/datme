@@ -18,6 +18,14 @@ function deepest(f: FolderNode, path: FolderNode[] = []): { note: Note; folders:
 const allNotes = (f: FolderNode): Note[] => [...f.notes, ...f.folders.flatMap(allNotes)]
 const links = (html: string) => [...html.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1])
 
+describe("a path that is not valid percent-encoding", () => {
+  test("is compared as written", () => {
+    const leaf = { dir: "a", url: "/a", notes: [{ url: "/a/50%zz" }], folders: [] }
+    const root = { dir: "", url: "/", notes: [], folders: [leaf] } as unknown as FolderNode
+    expect([...trail(root, "/a/50%zz/")]).toEqual(["a"])
+  })
+})
+
 describe("the explorer's tree on the server", () => {
   const { note, folders } = deepest(tree)!
   const outside = tree.folders.find((f) => f !== folders[0] && f.notes.length > 0)!
