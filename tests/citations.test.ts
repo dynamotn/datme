@@ -74,6 +74,10 @@ describe("in the vault", () => {
       level: "error",
       file: "07_Project/Blog post.md",
       message: "citation @missing2000 is not in the bibliography",
+      line: 15,
+      column: 59,
+      endLine: 15,
+      endColumn: 71,
     })
   })
 })

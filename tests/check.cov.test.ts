@@ -10,11 +10,14 @@ import {
   privacyReport,
   searchIndexBytes,
   searchProblems,
+  sortProblems,
+  queryProblems,
   stylesInUse,
   structureProblems,
   type PrivacyReport,
 } from "../src/lib/check"
 import * as hints from "../src/lib/layout-hints"
+import * as dataview from "../src/lib/dataview-render"
 import { getVault } from "../src/lib/vault"
 import type { LinkRef } from "../src/lib/obsidian"
 import { site } from "../src/site.config"
@@ -89,6 +92,26 @@ describe("reports", () => {
       { level: "warning" as const, file: "b.md", message: "odd" },
     ]
     expect(formatReport(problems, true)).toBe("a.md\n  error   broken\n  info    orphan\n\nb.md\n  warning odd\n\n1 error, 1 warning, 1 notice")
+  })
+
+  test("a problem with a place names it as compilers do, so terminals and editors can jump there; places sort by line", () => {
+    const placed = sortProblems([
+      { level: "error", file: "a.md", message: "later", line: 9, column: 1 },
+      { level: "error", file: "a.md", message: "nowhere" },
+      { level: "error", file: "a.md", message: "earlier", line: 3, column: 5, endLine: 3, endColumn: 12 },
+    ])
+    expect(formatReport(placed)).toStartWith("a.md\n  error   nowhere\n  error   a.md:3:5: earlier\n  error   a.md:9:1: later\n")
+  })
+
+  test("a Dataview query that cannot run is placed where the note's file writes it", () => {
+    const spy = spyOn(dataview, "queryProblem").mockImplementation(() => ({ level: "warning", message: "no" }))
+    try {
+      const queries = queryProblems().filter((p) => p.file === "03_Atomic/Queries.md")
+      expect(queries[0]).toMatchObject({ line: 4, column: 1, endLine: 6, endColumn: 4 })
+      expect(new Set(queries.map((p) => `${p.line}:${p.column}`)).size).toBe(queries.length)
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   test("external links name each linking file once", () => {

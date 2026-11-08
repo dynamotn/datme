@@ -60,6 +60,25 @@ garden, in its first language:
 `check: { structure: false }` in `datme.yaml` turns these off. The Obsidian
 plugin lists them too when its *Show notices* setting is on.
 
+A problem written somewhere in a note names its line and column, as compilers
+do, so a terminal or an editor can jump there:
+`Note.md:12:5: link to missing note "Foo"`. Each place a broken link is
+written is a problem of its own. Problems with a place are broken links and
+embeds, missing files and invalid values in the frontmatter (`layout`,
+`style`, `chrome`, `banner`, `cover`, `audio`, an ambiguous alias, YAML that
+does not parse, an unset password group), Dataview queries that cannot run,
+and citations missing from the bibliography. Problems of a whole note, a
+folder or `datme.yaml` have none.
+
+`check --json` prints `{ "format": 2, "counts": …, "problems": […] }`. Each
+problem has `level`, `file` and `message`, `url` for a dead external link,
+and, when it has a place, `line` and `column` and usually `endLine` and
+`endColumn`. Lines and columns count from 1 in the file as written,
+frontmatter included; columns count UTF-16 code units, as JavaScript and
+CodeMirror do; the end is just past the last character. `format` grows when
+the shape of the output changes; version 1, before it, had no `format` and no
+places.
+
 With the default `minisearch` engine, `check --verbose` also notes a
 language whose search index would pass about 2 MB, which every reader
 downloads whole on their first search, and suggests `search.engine: pagefind`

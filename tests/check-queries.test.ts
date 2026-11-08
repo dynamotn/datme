@@ -4,7 +4,7 @@ import { queryText } from "../src/lib/check"
 import { queryProblem } from "../src/lib/dataview-render"
 
 const fence = (q: string) => "```dataview\n" + q + "\n```"
-let result: { problems: { level: string; file: string; message: string }[]; all: number }
+let result: { problems: { level: string; file: string; message: string; line?: number; column?: number }[]; all: number }
 
 beforeAll(() => {
   result = probeVault(
@@ -35,6 +35,11 @@ test("a query datme does not support yet is a warning", () => {
 test("inline queries are checked too; working queries and private notes say nothing", () => {
   expect(result.problems.filter((p) => p.file === "Inline.md").map((p) => p.level)).toEqual(["error"])
   expect(result.problems.map((p) => p.file).sort()).toEqual(["Broken.md", "Calendar.md", "Inline.md"])
+})
+
+test("a problem points at its query in the note's file, frontmatter counted", () => {
+  expect(result.problems.find((p) => p.file === "Broken.md")).toMatchObject({ line: 4, column: 1, endLine: 6, endColumn: 4 })
+  expect(result.problems.find((p) => p.file === "Inline.md")).toMatchObject({ line: 4, column: 7, endLine: 4, endColumn: 20 })
 })
 
 test("a problem names its query by the first line, cut short", () => {

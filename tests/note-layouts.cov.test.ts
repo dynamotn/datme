@@ -507,7 +507,15 @@ describe("collections of their own kind", () => {
     expect(pilot.audio).toEqual({ href: "/assets/_assets/pilot.mp3", file: "_assets/pilot.mp3" })
     expect(note("Podcast/Second").audio).toEqual({ href: "https://cdn.example/ep2.m4a?x=1" })
     expect(note("Podcast/Old").audio).toBeUndefined()
-    expect(getVault().problems).toContainEqual({ level: "error", file: "Podcast/Old.md", message: 'audio "nope.mp3" is not in the vault' })
+    expect(getVault().problems).toContainEqual({
+      level: "error",
+      file: "Podcast/Old.md",
+      message: 'audio "nope.mp3" is not in the vault',
+      line: 3,
+      column: 8,
+      endLine: 3,
+      endColumn: 22,
+    })
     expect(itemOf(pilot)).toMatchObject({ kind: "episodes", audio: "/assets/_assets/pilot.mp3", byline: ["#1", "Jan 10, 2024", "32:10", "Ada Lovelace"] })
     expect(itemOf(note("Podcast/Bonus"))).toMatchObject({ audio: undefined, byline: ["May 1, 2023"] })
     expect(audioType("/a/b.MP3")).toBe("audio/mpeg")

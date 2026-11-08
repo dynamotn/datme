@@ -22,6 +22,10 @@ import { suggestLayouts } from "./layout-hints"
 import { publishedSources } from "./doctor"
 import { inGit, passwordProblems } from "./passwords"
 import { formatBytes } from "./client-data"
+import type { Place } from "./positions"
+import type { Node } from "unist"
+import type { Code, InlineCode } from "mdast"
+import fs from "node:fs"
 
 /** How many times the median a note's links must reach to count as a hub, and the fewest links that can. */
 const HUB_FACTOR = 5
@@ -182,16 +186,41 @@ export function queryProblems(): Problem[] {
   const problems: Problem[] = []
   for (const n of getVault().notes[lang]) {
     if (!/```dataview|`=\s/.test(n.md)) continue
-    const report = (source: string, inline: boolean) => {
+    // The queries as the note's file writes them, in order, to tell where each failing one is.
+    let written: { value: string; place: Place; used?: boolean }[] | undefined
+    const writtenAt = (value: string): Place | undefined => {
+      written ??= queriesIn(fs.readFileSync(n.source.file, "utf8").replace(/^\uFEFF/, ""))
+      const q = written.find((w) => !w.used && w.value === value)
+      return q && Object.assign(q, { used: true }).place
+    }
+    const report = (source: string, inline: boolean, node: string) => {
       const p = queryProblem(source, lang, n.key, inline)
-      if (p) problems.push({ level: p.level, file: n.key + ".md", message: `Dataview ${inline ? "`= " : "`"}${queryText(source)}\`: ${p.message}` })
+      if (p)
+        problems.push({
+          level: p.level,
+          file: n.key + ".md",
+          message: `Dataview ${inline ? "`= " : "`"}${queryText(source)}\`: ${p.message}`,
+          ...writtenAt(node),
+        })
     }
     visit(unified().use(remarkParse).use(remarkGfm).parse(n.md), (node) => {
-      if (node.type === "code" && node.lang === "dataview") report(node.value, false)
-      else if (node.type === "inlineCode" && /^=\s/.test(node.value)) report(node.value.slice(1).trim(), true)
+      if (isQuery(node)) report(node.type === "code" ? node.value : node.value.slice(1).trim(), node.type === "inlineCode", node.value)
     })
   }
   return problems
+}
+
+const isQuery = (node: Node): node is Code | InlineCode =>
+  (node.type === "code" && (node as Code).lang === "dataview") || (node.type === "inlineCode" && /^=\s/.test((node as InlineCode).value))
+
+/** The Dataview queries of a note's file, each with its place. */
+function queriesIn(src: string): { value: string; place: Place }[] {
+  const found: { value: string; place: Place }[] = []
+  visit(unified().use(remarkParse).use(remarkGfm).parse(src), (node) => {
+    const { start, end } = node.position!
+    if (isQuery(node)) found.push({ value: node.value, place: { line: start.line, column: start.column, endLine: end.line, endColumn: end.column } })
+  })
+  return found
 }
 
 /** Above this many bytes in a language, the MiniSearch index is worth trading for Pagefind. */
@@ -273,10 +302,10 @@ export function externalLinks(): Map<string, string[]> {
   return urls
 }
 
-/** Sort problems by file, then by severity. */
+/** Sort problems by file, then by severity, then by line. */
 export function sortProblems(problems: Problem[]): Problem[] {
   const rank = { error: 0, warning: 1, info: 2 }
-  return problems.sort((a, b) => a.file.localeCompare(b.file) || rank[a.level] - rank[b.level])
+  return problems.sort((a, b) => a.file.localeCompare(b.file) || rank[a.level] - rank[b.level] || (a.line ?? 0) - (b.line ?? 0))
 }
 
 export interface Counts {
@@ -310,7 +339,8 @@ export function formatReport(problems: Problem[], verbose = false): string {
       file = p.file
       lines.push("", file)
     }
-    lines.push(`  ${p.level.padEnd(7)} ${p.message}`)
+    // file:line:column, as compilers write it, so terminals and editors can jump there.
+    lines.push(`  ${p.level.padEnd(7)} ${p.line ? `${p.file}:${p.line}:${p.column}: ` : ""}${p.message}`)
   }
   const counts = countProblems(problems)
   lines.push("", summarize(counts))

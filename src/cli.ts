@@ -703,7 +703,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     const failed = counts.error > 0 || (args.strict && counts.warning > 0)
     if (args.command === "check") {
       // --json is for tools, such as the Obsidian plugin: every problem, notices included.
-      console.log(args.json ? JSON.stringify({ counts, problems }) : formatReport(problems, args.verbose))
+      // `format` counts the changes to its shape: 2 gave problems their line and column.
+      console.log(args.json ? JSON.stringify({ format: 2, counts, problems }) : formatReport(problems, args.verbose))
       if (failed) throw new CliError(`check failed: ${summarize(counts)}.`)
       return
     }

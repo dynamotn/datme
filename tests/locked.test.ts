@@ -115,6 +115,10 @@ describe("locked parts of a note", () => {
       level: "error",
       file: "06_Reference/Club.md",
       message: "password @nobody needs the DATME_LOCK_NOBODY environment variable; the note is not published",
+      line: 3,
+      column: 11,
+      endLine: 3,
+      endColumn: 20,
     })
   })
 

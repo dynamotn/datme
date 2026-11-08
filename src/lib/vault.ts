@@ -16,6 +16,7 @@ import { fenceAfter, resolvePassword, splitLocked } from "./locked"
 import { isSlides, isTheme, slideDirectives } from "./slides"
 import { keepIndent, markProsCons } from "./layout-source"
 import { cite, parseBibtex, type BibEntry } from "./citations"
+import { citationPlaces, FM_RE, linkPlaces, propertyPlace, yamlErrorPlace, type Place } from "./positions"
 import katex from "katex"
 import crypto from "node:crypto"
 import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, type Scene } from "./excalidraw"
@@ -189,7 +190,7 @@ export interface Doc {
 }
 
 /** Something wrong in the vault that a reader of the site would notice, reported by `datme check`. */
-export interface Problem {
+export interface Problem extends Partial<Place> {
   /** error: visibly broken on the site; warning: likely a mistake; info: expected in a private vault. */
   level: "error" | "warning" | "info"
   /** Vault-relative file the problem is in. */
@@ -278,8 +279,6 @@ export function markdownFiles(): string[] {
   walk(site.vault, found)
   return found.md
 }
-
-const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
 
 export function parseFrontmatter(src: string): { fm: Record<string, unknown>; body: string; error?: string } {
   // A byte order mark, as some Windows editors write, would hide the frontmatter.
@@ -627,7 +626,7 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
   }
 
   const problems: Problem[] = []
-  const report = (level: Problem["level"], file: string, message: string) => void problems.push({ level, file, message })
+  const report = (level: Problem["level"], file: string, message: string, place?: Place) => void problems.push({ level, file, message, ...place })
   // What is read once per language, such as a drawing inside another or a transcript, is reported once.
   const reported = new Set<string>()
   const reportOnce: typeof report = (level, file, message) => {
@@ -635,6 +634,10 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     if (!reported.has(id)) report(level, file, message)
     reported.add(id)
   }
+  // A note's file as written, read again only to tell where its problems are.
+  const sourceTexts = new Map<string, string>()
+  const readSource = (abs: string) => sourceTexts.get(abs) ?? sourceTexts.set(abs, fs.readFileSync(abs, "utf8")).get(abs)!
+  const orNone = (places: Place[]) => (places.length ? places : [undefined])
   // The config's own, such as a theme pack that could not be used.
   for (const w of site.warnings) report("warning", w.file, w.message)
   // A note behind a broken symlink would otherwise vanish from the site unseen.
@@ -686,7 +689,7 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     files.set(rel, parsed)
     const { fm, spec, body, error } = parsed
     // Without its frontmatter a note cannot say `publish: true`, so it silently disappears.
-    if (error) report("warning", rel, `frontmatter is not valid YAML, so it is ignored: ${error}`)
+    if (error) report("warning", rel, `frontmatter is not valid YAML, so it is ignored: ${error}`, yamlErrorPlace(fs.readFileSync(abs, "utf8")))
     if (!isPublished(fm, site.publish, new Date(), site.drafts)) {
       const at = scheduledFor(fm)
       if (at && at > new Date() && isPublished({ ...fm, publish_date: undefined, publishDate: undefined }, site.publish)) {
@@ -697,7 +700,12 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     const { password, variable } = spec ? resolvePassword(spec) : {}
     // A note whose group password is missing would otherwise go out in the clear.
     if (spec && !password) {
-      report("error", rel, `password ${spec} needs the ${variable} environment variable; the note is not published`)
+      report(
+        "error",
+        rel,
+        `password ${spec} needs the ${variable} environment variable; the note is not published`,
+        propertyPlace(fs.readFileSync(abs, "utf8"), ["password"]),
+      )
       continue
     }
     const key = rel.replace(MD_EXT, "")
@@ -744,7 +752,8 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
       const lower = fold(a)
       const other = byAlias.get(lower) ?? byStem.get(lower)?.find((o) => o !== s)
       if (other && other !== s) {
-        report("warning", s.key + ".md", `alias "${a}" is also the name or an alias of ${other.key}.md, so links to it are ambiguous`)
+        const place = propertyPlace(readSource(s.file), [s.fm.aliases != null ? "aliases" : "alias"], a)
+        report("warning", s.key + ".md", `alias "${a}" is also the name or an alias of ${other.key}.md, so links to it are ambiguous`, place)
       }
       byAlias.set(lower, s)
     }
@@ -935,17 +944,22 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     seenProblems.add(id)
     const t = p.target.trim().replace(/^\/+/, "")
     const isNote = !/\.\w+$/.test(t) || MD_EXT.test(t)
+    // Each time the note writes the link is a problem of its own; a drawing's links have no place in a note.
+    const source = sources.get(file.replace(MD_EXT, ""))
+    const places = source ? linkPlaces(readSource(source.file), p.kind, t) : []
+    const reportEach = (level: Problem["level"], message: string) => {
+      for (const place of orNone(places)) report(level, file, message, place)
+    }
     if (p.kind === "garden") {
       const [name, note] = [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)]
-      report("warning", file, `link to "${note}" not found in the garden "${name}" (${site.neighbours[name]})`)
+      reportEach("warning", `link to "${note}" not found in the garden "${name}" (${site.neighbours[name]})`)
     } else if (p.kind === "drawing") {
-      report("warning", file, `drawing "${t}" is not in the vault, so it is not shown`)
+      reportEach("warning", `drawing "${t}" is not in the vault, so it is not shown`)
     } else if (isNote && isPrivateNote(t, path.posix.dirname(file))) {
       const shown = p.shown ?? t
       privateLinks.push({ file, target: t, shown })
-      report(
+      reportEach(
         "info",
-        file,
         !shown
           ? `${p.kind} to unpublished note "${t}" is left out`
           : showsName(t, shown)
@@ -953,9 +967,9 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
             : `${p.kind} to unpublished note "${t}" is shown as plain text`,
       )
     } else if (isNote) {
-      report("error", file, `${p.kind} to missing note "${t}"`)
+      reportEach("error", `${p.kind} to missing note "${t}"`)
     } else {
-      report("error", file, `${p.kind} to missing file "${t}"`)
+      reportEach("error", `${p.kind} to missing file "${t}"`)
     }
   }
 
@@ -963,7 +977,8 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
   function missingCitation(relFile: string, key: string): void {
     if (missingCitations.has(`${relFile}\0${key}`)) return
     missingCitations.add(`${relFile}\0${key}`)
-    report("error", relFile, `citation @${key} is not in the bibliography`)
+    const places = citationPlaces(readSource(sources.get(relFile.replace(MD_EXT, ""))!.file), key)
+    for (const place of orNone(places)) report("error", relFile, `citation @${key} is not in the bibliography`, place)
   }
 
   const git = gitDates(report)
@@ -1071,8 +1086,9 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
       const created = toDate(s.fm.created ?? s.fm.date) ?? dates?.created ?? stat.birthtime
       const updated = toDate(s.fm.updated ?? s.fm.modified ?? s.fm.lastmod) ?? dates?.updated ?? stat.mtime
 
+      const fmPlace = (keys: string[]) => propertyPlace(readSource(s.file), keys)
       // A picture or sound property: a URL, or a file of the vault that is then published.
-      const fileProp = (field: string, v: unknown = s.fm[field]): { href: string; file?: string } | undefined => {
+      const fileProp = (field: string, v: unknown = s.fm[field], keys = [field]): { href: string; file?: string } | undefined => {
         if (typeof v !== "string" || !v) return undefined
         const b = v.replace(/^!?\[\[|\]\]$/g, "").replace(/\|.*$/, "")
         if (/^https?:\/\//.test(b)) return { href: b }
@@ -1081,7 +1097,7 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
           did("asset", asset)
           return { href: assetUrl(asset), file: asset }
         }
-        if (lang === site.defaultLang) did("report", "error", relFile, `${field} "${b}" is not in the vault`)
+        if (lang === site.defaultLang) did("report", "error", relFile, `${field} "${b}" is not in the vault`, fmPlace(keys))
         return undefined
       }
       // A protected note's pictures and sound are part of what its password guards, so they are not published.
@@ -1094,14 +1110,14 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
       const layout = LAYOUTS.find((l) => l === layoutField)
       // `layout: none` keeps the usual page, and `datme check` from suggesting a layout.
       if (layoutField && layoutField !== "none" && !layout && lang === site.defaultLang) {
-        did("report", "warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`)
+        did("report", "warning", relFile, `layout "${s.fm.layout}" is not one of ${LAYOUTS.join(", ")}, so the note is laid out as usual`, fmPlace(["layout"]))
       }
       // A dialogue's `speakers` map names to pictures, published like a cover; a protected dialogue keeps them.
       const speakers =
         layout === "dialogue" && !s.password && s.fm.speakers && typeof s.fm.speakers === "object" && !Array.isArray(s.fm.speakers)
           ? Object.fromEntries(
               Object.entries(s.fm.speakers as Record<string, unknown>).flatMap(([name, v]) => {
-                const src = fileProp(`speakers.${name}`, v)?.href
+                const src = fileProp(`speakers.${name}`, v, ["speakers", name])?.href
                 return src ? [[name, src]] : []
               }),
             )
@@ -1114,11 +1130,11 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
           : undefined
       const { value: style, invalid: badStyle } = pickOption(s.fm.style, site.styles)
       if (badStyle && lang === site.defaultLang) {
-        did("report", "warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`)
+        did("report", "warning", relFile, `style "${badStyle}" is not one of ${site.styles.join(", ")}, so the note keeps its usual style`, fmPlace(["style"]))
       }
       const { value: chrome, invalid: badChrome } = pickOption(s.fm.chrome, CHROMES)
       if (badChrome && lang === site.defaultLang) {
-        did("report", "warning", relFile, `chrome "${badChrome}" is not one of ${CHROMES.join(", ")}, so the note keeps its usual frame`)
+        did("report", "warning", relFile, `chrome "${badChrome}" is not one of ${CHROMES.join(", ")}, so the note keeps its usual frame`, fmPlace(["chrome"]))
       }
       const pos = (v: unknown) => (v != null && v !== "" ? `${Number(v) * 100}%` : "50%")
 

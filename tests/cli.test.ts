@@ -210,7 +210,17 @@ describe("url and check --json", () => {
 
   test("check --json lists every problem with its counts", () => {
     const out = JSON.parse(cli("check", fixture, "--json").stdout.toString())
+    expect(out.format).toBe(2)
     expect(out.counts.error).toBeGreaterThan(0)
+    expect(out.problems).toContainEqual({
+      level: "error",
+      file: "03_Atomic/Zettelkasten.md",
+      message: 'link to missing note "Missing note"',
+      line: 33,
+      column: 8,
+      endLine: 33,
+      endColumn: 24,
+    })
     expect(out.problems.some((p: { level: string }) => p.level === "info")).toBe(true)
   }, 60_000)
 })

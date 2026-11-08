@@ -172,6 +172,18 @@ function maskCode(md: string, mask: (s: string) => string, fence: Fence): string
     .replace(INLINE_MATH, (m) => mask(m))
 }
 
+/** Markdown with its code, math and `%%…%%` comments blanked out, every other character where it was: to find where a note writes something. */
+export function blankCode(md: string): string {
+  const blank = (s: string) => s.replace(/[^\n]/g, " ")
+  // A ```tabs block is markdown: only its fence lines go.
+  const fence: Fence = (m, info, body) => {
+    if (!/^\s*tabs\s*$/i.test(info)) return blank(m)
+    const at = m.indexOf("\n") + 1
+    return blank(m.slice(0, at)) + maskFences(body, fence) + blank(m.slice(at + body.length))
+  }
+  return maskCode(md, blank, fence).replace(OBSIDIAN_COMMENT, blank)
+}
+
 /**
  * Markdown without its comments, `%%…%%` and HTML, as the page shows it: a
  * comment mark inside code or math is text. For the plain-text copies of a note.
