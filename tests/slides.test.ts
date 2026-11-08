@@ -57,6 +57,11 @@ describe("Marp decks", () => {
     expect(deck.html).toMatch(/<\/template><\/div>$/)
   })
 
+  test("a theme Marp refuses is skipped, and the deck still renders", async () => {
+    const deck = (await renderSlides("# One", {}, ["section { color: red }"], labels))!
+    expect(deck.count).toBe(1)
+  })
+
   test("a deck of the vault uses its own theme, links and images", async () => {
     const vault = getVault()
     expect(vault.slideThemes).toHaveLength(1)
