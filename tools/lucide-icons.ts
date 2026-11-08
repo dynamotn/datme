@@ -50,7 +50,10 @@ export function render(): string {
   ].join("\n")
 }
 
-if (import.meta.main) {
-  fs.writeFileSync(target, render())
-  console.log(`wrote ${path.relative(root, target)} (${(fs.statSync(target).size / 1024).toFixed(0)} KiB)`)
+export function cli(file = target): number {
+  fs.writeFileSync(file, render())
+  console.log(`wrote ${path.relative(root, file)} (${(fs.statSync(file).size / 1024).toFixed(0)} KiB)`)
+  return 0
 }
+
+if (import.meta.main) process.exitCode = cli()
