@@ -54,15 +54,22 @@ function notFound(e: unknown): boolean {
   return code === "ERR_MODULE_NOT_FOUND" || code === "MODULE_NOT_FOUND" || /Cannot find (package|module)/.test(message ?? "")
 }
 
+const missing = new Set<string>()
+
 /**
- * An optional package, loaded only when a note needs it; undefined when it is not installed.
- * One that is installed but fails to load (a native binding, a version) says why on the page.
+ * An optional package, loaded only when a note needs it; undefined when it is not installed,
+ * which the build says once. One that is installed but fails to load (a native binding, a
+ * version) says why on the page.
  */
-async function optional<T>(name: string): Promise<T | undefined> {
+export async function optional<T>(name: string): Promise<T | undefined> {
   try {
     return (await importer(name)) as T
   } catch (e) {
-    if (notFound(e)) return undefined
+    if (notFound(e)) {
+      if (!missing.has(name)) console.warn(`[datme] ${name} is not installed: the pages that need it say so; install it next to datme (bun add ${name})`)
+      missing.add(name)
+      return undefined
+    }
     throw new Error(`${name} is installed but could not be loaded: ${(e as Error).message}`)
   }
 }

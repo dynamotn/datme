@@ -162,7 +162,9 @@ site theme.
 *Live example: [A slide deck](showcase/A%20slide%20deck.md).*
 
 Notes with `marp: true` (as written for the Marp Slides plugin or Marp for
-VS Code) are slide decks, rendered with Marp Core at build time.
+VS Code) are slide decks, rendered with Marp Core at build time. Marp Core is
+an optional dependency, like D2: install it next to datme
+(`bun add @marp-team/marp-core`), or a deck shows its text under a notice.
 
 ```markdown
 ---

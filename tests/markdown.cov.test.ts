@@ -6,6 +6,8 @@ import { site } from "../src/site.config"
 import { getVault } from "../src/lib/vault"
 import { renderMarkdown, renderNote, userHead } from "../src/lib/markdown"
 import * as renderCache from "../src/lib/render-cache"
+import { setOptionalImport } from "../src/lib/diagrams"
+import { MARP_MISSING } from "../src/lib/slides"
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "datme-markdown-cov-"))
 const FIXTURE = path.resolve(import.meta.dir, "fixtures/vault")
@@ -60,6 +62,7 @@ describe("with the vault's own plugins and a warm disk cache", () => {
   const saved = { vault: site.vault, version: g.__vaultVersion }
   const original = { ...renderCache }
   const reads: string[][] = []
+  const writes: string[] = []
 
   beforeAll(() => {
     fs.rmSync(vault, { recursive: true, force: true })
@@ -80,6 +83,7 @@ describe("with the vault's own plugins and a warm disk cache", () => {
     fs.writeFileSync(path.join(vault, "Cached.md"), "---\npublish: true\n---\nText with ![[wide.png]] inside. CACHE-ME\n")
     fs.writeFileSync(path.join(vault, "Typst.md"), '---\npublish: true\n---\nA figure.\n\n```typst\n#image("img/wide.png")\n```\n')
     fs.writeFileSync(path.join(vault, "Plain typst.md"), "---\npublish: true\n---\nA sum.\n\n```typst\n$1 + 1$\n```\n")
+    fs.writeFileSync(path.join(vault, "Deck.md"), "---\npublish: true\nmarp: true\n---\n# One\n\n---\n\nTwo\n")
     fs.writeFileSync(path.join(vault, "Foot.md"), "---\npublish: true\n---\nA claim.[^1] See [below](#tail) and [odd](#%E0%A4%A).\n\n[^1]: The source.\n")
     site.vault = vault
     g.__vaultVersion = 7_300_001
@@ -92,6 +96,10 @@ describe("with the vault's own plugins and a warm disk cache", () => {
         reads.push(parts)
         if (!parts.some((p) => p.includes("CACHE-ME"))) return undefined
         return Buffer.from(JSON.stringify({ html: "<p>from the cache</p>", headings: [], text: "cached text", words: 3, description: "cached" }))
+      },
+      writeCache: (kind: string, source: string, parts: string[], data: string | Uint8Array) => {
+        if (kind === "notes") writes.push(String(data))
+        original.writeCache(kind, source, parts, data)
       },
     }))
   })
@@ -144,6 +152,21 @@ describe("with the vault's own plugins and a warm disk cache", () => {
     await renderNote(vi.get("Plain typst")!)
     expect(reads.length).toBe(count + 1)
   }, 60_000)
+
+  test("without Marp Core a deck shows its text under a notice, kept out of the disk cache", async () => {
+    setOptionalImport(async (name) => {
+      throw new Error(`Cannot find package '${name}'`)
+    })
+    try {
+      const count = writes.length
+      const r = await renderNote(getVault().byKey["vi-VN"].get("Deck")!)
+      expect(r.html).toStartWith(MARP_MISSING)
+      expect(r.html).toContain("<p>Two</p>")
+      expect(writes.length).toBe(count)
+    } finally {
+      setOptionalImport(undefined)
+    }
+  })
 
   test("ids inside an embed are scoped, and links out of it go to the source note", async () => {
     const html = await renderMarkdown('<span class="transclude-ph" data-key="Foot" data-fragment=""></span>', "vi-VN", "x")

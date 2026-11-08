@@ -71,6 +71,12 @@ describe("datme doctor", () => {
     }
   })
 
+  test("Marp slide decks of the vault need Marp Core", () => {
+    // The fixture vault has a deck (07_Project/Talk).
+    const missing = diagnose(machine({ resolves: (p) => p !== "@marp-team/marp-core" })).find((f) => f.message.includes("marp-core"))!
+    expect(missing).toMatchObject({ level: "fail", fix: "bun add @marp-team/marp-core   (next to datme)" })
+  })
+
   test("tts needs uv and a voice clip, each with its fix; without tts there is nothing to check", () => {
     const before = site.tts
     try {

@@ -31,7 +31,7 @@ import { linkPreview, previewCard } from "./link-preview"
 import { loadUserPlugins, type UserPlugins } from "./user-plugins"
 import { site } from "../site.config"
 import { cacheStats, readCache, writeCache } from "./render-cache"
-import { renderSlides } from "./slides"
+import { MARP_MISSING, renderSlides } from "./slides"
 import { renderLeafletBlock } from "./leaflet-block"
 import { remarkDiagrams, READS_FILES } from "./diagrams"
 import { encrypt } from "./encrypt"
@@ -809,12 +809,12 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
       // A deck is drawn by Marp; the garden's rendering only gives its text, for search and cards.
       const deck =
         note.slides &&
-        renderSlides(note.md, note.slides, getVault().slideThemes, {
+        (await renderSlides(note.md, note.slides, getVault().slideThemes, {
           present: t(note.lang).present,
           slides: t(note.lang).slides,
-        })
+        }))
       parts = {
-        html: deck ? deck.html : String(file),
+        html: deck ? deck.html : (note.slides ? MARP_MISSING : "") + String(file),
         // Slides have no page anchors to list, and their first heading is a slide, not the title.
         h1: deck ? undefined : out.h1,
         headings: deck ? [] : (out.headings ?? []),
@@ -822,7 +822,8 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
         words: out.words ?? 0,
         description: out.description,
       }
-      if (diskKey) writeCache("notes", import.meta.url, diskKey, JSON.stringify(parts))
+      // A notice that a package is missing must go once it is installed.
+      if (diskKey && !parts.html.includes("diagram-missing")) writeCache("notes", import.meta.url, diskKey, JSON.stringify(parts))
     }
     // Locked parts are encrypted after the cache, so their text never reaches the disk.
     const html = note.lockedParts.length ? await sealParts(parts.html, note, user) : parts.html

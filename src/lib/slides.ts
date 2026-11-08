@@ -4,10 +4,12 @@
  * whose slides are split by `---` and styled by HTML comment directives.
  * Decks are rendered at build time with Marp Core, so they look as in the
  * plugin's preview; themes are the built-in ones plus any vault CSS file that
- * declares `@theme`.
+ * declares `@theme`. Marp Core is an optional dependency, like D2: without it
+ * a deck shows its text under a notice.
  */
-import { Marp } from "@marp-team/marp-core"
+import type * as MarpCore from "@marp-team/marp-core"
 import { dump } from "js-yaml"
+import { optional } from "./diagrams"
 import { escapeAttrKeepGt } from "./html"
 
 export function isSlides(fm: Record<string, unknown>): boolean {
@@ -83,14 +85,21 @@ const FRAME = `:host{display:block;margin:1.5rem 0}
 :host(.presenting) .marpit>svg[data-marpit-svg].current{display:block}
 @media print{.marpit>svg[data-marpit-svg]{break-inside:avoid;box-shadow:none;border:1px solid #ccc}}`
 
-export function renderSlides(
+/** Shown above a deck's text when Marp Core is not installed; the class keeps the page out of the build cache. */
+export const MARP_MISSING =
+  '<p class="dataview dv-error diagram-missing">Slides need @marp-team/marp-core: install it next to datme (bun add @marp-team/marp-core).</p>'
+
+/** A deck drawn by Marp Core; undefined when it is not installed. */
+export async function renderSlides(
   md: string,
   directives: Record<string, unknown>,
   themes: string[],
   /** UI strings: the presenter button, and the deck's name for screen readers, "{n}" its slide count. */
   labels: { present: string; slides: string },
-): Deck {
-  const marp = new Marp({
+): Promise<Deck | undefined> {
+  const core = await optional<typeof MarpCore>("@marp-team/marp-core")
+  if (!core) return undefined
+  const marp = new core.Marp({
     // Notes are trusted, as everywhere else in the garden.
     html: true,
     // Emoji stay text: Twemoji would fetch images from a CDN.
