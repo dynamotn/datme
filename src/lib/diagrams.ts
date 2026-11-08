@@ -36,15 +36,21 @@ function unavailable(kind: string, pkg: string, source: string): string {
 }
 
 // A variable keeps bundlers from resolving the optional package at build time.
-const importPackage = (name: string): Promise<unknown> => import(/* @vite-ignore */ name)
-let importer = importPackage
+export const importPackage = (name: string): Promise<unknown> => import(/* @vite-ignore */ name)
+/**
+ * Under Node, Astro loads its config, and this module with it, through a Vite module runner
+ * that it closes before the build hooks run, so this copy's import() fails there; the CLI,
+ * which Node loads itself, leaves its own import() here first.
+ */
+const nativeImport = (globalThis as { datmeImport?: typeof importPackage }).datmeImport ?? importPackage
+let importer = nativeImport
 
 /**
  * Replace how optional packages are imported, e.g. in tests to act as if one
  * were not installed; undefined restores it. The renderers loaded so far are forgotten.
  */
 export function setOptionalImport(fn: ((name: string) => Promise<unknown>) | undefined): void {
-  importer = fn ?? importPackage
+  importer = fn ?? nativeImport
   d2 = undefined
   typst = undefined
   transformer = undefined

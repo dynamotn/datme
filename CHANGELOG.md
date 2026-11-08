@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `search.engine: pagefind` builds under Node, as it did under Bun: datme installed with npm stopped after the pages with "pagefind is installed but could not be loaded: Vite module runner has been closed", whether Pagefind was installed or not. It now writes the Pagefind index, and without Pagefind the build says to run `bun add pagefind`.
 - Note history (`history: true`) no longer shows empty history pages in silence when git fails. A git that fails, a shallow clone, or a version git cannot read is now a warning in `datme check` (so `--strict` fails), naming the cause and, for a shallow clone, how to fetch the whole history; a vault outside git stays quiet. The history is read without a size limit: a long history, or large old versions of notes, no longer exceed a fixed 64 MB or 1 GB buffer.
 - Code highlighting no longer loses colour on a loaded build machine: each grammar is warmed up once, without Shiki's 500 ms-a-line limit, right after it is loaded, so the setup cost of its first line cannot cut that line off and leave the rest of it uncoloured.
 - A site built with `datme build` can be served by a web server running as another user (nginx, Caddy): its folder is no longer private to the user who ran the build, but follows the umask like any new folder.

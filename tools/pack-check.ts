@@ -5,8 +5,9 @@
  * under Bun from the source tree, so they never see a missing file in
  * `files`, a dependency left in devDependencies, or a Node that cannot load
  * what Bun can. Run with `bun tools/pack-check.ts`; CI runs it on each Node
- * that `engines` allows. It also prints the size of the tarball and of the
- * `node_modules` it installs, and fails when that passes MAX_INSTALL_MIB, so a
+ * that `engines` allows. A second build, of a vault searching with Pagefind,
+ * checks that an optional peer loads from the build hook. It also prints the
+ * size of the tarball and of the `node_modules` it installs, and fails when that passes MAX_INSTALL_MIB, so a
  * heavy dependency is added on purpose; `tools/bench.ts --install` measures
  * them too. In CI the size is also kept as a GitLab metrics report
  * (`metrics.txt`) and a GitHub job summary.
@@ -71,6 +72,16 @@ function main(): void {
       if (!fs.existsSync(path.join(site, page))) throw new Error(`the build under ${version} has no ${page}`)
     }
     console.log(`datme ${installed}, installed from its tarball, builds the fixture vault under Node ${version}.`)
+    // Pagefind is an optional peer, imported from the build hook, which Astro loads differently under Node than under Bun.
+    const peers = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).peerDependencies
+    run("npm", ["install", "--no-audit", "--no-fund", "--loglevel=error", `pagefind@${peers.pagefind}`], project)
+    const vault = path.join(work, "pagefind-vault")
+    fs.cpSync(path.join(root, "tests/fixtures/minimal"), vault, { recursive: true })
+    fs.writeFileSync(path.join(vault, "datme.yaml"), "search:\n  engine: pagefind\n")
+    const pagefindSite = path.join(work, "pagefind-site")
+    run(node, [datme, "build", vault, "--out", pagefindSite], project)
+    if (!fs.existsSync(path.join(pagefindSite, "pagefind/pagefind.js"))) throw new Error(`the build under ${version} wrote no Pagefind index`)
+    console.log(`With pagefind installed next to it, it writes the Pagefind index under Node ${version}.`)
   } finally {
     fs.rmSync(work, { recursive: true, force: true })
   }

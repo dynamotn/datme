@@ -846,6 +846,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   }
 
   const astro = await import("astro")
+  // Optional packages are imported by this process, not by the Vite module runner Astro loads its config with under Node.
+  ;(globalThis as { datmeImport?: (name: string) => Promise<unknown> }).datmeImport = (await import("./lib/diagrams.ts")).importPackage
   const server = { port: args.port, host: args.host }
   if (args.command === "dev") {
     env.DATME_DEV = "1"
