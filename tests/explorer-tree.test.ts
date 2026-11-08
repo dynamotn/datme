@@ -106,6 +106,29 @@ describe("the explorer in the browser", () => {
     c.open = true
     c.dispatchEvent(new dom.window.Event("toggle") as unknown as Event)
     expect(JSON.parse(localStorage.getItem("explorer-open")!)).toContain("C")
+    // Closing it forgets it again.
+    c.open = false
+    c.dispatchEvent(new dom.window.Event("toggle") as unknown as Event)
+    expect(JSON.parse(localStorage.getItem("explorer-open")!)).not.toContain("C")
+  })
+
+  test("with storage blocked, toggling a folder still works and remembers nothing", async () => {
+    online()
+    const el = mount("pt-PT")
+    await explorer.ensureExplorer()
+    const real = Object.getOwnPropertyDescriptor(globalThis, "localStorage")!
+    const throws = () => {
+      throw new Error("blocked")
+    }
+    Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: throws, setItem: throws } })
+    try {
+      const c = el.querySelector<HTMLDetailsElement>("details[data-dir='C']")!
+      c.open = true
+      expect(() => c.dispatchEvent(new dom.window.Event("toggle") as unknown as Event)).not.toThrow()
+      expect(c.open).toBe(true)
+    } finally {
+      Object.defineProperty(globalThis, "localStorage", real)
+    }
   })
 
   test("offline, the part stays as it is", async () => {

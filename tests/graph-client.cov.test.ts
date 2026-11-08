@@ -632,6 +632,26 @@ describe("the graph in the browser", () => {
       graph.teardownGraphs()
     })
 
+    test("a click changes the depth even when storage refuses to remember it", async () => {
+      const canvas = box("1")
+      graph.mountLocalGraph(canvas)
+      watchers.at(-1)!.cb([{ isIntersecting: true }])
+      await settle(20)
+      const [, two] = document.querySelectorAll<HTMLButtonElement>("[data-graph-depth]")
+      const real = Object.getOwnPropertyDescriptor(globalThis, "localStorage")!
+      const throws = () => {
+        throw new Error("blocked")
+      }
+      Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: throws, setItem: throws } })
+      try {
+        expect(() => two.click()).not.toThrow()
+        expect(pressed()).toEqual(["false", "true"])
+      } finally {
+        Object.defineProperty(globalThis, "localStorage", real)
+        graph.teardownGraphs()
+      }
+    })
+
     test("without buttons or storage it still shows, one link deep", async () => {
       document.body.innerHTML = ""
       const canvas = makeCanvas("cov-graph")

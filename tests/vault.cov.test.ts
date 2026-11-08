@@ -163,6 +163,13 @@ beforeAll(() => {
   fs.symlinkSync(path.join(ROOT, "does-not-exist.md"), path.join(main, "dead.md"))
 
   write(path.join(ROOT, "explicit"), { "datme.yaml": "publish: explicit", "Draft.md": "Not published." })
+  write(path.join(ROOT, "frontier"), {
+    "datme.yaml": "publish: all\nlanguages: [en-US]",
+    "index.md": "Home.",
+    "Perm.md": "---\npermalink:\n  en-US: /where/it-is/\n  vi-VN: /elsewhere\n---\nBody.",
+    "Verse.md": "---\nlayout: poem\nlineBreaks: false\n---\nOne\nTwo",
+    "Prose.md": "---\nlineBreaks: true\n---\nOne\nTwo",
+  })
   write(path.join(ROOT, "empty"), { "datme.yaml": "publish: all", "image.png": "png" })
 })
 
@@ -364,5 +371,29 @@ describe("vaults with nothing to publish", () => {
     const { vault, warned } = build("empty")
     expect(vault.notes["en-US"]).toEqual([])
     expect(warned).toEqual([`[datme] no publishable note found in ${path.join(ROOT, "empty")}`])
+  })
+})
+
+describe("frontmatter that settles a note's own address and line breaks", () => {
+  test("a permalink given per language takes this language's; lineBreaks in the frontmatter beats the layout", () => {
+    const notes = useVault(path.join(ROOT, "frontier")).byKey["en-US"]
+    expect(notes.get("Perm")!.url).toBe("/where/it-is")
+    expect(notes.get("Verse")!.hardBreaks).toBe(false)
+    expect(notes.get("Prose")!.hardBreaks).toBe(true)
+  })
+
+  test("a home note whose real path cannot be resolved is still the home", () => {
+    const real = fs.realpathSync
+    const broken = spyOn(fs, "realpathSync").mockImplementation(((p: fs.PathLike, ...rest: unknown[]) => {
+      if (String(p) === path.join(ROOT, "frontier", "index.md")) throw Object.assign(new Error("ENOENT"), { code: "ENOENT" })
+      return (real as (...a: unknown[]) => unknown)(p, ...rest)
+    }) as typeof fs.realpathSync)
+    try {
+      const vault = useVault(path.join(ROOT, "frontier"))
+      expect(vault.byKey["en-US"].get("index")!.isHome).toBe(true)
+      expect(vault.sources.has("index")).toBe(true)
+    } finally {
+      broken.mockRestore()
+    }
   })
 })
