@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { load as loadYaml } from "js-yaml"
 import { meets } from "../src/lib/doctor"
-import { parseArgs, resolveVault, publishOutput, starterConfig, run, inPackage, PACKAGE_ROOT, CliError, USAGE } from "../src/cli"
+import { parseArgs, resolveVault, publishOutput, starterConfig, run, inStaging, PACKAGE_ROOT, CliError, USAGE } from "../src/cli"
 import { resolveConfig } from "../src/site.config"
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-cli-"))
@@ -78,16 +78,18 @@ describe("resolveVault", () => {
   })
 })
 
-describe("inPackage", () => {
-  test("runs in the package root and restores the working directory", async () => {
+describe("inStaging", () => {
+  test("runs in a work folder outside the package and restores the working directory", async () => {
     const before = process.cwd()
-    expect(await inPackage(async () => process.cwd())).toBe(fs.realpathSync(PACKAGE_ROOT))
+    const during = await inStaging(async () => process.cwd())
+    expect(path.basename(during)).toMatch(/^datme-build-\d+-/)
+    expect(path.relative(PACKAGE_ROOT, during).startsWith("..")).toBe(true)
     expect(process.cwd()).toBe(before)
   })
 
   test("restores the working directory when the build fails", async () => {
     const before = process.cwd()
-    await expect(inPackage(() => Promise.reject(new Error("boom")))).rejects.toThrow("boom")
+    await expect(inStaging(() => Promise.reject(new Error("boom")))).rejects.toThrow("boom")
     expect(process.cwd()).toBe(before)
   })
 })
@@ -176,8 +178,8 @@ describe("build", () => {
       expect(fs.existsSync(path.join(site, other, "index.html"))).toBe(false)
     }
     // Each build cleans up the directory it staged in.
-    const staged = fs.existsSync(path.join(PACKAGE_ROOT, ".datme")) ? fs.readdirSync(path.join(PACKAGE_ROOT, ".datme")) : []
-    for (const p of procs) expect(staged).not.toContain(`dist-${p.pid}`)
+    const staged = fs.readdirSync(os.tmpdir())
+    for (const p of procs) expect(staged.some((n) => n.startsWith(`datme-build-${p.pid}-`))).toBe(false)
   }, 120_000)
 })
 

@@ -14,10 +14,20 @@ import { SOURCES, applyMigration, describePlan, planMigration, type Source } fro
 
 export { PACKAGE_ROOT }
 /**
- * Astro builds here first: it renames files out of .astro/, which fails across
- * filesystems. One per process, so builds running at once never share it.
+ * Everything Astro writes while it runs goes here, in the temporary directory:
+ * the package may be read-only (a Nix store, a root-owned prefix). Made on
+ * first use, private to the user and named by the process, so builds running
+ * at once never share it. Its real path, as Vite sees the files under it.
  */
-const STAGING = path.join(PACKAGE_ROOT, ".datme", `dist-${process.pid}`)
+let work: string | undefined
+function workDir(): string {
+  if (!work || !fs.existsSync(work)) {
+    const made = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `datme-build-${process.pid}-`)))
+    process.once("exit", () => fs.rmSync(made, { recursive: true, force: true }))
+    work = made
+  }
+  return work
+}
 /** Whether a process is still running; one we may not signal is, all the same. */
 function alive(pid: number): boolean {
   try {
@@ -28,8 +38,12 @@ function alive(pid: number): boolean {
   }
 }
 
-/** Remove the staging folders of builds that died before cleaning up, so they do not pile up. */
-export function sweepStaging(dir = path.dirname(STAGING)): void {
+/**
+ * Remove the work folders of builds that died before cleaning up, so they do
+ * not pile up. Only real folders of this user: the temporary directory is
+ * shared, and a link or another user's folder is none of ours to delete.
+ */
+export function sweepStaging(dir = os.tmpdir()): void {
   let entries: string[]
   try {
     entries = fs.readdirSync(dir)
@@ -37,8 +51,10 @@ export function sweepStaging(dir = path.dirname(STAGING)): void {
     return
   }
   for (const name of entries) {
-    const pid = Number(name.match(/^dist-(\d+)$/)?.[1])
-    if (pid && !alive(pid)) fs.rmSync(path.join(dir, name), { recursive: true, force: true })
+    const pid = Number(name.match(/^datme-build-(\d+)-/)?.[1])
+    if (!pid || alive(pid)) continue
+    const stat = fs.lstatSync(path.join(dir, name))
+    if (stat.isDirectory() && stat.uid === (process.getuid?.() ?? stat.uid)) fs.rmSync(path.join(dir, name), { recursive: true, force: true })
   }
 }
 
@@ -505,13 +521,36 @@ footer: {}
 }
 
 /**
- * Runs Astro from the package root. An outDir outside the working directory
- * makes Astro prerender into <cwd>/.astro and rename from there, which fails
- * with EXDEV when the package sits on another filesystem (bunx under /tmp).
+ * Astro writes .astro/ under its root, so the root is the work folder, which
+ * links to the package's sources and packages; the package itself stays
+ * untouched.
  */
-export async function inPackage<T>(fn: () => Promise<T>): Promise<T> {
+function astroRoot(): { root: string; configFile: string } {
+  const root = workDir()
+  process.env.DATME_WORK = root
+  for (const name of ["src", "package.json", "tsconfig.json", "node_modules"]) {
+    const target = name === "node_modules" ? modulesDir() : path.join(PACKAGE_ROOT, name)
+    if (!fs.existsSync(path.join(root, name))) fs.symlinkSync(target, path.join(root, name), "junction")
+  }
+  return { root, configFile: path.relative(root, path.join(PACKAGE_ROOT, "astro.config.mjs")) }
+}
+
+/** The node_modules folder the package resolves astro from, wherever the package manager put it. */
+function modulesDir(): string {
+  const at = (dir: string) => (path.basename(dir) === "node_modules" ? dir : path.join(dir, "node_modules"))
+  let dir = PACKAGE_ROOT
+  while (!fs.existsSync(path.join(at(dir), "astro", "package.json")) && path.dirname(dir) !== dir) dir = path.dirname(dir)
+  return at(dir)
+}
+
+/**
+ * Runs Astro from the work folder. An outDir outside the working directory
+ * makes Astro prerender into <cwd>/.astro and rename from there, which fails
+ * with EXDEV across filesystems.
+ */
+export async function inStaging<T>(fn: () => Promise<T>): Promise<T> {
   const cwd = process.cwd()
-  process.chdir(PACKAGE_ROOT)
+  process.chdir(workDir())
   try {
     return await fn()
   } finally {
@@ -656,7 +695,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
       const { fetchNeighbours } = await import("./lib/neighbours.ts")
       const cacheDir = cacheDirOf(env, cwd, vault)
       if (cacheDir) claimCache(cacheDir)
-      const file = path.join(cacheDir ?? path.join(PACKAGE_ROOT, ".datme"), NEIGHBOURS_FILE)
+      const file = path.join(cacheDir ?? workDir(), NEIGHBOURS_FILE)
       const failed = await fetchNeighbours(site.neighbours, site.langs, file)
       if (failed.length) console.warn(`[datme] could not reach the gardens ${failed.join(", ")}; links to them use their last known notes`)
       env.DATME_NEIGHBOURS = file
@@ -720,7 +759,8 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   const server = { port: args.port, host: args.host }
   if (args.command === "dev") {
     env.DATME_DEV = "1"
-    await astro.dev({ root: PACKAGE_ROOT, server })
+    sweepStaging()
+    await astro.dev({ ...astroRoot(), server })
     return
   }
   // An empty DATME_CACHE turns the cache off; a path moves it, e.g. somewhere CI keeps between runs.
@@ -737,14 +777,14 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   }
   // Filesystems keep coarse timestamps; a second of slack never prunes an entry this build used.
   const started = Date.now() - 1000
-  // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends.
+  // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends (the work folder goes at exit).
   sweepStaging()
-  const dropStaging = () => fs.rmSync(STAGING, { recursive: true, force: true })
-  if (args.command === "preview") process.once("exit", dropStaging)
+  const staging = path.join(workDir(), "dist")
+  const dropStaging = () => fs.rmSync(workDir(), { recursive: true, force: true })
   try {
-    await inPackage(() => astro.build({ root: PACKAGE_ROOT, outDir: STAGING }))
+    await inStaging(() => astro.build({ ...astroRoot(), outDir: staging }))
     if (cacheDir) pruneCache(cacheDir, started)
-    if (args.command === "build") publishOutput(STAGING, out, vault)
+    if (args.command === "build") publishOutput(staging, out, vault)
   } finally {
     if (args.command === "build") dropStaging()
   }
@@ -758,5 +798,5 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     }
     return
   }
-  await astro.preview({ root: PACKAGE_ROOT, outDir: STAGING, server })
+  await astro.preview({ ...astroRoot(), outDir: staging, server })
 }

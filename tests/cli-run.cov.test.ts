@@ -423,7 +423,7 @@ describe("run, check", () => {
     expect(fs.existsSync(env.DATME_NEIGHBOURS)).toBe(true)
   })
 
-  test("neighbours without a cache are kept next to the package", async () => {
+  test("neighbours without a cache are kept in the work folder, not in the package", async () => {
     setSite({ neighbours: { friend: "https://friend.invalid" } })
     const env: Record<string, string> = { DATME_CACHE: "" }
     const fetch = spyOn(globalThis, "fetch").mockImplementation((async () => {
@@ -438,14 +438,16 @@ describe("run, check", () => {
       write.mockRestore()
       mkdir.mockRestore()
     }
-    expect(env.DATME_NEIGHBOURS).toBe(path.join(PACKAGE_ROOT, ".datme", NEIGHBOURS_FILE))
+    expect(path.basename(path.dirname(env.DATME_NEIGHBOURS))).toMatch(/^datme-build-\d+-/)
+    expect(path.basename(env.DATME_NEIGHBOURS)).toBe(NEIGHBOURS_FILE)
   })
 })
 
 describe("run, Astro commands", () => {
   // Astro itself is not run here: the build tests run it for real, out of process.
   // The fake build writes a page into this process's own staging directory, as Astro would.
-  const staging = path.join(PACKAGE_ROOT, ".datme", `dist-${process.pid}`)
+  // Where the last build was told to stage: a folder of its own in the temporary directory.
+  const stagingOf = (m: Mock<typeof astro.build>) => (m.mock.calls.at(-1)![0] as { outDir: string }).outDir
   let build: Mock<typeof astro.build>
   let dev: Mock<typeof astro.dev>
   let preview: Mock<typeof astro.preview>
@@ -460,10 +462,11 @@ describe("run, Astro commands", () => {
     preview = spyOn(astro, "preview").mockResolvedValue({} as Awaited<ReturnType<typeof astro.preview>>)
   })
   afterEach(() => {
+    // A preview leaves its work folder until the process exits.
+    if (build.mock.calls.length) fs.rmSync(path.dirname(stagingOf(build)), { recursive: true, force: true })
     build.mockRestore()
     dev.mockRestore()
     preview.mockRestore()
-    fs.rmSync(staging, { recursive: true, force: true })
   })
 
   test("build --strict stops on problems before building", async () => {
@@ -482,7 +485,11 @@ describe("run, Astro commands", () => {
     const env: Record<string, string> = { DATME_CACHE: cache }
     await run({ command: "build", vault: fixture, out, verbose: true }, env, tmp)
     expect(warned()).toContain('run "datme check" for details')
-    expect(build).toHaveBeenCalledWith({ root: PACKAGE_ROOT, outDir: staging })
+    const staging = stagingOf(build)
+    const work = path.dirname(staging)
+    expect(path.basename(work)).toMatch(/^datme-build-\d+-\w+$/)
+    expect(build).toHaveBeenCalledWith({ root: work, configFile: path.relative(work, path.join(PACKAGE_ROOT, "astro.config.mjs")), outDir: staging })
+    expect(fs.existsSync(work)).toBe(false)
     expect(env.DATME_CACHE).toBe(cache)
     expect(env.DATME_VERSION).toMatch(/^\d+\.\d+\.\d+/)
     expect(fs.existsSync(path.join(cache, "notes"))).toBe(false)
@@ -503,7 +510,7 @@ describe("run, Astro commands", () => {
     }) as unknown as typeof astro.build)
     expect((await failure(run({ command: "build", vault: fixture, out }, { DATME_CACHE: "" }, tmp)))?.message).toBe("astro broke")
     expect(fs.readFileSync(path.join(out, "index.html"), "utf8")).toBe("<p>built</p>")
-    expect(fs.existsSync(staging)).toBe(false)
+    expect(fs.existsSync(path.dirname(stagingOf(build)))).toBe(false)
   }, 60_000)
 
   test("build --fresh empties the cache but keeps it datme's; an empty DATME_CACHE turns it off", async () => {
@@ -532,15 +539,25 @@ describe("run, Astro commands", () => {
   }, 60_000)
 
   test("dev serves the vault live, preview builds then serves until the process ends", async () => {
+    const listeners = process.listeners("exit")
     const env: Record<string, string> = { DATME_CACHE: "" }
     await run({ command: "dev", vault: fixture, port: 4400, host: true }, env, tmp)
     expect(env.DATME_DEV).toBe("1")
-    expect(dev).toHaveBeenCalledWith({ root: PACKAGE_ROOT, server: { port: 4400, host: true } })
+    const root = (dev.mock.calls[0]![0] as { root: string }).root
+    expect(dev).toHaveBeenCalledWith({ root, configFile: path.relative(root, path.join(PACKAGE_ROOT, "astro.config.mjs")), server: { port: 4400, host: true } })
+    expect(fs.realpathSync(path.join(root, "node_modules", "astro", "package.json"))).toBe(
+      fs.realpathSync(path.join(PACKAGE_ROOT, "node_modules/astro/package.json")),
+    )
     expect(build).not.toHaveBeenCalled()
-    const listeners = process.listeners("exit")
     await run({ command: "preview", vault: fixture, port: 4401 }, { DATME_CACHE: "" }, tmp)
     expect(build).toHaveBeenCalledTimes(1)
-    expect(preview).toHaveBeenCalledWith({ root: PACKAGE_ROOT, outDir: staging, server: { port: 4401, host: undefined } })
+    const staging = stagingOf(build)
+    expect(preview).toHaveBeenCalledWith({
+      root: path.dirname(staging),
+      configFile: expect.any(String),
+      outDir: staging,
+      server: { port: 4401, host: undefined },
+    })
     expect(fs.existsSync(path.join(staging, "index.html"))).toBe(true)
     // The staging directory is dropped when the process exits.
     const added = process.listeners("exit").filter((l) => !listeners.includes(l))

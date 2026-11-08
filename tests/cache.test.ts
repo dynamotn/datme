@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "bun:test"
+import { afterAll, describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
@@ -182,13 +182,35 @@ describe("the default cache", () => {
 })
 
 describe("staging folders", () => {
-  test("those of builds that died are swept; a running build's and other files stay", () => {
+  test("those of builds that died are swept; a running build's, links, other files and other names stay", () => {
     const dir = path.join(tmp, "staging")
     // Process 1 always runs, though as another user it may refuse our signal.
-    for (const name of ["dist-999999999", `dist-${process.pid}`, "dist-1", "dist-x", "cache"]) fs.mkdirSync(path.join(dir, name), { recursive: true })
+    for (const name of ["datme-build-999999999-abc", `datme-build-${process.pid}-abc`, "datme-build-1-abc", "datme-build-x", "cache"]) {
+      fs.mkdirSync(path.join(dir, name), { recursive: true })
+    }
+    // A dead build's name on a link or a file is not a folder of ours.
+    const elsewhere = path.join(tmp, "elsewhere")
+    fs.mkdirSync(elsewhere)
+    fs.symlinkSync(elsewhere, path.join(dir, "datme-build-999999998-link"))
+    fs.writeFileSync(path.join(dir, "datme-build-999999997-file"), "")
     sweepStaging(dir)
-    expect(fs.readdirSync(dir).sort()).toEqual(["cache", "dist-1", `dist-${process.pid}`, "dist-x"].sort())
+    expect(fs.readdirSync(dir).sort()).toEqual(
+      ["cache", "datme-build-1-abc", `datme-build-${process.pid}-abc`, "datme-build-999999997-file", "datme-build-999999998-link", "datme-build-x"].sort(),
+    )
+    expect(fs.existsSync(elsewhere)).toBe(true)
     // A missing folder is nothing to sweep.
     expect(() => sweepStaging(path.join(tmp, "nowhere"))).not.toThrow()
+  })
+
+  test("a folder of another user stays", () => {
+    const dir = path.join(tmp, "staging-owner")
+    fs.mkdirSync(path.join(dir, "datme-build-999999999-abc"), { recursive: true })
+    const uid = spyOn(process, "getuid").mockReturnValue(process.getuid!() + 1)
+    try {
+      sweepStaging(dir)
+    } finally {
+      uid.mockRestore()
+    }
+    expect(fs.existsSync(path.join(dir, "datme-build-999999999-abc"))).toBe(true)
   })
 })
