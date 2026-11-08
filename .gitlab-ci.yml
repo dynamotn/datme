@@ -59,10 +59,10 @@ audit:
 # The installed size is kept as a metrics report, shown on merge requests.
 package:
   needs: [test]
-  image: node:${NODE}
+  image: node:${NODE_VERSION}
   parallel:
     matrix:
-      - NODE: ["22.18", "24", "25"]
+      - NODE_VERSION: ["22.18", "24", "25"]
   cache: []
   before_script:
     - npm install --global --no-audit --no-fund bun@1.4.2
