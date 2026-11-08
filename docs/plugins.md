@@ -24,6 +24,7 @@ see **published** notes: a private note can't leak through a Dataview table.
 - [Diagrams: D2, Typst, sheet music and mind maps](#diagrams-d2-typst-sheet-music-and-mind-maps)
 - [Tabs](#tabs)
 - [Columns](#columns)
+- [Admonitions](#admonitions)
 
 ## Dataview
 
@@ -370,3 +371,22 @@ Right column
 `--- column-end ---` and the older `===` markers work too. A
 `> [!multi-column]` callout, as in the Modular CSS Layout snippet, puts the
 callouts it holds side by side.
+
+## Admonitions
+
+```` ```ad-warning ```` blocks of the Admonition plugin become the callouts
+datme already renders, so older vaults keep their notes:
+
+````markdown
+```ad-warning
+title: Careful
+collapse: open
+The body is markdown: links, embeds and code work inside.
+```
+````
+
+`title:` sets the title, `collapse: open` or `closed` makes it foldable (`none`
+or no line keeps it fixed) and `color:` takes `#rgb`, `#rrggbb` or `r, g, b`;
+any other value is ignored. An unknown type renders as a note. `icon:` is read
+and ignored, since callouts have no custom icons. Nest an admonition with a
+longer fence (a ```` ````ad-note ```` outside) or `~~~`.

@@ -7,6 +7,7 @@ import rehypeRaw from "rehype-raw"
 import rehypeKatex from "rehype-katex"
 import rehypeSlug from "rehype-slug"
 import rehypeAutolinkHeadings, { type Options as AutolinkOptions } from "rehype-autolink-headings"
+import { remarkAdmonitions } from "./admonition"
 import { rehypeHighlight } from "./highlight"
 import { rehypeTaskLabels } from "./task-labels"
 import { transformerMetaHighlight, transformerNotationDiff, transformerNotationFocus, transformerNotationHighlight } from "@shikijs/transformers"
@@ -86,6 +87,7 @@ const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
     const raw = m[1].toLowerCase()
     const kind = CALLOUT_ALIASES[raw] ?? raw
     const fold = m[2]
+    const color = (node.data as { calloutColor?: string } | undefined)?.calloutColor
     head.value = head.value.slice(m[0].length)
 
     // The callout title is everything on the first line of the first paragraph.
@@ -129,6 +131,7 @@ const remarkCallouts: Plugin<[], MdRoot> = () => (tree) => {
       hProperties: {
         className: ["callout"],
         dataCallout: kind,
+        ...(color ? { style: `--c: ${color}` } : {}),
         ...(fold === "+" ? { open: true } : {}),
       },
     }
@@ -710,6 +713,7 @@ function processorFor(lang: Lang, stack: string[], out: Partial<Rendered>, hardB
   return unified()
     .use(remarkParse)
     .use(remarkGfm)
+    .use(remarkAdmonitions)
     .use(remarkTaskStatuses)
     .use(remarkHardBreaks, { enabled: hardBreaks })
     .use(remarkMath)
