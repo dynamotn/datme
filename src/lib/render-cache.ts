@@ -2,7 +2,7 @@ import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { site } from "../site.config"
+import { onSiteReload, site } from "../site.config"
 import { configSalt } from "./cache-salt"
 
 /**
@@ -25,6 +25,7 @@ export function useCacheDir(to: string | undefined): string | undefined {
 }
 
 const salts = new Map<string, string>()
+onSiteReload(() => salts.clear())
 /**
  * Anything that changes the output: datme's version, the keys of the config
  * that can reach a cached value (see cache-salt.ts), and the code

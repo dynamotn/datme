@@ -2,7 +2,7 @@ import type { AstroIntegration } from "astro"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { site } from "../site.config"
+import { CONFIG_FILES, reloadSite, site } from "../site.config"
 import { redirectsFile } from "./routes"
 import { headersFile, inlineScriptHashes } from "./headers"
 import { ACTOR_PATH, OUTBOX_PATH, actor, outbox, webfinger } from "./activitypub"
@@ -11,22 +11,31 @@ import { renderNote } from "./markdown"
 import { keepRequestUrl } from "./dev-look"
 
 /**
- * The path of a file relative to the vault, with "/" separators so Windows
+ * The path of a file relative to a folder, with "/" separators so Windows
  * paths match too; undefined outside it, a sibling folder sharing its name included.
  */
-function inVault(file: string): string | undefined {
-  const vault = site.vault.replace(/\\/g, "/").replace(/\/+$/, "")
+function under(dir: string, file: string): string | undefined {
+  const d = dir.replace(/\\/g, "/").replace(/\/+$/, "")
   const p = file.replace(/\\/g, "/")
-  return p.startsWith(vault + "/") ? p.slice(vault.length + 1) : undefined
+  return p.startsWith(d + "/") ? p.slice(d.length + 1) : undefined
+}
+
+const inVault = (file: string) => under(site.vault, file)
+
+/** Whether a file is read for the config: a config file, or one under .datme/ (its theme packs) or a theme pack that is a folder of the vault. */
+export function isConfigFile(file: string): boolean {
+  const rel = inVault(file)
+  if (rel !== undefined && (CONFIG_FILES.includes(rel) || rel === ".datme" || rel.startsWith(".datme/"))) return true
+  return !!site.pack && under(site.pack.dir, file) !== undefined
 }
 
 /**
  * Whether the dev watcher leaves a file out: one in a folder datme ignores, or
- * a dotfile such as .git, inside the vault.
+ * a dotfile such as .git, inside the vault; what the config reads is kept.
  */
 export function ignoredInVault(file: string): boolean {
   const rel = inVault(file)
-  if (rel === undefined) return false
+  if (rel === undefined || isConfigFile(file)) return false
   return rel.split("/").some((segment) => segment.startsWith(".")) || isIgnored(rel)
 }
 
@@ -93,7 +102,11 @@ export default function vaultWatcher(): AstroIntegration {
         // The whole vault, so a folder made after start is seen too; ignoredInVault keeps .git and ignored trees out.
         server.watcher.add(site.vault)
         const onChange = (file: string) => {
-          if (inVault(file) === undefined || ignoredInVault(file)) return
+          if (isConfigFile(file)) {
+            const problem = reloadSite()
+            if (problem) console.error(`[datme] ${problem}`)
+            else console.log("[datme] config reloaded")
+          } else if (inVault(file) === undefined || ignoredInVault(file)) return
           const g = globalThis as { __vaultVersion?: number }
           g.__vaultVersion = (g.__vaultVersion ?? 0) + 1
           // Astro keeps each page's props from getStaticPaths, the note itself included, until its

@@ -1,5 +1,5 @@
 ---
-import { site, type StyleName } from "~/site.config"
+import { configProblem, site, type StyleName } from "~/site.config"
 import { CHROMES, type Explained, type Frame, type FrameRule, type LookRule } from "~/lib/look"
 import { isCollection } from "~/lib/note-layouts"
 import {
@@ -43,6 +43,8 @@ const changed = {
   group: ownGroup && preview.group !== ownGroup ? preview.group : undefined,
 }
 const previewing = Boolean(changed.style || changed.chrome || changed.layout || changed.group)
+// A datme.yaml that no longer loads, or that needs a restart, while `datme dev` runs.
+const problem = dev ? configProblem() : undefined
 const lines = configLines(target, changed, shape)
 const chromeKept = !changed.chrome || lines.some((l) => l.code.includes("chrome:"))
 const url = pageUrl(Astro.url)
@@ -56,13 +58,15 @@ const layoutHref = (l: (typeof LAYOUT_PREVIEWS)[number]) => previewUrl(url, "lay
 
 {
   dev && (
-    <details class="dev-look" open={previewing} data-previewing={previewing ? "" : undefined}>
+    <details class="dev-look" open={previewing || !!problem} data-previewing={previewing ? "" : undefined}>
       <summary>
         <span aria-hidden="true">🎨</span> {shown.style} · {shown.chrome}
         {shape && <> · {shown.layout ?? "no layout"}</>}
         {previewing && <em>preview</em>}
+        {problem && <em>config</em>}
       </summary>
       <div class="dev-look-body">
+        {problem && <pre class="dev-look-problem" role="alert">{problem}</pre>}
         <p>
           Style <strong>{look.value}</strong> from <code>{describeLookRule(look.rule, target)}</code>
         </p>

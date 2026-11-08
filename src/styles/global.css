@@ -3195,6 +3195,11 @@ dialog.graph-modal {
   overflow-x: auto;
   user-select: all;
 }
+.dev-look .dev-look-problem {
+  margin-top: 8px;
+  color: var(--clay-text);
+  white-space: pre-wrap;
+}
 .dev-look-reset {
   display: inline-block;
   margin-top: 4px;

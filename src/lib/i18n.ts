@@ -1,4 +1,4 @@
-import { site, type Lang } from "../site.config"
+import { onSiteReload, site, type Lang } from "../site.config"
 import { isDateOnly } from "./calendar"
 import de from "../i18n/de.json"
 import en from "../i18n/en.json"
@@ -21,6 +21,8 @@ type Counted = (typeof COUNTED)[number]
 export type Strings = Record<Exclude<StringKey, Counted>, string> & Record<Counted, (n: number) => string>
 
 const cache = new Map<Lang, Strings>()
+// The `strings` of datme.yaml may change while `datme dev` runs.
+onSiteReload(() => cache.clear())
 
 /**
  * UI strings for a language: the built-in set of its base language (English
