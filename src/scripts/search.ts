@@ -1,30 +1,36 @@
 import type MiniSearch from "minisearch"
 import { navigate } from "astro:transitions/client"
 import { loadIndex, currentLang, matchesFilter, readFilters, samePath, type IndexNote } from "./data"
-import { fold, highlight, snippet } from "./text"
+import { fold, highlight, holds, pairs, phrases, snippet, syllabic } from "./text"
 import { escapeAttr } from "../lib/html"
 import { blend, embedQuery, loadVectors, nearest, type Near } from "./semantic"
 import { base, withBase } from "./base"
 
-const engines = new Map<string, Promise<{ ms: MiniSearch<IndexNote & { id: number }>; notes: IndexNote[] }>>()
+type Engine = { ms: MiniSearch<IndexNote & { id: number }>; notes: IndexNote[]; paired: boolean }
+const engines = new Map<string, Promise<Engine>>()
 
 function engine(lang: string) {
   let hit = engines.get(lang)
   if (!hit) {
     // MiniSearch is fetched with the index, when the reader first searches.
     hit = Promise.all([loadIndex(lang), import("minisearch")]).then(([{ notes }, { default: MiniSearch }]) => {
+      const split = MiniSearch.getDefault("tokenize") as (text: string) => string[]
+      // Where words are several syllables, pairs of neighbouring syllables are indexed too, to rank "Hà Nội" above "nội … hà".
+      const paired = syllabic(lang)
       const ms = new MiniSearch<IndexNote & { id: number }>({
         fields: ["t", "a", "g", "c"],
         storeFields: ["u"],
         processTerm: (term) => fold(term),
-        searchOptions: { boost: { t: 4, a: 3, g: 2 }, prefix: true, fuzzy: 0.15, combineWith: "AND" },
+        tokenize: paired ? (text) => [...split(text), ...pairs(text)] : split,
+        searchOptions: { boost: { t: 4, a: 3, g: 2 }, prefix: true, fuzzy: 0.15, combineWith: "AND", tokenize: split },
         extractField: (doc, field) => {
           const v = (doc as unknown as Record<string, unknown>)[field]
-          return Array.isArray(v) ? v.join(" ") : String(v ?? "")
+          // One line per alias or tag, so no pair spans two of them.
+          return Array.isArray(v) ? v.join("\n") : String(v ?? "")
         },
       })
       ms.addAll(notes.map((n, id) => ({ ...n, id })))
-      return { ms, notes }
+      return { ms, notes, paired }
     })
     engines.set(lang, hit)
   }
@@ -117,6 +123,22 @@ function resultHtml(n: IndexNote, terms: string[], sim?: number): string {
       </a></li>`
 }
 
+/** Notes holding every word of a query, those holding its quoted phrases only, and those holding its syllables side by side first, in languages that pair them. */
+function find({ ms, notes, paired }: Engine, q: string) {
+  const quoted = phrases(q)
+  // Quotes are punctuation to MiniSearch: a phrase first finds the notes holding its words.
+  const found = ms.search(q).filter(({ id }) => {
+    const n = notes[id as number]
+    return quoted.every((p) => [n.t, ...n.a, ...n.g, n.c].some((field) => holds(field, p)))
+  })
+  const two = paired ? pairs(q) : []
+  if (!two.length) return found
+  // The more of its pairs a note holds, the higher it ranks: "Hà Nội" in the text beats "Nội" in a title.
+  const together = new Map(ms.search(q, { tokenize: () => two, combineWith: "OR" }).map((r) => [r.id, r.queryTerms.length]))
+  const held = (id: unknown) => together.get(id) ?? 0
+  return found.sort((a, b) => held(b.id) - held(a.id) || b.score - a.score)
+}
+
 const threshold = (dialog: HTMLDialogElement) => Number(dialog.dataset.threshold) || 0.55
 
 /** With nothing typed on a note's page: the notes closest to it in meaning, from vectors alone. */
@@ -150,7 +172,8 @@ async function run(dialog: HTMLDialogElement, query: string) {
   const list = dialog.querySelector<HTMLElement>(".search-results")!
   if (dialog.dataset.engine === "pagefind" && (query.trim() || !dialog.dataset.similar)) return runPagefind(dialog, list, query.trim(), stale)
   if (dialog.dataset.engine === "pagefind") return showSimilar(dialog, list, (await loadIndex(dialog.dataset.lang ?? currentLang())).notes, stale)
-  const { ms, notes } = await engine(dialog.dataset.lang ?? currentLang())
+  const index = await engine(dialog.dataset.lang ?? currentLang())
+  const { notes } = index
   const q = query.trim()
   const filter = readFilters(dialog)
   const filtering = Boolean(filter.folder || filter.type)
@@ -159,11 +182,13 @@ async function run(dialog: HTMLDialogElement, query: string) {
     show(list, "")
     return
   }
-  const terms = fold(q).split(/\s+/).filter(Boolean)
+  const terms = fold(q)
+    .split(/[\s"]+/)
+    .filter(Boolean)
   const tagQuery = q.startsWith("#") ? fold(q.slice(1)) : null
   const all = notes.map((_, id) => ({ id, score: 0 }))
   // With filters but no query, browse every matching note.
-  const found = !q ? all : tagQuery ? all.filter(({ id }) => notes[id].g.some((g) => fold(g).startsWith(tagQuery))) : ms.search(q)
+  const found = !q ? all : tagQuery ? all.filter(({ id }) => notes[id].g.some((g) => fold(g).startsWith(tagQuery))) : find(index, q)
   const meaning = q && !tagQuery ? await byMeaning(dialog, q) : []
   if (stale()) return
   const idOf = new Map(notes.map((n, id) => [n.u, id]))

@@ -36,3 +36,31 @@ export function snippet(content: string, terms: string[]): string {
   const start = Math.max(0, pos - 60)
   return (start > 0 ? "…" : "") + content.slice(start, start + 180)
 }
+
+/** Folded words of a text, punctuation dropped: the form phrases are matched in. */
+const words = (s: string) =>
+  fold(s)
+    .split(/[\p{Z}\p{P}\s]+/u)
+    .filter(Boolean)
+
+/**
+ * The quoted phrases of a query, each as the words it must find in a row, between spaces.
+ * A quote still open, as while the reader types, leaves its last word a prefix.
+ */
+export function phrases(q: string): string[] {
+  return [...q.matchAll(/"([^"]*)("?)/g)].flatMap(([, p, closed]) => (words(p).length ? [` ${words(p).join(" ")}${closed ? " " : ""}`] : []))
+}
+
+/** Whether a text holds a phrase from {@link phrases}. */
+export const holds = (text: string, phrase: string) => ` ${words(text).join(" ")} `.includes(phrase)
+
+/** Languages written with spaces between syllables, where a word is often two or three of them ("Hà Nội"). */
+const SYLLABIC = new Set(["vi"])
+export const syllabic = (lang: string) => SYLLABIC.has(lang.split("-")[0].toLowerCase())
+
+/** Each two neighbouring words, as one term: "hà nội" from "Hà Nội". Punctuation breaks pairs. */
+export const pairs = (text: string) =>
+  text.split(/[\p{P}\n\r]+/u).flatMap((run) => {
+    const w = run.split(/[\p{Z}\s]+/u).filter(Boolean)
+    return w.slice(1).map((b, i) => `${w[i]} ${b}`)
+  })

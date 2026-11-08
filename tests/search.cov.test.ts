@@ -53,6 +53,15 @@ const index = {
   ],
   links: [],
 }
+// "Nội dung" holds both syllables of "Hà Nội", apart and in the other order.
+const viIndex = {
+  notes: [
+    note("/vi/noi-dung", "Nội dung", { c: "Nội dung của chuyến đi: hà khắc và dài." }),
+    note("/vi/ha-noi", "Chuyến đi", { c: "Một ngày ở Hà Nội, phát triển bền vững." }),
+    note("/vi/ben", "Bền vững", { c: "Vững bền, rồi phát triển." }),
+  ],
+  links: [],
+}
 const vectors = {
   model: "fake",
   dims: 2,
@@ -69,7 +78,7 @@ beforeAll(async () => {
   globalThis.fetch = (async (url: string) => {
     const u = String(url)
     if (u.includes("vectors.cov-novec")) return new Response("missing", { status: 404 })
-    return new Response(JSON.stringify(u.includes("vectors") ? vectors : index))
+    return new Response(JSON.stringify(u.includes("vectors") ? vectors : u.includes(".vi.") ? viIndex : index))
   }) as unknown as typeof fetch
   search = await import("../src/scripts/search")
 })
@@ -152,6 +161,31 @@ describe("searching with the built-in index", () => {
     expect(input.getAttribute("aria-expanded")).toBe("false")
     expect(input.hasAttribute("aria-activedescendant")).toBe(false)
     expect(key(input, "Enter").defaultPrevented).toBe(false)
+  })
+
+  test("in Vietnamese, notes holding the query's syllables side by side come first, with or without diacritics", async () => {
+    for (const q of ["ha noi", "Hà Nội", "noi ha"]) {
+      const { input, list } = make({ lang: "vi" })
+      type(input, q)
+      await settled(list)
+      expect(hrefs(list)[0]).toBe(q === "noi ha" ? "/vi/noi-dung" : "/vi/ha-noi")
+      expect(hrefs(list)).toContain("/vi/noi-dung")
+    }
+  })
+
+  test("a quoted phrase finds only notes holding its words in that order, in any language", async () => {
+    for (const [lang, q, found] of [
+      ["vi", '"phat trien ben vung"', ["/vi/ha-noi"]],
+      ["vi", '"Hà Nội"', ["/vi/ha-noi"]],
+      ["vi", '"phát triển', ["/vi/ha-noi", "/vi/ben"]],
+      ["cov-search", '"box slip"', []],
+      ["cov-search", '"slip box"', ["/notes/b", "/notes/a"]],
+    ] as const) {
+      const { input, list } = make({ lang })
+      type(input, q)
+      await settled(list)
+      expect(hrefs(list).sort()).toEqual([...found].sort())
+    }
   })
 
   test("a query starting with # finds notes by tag, nested tags too", async () => {
@@ -358,6 +392,13 @@ describe("searching with Pagefind", () => {
     expect(pagefindAsked.at(-1)).toEqual({ q: "slip", filters: {} })
     // Its result URLs are paths from the site's root: the site's path goes in front.
     expect(pagefindOptions).toEqual([{ baseUrl: "/" }])
+  })
+
+  test("a quoted phrase reaches Pagefind with its quotes, which make it an exact search there", async () => {
+    const { input, list } = make({ engine: "pagefind", lang: "cov-pf" })
+    type(input, ' "phát triển bền vững" ')
+    await settled(list)
+    expect(pagefindAsked.at(-1)).toEqual({ q: '"phát triển bền vững"', filters: {} })
   })
 
   test("filters go to Pagefind, even with nothing typed; nothing found says so", async () => {

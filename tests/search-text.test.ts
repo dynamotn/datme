@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { fold, highlight, snippet } from "../src/scripts/text"
+import { fold, highlight, holds, pairs, phrases, snippet, syllabic } from "../src/scripts/text"
 import { samePath } from "../src/scripts/data"
 
 describe("fold", () => {
@@ -72,5 +72,28 @@ describe("matchesFilter", () => {
     expect(matchesFilter(tended, { fresh: "older" })).toBe(false)
     expect(matchesFilter({ ...tended, m: today - 400 }, { fresh: "older" })).toBe(true)
     expect(matchesFilter(note, { fresh: "month" })).toBe(false)
+  })
+})
+
+describe("phrases and syllable pairs", () => {
+  test("quoted phrases are folded words in a row; an open quote leaves its last word a prefix", () => {
+    expect(phrases('"Phát triển  bền vững" xanh')).toEqual([" phat trien ben vung "])
+    expect(phrases('a "" b "hà nộ')).toEqual([" ha no"])
+    expect(phrases("no quotes")).toEqual([])
+  })
+
+  test("a phrase matches its words in that order, with or without diacritics, never inside a word", () => {
+    const text = "Kế hoạch phát triển bền vững, cho Hà Nội."
+    expect(holds(text, phrases('"phat trien ben vung"')[0])).toBe(true)
+    expect(holds(text, phrases('"hà nội"')[0])).toBe(true)
+    expect(holds(text, phrases('"bền phát"')[0])).toBe(false)
+    expect(holds(text, phrases('"ha no"')[0])).toBe(false)
+    expect(holds(text, phrases('"ha no')[0])).toBe(true)
+  })
+
+  test("pairs join neighbouring words, never across punctuation; only syllabic languages use them", () => {
+    expect(pairs("Hà Nội, phát triển")).toEqual(["Hà Nội", "phát triển"])
+    expect(pairs("one")).toEqual([])
+    expect([syllabic("vi"), syllabic("vi-VN"), syllabic("en")]).toEqual([true, true, false])
   })
 })

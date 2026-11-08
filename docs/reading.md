@@ -10,11 +10,16 @@ This is what someone visiting your garden can do. None of it needs setting up.
 - **Search** (`Ctrl K`) covers every note. You can narrow it by folder, note
   type and when a note was last tended (the last 30 days, the last year, or
   longer ago), or by tag with `#tag`. When notes set their own `stage`, a stage
-  filter joins them. For large vaults, `search: { engine: pagefind }` loads only
-  what each query needs. With `site.url` set, browsers can also search the garden
-  from the address bar (an `opensearch.xml` is written and linked from every
-  page, one for the whole garden, named by the first language's title), and a
-  link ending in `?q=words` opens the search with those words typed in.
+  filter joins them. Accents and case don't matter: `ha noi` finds "Hà Nội".
+  Quotes ask for an exact phrase, words in that order: `"phát triển bền
+  vững"`. In Vietnamese, notes holding the typed syllables side by side ("Hà
+  Nội") come before notes holding them apart ("nội dung … hà"). For large
+  vaults, `search: { engine: pagefind }` loads only what each query needs;
+  there a phrase has to be the whole query. With `site.url` set, browsers can
+  also search the garden from the address bar (an `opensearch.xml` is written
+  and linked from every page, one for the whole garden, named by the first
+  language's title), and a link ending in `?q=words` opens the search with
+  those words typed in.
 - **Graph** (`Ctrl G`) shows the whole garden. Filter it by folder, tag and
   stage, and colour notes by folder, type, stage or freshness. Its time slider replays how the garden grew,
   and its 3D button lays the garden out in space: drag to turn it, scroll to zoom.
