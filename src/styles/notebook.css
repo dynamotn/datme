@@ -1375,6 +1375,10 @@
   color: var(--yellow);
   font-family: var(--font-mono);
 }
+/* In the dark the strip is light ink, on which yellow all but vanishes (1.1:1). */
+[data-look="notebook"][data-theme="dark"] .archive-year h2 small {
+  color: var(--surface);
+}
 [data-look="notebook"] .archive-list {
   border: var(--bw) solid var(--ink);
   border-radius: 6px;

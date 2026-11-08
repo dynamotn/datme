@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A page the sitemap cannot read back after the build is left out of it, with a warning, instead of listed: it could be a page kept out of search engines.
 - `datme dev` shows a note as it is saved again: the page reloaded, but kept showing the note as it was when the server started, until a restart.
 - `datme dev` applies an edit to `datme.yaml` (or `datme.yml`, `.datme.yaml`) and to a theme pack in the vault (`.datme/themes/…` or a folder of the vault) without a restart: the page reloads with the new config, where it used to keep the old one, and edits under `.datme/` were not seen at all. A config that no longer loads keeps the previous one and shows why in the terminal and in the 🎨 bar; a new `site.url` asks for a restart, since the server keeps serving the site under the path it started with.
+- In the `notebook` style's dark mode, the number of notes beside each year of the archive and each month of the recent page is readable: it was yellow on the light heading strip (1.1:1).
 
 ### Security
 
