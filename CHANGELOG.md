@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `npm i @dynamotn/datme` installs 361 MiB in 447 packages instead of 493 MiB in 509 (on macOS arm64), through the four changes below. The pipelines check that it stays under 400 MiB.
 - datme installs 52 MiB less: it ships the Lucide icons that Iconize and bases draw as one 457 kB module instead of depending on `lucide-static`, whose fonts, sprites and JavaScript took 53 MiB. Every Lucide icon is still there, drawn as before.
 - Marp Core is an optional dependency, like D2 and Typst, and datme installs 45 MiB and 24 packages less without it (it brought MathJax along). Gardens with slide decks (`marp: true`) now need `bun add @marp-team/marp-core` (or `npm i`) next to datme: without it a deck shows its text under a notice, the build says which package is missing, and `datme doctor` lists it.
 - markmap-lib, which reads mind maps at build time, is an optional dependency too, and datme installs 23 MiB and 35 packages less without it. Gardens with ```` ```markmap ```` or ```` ```mindmap ```` blocks now need `bun add markmap-lib` next to datme: without it a block shows its source with a notice, and `datme doctor` lists it. Drawing them in the browser needs nothing more.

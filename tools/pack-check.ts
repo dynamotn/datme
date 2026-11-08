@@ -19,7 +19,7 @@ import path from "node:path"
 const root = path.resolve(import.meta.dir, "..")
 const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: "1", DATME_VAULT: "", VAULT_PATH: "", DATME_CACHE: "" }
 /** The most `node_modules` may weigh once npm installs datme; raise it on purpose only. */
-const MAX_INSTALL_MIB = 480
+const MAX_INSTALL_MIB = 400
 const run = (cmd: string, args: string[], cwd: string) => execFileSync(cmd, args, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] })
 
 /** Packs datme into `work` and installs the tarball with npm in an empty project there. */

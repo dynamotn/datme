@@ -85,7 +85,10 @@ toggles publishing from the status bar, checks the garden and previews the
 current note.
 
 `npx` works just as well with Node 22.18+. Install it globally with
-`npm i -g @dynamotn/datme` and the command is simply `datme`.
+`npm i -g @dynamotn/datme` and the command is simply `datme`. It installs
+about 360 MiB in 450 packages (down from 490 MiB in 510); D2, Typst, Marp
+slides, mind maps and Pagefind search are optional packages, added next to
+datme by the gardens that use them: `datme doctor` names the ones yours needs.
 [Getting started](docs/getting-started.md) walks through the rest.
 
 ## What grows in it
