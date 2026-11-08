@@ -239,7 +239,6 @@ function _main {
   fi
   dybatpho::require "git"
   dybatpho::require "bun"
-  dybatpho::require "npm"
 
   # shellcheck disable=SC2154 # set by the option spec of this script
   read -r -a REMOTES <<< "${REMOTE_LIST}"
@@ -279,7 +278,9 @@ function _main {
   fi
 
   dybatpho::progress "Stamping package.json and CHANGELOG.md"
-  dybatpho::dry_run npm --prefix "${ROOT_DIR}" version "${version}" --no-git-tag-version --ignore-scripts
+  # bun, not npm: npm may be a shim of bun, which reads `--prefix <dir>` as a script to run.
+  (cd "${ROOT_DIR}" && dybatpho::dry_run bun pm version "${version}" --no-git-tag-version --ignore-scripts) \
+    || dybatpho::die "Cannot stamp package.json"
   # shellcheck disable=SC2154 # declared by `process.sh`, a core module, and set by --dry-run
   if dybatpho::is true "${DRY_RUN}"; then
     dybatpho::info "Would promote '## [Unreleased]' of CHANGELOG.md to '## [${version}] - ${today}'"
