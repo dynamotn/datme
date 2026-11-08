@@ -1,5 +1,5 @@
 /**
- * Writes schema/datme.schema.json, the JSON Schema of datme.yaml, from the zod schema of src/site.config.ts.
+ * Writes schema/datme.schema.json, the JSON Schema of datme.yaml, from the zod schema of src/lib/config-schema.ts.
  * zod carries no descriptions, so each key's comes from its JSDoc comment, read with the TypeScript compiler.
  * Run with `bun tools/config-schema.ts`; tests/config-schema.test.ts fails when the file is out of date.
  */
@@ -7,11 +7,11 @@ import fs from "node:fs"
 import path from "node:path"
 import ts from "typescript"
 import { z } from "astro/zod"
-import { makeSchema, STYLES } from "../src/site.config"
+import { makeSchema, STYLES } from "../src/lib/config-schema"
 import { SCHEMA_URL } from "../src/lib/config-files"
 
 const root = path.resolve(import.meta.dir, "..")
-const SOURCE = path.join(root, "src/site.config.ts")
+const SOURCE = path.join(root, "src/lib/config-schema.ts")
 export const SCHEMA_FILE = path.join(root, "schema/datme.schema.json")
 
 /** The parts of a JSON Schema node that descriptions are attached through. */
