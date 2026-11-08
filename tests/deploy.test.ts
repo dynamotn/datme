@@ -1,9 +1,9 @@
-import { afterAll, describe, expect, test } from "bun:test"
+import { afterAll, describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { load as loadYaml } from "js-yaml"
-import { deployFiles, projectName, TARGETS, TRANSFORMERS_VERSION } from "../src/lib/deploy"
+import { deployFiles, PREVIEW_STEPS, projectName, TARGETS, TRANSFORMERS_VERSION } from "../src/lib/deploy"
 import { parseArgs, run, CliError } from "../src/cli"
 import pkg from "../package.json"
 
@@ -210,7 +210,7 @@ describe("deployFiles", () => {
       rules: { if: string }[]
       environment: Record<string, string>
       pages: Record<string, string>
-      cache: { policy: string }
+      cache?: unknown
       artifacts: { paths: string[] }
     }
     const gitlab = loadYaml(deployFiles("gitlab", { ...opts, previews: true })[0].content) as Record<string, GitlabJob>
@@ -218,16 +218,30 @@ describe("deployFiles", () => {
     expect(job.rules).toEqual([{ if: '$CI_PIPELINE_SOURCE == "merge_request_event"' }])
     expect(job.pages.path_prefix).toBe("mr-$CI_MERGE_REQUEST_IID")
     expect(job.environment).toEqual({ name: "preview/mr-$CI_MERGE_REQUEST_IID", url: "$CI_PAGES_URL" })
-    expect(job.cache.policy).toBe("pull")
+    // GitLab keeps the caches of protected and unprotected refs apart, so a preview would restore nothing.
+    expect(job.cache).toBeUndefined()
     expect(job.artifacts.paths).toEqual(["public"])
-    expect(job.script[0]).toBe(`bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out public ${flags} "$CI_PAGES_URL"`)
-    // The comment's token is a masked CI/CD variable, read only when set, and a failed comment does not fail the job.
+    // The comment's token never reaches the build.
+    expect(job.script[0]).toBe(`(unset DATME_PREVIEW_TOKEN; bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out public ${flags} "$CI_PAGES_URL")`)
+    // The token is a masked CI/CD variable, read only when set, and a failed comment does not fail the job.
     expect(job.script[1]).toStartWith('if [ -n "$DATME_PREVIEW_TOKEN" ]; then bun -e ')
+    expect(job.script[1]).toContain('else echo "DATME_PREVIEW_TOKEN is not set, so the preview is not commented on the merge request"; fi')
     expect(job.script[1]).toContain('"PRIVATE-TOKEN": process.env.DATME_PREVIEW_TOKEN')
     expect(job.script[1]).toContain("/merge_requests/")
     expect(job.script[1]).toContain("!notes.some((n) => n.body === body)")
     expect(job.script[1]).not.toContain("process.exit")
     expect(job.variables.DATME_TTS).toBeUndefined()
+    const gitlabText = deployFiles("gitlab", { ...opts, previews: true })[0].content
+    for (const warning of [
+      "anyone can guess and open",
+      "Limit Pages to project members",
+      "cannot be protected",
+      "from forks",
+      "ignores _headers",
+      "same host",
+    ]) {
+      expect(gitlabText.replace(/\n# /g, " ")).toContain(warning)
+    }
     expect(
       (loadYaml(deployFiles("gitlab", { ...opts, tts: true, previews: true })[0].content) as Record<string, GitlabJob>)["pages-preview"].variables.DATME_TTS,
     ).toBe("off")
@@ -238,29 +252,39 @@ describe("deployFiles", () => {
       `bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out dist ${flags} "$DEPLOY_PRIME_URL"`,
     )
     expect(deployFiles("netlify", { ...opts, previews: true })).toHaveLength(1)
+    expect(deployFiles("netlify", { ...opts, previews: true })[0].content.replace(/\n# /g, " ")).toContain(
+      "anyone can guess and open; noindex only keeps search engines away. Protect them with a password or SSO",
+    )
 
-    type Step = { run?: string; uses?: string; with?: Record<string, string>; env?: Record<string, string> }
+    type Step = { id?: string; run?: string; uses?: string; with?: Record<string, string | number | boolean>; env?: Record<string, string> }
     type Workflow = {
       on: Record<string, unknown>
       permissions: Record<string, string>
-      jobs: { preview: { if: string; env: Record<string, string>; steps: Step[] } }
+      jobs: { preview: { if: string; permissions: Record<string, string>; env: Record<string, string>; steps: Step[] } }
     }
     const files = deployFiles("cloudflare", { ...opts, previews: true })
     expect(files.map((f) => f.path)).toEqual([".github/workflows/datme-cloudflare.yml", ".github/workflows/datme-preview.yml"])
     const wf = loadYaml(files[1].content) as Workflow
     expect(Object.keys(wf.on)).toEqual(["pull_request"])
-    expect(wf.permissions).toEqual({ contents: "read", deployments: "write", "pull-requests": "write" })
+    expect(wf.permissions).toEqual({})
     const preview = wf.jobs.preview
+    expect(preview.permissions).toEqual({ contents: "read", "pull-requests": "write" })
     expect(preview.if).toBe("github.event.pull_request.head.repo.full_name == github.repository")
-    expect(preview.env.PREVIEW_URL).toBe("https://pr-${{ github.event.number }}.my-garden.pages.dev")
+    expect(preview.steps[0]).toEqual({ uses: "actions/checkout@v4", with: { "fetch-depth": 0, "persist-credentials": false } })
+    // The build runs before the deploy, so it guesses its address; a repository variable overrides the subdomain.
+    expect(preview.env.SITE_URL).toBe("https://pr-${{ github.event.number }}.${{ vars.DATME_PAGES_SUBDOMAIN || 'my-garden' }}.pages.dev")
     expect(preview.env.DATME_TTS).toBeUndefined()
-    expect(preview.steps.some((s) => s.run === `bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out dist ${flags} "$PREVIEW_URL"`)).toBe(true)
+    expect(preview.steps.some((s) => s.run === `bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out dist ${flags} "$SITE_URL"`)).toBe(true)
+    expect(files[1].content.replace(/\n# /g, " ")).toContain("anyone can guess and open; noindex only keeps search engines away. Turn on Cloudflare Access")
     const deploy = preview.steps.find((s) => s.uses === "cloudflare/wrangler-action@v3")!
+    expect(deploy.id).toBe("deploy")
     expect(deploy.with?.apiToken).toBe("${{ secrets.CLOUDFLARE_API_TOKEN }}")
     expect(deploy.with?.command).toBe("pages deploy dist --project-name=my-garden --branch=pr-${{ github.event.number }}")
     const comment = preview.steps.at(-1)!
     expect(comment.run).toBe('gh pr comment "$PR" --body "Preview at $PREVIEW_URL" --edit-last --create-if-none')
     expect(comment.env?.GH_TOKEN).toBe("${{ github.token }}")
+    // The comment links the address Cloudflare returns, not the guessed one.
+    expect(comment.env?.PREVIEW_URL).toBe("${{ steps.deploy.outputs.pages-deployment-alias-url }}")
     expect((loadYaml(deployFiles("cloudflare", { ...opts, tts: true, previews: true })[1].content) as Workflow).jobs.preview.env.DATME_TTS).toBe("off")
   })
 
@@ -295,7 +319,13 @@ describe("datme deploy", () => {
     const repo = path.join(tmp, "previews")
     fs.mkdirSync(repo, { recursive: true })
     Bun.spawnSync(["git", "init", "-q", "-b", "main", repo])
-    await run({ command: "deploy", target: "cloudflare", vault: repo, previews: true }, {}, tmp)
+    const log = spyOn(console, "log").mockImplementation(() => {})
+    try {
+      await run({ command: "deploy", target: "cloudflare", vault: repo, previews: true }, {}, tmp)
+      expect(log).toHaveBeenLastCalledWith(PREVIEW_STEPS.cloudflare)
+    } finally {
+      log.mockRestore()
+    }
     expect(fs.readFileSync(path.join(repo, ".github/workflows/datme-preview.yml"), "utf8")).toContain("--branch=pr-${{ github.event.number }}")
     expect(fs.existsSync(path.join(repo, ".github/workflows/datme-cloudflare.yml"))).toBe(true)
   })

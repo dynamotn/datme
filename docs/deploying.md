@@ -138,30 +138,52 @@ request is built with `--drafts --noindex` and `--site` set to its own preview
 address, and published there without audio. The published site's pipeline is
 unchanged.
 
+A preview publishes every draft and scheduled note at an address anyone can
+guess and open: `noindex` keeps search engines away, not people. Limit who can
+open previews with the host's access control, as below; `deploy` says so too.
+
 - **GitLab**: a `pages-preview` job in `.gitlab-ci.yml` runs in merge request
   pipelines and publishes a Pages
   [parallel deployment](https://docs.gitlab.com/user/project/pages/parallel_deployments/)
   under `mr-<iid>/` of the Pages address. This needs GitLab Premium or
   Ultimate. The merge request shows the link as its environment, and GitLab
   removes the preview when the merge request is merged or closed, or after a
-  week without a push. To have the job also comment the link on the merge
-  request, create a project access token (Reporter role, `api` scope) and add
-  it as a masked CI/CD variable named `DATME_PREVIEW_TOKEN`; without it the job
-  skips the comment, and a comment that fails only prints a warning. It
-  comments once per merge request.
+  week without a push. Set Settings → General → Visibility → Pages to
+  "Only project members" to keep previews private (this applies to the
+  published site too). A preview lives under `/mr-<iid>/` on the same host as
+  the published site, so the two share browser storage and the service worker.
+  GitLab Pages ignores `_headers`, so there only the HTML pages carry
+  `noindex`; PDFs and pictures do not. The job keeps no build cache: GitLab
+  keeps the caches of protected and unprotected refs apart, so a merge request
+  could not read the published site's.
+
+  To have the job also comment the link on the merge request, create a project
+  access token (Reporter role, `api` scope, a short expiry) and add it as a
+  masked CI/CD variable named `DATME_PREVIEW_TOKEN`. It cannot be a protected
+  variable, since merge request refs are never protected, so anyone who can run
+  a merge request pipeline in the project can read it; never run the pipeline
+  of a merge request from a fork in your project without reviewing its
+  `.gitlab-ci.yml`. The build runs without the token, which only the comment
+  step reads. Without it the job prints that it skips the comment, and a
+  comment that fails only prints a warning. It comments once per merge request.
 - **Netlify**: `netlify.toml` gets a `[context.deploy-preview]` build command.
   Netlify builds deploy previews of pull requests itself and comments their
-  address on the pull request, so datme adds no comment of its own.
+  address on the pull request, so datme adds no comment of its own. Protect
+  deploy previews with a password or SSO under Site configuration → Access &
+  security → Visitor access.
 - **Cloudflare**: a second workflow, `.github/workflows/datme-preview.yml`,
-  deploys each pull request to the branch alias
-  `https://pr-<number>.<project>.pages.dev`, with the secrets of the main
-  workflow, then comments that address on the pull request with the workflow's
-  own `GITHUB_TOKEN`, editing its comment on later pushes. Cloudflare comments
-  only for projects connected to Git, not for the direct uploads datme makes,
-  so the comments do not double. If Cloudflare gave the project another
-  subdomain (`<project>-abc.pages.dev`, when the name was taken), fix
-  `PREVIEW_URL` in the workflow. Pull requests from forks get no secrets, and
-  so no preview.
+  deploys each pull request to the branch alias `pr-<number>`, with the
+  secrets of the main workflow, then comments the address Cloudflare returns
+  on the pull request with the workflow's own `GITHUB_TOKEN` (only
+  `contents: read` and `pull-requests: write`), editing its comment on later
+  pushes. Cloudflare comments only for projects connected to Git, not for the
+  direct uploads datme makes, so the comments do not double. The build runs
+  before the deploy, so it takes its address for canonical links and social
+  cards from `https://pr-<number>.<project>.pages.dev`; when Cloudflare gave
+  the project another subdomain (`<project>-abc.pages.dev`, when the name was
+  taken), set it as the repository variable `DATME_PAGES_SUBDOMAIN`. Turn on
+  Cloudflare Access for preview deployments in the Pages project's settings.
+  Pull requests from forks get no secrets, and so no preview.
 - **GitHub Pages** serves one site per repository and cannot host previews
   (its preview deployments are not public), so `deploy github --previews` stops
   with an error. Use Netlify or Cloudflare for previews.

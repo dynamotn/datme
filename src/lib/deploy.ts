@@ -207,32 +207,37 @@ const gitlabVoice = [
  */
 const GITLAB_COMMENT = `bun -e 'const api = process.env.CI_API_V4_URL + "/projects/" + process.env.CI_PROJECT_ID + "/merge_requests/" + process.env.CI_MERGE_REQUEST_IID + "/notes"; const headers = { "PRIVATE-TOKEN": process.env.DATME_PREVIEW_TOKEN, "Content-Type": "application/json" }; const body = "Preview at " + process.env.CI_PAGES_URL; const notes = await fetch(api + "?per_page=100", { headers }).then((r) => (r.ok ? r.json() : [])); if (!notes.some((n) => n.body === body)) { const r = await fetch(api, { method: "POST", headers, body: JSON.stringify({ body }) }); if (!r.ok) console.error("Could not comment the preview: HTTP " + r.status) }'`
 
+/** Previews publish drafts at an address anyone can open: said in every file and step that sets them up. */
+const PREVIEW_WARNING = "A preview publishes every draft and scheduled note at an address anyone can guess and open; noindex only keeps search engines away."
+
 /** A Pages parallel deployment of every merge request, removed by GitLab when the merge request closes. */
 const gitlabPreview = (o: DeployOpts) => `
 # Builds every merge request at its own address, with drafts and out of search engines. Needs Pages parallel
-# deployments (GitLab Premium or Ultimate). With a project access token (Reporter, api scope) in the masked
-# CI/CD variable DATME_PREVIEW_TOKEN, it also comments the address on the merge request.
+# deployments (GitLab Premium or Ultimate).
+# ${PREVIEW_WARNING} Limit Pages to project members under
+# Settings > General > Visibility > Pages.
+# A preview lives under /mr-<iid>/ on the same host as the site, so it shares its storage and service worker.
+# GitLab Pages ignores _headers: only the HTML pages carry noindex.
+# To comment the address on the merge request, add a project access token (Reporter role, api scope, short expiry)
+# as the masked CI/CD variable DATME_PREVIEW_TOKEN. It cannot be protected, as merge request refs never are, so
+# anyone who can run a merge request pipeline here can read it: never run pipelines of merge requests from forks
+# in this project without reviewing their .gitlab-ci.yml.
 pages-preview:
   image: oven/bun:${BUN_VERSION}
   variables:
     ASTRO_TELEMETRY_DISABLED: "1"
     GIT_DEPTH: 0
-    DATME_CACHE: .datme-cache
-${o.tts ? '    DATME_TTS: "off" # previews are published without audio\n' : ""}  cache:
-    key: datme
-    policy: pull # previews read the published site's cache, and never write it
-    paths:
-      - .datme-cache
-  pages:
+${o.tts ? '    DATME_TTS: "off" # previews are published without audio\n' : ""}  pages:
     path_prefix: mr-$CI_MERGE_REQUEST_IID
     expire_in: 1 week # without a push for a week; closing the merge request removes it at once
   environment:
     name: preview/mr-$CI_MERGE_REQUEST_IID
     url: $CI_PAGES_URL
   script:
-    - ${previewBuild(o, "public", '"$CI_PAGES_URL"')}
+    # The comment's token stays out of the build.
+    - (unset DATME_PREVIEW_TOKEN; ${previewBuild(o, "public", '"$CI_PAGES_URL"')})
     - |
-        if [ -n "$DATME_PREVIEW_TOKEN" ]; then ${GITLAB_COMMENT}; fi
+        if [ -n "$DATME_PREVIEW_TOKEN" ]; then ${GITLAB_COMMENT}; else echo "DATME_PREVIEW_TOKEN is not set, so the preview is not commented on the merge request"; fi
   artifacts:
     paths:
       - public
@@ -287,6 +292,8 @@ ${
   o.previews
     ? `
 # Deploy previews of pull requests show drafts and stay out of search engines; Netlify comments their address itself.
+# ${PREVIEW_WARNING} Protect them with a password or SSO under
+# Site configuration > Access & security > Visitor access.
 [context.deploy-preview]
   command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ${previewBuild(o, "dist", '"$DEPLOY_PRIME_URL"', "~/.bun/bin/").replace(/"/g, '\\"')}"
 `
@@ -350,16 +357,17 @@ const cloudflarePreview = (o: DeployOpts): DeployFile => ({
   path: ".github/workflows/datme-preview.yml",
   content: `# Builds every pull request as a Cloudflare Pages preview, with drafts and out of search engines, and comments
 # its address on the pull request. Uses the secrets of datme-cloudflare.yml, which pull requests from forks do
-# not get, so those have no preview. The address assumes the project's subdomain is ${o.project}.pages.dev.
+# not get, so those have no preview.
+# ${PREVIEW_WARNING} Turn on Cloudflare Access for preview deployments in the Pages project's settings.
+# The build runs before the deploy, so it guesses its address for canonical links and social cards from the
+# project's subdomain, ${o.project}.pages.dev; set the repository variable DATME_PAGES_SUBDOMAIN when Cloudflare
+# gave the project another one. The comment links the address Cloudflare returns.
 name: datme-preview
 
 on:
   pull_request:
 
-permissions:
-  contents: read
-  deployments: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: preview-\${{ github.event.number }}
@@ -369,14 +377,18 @@ jobs:
   preview:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
       DATME_CACHE: .datme-cache
-${o.tts ? '      DATME_TTS: "off" # previews are published without audio\n' : ""}      PREVIEW_URL: https://pr-\${{ github.event.number }}.${o.project}.pages.dev
+${o.tts ? '      DATME_TTS: "off" # previews are published without audio\n' : ""}      SITE_URL: https://pr-\${{ github.event.number }}.\${{ vars.DATME_PAGES_SUBDOMAIN || '${o.project}' }}.pages.dev
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${BUN_VERSION}
@@ -385,8 +397,9 @@ ${o.tts ? '      DATME_TTS: "off" # previews are published without audio\n' : ""
           path: .datme-cache
           key: datme-\${{ github.sha }}
           restore-keys: datme-
-      - run: ${previewBuild(o, "dist", '"$PREVIEW_URL"')}
-      - uses: cloudflare/wrangler-action@v3
+      - run: ${previewBuild(o, "dist", '"$SITE_URL"')}
+      - id: deploy
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -396,6 +409,7 @@ ${o.tts ? '      DATME_TTS: "off" # previews are published without audio\n' : ""
           GH_TOKEN: \${{ github.token }}
           GH_REPO: \${{ github.repository }}
           PR: \${{ github.event.number }}
+          PREVIEW_URL: \${{ steps.deploy.outputs.pages-deployment-alias-url }}
 `,
 })
 
@@ -423,4 +437,11 @@ export const NEXT_STEPS: Record<Target, string> = {
   gitlab: "Commit and push; the site appears under Deploy → Pages.",
   netlify: "Commit and push, then import the repository in Netlify.",
   cloudflare: "Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to the repository, then commit and push.",
+}
+
+/** Printed after NEXT_STEPS with --previews: who can open a preview, and how to limit it. */
+export const PREVIEW_STEPS: Record<Exclude<Target, "github">, string> = {
+  gitlab: `${PREVIEW_WARNING} Limit Pages to project members (Settings → General → Visibility → Pages). To comment the link on merge requests, add DATME_PREVIEW_TOKEN as described in .gitlab-ci.yml.`,
+  netlify: `${PREVIEW_WARNING} Protect deploy previews with a password or SSO (Site configuration → Access & security → Visitor access).`,
+  cloudflare: `${PREVIEW_WARNING} Turn on Cloudflare Access for preview deployments in the Pages project's settings.`,
 }

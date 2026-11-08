@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
-import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
+import { TARGETS, NEXT_STEPS, PREVIEW_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
 import { CONFIG_FILES, SCHEMA_URL } from "./lib/config-files.ts"
 import { parseYaml } from "./lib/yaml.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
@@ -489,6 +489,7 @@ export function deploy(target: Target, dir: string, branch?: string, needs = { t
     console.log(`Wrote ${file}`)
   }
   console.log(NEXT_STEPS[target])
+  if (previews && target !== "github") console.log(PREVIEW_STEPS[target])
 }
 
 /** A commented datme.yaml to start from, named after the vault. */
