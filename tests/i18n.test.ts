@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { builtin, t, langPrefix, formatDate, langMeta, type StringKey } from "../src/lib/i18n"
 import { dayKey } from "../src/lib/calendar"
+import { site } from "../src/site.config"
 
 describe("i18n", () => {
   test("the default language lives at the root", () => {
@@ -44,6 +45,17 @@ describe("i18n", () => {
   test("datme.yaml can override strings per language", () => {
     expect(t("en-US").blog).toBe("Essays")
     expect(t("vi-VN").blog).toBe("Bài viết")
+  })
+
+  test("a config swapped in place is read again, and the one put back too", () => {
+    const saved = site.strings
+    site.strings = { "en-US": { blog: "Posts" } }
+    try {
+      expect(t("en-US").blog).toBe("Posts")
+    } finally {
+      site.strings = saved
+    }
+    expect(t("en-US").blog).toBe("Essays")
   })
 
   test("langMeta names languages natively", () => {

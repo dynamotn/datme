@@ -1,4 +1,4 @@
-import { onSiteReload, site, type Lang } from "../site.config"
+import { site, type Lang } from "../site.config"
 import { isDateOnly } from "./calendar"
 import de from "../i18n/de.json"
 import en from "../i18n/en.json"
@@ -20,16 +20,17 @@ const COUNTED = ["readingTime", "words", "notesCount", "activityCount", "sharedL
 type Counted = (typeof COUNTED)[number]
 export type Strings = Record<Exclude<StringKey, Counted>, string> & Record<Counted, (n: number) => string>
 
-const cache = new Map<Lang, Strings>()
-// The `strings` of datme.yaml may change while `datme dev` runs.
-onSiteReload(() => cache.clear())
+// Kept per `strings` section: a reload in `datme dev`, or any swap of the config, brings a new one.
+const cache = new WeakMap<object, Map<Lang, Strings>>()
 
 /**
  * UI strings for a language: the built-in set of its base language (English
  * when there is none), overridden by the `strings` section of datme.yaml.
  */
 export function t(lang: Lang): Strings {
-  let hit = cache.get(lang)
+  let byLang = cache.get(site.strings)
+  if (!byLang) cache.set(site.strings, (byLang = new Map()))
+  let hit = byLang.get(lang)
   if (!hit) {
     const base = lang.split("-")[0]
     const merged: Record<string, string> = { ...en, ...(builtin[base] ?? {}), ...(site.strings[lang] ?? {}) }
@@ -39,7 +40,7 @@ export function t(lang: Lang): Strings {
       out[key] = (n: number) => template.replace("{n}", n.toLocaleString(lang))
     }
     hit = out as Strings
-    cache.set(lang, hit)
+    byLang.set(lang, hit)
   }
   return hit
 }
