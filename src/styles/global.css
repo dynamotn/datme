@@ -4115,6 +4115,25 @@ a.drawing-link tspan {
 }
 
 /* ---------- dataview ---------- */
+.prose .dv-calendar {
+  margin: 0 0 1.1em;
+}
+.prose .dv-calendar caption {
+  text-align: left;
+  font-weight: 650;
+}
+/* Other pages of the same day: a dot each. */
+.prose .dv-calendar td.has-note a + a {
+  width: 1em;
+  background: none;
+}
+.prose .dv-calendar th,
+.prose .dv-calendar td {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  text-align: center;
+}
 .prose table.dataview {
   display: block;
   overflow-x: auto;
@@ -4884,7 +4903,8 @@ summary.ntn-col-head {
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
   gap: 24px;
 }
-.calendar-month h2 {
+.calendar-month h2,
+.calendar-month caption {
   margin: 0 0 8px;
   font-size: 1.05rem;
   text-transform: capitalize;

@@ -2,11 +2,13 @@
  * A subset of the Dataview Query Language, run at build time over the
  * published notes only, so a query can never reveal a private note.
  *
- *   LIST [expr] | TABLE [WITHOUT ID] expr [AS "Name"], ... | TASK
+ *   LIST [expr] | TABLE [WITHOUT ID] expr [AS "Name"], ... | TASK | CALENDAR expr
  *   FROM #tag | "folder" | [[note]] combined with AND, OR, -, ! and ( )
  *   WHERE expr · FLATTEN expr [AS name] · GROUP BY expr [AS name]
  *   SORT expr [ASC|DESC], ... · LIMIT n
  */
+
+import { isDateOnly } from "./calendar"
 
 export interface Link {
   kind: "link"
@@ -15,7 +17,14 @@ export interface Link {
   url?: string
 }
 
-export type Value = string | number | boolean | null | Date | Link | Value[] | { [k: string]: Value }
+/** A length of time: calendar months apart, since they vary in length, and the rest in milliseconds. */
+export interface Duration {
+  kind: "duration"
+  months: number
+  ms: number
+}
+
+export type Value = string | number | boolean | null | Date | Link | Duration | Value[] | { [k: string]: Value }
 
 /** A `- [ ] task` line of a note. */
 export interface Task {
@@ -117,7 +126,8 @@ function tokenize(src: string): Tok[] {
       let j = i + 1
       let v = ""
       while (j < src.length && src[j] !== c) {
-        if (src[j] === "\\" && j + 1 < src.length) j++
+        // Only the quote and the backslash are escaped: `"\\s+"` stays a pattern, as in Dataview.
+        if (src[j] === "\\" && (src[j + 1] === c || src[j + 1] === "\\")) j++
         v += src[j++]
       }
       if (j >= src.length) throw new DataviewError("unterminated string")
@@ -145,6 +155,13 @@ function tokenize(src: string): Tok[] {
       i += iso[0].length
       continue
     }
+    // dur(1 day) is a duration literal: its text up to the parenthesis.
+    const span = out.at(-1)?.v === "(" && String(out.at(-2)?.v).toLowerCase() === "dur" ? src.slice(i).match(/^\d[^)"']*/) : null
+    if (span) {
+      out.push({ t: "str", v: span[0].trim() })
+      i += span[0].length
+      continue
+    }
     const num = src.slice(i).match(/^\d+(\.\d+)?/)
     if (num) {
       out.push({ t: "num", v: Number(num[0]) })
@@ -157,7 +174,7 @@ function tokenize(src: string): Tok[] {
       i += id[0].length
       continue
     }
-    const op = src.slice(i).match(/^(!=|<=|>=|=|<|>|\+|-|\*|\/|\(|\)|,|!|\.|\[|\]|&|\|)/)
+    const op = src.slice(i).match(/^(!=|<=|>=|=>|=|<|>|\+|-|\*|\/|\(|\)|,|!|\.|\[|\]|&|\|)/)
     if (op) {
       out.push({ t: "op", v: op[0] })
       i += op[0].length
@@ -180,6 +197,7 @@ type Expr =
   | { k: "neg"; e: Expr }
   | { k: "bin"; op: string; a: Expr; b: Expr }
   | { k: "link"; target: string }
+  | { k: "lambda"; params: string[]; body: Expr }
 
 type Source =
   | { k: "tag"; tag: string }
@@ -196,7 +214,7 @@ type Step =
   | { k: "limit"; n: number }
 
 export interface Query {
-  type: "list" | "table" | "task"
+  type: "list" | "table" | "task" | "calendar"
   withoutId: boolean
   columns: { e: Expr; name: string }[]
   from?: Source
@@ -236,10 +254,10 @@ class Parser {
 
   query(): Query {
     const head = this.peek()
-    if (head?.t !== "id") throw new DataviewError("a query starts with LIST, TABLE or TASK")
+    if (head?.t !== "id") throw new DataviewError("a query starts with LIST, TABLE, TASK or CALENDAR")
     const type = head.v.toUpperCase()
     this.i++
-    if (type !== "LIST" && type !== "TABLE" && type !== "TASK") throw new Unsupported(`${type} queries`)
+    if (!["LIST", "TABLE", "TASK", "CALENDAR"].includes(type)) throw new Unsupported(`${type} queries`)
     const q: Query = { type: type.toLowerCase() as Query["type"], withoutId: false, columns: [], steps: [] }
     if (this.isKw("WITHOUT") && this.isKw("ID", 1)) {
       this.i += 2
@@ -258,6 +276,7 @@ class Parser {
         q.columns.push({ e, name })
       } while (q.type === "table" && this.eatOp(","))
     }
+    if (q.type === "calendar" && !q.columns.length) throw new DataviewError("CALENDAR needs a date field, as in CALENDAR file.ctime")
     while (this.peek()) {
       if (this.eatKw("FROM")) q.from = this.sourceOr()
       else if (this.eatKw("WHERE")) q.steps.push({ k: "where", e: this.expr() })
@@ -282,6 +301,21 @@ class Parser {
       } else throw new DataviewError(`unexpected "${String(this.peek()!.v)}"`)
     }
     return q
+  }
+
+  /** The parameters of a lambda, `(x, y) =>`, read past when the tokens after "(" are one. */
+  lambdaParams(): string[] | undefined {
+    const params: string[] = []
+    let j = this.i
+    while (this.toks[j]?.t === "id") {
+      params.push(String(this.toks[j++].v))
+      if (this.toks[j]?.t !== "op" || this.toks[j].v !== ",") break
+      j++
+    }
+    const [close, arrow] = [this.toks[j], this.toks[j + 1]]
+    if (close?.t !== "op" || close.v !== ")" || arrow?.t !== "op" || arrow.v !== "=>") return undefined
+    this.i = j + 2
+    return params
   }
 
   next(t: Tok["t"]) {
@@ -389,6 +423,8 @@ class Parser {
     if (t.t === "link") return { k: "link", target: t.v }
     if (t.t === "tag") return { k: "lit", v: "#" + t.v }
     if (t.t === "op" && t.v === "(") {
+      const params = this.lambdaParams()
+      if (params) return { k: "lambda", params, body: this.expr() }
       const e = this.expr()
       this.expectOp(")")
       return e
@@ -517,8 +553,114 @@ function isLink(v: Value): v is Link {
   return typeof v === "object" && v !== null && !Array.isArray(v) && !(v instanceof Date) && (v as Link).kind === "link"
 }
 
+const isDur = (v: Value): v is Duration => typeof v === "object" && v !== null && (v as Duration).kind === "duration"
+const DAY = 86_400_000
+
+/** Units dur() reads, with their length in months and milliseconds. */
+const UNITS: [string[], number, number][] = [
+  [["y", "yr", "yrs", "year", "years"], 12, 0],
+  [["mo", "mos", "month", "months"], 1, 0],
+  [["w", "wk", "wks", "week", "weeks"], 0, 7 * DAY],
+  [["d", "day", "days"], 0, DAY],
+  [["h", "hr", "hrs", "hour", "hours"], 0, 3_600_000],
+  [["m", "min", "mins", "minute", "minutes"], 0, 60_000],
+  [["s", "sec", "secs", "second", "seconds"], 0, 1000],
+]
+
+/** A duration written as "3 days", "1 hour, 30 minutes" or "2wk"; null when it is not one. */
+function parseDur(src: string): Duration | null {
+  if (!/^\s*(\d+(\.\d+)?\s*[a-z]+\s*,?\s*)+$/i.test(src)) return null
+  const d: Duration = { kind: "duration", months: 0, ms: 0 }
+  for (const [, n, unit] of src.toLowerCase().matchAll(/(\d+(?:\.\d+)?)\s*([a-z]+)/g)) {
+    const u = UNITS.find(([names]) => names.includes(unit))
+    if (!u) return null
+    d.months += Number(n) * u[1]
+    d.ms += Number(n) * u[2]
+  }
+  return d
+}
+
+/** A duration as Dataview shows it: "1 year, 2 days, 3 hours". */
+export function durationText(d: Duration): string {
+  const parts: string[] = []
+  const add = (n: number, unit: string) => n && parts.push(`${n} ${unit}${Math.abs(n) === 1 ? "" : "s"}`)
+  add(Math.trunc(d.months / 12), "year")
+  add(d.months % 12, "month")
+  let ms = d.ms
+  for (const [unit, size] of [
+    ["day", DAY],
+    ["hour", 3_600_000],
+    ["minute", 60_000],
+    ["second", 1000],
+  ] as const) {
+    add(Math.trunc(ms / size), unit)
+    ms %= size
+  }
+  return parts.join(", ") || "0 seconds"
+}
+
+/** A date moved by a duration, months first, as Luxon does. */
+function shift(d: Date, by: Duration, sign: number): Date {
+  const out = new Date(d)
+  out.setUTCMonth(out.getUTCMonth() + sign * by.months)
+  return new Date(out.getTime() + sign * by.ms)
+}
+
+/** A date whose UTC fields are its calendar fields: as written for a date-only value, else local. */
+const wall = (d: Date) => (isDateOnly(d) ? d : new Date(d.getTime() - d.getTimezoneOffset() * 60_000))
+
+/** A date in a Luxon format, such as "yyyy-MM-dd" or "EEEE d MMMM", with 'quoted' text kept. */
+function dateformat(d: Date, format: string): string {
+  const x = wall(d)
+  const name = (o: Intl.DateTimeFormatOptions) => x.toLocaleDateString("en-US", { ...o, timeZone: "UTC" })
+  const two = (n: number) => String(n).padStart(2, "0")
+  const h = x.getUTCHours()
+  const tokens: Record<string, () => string | number> = {
+    yyyy: () => x.getUTCFullYear(),
+    yy: () => two(x.getUTCFullYear() % 100),
+    MMMM: () => name({ month: "long" }),
+    MMM: () => name({ month: "short" }),
+    MM: () => two(x.getUTCMonth() + 1),
+    M: () => x.getUTCMonth() + 1,
+    dd: () => two(x.getUTCDate()),
+    d: () => x.getUTCDate(),
+    EEEE: () => name({ weekday: "long" }),
+    EEE: () => name({ weekday: "short" }),
+    HH: () => two(h),
+    H: () => h,
+    hh: () => two(((h + 11) % 12) + 1),
+    h: () => ((h + 11) % 12) + 1,
+    mm: () => two(x.getUTCMinutes()),
+    m: () => x.getUTCMinutes(),
+    ss: () => two(x.getUTCSeconds()),
+    s: () => x.getUTCSeconds(),
+    a: () => (h < 12 ? "AM" : "PM"),
+  }
+  return format.replace(/'([^']*)'|yyyy|yy|MMMM|MMM|MM|M|dd|d|EEEE|EEE|HH|H|hh|h|mm|m|ss|s|a/g, (t, quoted?: string) => quoted ?? String(tokens[t]()))
+}
+
+/** + and - over numbers, dates and durations; + joins anything else as text. */
+function arithmetic(op: "+" | "-", a: Value, b: Value): Value {
+  const sign = op === "+" ? 1 : -1
+  if (typeof a === "number" && typeof b === "number") return a + sign * b
+  if (a instanceof Date && isDur(b)) return shift(a, b, sign)
+  if (isDur(a) && isDur(b)) return { kind: "duration", months: a.months + sign * b.months, ms: a.ms + sign * b.ms }
+  if (op === "-") return a instanceof Date && b instanceof Date ? { kind: "duration", months: 0, ms: a.getTime() - b.getTime() } : null
+  return isDur(a) && b instanceof Date ? shift(b, a, 1) : text(a) + text(b)
+}
+
+function pattern(src: string): RegExp {
+  try {
+    return new RegExp(src)
+  } catch {
+    throw new DataviewError(`invalid pattern "${src}"`)
+  }
+}
+
 function scalar(v: Value): string | number | boolean | null {
   if (v instanceof Date) return v.getTime()
+  // Months count as 30 days, enough to order durations.
+  if (isDur(v)) return v.months * 30 * DAY + v.ms
   if (isLink(v)) return v.key ?? v.title
   if (Array.isArray(v) || (typeof v === "object" && v !== null)) return JSON.stringify(v)
   return v
@@ -546,6 +688,7 @@ function text(v: Value): string {
   if (v == null) return ""
   if (isLink(v)) return v.title
   if (v instanceof Date) return v.toISOString()
+  if (isDur(v)) return durationText(v)
   if (Array.isArray(v)) return v.map(text).join(", ")
   return String(v)
 }
@@ -609,9 +752,8 @@ function evaluate(e: Expr, row: Row, engine: Engine): Value {
         case ">=":
           return a != null && b != null && compare(a, b) >= 0
         case "+":
-          return typeof a === "number" && typeof b === "number" ? a + b : text(a) + text(b)
         case "-":
-          return typeof a === "number" && typeof b === "number" ? a - b : null
+          return arithmetic(e.op, a, b)
         case "*":
           return typeof a === "number" && typeof b === "number" ? a * b : null
         case "/":
@@ -625,20 +767,48 @@ function evaluate(e: Expr, row: Row, engine: Engine): Value {
       if (e.fn === "date" && first?.k === "var" && DATE_WORDS.includes(first.name.toLowerCase())) {
         return call("date", [first.name.toLowerCase()], engine)
       }
+      // A lambda argument, (x) => x > 1, is a function of its parameters over the current row.
+      const fns = e.args.map((a) =>
+        a.k === "lambda"
+          ? (...xs: Value[]) => evaluate(a.body, { ...row, ...Object.fromEntries(a.params.map((p, i) => [p, xs[i] ?? null])) }, engine)
+          : undefined,
+      )
       return call(
         e.fn,
-        e.args.map((a) => evaluate(a, row, engine)),
+        e.args.map((a) => (a.k === "lambda" ? null : evaluate(a, row, engine))),
         engine,
+        fns,
       )
     }
+    case "lambda":
+      throw new DataviewError("a lambda, (x) => …, is only an argument of filter, map, any or all")
   }
 }
 
-function call(fn: string, args: Value[], engine: Engine): Value {
+/** Functions of one value that a list maps over and null passes through, as in Dataview. */
+const BROADCAST = new Set(["dur", "dateformat", "striptime", "localtime", "replace", "padleft", "padright", "substring", "truncate"])
+
+/** Dataview functions datme does not run yet: a warning in `datme check`, not an error. */
+const LATER = new Set(
+  "array object embed elink trunc floor ceil product reduce average minby maxby containsword firstvalue none slice regextest regexreplace ldefault hash display durationformat currencyformat".split(
+    " ",
+  ),
+)
+
+type Fn = (...xs: Value[]) => Value
+
+function call(fn: string, args: Value[], engine: Engine, fns: (Fn | undefined)[] = []): Value {
   const [a, b, c] = args
+  const f = fns[1]
   const str = (v: Value) => (v == null ? "" : text(v))
+  if (BROADCAST.has(fn)) {
+    if (Array.isArray(a)) return a.map((x) => call(fn, [x, ...args.slice(1)], engine))
+    if (a == null) return null
+  }
   switch (fn) {
     case "contains":
+    // Lists already match whole elements, which is all econtains adds.
+    case "econtains":
       if (Array.isArray(a)) return a.some((x) => equals(x, b) || (typeof x === "string" && typeof b === "string" && x === b))
       if (typeof a === "string") return a.includes(str(b))
       if (isLink(a) && isLink(b)) return equals(a, b)
@@ -703,8 +873,60 @@ function call(fn: string, args: Value[], engine: Engine): Value {
       // Obsidian's link metadata (display text, embed) does not exist after publishing.
       return isLink(a) ? { display: null, embed: false, path: a.key ? a.key + ".md" : null } : null
     case "typeof":
-      return a == null ? "null" : Array.isArray(a) ? "array" : a instanceof Date ? "date" : isLink(a) ? "link" : typeof a
+      return a == null ? "null" : Array.isArray(a) ? "array" : a instanceof Date ? "date" : isLink(a) ? "link" : isDur(a) ? "duration" : typeof a
+    case "dur":
+      return isDur(a) ? a : parseDur(str(a))
+    case "dateformat":
+      return a instanceof Date ? dateformat(a, str(b)) : null
+    case "striptime": {
+      if (!(a instanceof Date)) return null
+      const x = wall(a)
+      return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()))
+    }
+    case "localtime":
+      // shortcut: dates are already read in the build machine's zone; a stored zone would need converting here.
+      return a instanceof Date ? a : null
+    case "replace":
+      return str(a).replaceAll(str(b), str(c))
+    case "split":
+      return a == null ? null : str(a).split(pattern(str(b)), typeof c === "number" ? c : undefined)
+    case "padleft":
+      return str(a).padStart(Number(b), c == null ? " " : str(c))
+    case "padright":
+      return str(a).padEnd(Number(b), c == null ? " " : str(c))
+    case "substring":
+      return str(a).substring(Number(b), c == null ? undefined : Number(c))
+    case "truncate": {
+      const s = str(a)
+      const end = c == null ? "..." : str(c)
+      return s.length <= Number(b) ? s : s.slice(0, Math.max(0, Number(b) - end.length)) + end
+    }
+    case "extract":
+      return a && typeof a === "object" && !Array.isArray(a) && !(a instanceof Date)
+        ? Object.fromEntries(args.slice(1).map((k) => [str(k), (a as Record<string, Value>)[str(k)] ?? null]))
+        : null
+    case "filter":
+      return Array.isArray(a) && f ? a.filter((x) => truthy(f(x))) : null
+    case "map":
+      return Array.isArray(a) && f ? a.map((x) => f(x)) : null
+    case "any":
+    case "all": {
+      // any(list, (x) => …), any(list) or any(a, b, c).
+      const xs = Array.isArray(a) && f ? a.map((x) => f(x)) : Array.isArray(a) && args.length === 1 ? a : args
+      return fn === "any" ? xs.some(truthy) : xs.every(truthy)
+    }
+    case "flat":
+      return Array.isArray(a) ? (a.flat(typeof b === "number" ? b : 1) as Value[]) : a
+    case "sort":
+      return Array.isArray(a) ? [...a].sort(compare) : a
+    case "reverse":
+      return Array.isArray(a) ? [...a].reverse() : a
+    case "unique":
+      return Array.isArray(a) ? a.filter((x, i) => a.findIndex((y) => equals(x, y)) === i) : a
+    case "nonnull":
+      return Array.isArray(a) ? a.filter((x) => x != null) : a
   }
+  if (LATER.has(fn)) throw new Unsupported(`${fn}()`)
   throw new DataviewError(`unknown function ${fn}()`)
 }
 
@@ -749,7 +971,8 @@ export interface TaskGroup {
 }
 
 export interface Result {
-  type: "list" | "table" | "task"
+  /** A CALENDAR result has the rows of a LIST: [page, date]. */
+  type: "list" | "table" | "task" | "calendar"
   headers: string[]
   rows: Value[][]
   /** LIST … GROUP BY without a column: each row is [key, members], shown nested. */
@@ -870,10 +1093,10 @@ export function runQuery(q: Query, engine: Engine): Result {
       rows: rows.map((r) => [...(q.withoutId ? [] : [r.key]), ...q.columns.map((c) => evaluate(c.e, r, engine))]),
     }
   }
-  if (q.type === "list") {
+  if (q.type === "list" || q.type === "calendar") {
     const col = q.columns[0]
     return {
-      type: "list",
+      type: q.type,
       headers: [],
       rows: rows.map((r) => (col ? (q.withoutId ? [evaluate(col.e, r, engine)] : [file(r), evaluate(col.e, r, engine)]) : [file(r)])),
     }

@@ -184,9 +184,139 @@ describe("TASK", () => {
   })
 })
 
+describe("functions of the Dataview reference", () => {
+  // Examples from https://blacksmithgu.github.io/obsidian-dataview/reference/functions/
+  const ev = (src: string) => evaluateInline(src, { ...engine, current: pages[0] })
+
+  test("lists: filter, map, any, all, flat, sort, reverse, unique, nonnull", () => {
+    expect(ev("filter(list(1, 2, 3), (x) => x >= 2)")).toEqual([2, 3])
+    expect(ev('filter(list("yes", "no", "yas"), (x) => startswith(x, "y"))')).toEqual(["yes", "yas"])
+    expect(ev("map(list(1, 2, 3), (x) => x + 2)")).toEqual([3, 4, 5])
+    expect(ev('map(list("yes", "no"), (x) => x + "?")')).toEqual(["yes?", "no?"])
+    expect(ev("any(list(1, 2, 3), (x) => x >= 2)")).toBe(true)
+    expect(ev("any(true, false)")).toBe(true)
+    expect(ev("any(list(true, false))")).toBe(true)
+    expect(ev("all(list(1, 2, 3), (x) => x >= 2)")).toBe(false)
+    expect(ev("all(true, false)")).toBe(false)
+    expect(ev("all(list(true, true))")).toBe(true)
+    expect(ev("flat(list(1, 2, 3, list(4, 5), 6))")).toEqual([1, 2, 3, 4, 5, 6])
+    expect(ev("flat(list(1, list(21, 22), list(list(311, 312, 313))), 4)")).toEqual([1, 21, 22, 311, 312, 313])
+    expect(ev("sort(list(3, 2, 1))")).toEqual([1, 2, 3])
+    expect(ev('sort(list("a", "b", "aa"))')).toEqual(["a", "aa", "b"])
+    expect(ev("reverse(list(1, 2, 3))")).toEqual([3, 2, 1])
+    expect(ev('reverse(list("a", "b", "c"))')).toEqual(["c", "b", "a"])
+    expect(ev("unique(list(1, 3, 7, 3, 1))")).toEqual([1, 3, 7])
+    expect(ev("nonnull(list(null, 1, 2))")).toEqual([1, 2])
+    expect(ev("nonnull(list(null, null))")).toEqual([])
+    // A lambda sees the row too, and is nothing outside a function.
+    expect(ev("filter(list(4, 5, 6), (x) => x > rating)")).toEqual([6])
+    expect(ev("map(list(1, 2), () => rating)")).toEqual([5, 5])
+    expect(() => ev("(x) => x")).toThrow(DataviewError)
+    expect(ev("(rating)")).toBe(5)
+    // Without a list, or without a lambda, there is nothing to filter.
+    expect([ev("filter(null, (x) => x)"), ev("map(list(1), 2)")]).toEqual([null, null])
+    expect([ev("flat(1)"), ev("sort(1)"), ev("reverse(null)"), ev("unique(2)"), ev("nonnull(3)")]).toEqual([1, 1, null, 2, 3])
+  })
+
+  test("objects and text: econtains, extract, replace, split, padleft, padright, substring, truncate", () => {
+    expect(ev('econtains("Hello", "Lo")')).toBe(false)
+    expect(ev('econtains("Hello", "lo")')).toBe(true)
+    expect(ev('econtains(list("this","is","example"), "ex")')).toBe(false)
+    expect(ev('econtains(list("this","is","example"), "is")')).toBe(true)
+    expect(ev('extract(book, "author")')).toEqual({ author: "Herbert" })
+    expect(ev('extract(book, "year", "nope")')).toEqual({ year: 1965, nope: null })
+    expect(ev('extract("text", "a")')).toBeNull()
+    expect(ev('replace("what", "wh", "h")')).toBe("hat")
+    expect(ev('replace("The big dog chased the big cat.", "big", "small")')).toBe("The small dog chased the small cat.")
+    expect(ev('replace("test", "test", "no")')).toBe("no")
+    expect(ev('split("hello world", " ")')).toEqual(["hello", "world"])
+    expect(ev('split("hello  world", "\\s")')).toEqual(["hello", "", "world"])
+    expect(ev('split("hello there world", " ", 2)')).toEqual(["hello", "there"])
+    expect(ev('split("hello there world", "(t)here")')).toEqual(["hello ", "t", " world"])
+    expect(ev('split(null, " ")')).toBeNull()
+    expect(() => ev('split("a", "(")')).toThrow('invalid pattern "("')
+    expect(ev('padleft("hello", 7)')).toBe("  hello")
+    expect(ev('padleft("yes", 5, "!")')).toBe("!!yes")
+    expect(ev('padright("hello", 7)')).toBe("hello  ")
+    expect(ev('padright("yes", 5, "!")')).toBe("yes!!")
+    expect(ev('substring("hello", 0, 2)')).toBe("he")
+    expect(ev('substring("hello", 2, 4)')).toBe("ll")
+    expect(ev('substring("hello", 2)')).toBe("llo")
+    expect(ev('substring("hello", 0)')).toBe("hello")
+    expect(ev('truncate("Hello there!", 8)')).toBe("Hello...")
+    expect(ev('truncate("Hello there!", 8, "/")')).toBe("Hello t/")
+    expect(ev('truncate("Hello there!", 10)')).toBe("Hello t...")
+    expect(ev('truncate("Hello there!", 10, "!")')).toBe("Hello the!")
+    expect(ev('truncate("Hello there!", 50)')).toBe("Hello there!")
+  })
+
+  test("lists broadcast and null passes through", () => {
+    expect(ev('replace(list("yes", "re"), "e", "a")')).toEqual(["yas", "ra"])
+    expect(ev('truncate(list("abcdef", "ab"), 4, "")')).toEqual(["abcd", "ab"])
+    expect(ev("padleft(null, 3)")).toBeNull()
+    expect(ev('dateformat(null, "yyyy")')).toBeNull()
+  })
+
+  test("dates and durations: dur, dateformat, striptime, localtime", () => {
+    const d = (v: Value) => (v as Date).toISOString()
+    expect(typeof ev('dur("8 minutes")')).toBe("object")
+    expect(ev('dur("8 minutes") = dur(8 min)')).toBe(true)
+    expect(ev('dur("9 hours, 2 minutes, 3 seconds") = dur(9h 2m 3s)')).toBe(true)
+    expect(ev("dur(dur(1 day)) = dur(24 hours)")).toBe(true)
+    expect([ev('dur("soon")'), ev('dur("3 fortnights")'), ev("dur(null)")]).toEqual([null, null, null])
+    expect(ev("typeof(dur(1 week))")).toBe("duration")
+    expect(ev('string(dur("1 yr, 2 mo, 3 days, 4 hours, 5 minutes, 6 seconds"))')).toBe("1 year, 2 months, 3 days, 4 hours, 5 minutes, 6 seconds")
+    expect(ev("string(dur(0 s))")).toBe("0 seconds")
+    expect(d(ev("date(2024-01-31) + dur(1 month)"))).toBe("2024-03-02T00:00:00.000Z")
+    expect(d(ev("date(2024-03-10) - dur(1 week)"))).toBe("2024-03-03T00:00:00.000Z")
+    expect(d(ev("dur(2 days) + date(2024-03-10)"))).toBe("2024-03-12T00:00:00.000Z")
+    expect(ev("date(2024-03-10) - date(2024-03-03) = dur(7 days)")).toBe(true)
+    expect(ev("dur(1 day) + dur(1 day) = dur(2 days)")).toBe(true)
+    expect(ev("dur(1 year) - dur(12 months) = dur(0 s)")).toBe(true)
+    expect(ev("dur(1 week) > dur(6 days)")).toBe(true)
+    expect(ev('"a" - 1')).toBeNull()
+    expect(ev('dateformat(date("2021-08-07T18:09"), "yyyy-MM-dd")')).toBe("2021-08-07")
+    expect(ev('dateformat(date(2021-08-07), "yy M d")')).toBe("21 8 7")
+    expect(ev('dateformat(date(2021-08-07), "EEEE, MMMM d, yyyy")')).toBe("Saturday, August 7, 2021")
+    expect(ev("dateformat(date(2021-08-07), \"EEE dd MMM 'week'\")")).toBe("Sat 07 Aug week")
+    expect(ev('dateformat(date("2021-08-07T08:05:09"), "HH:mm:ss H:m:s hh h a")')).toBe("08:05:09 8:5:9 08 8 AM")
+    expect(ev('dateformat(date("2021-08-07T18:05"), "h a")')).toBe("6 PM")
+    expect(ev('dateformat("2021-08-07", "yyyy")')).toBeNull()
+    expect(d(ev('striptime(date("2021-08-07T18:09"))'))).toBe("2021-08-07T00:00:00.000Z")
+    expect(ev("striptime(rating)")).toBeNull()
+    expect(d(ev("localtime(date(2021-08-07))"))).toBe("2021-08-07T00:00:00.000Z")
+    expect(ev("localtime(rating)")).toBeNull()
+  })
+
+  test("functions Dataview has and datme does not run yet are unsupported, not unknown", () => {
+    expect(() => ev("floor(1.5)")).toThrow(Unsupported)
+    expect(() => ev("nope(1)")).toThrow("unknown function nope()")
+  })
+})
+
+describe("CALENDAR", () => {
+  const dated = [
+    page("Days/A", { fields: { day: "2024-03-05" } }),
+    page("Days/B", { fields: { day: "2024-03-05" } }),
+    page("Days/C", { fields: { day: "2024-04-01" } }),
+    page("Days/D", { fields: { day: "soon" } }),
+  ]
+  const e: Engine = { pages: dated, resolve: () => undefined }
+
+  test("lists each page with its date, as a LIST would", () => {
+    const res = runQuery(parseQuery('CALENDAR day FROM "Days" WHERE file.name != "C"'), e)
+    expect(res.type).toBe("calendar")
+    expect(res.rows.map(([p, d]) => [(p as { title: string }).title, d instanceof Date ? d.toISOString().slice(0, 10) : d])).toEqual([
+      ["A", "2024-03-05"],
+      ["B", "2024-03-05"],
+      ["D", "soon"],
+    ])
+  })
+})
+
 describe("errors", () => {
   test("unsupported features are reported as such", () => {
-    expect(() => parseQuery("CALENDAR file.ctime")).toThrow(Unsupported)
+    expect(() => run("LIST hash(file.name)")).toThrow(Unsupported)
   })
 
   test("syntax errors and unknown functions are explained", () => {

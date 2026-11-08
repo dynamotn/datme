@@ -125,21 +125,31 @@ export function dayNeighbours(note: Note): { day: string; prev?: Day; next?: Day
   return { day: days[i].date, prev: days[i - 1], next: days[i + 1] }
 }
 
-export interface Month {
+export interface Month<T = Note> {
   year: number
   /** 1 to 12 */
   month: number
-  /** Weeks from Monday; null pads the days of other months. */
-  weeks: ({ day: number; note?: Note } | null)[][]
+  /** Weeks from Monday, each day with its notes; null pads the days of other months. */
+  weeks: ({ day: number; notes: T[] } | null)[][]
 }
 
-/** Month grids of the days, newest month first. */
-export function months(days: Day[]): Month[] {
-  const byMonth = new Map<string, Map<number, Note>>()
+/** The days of the week from Monday, short, in a language: 2024-01-01 was a Monday. */
+export const weekdayNames = (lang: string) =>
+  Array.from({ length: 7 }, (_, i) => new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }))
+
+/** "October 2026", in a language; month is 1 to 12. */
+export const monthName = (lang: string, year: number, month: number) =>
+  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(lang, { month: "long", year: "numeric", timeZone: "UTC" })
+
+/** Month grids of the days, newest month first: of daily notes, or of the pages of a CALENDAR query. */
+export function months<T = Note>(days: { date: string; note: T }[]): Month<T>[] {
+  const byMonth = new Map<string, Map<number, T[]>>()
   for (const d of days) {
     const ym = d.date.slice(0, 7)
     if (!byMonth.has(ym)) byMonth.set(ym, new Map())
-    byMonth.get(ym)!.set(Number(d.date.slice(8)), d.note)
+    const month = byMonth.get(ym)!
+    const day = Number(d.date.slice(8))
+    month.set(day, [...(month.get(day) ?? []), d.note])
   }
   return [...byMonth.keys()]
     .sort()
@@ -148,8 +158,8 @@ export function months(days: Day[]): Month[] {
       const [year, month] = ym.split("-").map(Number)
       const first = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7
       const length = new Date(Date.UTC(year, month, 0)).getUTCDate()
-      const cells: ({ day: number; note?: Note } | null)[] = Array(first).fill(null)
-      for (let day = 1; day <= length; day++) cells.push({ day, note: byMonth.get(ym)!.get(day) })
+      const cells: ({ day: number; notes: T[] } | null)[] = Array(first).fill(null)
+      for (let day = 1; day <= length; day++) cells.push({ day, notes: byMonth.get(ym)!.get(day) ?? [] })
       while (cells.length % 7) cells.push(null)
       const weeks = []
       for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))

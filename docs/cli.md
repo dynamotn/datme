@@ -151,7 +151,7 @@ a ground its stylesheets change is not seen.
 `check` runs every Dataview query of the published notes, ```` ```dataview ````
 blocks and inline `` `= …` `` alike. One that cannot run is an error, since the
 page would show the error instead of a result; one that datme does not
-support yet, such as `CALENDAR`, is a warning. Either way `--strict` stops the
+support yet, such as a call to `regexreplace`, is a warning. Either way `--strict` stops the
 build before a broken query goes live.
 
 `check` warns about the passwords of protected notes and locked parts (see

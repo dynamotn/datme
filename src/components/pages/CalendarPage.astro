@@ -2,7 +2,7 @@
 import { site, type Lang } from "~/site.config"
 import { t, langPrefix } from "~/lib/i18n"
 import { slugToUrl } from "~/lib/slug"
-import { journal, months, hasJournal } from "~/lib/journal"
+import { journal, months, hasJournal, weekdayNames, monthName } from "~/lib/journal"
 import Base from "~/layouts/Base.astro"
 
 interface Props {
@@ -12,12 +12,7 @@ const { lang } = Astro.props
 const s = t(lang)
 const days = journal(lang)
 const grid = months(days)
-// Monday first, in the reader's language: 2024-01-01 was a Monday.
-const weekdays = Array.from({ length: 7 }, (_, i) =>
-  new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(lang, { weekday: "short", timeZone: "UTC" }),
-)
-const monthName = (year: number, month: number) =>
-  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(lang, { month: "long", year: "numeric", timeZone: "UTC" })
+const weekdays = weekdayNames(lang)
 const alternates = Object.fromEntries(site.langs.filter(hasJournal).map((l) => [l, slugToUrl(langPrefix(l) + "calendar")]))
 ---
 
@@ -32,7 +27,7 @@ const alternates = Object.fromEntries(site.langs.filter(hasJournal).map((l) => [
       {
         grid.map((m) => (
           <section class="calendar-month" aria-labelledby={`m${m.year}-${m.month}`}>
-            <h2 id={`m${m.year}-${m.month}`}>{monthName(m.year, m.month)}</h2>
+            <h2 id={`m${m.year}-${m.month}`}>{monthName(lang, m.year, m.month)}</h2>
             <table>
               <thead>
                 <tr>
@@ -47,9 +42,9 @@ const alternates = Object.fromEntries(site.langs.filter(hasJournal).map((l) => [
                     {week.map((cell) =>
                       cell === null ? (
                         <td />
-                      ) : cell.note ? (
+                      ) : cell.notes.length ? (
                         <td class="has-note">
-                          <a class="internal" href={cell.note.url} title={cell.note.title}>
+                          <a class="internal" href={cell.notes[0].url} title={cell.notes[0].title}>
                             {cell.day}
                           </a>
                         </td>

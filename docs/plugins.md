@@ -37,8 +37,23 @@ see **published** notes: a private note can't leak through a Dataview table.
 - `WHERE`, `FLATTEN`, `GROUP BY`, `SORT`, `LIMIT`, and the common functions.
 - `TASK` queries over `- [ ]` items, with Tasks-plugin dates like 📅 and
   `[key:: value]` fields.
+- `CALENDAR file.ctime` (or any date field): a grid of each month with a
+  matching note, newest first, like the `/calendar` page. Each day links to
+  its notes.
+- Functions, with lambdas such as `filter(tags, (t) => startswith(t, "#a"))`:
+  `contains`, `econtains`, `icontains`, `extract`, `filter`, `map`, `any`,
+  `all`, `flat`, `sort`, `reverse`, `unique`, `nonnull`, `length`, `min`,
+  `max`, `sum`, `join`, `replace`, `split`, `padleft`, `padright`,
+  `substring`, `truncate`, `lower`, `upper`, `startswith`, `endswith`,
+  `regexmatch`, `date`, `dur`, `dateformat`, `striptime`, `localtime`,
+  `default`, `choice`, `round`, `number`, `string`, `link`, `meta` and
+  `typeof`. Dates add and subtract durations: `date(today) - dur(1 week)`.
+  Text and date functions given a list apply to each item, and give `null`
+  for `null`.
 
-DataviewJS blocks show a notice, since they would need Obsidian to run.
+DataviewJS blocks show a notice, since they would need Obsidian to run. So
+does a query using a Dataview function datme does not run yet, such as
+`floor`, `slice` or `regexreplace`; `datme check` warns about it.
 
 **Inline queries** work too: `` `= this.rating` `` shows a field of the note,
 `` `= [[Dune]].author` `` one of another note, and expressions like

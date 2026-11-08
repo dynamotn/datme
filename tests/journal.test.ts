@@ -57,7 +57,7 @@ describe("the journal of the vault", () => {
     expect(
       oct.weeks
         .flat()
-        .filter((c) => c?.note)
+        .filter((c) => c?.notes.length)
         .map((c) => c!.day),
     ).toEqual([5, 7])
     expect(oct.weeks.every((w) => w.length === 7)).toBe(true)

@@ -206,8 +206,9 @@ describe("queries", () => {
   })
 
   test("syntax errors", () => {
-    expect(() => parseQuery("")).toThrow("a query starts with LIST, TABLE or TASK")
-    expect(() => parseQuery("CALENDAR file.ctime")).toThrow(Unsupported)
+    expect(() => parseQuery("")).toThrow("a query starts with LIST, TABLE, TASK or CALENDAR")
+    expect(() => parseQuery("GANTT file.ctime")).toThrow(Unsupported)
+    expect(() => parseQuery("CALENDAR")).toThrow("CALENDAR needs a date field")
     expect(() => parseQuery("TABLE rating AS 5")).toThrow("expected a column name after AS")
     expect(() => parseQuery("LIST FROM 5")).toThrow('FROM expects #tags, "folders" or [[links]]')
     expect(() => parseQuery("LIST FROM (#a")).toThrow('expected ")"')

@@ -12,6 +12,7 @@ beforeAll(() => {
       "Good.md": `---\npublish: true\nrating: 3\n---\n${fence('LIST FROM ""')}\n\nRated \`= this.rating\`.\n`,
       "Broken.md": `---\npublish: true\n---\n${fence("TABLE rating FROM WHERE")}\n`,
       "Calendar.md": `---\npublish: true\n---\n${fence("CALENDAR file.ctime")}\n`,
+      "Later.md": `---\npublish: true\n---\n${fence("LIST hash(file.name)")}\n`,
       "Inline.md": "---\npublish: true\n---\nTotal `= (this.a +`.\n\nNot a query: `=x`, and `code`.\n",
       "Private.md": `---\npublish: false\n---\n${fence("TABLE FROM WHERE")}\n`,
     },
@@ -29,12 +30,12 @@ test("a query that cannot run is an error of its note, so check and --strict cat
 })
 
 test("a query datme does not support yet is a warning", () => {
-  expect(result.problems.filter((p) => p.file === "Calendar.md").map((p) => p.level)).toEqual(["warning"])
+  expect(result.problems.filter((p) => p.file === "Later.md").map((p) => p.level)).toEqual(["warning"])
 })
 
 test("inline queries are checked too; working queries and private notes say nothing", () => {
   expect(result.problems.filter((p) => p.file === "Inline.md").map((p) => p.level)).toEqual(["error"])
-  expect(result.problems.map((p) => p.file).sort()).toEqual(["Broken.md", "Calendar.md", "Inline.md"])
+  expect(result.problems.map((p) => p.file).sort()).toEqual(["Broken.md", "Inline.md", "Later.md"])
 })
 
 test("a problem points at its query in the note's file, frontmatter counted", () => {
@@ -52,7 +53,8 @@ test("each query on its own: fine, broken, unsupported, inline", () => {
   expect(queryProblem("LIST", "en-US", "index")).toBeUndefined()
   expect(queryProblem("   ", "en-US", "index")).toBeUndefined()
   expect(queryProblem("TABLE FROM WHERE", "en-US", "index")?.level).toBe("error")
-  expect(queryProblem("CALENDAR file.ctime", "en-US", "index")).toMatchObject({ level: "warning", message: expect.stringContaining("not supported yet") })
+  expect(queryProblem("LIST hash(file.name)", "en-US", "index")).toMatchObject({ level: "warning", message: "not supported yet: hash()" })
+  expect(queryProblem("CALENDAR file.ctime", "en-US", "index")).toBeUndefined()
   expect(queryProblem("this.title", "en-US", "index", true)).toBeUndefined()
   expect(queryProblem("(this.a +", "en-US", "index", true)?.level).toBe("error")
   // Anything but a query's own mistake is datme's, and is not dressed up as one.

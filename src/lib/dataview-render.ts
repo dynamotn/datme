@@ -2,13 +2,29 @@ import type { Lang } from "../site.config"
 import { getVault, vaultMemo, type Note } from "./vault"
 import { formatDate, t } from "./i18n"
 import { escapeAttr } from "./html"
-import { parseQuery, runQuery, extractTasks, evaluateInline, inlineFields, DataviewError, Unsupported, type Engine, type Page, type Value } from "./dataview"
+import {
+  parseQuery,
+  runQuery,
+  extractTasks,
+  evaluateInline,
+  inlineFields,
+  durationText,
+  DataviewError,
+  Unsupported,
+  type Duration,
+  type Engine,
+  type Link,
+  type Page,
+  type Value,
+} from "./dataview"
 import { filterLanguage } from "./vault"
 import { withoutLocked } from "./locked"
 import { renderGraph } from "./contribution-graph"
 import { parseTasksQuery, runTasksQuery, groupOf, TasksQueryError, type TaskItem } from "./tasks-query"
 import { parseSearch, search, highlight, SearchQueryError, type Searchable } from "./search-query"
 import { listed } from "./vault"
+import { months, monthName, weekdayNames } from "./journal"
+import { dayKey } from "./calendar"
 
 /** The Dataview engine of each language, for the current version of the vault. */
 const engines = vaultMemo<Engine>()
@@ -63,6 +79,7 @@ export function html(v: Value, lang: Lang): string {
   if (v instanceof Date) return formatDate(v, lang)
   if (Array.isArray(v)) return v.map((x) => html(x, lang)).join(", ")
   if (typeof v === "object") {
+    if ((v as Duration).kind === "duration") return escapeAttr(durationText(v as Duration))
     if ((v as { kind?: string }).kind === "link") {
       const l = v as { key?: string; title: string; url?: string }
       if (l.url) return `<a href="${escapeAttr(l.url)}" class="internal" data-key="${escapeAttr(l.key ?? "")}">${escapeAttr(l.title)}</a>`
@@ -136,7 +153,9 @@ export function renderDataview(source: string, lang: Lang, currentKey: string): 
       )
       return { markdown: `<div class="dataview dv-tasks">\n\n${parts.join("\n\n")}\n\n</div>` }
     }
-    if (!res.rows.length) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
+    const days = res.type === "calendar" ? res.rows.flatMap(([page, date]) => (date instanceof Date ? [{ date: dayKey(date), note: page as Link }] : [])) : []
+    if (!res.rows.length || (res.type === "calendar" && !days.length)) return `<p class="dataview dv-empty">${escapeAttr(s.dvEmpty)}</p>`
+    if (res.type === "calendar") return calendarHtml(days, lang)
     if (res.nested) {
       const items = res.rows
         .map(([key, members]) => `<li>${html(key, lang)}<ul>${(members as Value[]).map((m) => `<li>${html(m, lang)}</li>`).join("")}</ul></li>`)
@@ -155,6 +174,25 @@ export function renderDataview(source: string, lang: Lang, currentKey: string): 
     if (e instanceof DataviewError) return `<p class="dataview dv-error">Dataview: ${escapeAttr(e.message)}</p>`
     throw e
   }
+}
+
+/** A CALENDAR result as the month grids of the /calendar page, newest first: each day links to its pages. */
+function calendarHtml(days: { date: string; note: Link }[], lang: Lang): string {
+  const head = `<thead><tr>${weekdayNames(lang)
+    .map((d) => `<th scope="col">${escapeAttr(d)}</th>`)
+    .join("")}</tr></thead>`
+  // The first page of a day shows the day; each other page a dot named after it.
+  const link = (n: Link, day?: number) =>
+    `<a class="internal" href="${escapeAttr(n.url ?? "")}" data-key="${escapeAttr(n.key ?? "")}" title="${escapeAttr(n.title)}"${day ? `>${day}` : ` aria-label="${escapeAttr(n.title)}">•`}</a>`
+  const cell = (c: { day: number; notes: Link[] } | null) =>
+    !c ? "<td></td>" : c.notes.length ? `<td class="has-note">${c.notes.map((n, i) => link(n, i ? undefined : c.day)).join("")}</td>` : `<td>${c.day}</td>`
+  const grids = months(days).map(
+    (m) =>
+      `<section class="calendar-month"><table><caption>${escapeAttr(monthName(lang, m.year, m.month))}</caption>${head}<tbody>${m.weeks
+        .map((w) => `<tr>${w.map(cell).join("")}</tr>`)
+        .join("")}</tbody></table></section>`,
+  )
+  return `<div class="dataview dv-calendar calendar-months">${grids.join("")}</div>`
 }
 
 /**

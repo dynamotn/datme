@@ -98,8 +98,20 @@ describe("blocks", () => {
     const empty = renderDataview('LIST FROM "nowhere"', LANG, QUERIES)
     expect(empty).toMatch(/^<p class="dataview dv-empty">[^<]+<\/p>$/)
     expect(renderDataview('TASK FROM "nowhere"', LANG, QUERIES)).toBe(empty)
-    expect(renderDataview("CALENDAR file.ctime", LANG, QUERIES)).toMatch(/^<p class="dataview dv-note">⚙️ .+ \(CALENDAR queries\)<\/p>$/)
+    expect(renderDataview("LIST hash(file.name)", LANG, QUERIES)).toMatch(/^<p class="dataview dv-note">⚙️ .+ \(hash\(\)\)<\/p>$/)
     expect(renderDataview("LIST WHERE (", LANG, QUERIES)).toBe('<p class="dataview dv-error">Dataview: unexpected end of query</p>')
+  })
+
+  test("CALENDAR draws month grids, newest first, each day linking to its pages", () => {
+    const cal = renderDataview('CALENDAR file.ctime FROM "03_Atomic" OR "08_Journal"', LANG, QUERIES) as string
+    expect(cal).toStartWith('<div class="dataview dv-calendar calendar-months"><section class="calendar-month"><table><caption>October 2026</caption>')
+    expect(cal).toContain('<th scope="col">Mon</th>')
+    expect(cal).toContain("<caption>April 2024</caption>")
+    expect(cal).toMatch(/<td class="has-note"><a class="internal" href="[^"]+" data-key="03_Atomic\/Zettelkasten" title="Zettelkasten method">22<\/a><\/td>/)
+    // A second page of the same day is a dot named after it.
+    expect(cal).toMatch(/<a class="internal" href="[^"]+" data-key="[^"]+" title="([^"]+)" aria-label="\1">•<\/a>/)
+    expect(renderDataview("CALENDAR file.name", LANG, QUERIES)).toMatch(/^<p class="dataview dv-empty">/)
+    expect(html({ kind: "duration", months: 0, ms: 90_000 }, LANG)).toBe("1 minute, 30 seconds")
   })
 
   test("DataviewJS is never run, only announced", () => {
