@@ -114,6 +114,31 @@ describe("reading", () => {
   }, 30_000)
 })
 
+describe("spoilers and content warnings", () => {
+  test("a spoiler is hidden from assistive technology until a keypress reveals it, and stays revealed", async () => {
+    await open("/07_Project/Spoilers")
+    const spoiler = page.locator(".spoiler")
+    await expect(spoiler.getAttribute("aria-label")).resolves.toBe("Tiết lộ nội dung, nhấn để hiện")
+    await expect(spoiler.evaluate((el) => getComputedStyle(el).filter)).resolves.toContain("blur")
+    await spoiler.focus()
+    await page.keyboard.press("Enter")
+    await expect(spoiler.getAttribute("role")).resolves.toBeNull()
+    await page.locator("h1").focus()
+    await expect(spoiler.evaluate((el) => getComputedStyle(el).filter)).resolves.toBe("none")
+    await page.locator("details.callout[data-callout=spoiler] summary").click()
+    await expect(page.getByText("The ending is a dream.").isVisible()).resolves.toBe(true)
+  }, 30_000)
+
+  test("a note with a content warning opens once, and stays open on the next visit", async () => {
+    await open("/07_Project/Warned")
+    await expect(page.getByText("A story with a hard scene in it.").isVisible()).resolves.toBe(false)
+    await page.locator("details.cw summary").click()
+    await expect(page.getByText("A story with a hard scene in it.").isVisible()).resolves.toBe(true)
+    await page.reload({ waitUntil: "networkidle" })
+    await expect(page.getByText("A story with a hard scene in it.").isVisible()).resolves.toBe(true)
+  }, 30_000)
+})
+
 describe("keyboard", () => {
   test("Ctrl K opens search; typing, arrows and Enter open a result", async () => {
     await open("/")
@@ -227,6 +252,8 @@ const AXE_PAGES = [
   "/stats",
   "/practice",
   "/06_Reference/Secret",
+  "/07_Project/Spoilers",
+  "/07_Project/Warned",
   "/_assets/draw/Sketch.excalidraw",
 ]
 

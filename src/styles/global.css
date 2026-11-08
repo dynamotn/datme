@@ -1338,6 +1338,9 @@ details.callout[open] > summary::after {
     filter: none;
   }
 }
+.callout[data-callout="spoiler"] .callout-title {
+  color: var(--ink-2);
+}
 details.cw > summary {
   cursor: pointer;
   padding: 0.6em 1em;

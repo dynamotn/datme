@@ -878,12 +878,12 @@ const SEALED: Rendered = { html: "", headings: [], text: "", words: 0, descripti
  * A protected note renders as empty here, so its content cannot leak anywhere;
  * only renderSecret hands it out, to be encrypted.
  */
-export async function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
-  if (note.protected) return SEALED
-  const r = await renderFull(note, stack)
+export function renderNote(note: Note, stack: string[] = [note.key]): Promise<Rendered> {
+  if (note.protected) return Promise.resolve(SEALED)
+  const full = renderFull(note, stack)
   // A content warning stands in for the text everywhere but the page, where it opens onto it.
   const { warning } = note
-  return warning ? { ...r, html: warned(r.html, warning, note.url, note.lang), text: warning, description: warning } : r
+  return warning ? full.then((r) => ({ ...r, html: warned(r.html, warning, note.url, note.lang), text: warning, description: warning })) : full
 }
 
 /** The translation a poem is shown beside, rendered like the poem; undefined without one. */

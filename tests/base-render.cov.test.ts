@@ -27,7 +27,7 @@ describe("renderBaseView", () => {
     expect(renderBaseView(d, "Nope", "en-US")).toBe(list)
     const table = renderBaseView(d, "Here", "en-US", "07_Project/Talk")
     expect(table).toStartWith('<table class="dataview base-table"><thead><tr><th>Name</th><th>this.file.name</th></tr></thead>')
-    expect(table.match(/<td>Talk<\/td>/g)!.length).toBe(4)
+    expect(table.match(/<td>Talk<\/td>/g)!.length).toBe(6)
   })
 
   test("errors in the base show in its name, on the page", () => {
