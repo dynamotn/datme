@@ -83,7 +83,6 @@
     "markmap-view": "^0.18.12",
     "mermaid": "^12.0.0",
     "minisearch": "^7.2.0",
-    "pagefind": "^1.5.2",
     "perfect-freehand": "^1.2.3",
     "property-information": "^7",
     "rehype-autolink-headings": "^7.1.0",
@@ -119,6 +118,7 @@
     "happy-dom": "^21.0.4",
     "lucide-static": "^1.52.0",
     "markmap-lib": "^0.18.12",
+    "pagefind": "^1.5.2",
     "playwright": "^1.63.0",
     "typescript": "6"
   },
@@ -127,7 +127,8 @@
     "@marp-team/marp-core": "^4.4.0",
     "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
     "@terrastruct/d2": "^0.1.33",
-    "markmap-lib": "^0.18.12"
+    "markmap-lib": "^0.18.12",
+    "pagefind": "^1.5.2"
   },
   "peerDependenciesMeta": {
     "@huggingface/transformers": {
@@ -143,6 +144,9 @@
       "optional": true
     },
     "markmap-lib": {
+      "optional": true
+    },
+    "pagefind": {
       "optional": true
     }
   },

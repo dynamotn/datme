@@ -68,7 +68,7 @@ export async function optional<T>(name: string): Promise<T | undefined> {
     return (await importer(name)) as T
   } catch (e) {
     if (notFound(e)) {
-      if (!missing.has(name)) console.warn(`[datme] ${name} is not installed: the pages that need it say so; install it next to datme (bun add ${name})`)
+      if (!missing.has(name)) console.warn(`[datme] ${name} is not installed, and this garden needs it: install it next to datme (bun add ${name})`)
       missing.add(name)
       return undefined
     }

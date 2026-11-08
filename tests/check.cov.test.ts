@@ -270,7 +270,7 @@ describe("the size of the search index", () => {
     expect(notices.map((p) => p.file)).toEqual(["datme.yaml", "datme.yaml"])
     const [vi, en] = notices
     expect(vi.message).toMatch(
-      /^search index of vi-VN: about \d+(\.\d)? kB, which every reader downloads whole on their first search; search\.engine: pagefind loads only what a query needs$/,
+      /^search index of vi-VN: about \d+(\.\d)? kB, which every reader downloads whole on their first search; search\.engine: pagefind \(with bun add pagefind\) loads only what a query needs$/,
     )
     expect(en.message).toContain("search index of en-US: about")
   })

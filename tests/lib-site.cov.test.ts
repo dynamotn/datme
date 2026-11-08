@@ -15,6 +15,7 @@ import { allSeries, seriesOf } from "../src/lib/series"
 import { customCssFile, fontsHref, themeCss } from "../src/lib/theme"
 import { typeInfo } from "../src/lib/types"
 import vaultWatcher, { ignoredInVault } from "../src/lib/vault-watcher"
+import { setOptionalImport } from "../src/lib/diagrams"
 import { BRIDGY_REDIRECTS } from "../src/lib/activitypub"
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-cov-lib-"))
@@ -406,6 +407,22 @@ describe("the Astro integration", () => {
     expect(fs.existsSync(path.join(out, "pagefind"))).toBe(true)
     expect(fs.readFileSync(path.join(out, "_headers"), "utf8")).toMatch(/Content-Security-Policy: .*'sha256-/)
   }, 120_000)
+
+  test("search.engine: pagefind without Pagefind installed fails the build, saying what to install", async () => {
+    const out = path.join(tmp, "build-no-pagefind")
+    fs.mkdirSync(out, { recursive: true })
+    setSite({ cname: false, redirects: false, activitypub: undefined, headers: false, search: { engine: "pagefind", meaning: false } })
+    setOptionalImport(async (name) => {
+      throw new Error(`Cannot find package '${name}'`)
+    })
+    try {
+      await expect(hooks["astro:build:done"]!({ dir: pathToFileURL(out + "/") } as unknown as Parameters<BuildDone>[0])).rejects.toThrow(
+        "search.engine: pagefind needs the pagefind package: install it next to datme (bun add pagefind)",
+      )
+    } finally {
+      setOptionalImport(undefined)
+    }
+  })
 
   test("with every extra off, it writes nothing", async () => {
     const out = path.join(tmp, "build-none")

@@ -252,7 +252,7 @@ export function searchProblems(limit = SEARCH_INDEX_LIMIT): Problem[] {
       {
         level: "info" as const,
         file: "datme.yaml",
-        message: `search index of ${lang}: about ${formatBytes(bytes)}, which every reader downloads whole on their first search; search.engine: pagefind loads only what a query needs`,
+        message: `search index of ${lang}: about ${formatBytes(bytes)}, which every reader downloads whole on their first search; search.engine: pagefind (with bun add pagefind) loads only what a query needs`,
       },
     ]
   })

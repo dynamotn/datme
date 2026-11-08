@@ -363,7 +363,9 @@ note's text, and a reader's browser downloads it whole on their first search:
 a few hundred kilobytes for a small garden, megabytes for thousands of notes.
 `pagefind` indexes the built pages instead and loads only the parts a query
 needs. `datme check --verbose` suggests it, as a notice that never fails
-`--strict`, once a language's index would pass about 2 MB.
+`--strict`, once a language's index would pass about 2 MB. Pagefind is an
+optional dependency: install it next to datme (`bun add pagefind`), or the
+build stops and says so.
 
 ## Audio in your voice
 

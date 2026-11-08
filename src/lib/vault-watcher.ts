@@ -9,6 +9,7 @@ import { ACTOR_PATH, OUTBOX_PATH, actor, outbox, webfinger } from "./activitypub
 import { listed, byRecent, isIgnored } from "./vault"
 import { renderNote } from "./markdown"
 import { keepRequestUrl } from "./dev-look"
+import { optional } from "./diagrams"
 
 /**
  * The path of a file relative to a folder, with "/" separators so Windows
@@ -83,7 +84,9 @@ export default function vaultWatcher(): AstroIntegration {
         }
         if (site.search.engine === "pagefind") {
           // Notes mark their body for Pagefind; every other page is left out of the index.
-          const pagefind = await import("pagefind")
+          // An optional dependency: a garden searching with MiniSearch never needs it.
+          const pagefind = await optional<typeof import("pagefind")>("pagefind")
+          if (!pagefind) throw new Error("search.engine: pagefind needs the pagefind package: install it next to datme (bun add pagefind)")
           const { index } = await pagefind.createIndex({})
           if (!index) throw new Error("Pagefind could not start")
           await index.addDirectory({ path: out })

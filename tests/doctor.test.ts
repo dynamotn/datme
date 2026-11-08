@@ -90,6 +90,17 @@ describe("datme doctor", () => {
     }
   })
 
+  test("search.engine: pagefind needs Pagefind", () => {
+    const before = site.search
+    site.search = { ...before, engine: "pagefind" }
+    try {
+      const missing = diagnose(machine({ resolves: (p) => p !== "pagefind" })).find((f) => f.message.startsWith("pagefind"))!
+      expect(missing).toMatchObject({ level: "fail", fix: "bun add pagefind   (next to datme)" })
+    } finally {
+      site.search = before
+    }
+  })
+
   test("tts needs uv and a voice clip, each with its fix; without tts there is nothing to check", () => {
     const before = site.tts
     try {
