@@ -117,7 +117,8 @@ export const USAGE = `datme: publish an Obsidian vault as a digital garden
 
 Usage:
   datme dev     [vault] [--port 4321] [--host]   live preview, reloads on note changes
-  datme build   [vault] [--out ./dist] [--fresh] build the static site (dev, build and preview take --drafts)
+  datme build   [vault] [--out ./dist] [--fresh] build the static site (dev, build and preview take
+                                                 --drafts and --noindex)
   datme preview [vault] [--port 4321] [--host]   build, then serve the result
   datme check   [vault] [--verbose] [--external] report broken links and other problems
                                                  (--json for tools, --privacy for what leaves the vault,
@@ -129,6 +130,7 @@ Usage:
   datme doctor  [vault]                          check the machine and the vault before a build
   datme deploy  <host> [vault] [--branch main]   write a CI config publishing on every push
                                                  hosts: github, gitlab, netlify, cloudflare
+                                                 (--previews also builds each merge request)
   datme export  <folder> [vault] [--format epub|html] [--out file] [--lang xx]
                                                  a folder as an EPUB, or one page to print
   datme mcp     [vault]                          serve the published notes to AI assistants
@@ -145,6 +147,8 @@ Options:
   --host         listen on every network interface
   --fresh        ignore the cache of rendered notes and social cards
   --drafts       also build drafts and scheduled notes, marked and kept out of search engines
+  --noindex      keep every page out of search engines, as previews are
+  --previews     with deploy, also build every merge or pull request as a preview
   --strict       fail check and build on warnings too, not only on errors
   --verbose      also list notices: links to unpublished notes, scheduled notes;
                  with build, how many notes came from the cache
@@ -194,6 +198,10 @@ export interface Args {
   verbose?: boolean
   fresh?: boolean
   drafts?: boolean
+  /** Every page out of search engines: a preview build. */
+  noindex?: boolean
+  /** `datme deploy --previews`: also build every merge or pull request. */
+  previews?: boolean
   external?: boolean
   json?: boolean
   /** `datme check --privacy`: what leaves the vault, instead of the problems. */
@@ -228,6 +236,8 @@ export function parseArgs(argv: string[]): Args {
         strict: { type: "boolean" },
         fresh: { type: "boolean" },
         drafts: { type: "boolean" },
+        noindex: { type: "boolean" },
+        previews: { type: "boolean" },
         external: { type: "boolean" },
         json: { type: "boolean" },
         write: { type: "boolean" },
@@ -261,6 +271,9 @@ export function parseArgs(argv: string[]): Args {
       throw new CliError(`${host ? `Unknown host "${host}"` : "Missing host"}; choose one of ${TARGETS.join(", ")}.`)
     }
     target = host as Target
+    if (values.previews && target === "github") {
+      throw new CliError("GitHub Pages serves one site and cannot host previews yet; use cloudflare or netlify for previews.")
+    }
   }
   let folder: string | undefined
   if (command === "export") {
@@ -292,7 +305,7 @@ export function parseArgs(argv: string[]): Args {
   return {
     command: command as Command,
     vault,
-    ...(target ? { target, branch: values.branch } : {}),
+    ...(target ? { target, branch: values.branch, ...(values.previews ? { previews: true } : {}) } : {}),
     ...(folder ? { folder, format: (values.format ?? "epub") as "epub" | "html", lang: values.lang } : {}),
     ...(note ? { note, lang: values.lang } : {}),
     ...(from ? { from, write: values.write ?? false } : {}),
@@ -307,6 +320,7 @@ export function parseArgs(argv: string[]): Args {
     verbose: values.verbose,
     fresh: values.fresh,
     ...(values.drafts ? { drafts: true } : {}),
+    ...(values.noindex ? { noindex: true } : {}),
     ...(values.external ? { external: true } : {}),
   }
 }
@@ -447,7 +461,7 @@ export function pipelineNeeds(vault: string): { tts: boolean; semantic: boolean 
 }
 
 /** Write the CI configuration for a host at the root of the vault's repository. */
-export function deploy(target: Target, dir: string, branch?: string, needs = { tts: false, semantic: false }): void {
+export function deploy(target: Target, dir: string, branch?: string, needs = { tts: false, semantic: false }, previews = false): void {
   // git answers with resolved paths, so the vault must be resolved too to get its place in the repository.
   const vault = fs.realpathSync(dir)
   const root = git(vault, "rev-parse", "--show-toplevel") ?? vault
@@ -458,6 +472,7 @@ export function deploy(target: Target, dir: string, branch?: string, needs = { t
     vault: path.relative(root, vault) || ".",
     branch: branch ?? git(vault, "symbolic-ref", "--short", "HEAD") ?? "main",
     project: projectName(path.basename(root)),
+    previews,
     ...needs,
   })
   if (needs.tts && target === "netlify") {
@@ -620,7 +635,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
     return void console.log(`Wrote ${file}`)
   }
 
-  if (args.command === "deploy") return deploy(args.target!, vault, args.branch, pipelineNeeds(vault))
+  if (args.command === "deploy") return deploy(args.target!, vault, args.branch, pipelineNeeds(vault), args.previews)
 
   if (args.command === "migrate") {
     const plan = planMigration(vault, args.from!)
@@ -634,6 +649,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   env.DATME_VAULT = vault
   if (args.site) env.DATME_SITE_URL = args.site
   if (args.drafts) env.DATME_DRAFTS = "1"
+  if (args.noindex) env.DATME_NOINDEX = "1"
   const out = path.resolve(cwd, args.out ?? "dist")
   const rel = path.relative(vault, out)
   // Output written inside the vault must not be scanned on the next build; the vault names paths with "/".

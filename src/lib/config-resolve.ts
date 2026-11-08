@@ -207,6 +207,8 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
   const url = (env.DATME_SITE_URL ?? c.site.url)?.replace(/\/+$/, "")
   /** Set by `--drafts`: drafts and scheduled notes are built too, for previewing. */
   const drafts = env.DATME_DRAFTS === "1"
+  /** Set by `--noindex`, as preview builds are: every page is kept out of search engines. */
+  const noindex = env.DATME_NOINDEX === "1"
   let webmentions: { domain: string } | undefined
   if (c.webmentions) {
     const domain = c.webmentions.domain ?? (url ? new URL(url).host : undefined)
@@ -324,6 +326,7 @@ export function resolveConfig(raw: unknown, vault: string, env: Record<string, s
     stats: c.stats,
     offline: c.offline,
     drafts,
+    noindex,
     map: c.map,
     glossary: c.glossary,
     archiveDeadLinks: c.archiveDeadLinks,

@@ -221,6 +221,8 @@ describe("small files", () => {
     expect(await r.text()).toBe(`User-agent: *\nAllow: /\n\nSitemap: ${site.url}/sitemap-index.xml\n`)
     setSite({ url: undefined })
     expect(await robots.GET().text()).toBe("User-agent: *\nAllow: /\n")
+    setSite({ noindex: true })
+    expect(await robots.GET().text()).toBe("User-agent: *\nDisallow: /\n")
   })
 
   test("opensearch.xml searches the garden from the address bar, with the title escaped", async () => {

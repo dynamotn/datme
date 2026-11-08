@@ -108,6 +108,8 @@ export function headersFile(site: SiteConfig, scriptHashes: string[] = []): stri
     "Referrer-Policy: strict-origin-when-cross-origin",
     "Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()",
     "X-Frame-Options: SAMEORIGIN",
+    // --noindex, for previews: also keeps files that carry no robots meta (PDFs, images) out of search engines.
+    ...(site.noindex ? ["X-Robots-Tag: noindex"] : []),
     // A site served over HTTPS stays on it; a host that serves only HTTP ignores the header.
     ...(site.url?.startsWith("https://") ? ["Strict-Transport-Security: max-age=31536000"] : []),
     // biome-ignore lint/complexity/useOptionalChain: headers may be `false`, which `?.` does not narrow

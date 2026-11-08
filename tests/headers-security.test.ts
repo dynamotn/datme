@@ -13,6 +13,11 @@ describe("_headers hardening", () => {
     expect(headers({})).not.toContain("Strict-Transport-Security")
   })
 
+  test("--noindex keeps every file out of search engines, as previews are", () => {
+    expect(rule(headersFile(resolveConfig({}, "/v", { DATME_NOINDEX: "1" })), "/*")).toContain("  X-Robots-Tag: noindex\n")
+    expect(headers({})).not.toContain("X-Robots-Tag")
+  })
+
   test("the CSP lets Giscus load its stylesheet", () => {
     const site = resolveConfig({ headers: { csp: true }, comments: { provider: "giscus", repo: "a/b", repoId: "R", category: "C", categoryId: "D" } }, "/v")
     const style = contentSecurityPolicy(site, [])

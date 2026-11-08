@@ -177,7 +177,7 @@ const packBand = drawSlot("footer-band", look, lang, { author: site.author, year
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
-    {noindex && <meta name="robots" content="noindex" />}
+    {(noindex || site.noindex) && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={withBase("/favicon.svg")} type="image/svg+xml" />
     <link rel="preconnect" href={MONO_FONT_ORIGIN} crossorigin />

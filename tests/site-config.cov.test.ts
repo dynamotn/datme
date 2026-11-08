@@ -46,6 +46,8 @@ describe("resolveConfig, the rest of the options", () => {
     expect(resolveConfig({ bibliography: ["a.bib", "/b.bib"] }, "/v").bibliography).toEqual(["a.bib", "b.bib"])
     expect(resolveConfig({}, "/v").bibliography).toEqual([])
     expect(resolveConfig({}, "/v").drafts).toBe(false)
+    expect(resolveConfig({}, "/v", { DATME_NOINDEX: "1" }).noindex).toBe(true)
+    expect(resolveConfig({}, "/v").noindex).toBe(false)
   })
 
   test("a title of only symbols falls back to a star logo, and the root folder to Notes", () => {

@@ -37,6 +37,8 @@ export const SALT_KEYS = {
   ignore: "salt",
   publish: "salt",
   drafts: "salt",
+  // Only the frame's robots meta, robots.txt and _headers change.
+  noindex: "skip",
   home: "salt",
   privateLinks: "salt",
   neighbours: "salt",

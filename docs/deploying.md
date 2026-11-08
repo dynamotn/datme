@@ -128,4 +128,40 @@ instead.
 
 Build branches with `--drafts` to see drafts and scheduled notes, and
 `--site <url>` (or `$DATME_SITE_URL`) for the preview's own address. Drafts are
-marked as such and kept out of search engines.
+marked as such and kept out of search engines. `--noindex` (or
+`DATME_NOINDEX=1`) keeps the whole preview out of them: every page carries
+`noindex`, `robots.txt` disallows everything, and `_headers` sends
+`X-Robots-Tag: noindex` where the host reads it (Netlify, Cloudflare Pages).
+
+`datme deploy <host> --previews` writes this for you: every merge or pull
+request is built with `--drafts --noindex` and `--site` set to its own preview
+address, and published there without audio. The published site's pipeline is
+unchanged.
+
+- **GitLab**: a `pages-preview` job in `.gitlab-ci.yml` runs in merge request
+  pipelines and publishes a Pages
+  [parallel deployment](https://docs.gitlab.com/user/project/pages/parallel_deployments/)
+  under `mr-<iid>/` of the Pages address. This needs GitLab Premium or
+  Ultimate. The merge request shows the link as its environment, and GitLab
+  removes the preview when the merge request is merged or closed, or after a
+  week without a push. To have the job also comment the link on the merge
+  request, create a project access token (Reporter role, `api` scope) and add
+  it as a masked CI/CD variable named `DATME_PREVIEW_TOKEN`; without it the job
+  skips the comment, and a comment that fails only prints a warning. It
+  comments once per merge request.
+- **Netlify**: `netlify.toml` gets a `[context.deploy-preview]` build command.
+  Netlify builds deploy previews of pull requests itself and comments their
+  address on the pull request, so datme adds no comment of its own.
+- **Cloudflare**: a second workflow, `.github/workflows/datme-preview.yml`,
+  deploys each pull request to the branch alias
+  `https://pr-<number>.<project>.pages.dev`, with the secrets of the main
+  workflow, then comments that address on the pull request with the workflow's
+  own `GITHUB_TOKEN`, editing its comment on later pushes. Cloudflare comments
+  only for projects connected to Git, not for the direct uploads datme makes,
+  so the comments do not double. If Cloudflare gave the project another
+  subdomain (`<project>-abc.pages.dev`, when the name was taken), fix
+  `PREVIEW_URL` in the workflow. Pull requests from forks get no secrets, and
+  so no preview.
+- **GitHub Pages** serves one site per repository and cannot host previews
+  (its preview deployments are not public), so `deploy github --previews` stops
+  with an error. Use Netlify or Cloudflare for previews.

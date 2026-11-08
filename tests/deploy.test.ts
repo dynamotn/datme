@@ -185,6 +185,85 @@ describe("deployFiles", () => {
     expect(deployFiles("netlify", opts)[0].content).not.toContain("DATME_TTS")
   })
 
+  test("previews: false leaves every pipeline exactly as it was", () => {
+    for (const target of TARGETS) expect(deployFiles(target, { ...opts, previews: false })).toEqual(deployFiles(target, opts))
+  })
+
+  test("previews: true builds each merge or pull request with drafts, out of search engines, at its own address", () => {
+    const flags = "--drafts --noindex --site"
+    for (const extra of [{}, { tts: true }, { semantic: true }]) {
+      const o = { ...opts, ...extra, previews: true }
+      for (const target of ["gitlab", "netlify", "cloudflare"] as const) {
+        for (const file of deployFiles(target, o)) {
+          if (file.path.endsWith(".yml")) expect(() => loadYaml(file.content)).not.toThrow()
+          else expect(() => Bun.TOML.parse(file.content)).not.toThrow()
+        }
+      }
+      // The published site is built as before.
+      expect(deployFiles("gitlab", o)[0].content).toStartWith(deployFiles("gitlab", { ...o, previews: false })[0].content)
+      expect(deployFiles("cloudflare", o)[0]).toEqual(deployFiles("cloudflare", { ...o, previews: false })[0])
+    }
+
+    type GitlabJob = {
+      variables: Record<string, string>
+      script: string[]
+      rules: { if: string }[]
+      environment: Record<string, string>
+      pages: Record<string, string>
+      cache: { policy: string }
+      artifacts: { paths: string[] }
+    }
+    const gitlab = loadYaml(deployFiles("gitlab", { ...opts, previews: true })[0].content) as Record<string, GitlabJob>
+    const job = gitlab["pages-preview"]
+    expect(job.rules).toEqual([{ if: '$CI_PIPELINE_SOURCE == "merge_request_event"' }])
+    expect(job.pages.path_prefix).toBe("mr-$CI_MERGE_REQUEST_IID")
+    expect(job.environment).toEqual({ name: "preview/mr-$CI_MERGE_REQUEST_IID", url: "$CI_PAGES_URL" })
+    expect(job.cache.policy).toBe("pull")
+    expect(job.artifacts.paths).toEqual(["public"])
+    expect(job.script[0]).toBe(`bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out public ${flags} "$CI_PAGES_URL"`)
+    // The comment's token is a masked CI/CD variable, read only when set, and a failed comment does not fail the job.
+    expect(job.script[1]).toStartWith('if [ -n "$DATME_PREVIEW_TOKEN" ]; then bun -e ')
+    expect(job.script[1]).toContain('"PRIVATE-TOKEN": process.env.DATME_PREVIEW_TOKEN')
+    expect(job.script[1]).toContain("/merge_requests/")
+    expect(job.script[1]).toContain("!notes.some((n) => n.body === body)")
+    expect(job.script[1]).not.toContain("process.exit")
+    expect(job.variables.DATME_TTS).toBeUndefined()
+    expect(
+      (loadYaml(deployFiles("gitlab", { ...opts, tts: true, previews: true })[0].content) as Record<string, GitlabJob>)["pages-preview"].variables.DATME_TTS,
+    ).toBe("off")
+
+    // Netlify builds deploy previews and comments them itself; only the command changes.
+    const netlify = Bun.TOML.parse(deployFiles("netlify", { ...opts, previews: true })[0].content) as { context: { "deploy-preview": { command: string } } }
+    expect(netlify.context["deploy-preview"].command).toEndWith(
+      `bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out dist ${flags} "$DEPLOY_PRIME_URL"`,
+    )
+    expect(deployFiles("netlify", { ...opts, previews: true })).toHaveLength(1)
+
+    type Step = { run?: string; uses?: string; with?: Record<string, string>; env?: Record<string, string> }
+    type Workflow = {
+      on: Record<string, unknown>
+      permissions: Record<string, string>
+      jobs: { preview: { if: string; env: Record<string, string>; steps: Step[] } }
+    }
+    const files = deployFiles("cloudflare", { ...opts, previews: true })
+    expect(files.map((f) => f.path)).toEqual([".github/workflows/datme-cloudflare.yml", ".github/workflows/datme-preview.yml"])
+    const wf = loadYaml(files[1].content) as Workflow
+    expect(Object.keys(wf.on)).toEqual(["pull_request"])
+    expect(wf.permissions).toEqual({ contents: "read", deployments: "write", "pull-requests": "write" })
+    const preview = wf.jobs.preview
+    expect(preview.if).toBe("github.event.pull_request.head.repo.full_name == github.repository")
+    expect(preview.env.PREVIEW_URL).toBe("https://pr-${{ github.event.number }}.my-garden.pages.dev")
+    expect(preview.env.DATME_TTS).toBeUndefined()
+    expect(preview.steps.some((s) => s.run === `bunx @dynamotn/datme@${pkg.version} build 'notes/My Vault' --out dist ${flags} "$PREVIEW_URL"`)).toBe(true)
+    const deploy = preview.steps.find((s) => s.uses === "cloudflare/wrangler-action@v3")!
+    expect(deploy.with?.apiToken).toBe("${{ secrets.CLOUDFLARE_API_TOKEN }}")
+    expect(deploy.with?.command).toBe("pages deploy dist --project-name=my-garden --branch=pr-${{ github.event.number }}")
+    const comment = preview.steps.at(-1)!
+    expect(comment.run).toBe('gh pr comment "$PR" --body "Preview at $PREVIEW_URL" --edit-last --create-if-none')
+    expect(comment.env?.GH_TOKEN).toBe("${{ github.token }}")
+    expect((loadYaml(deployFiles("cloudflare", { ...opts, tts: true, previews: true })[1].content) as Workflow).jobs.preview.env.DATME_TTS).toBe("off")
+  })
+
   test("project names are what Cloudflare accepts", () => {
     expect(projectName("Khu Vườn của Tôi!")).toBe("khu-vuon-cua-toi")
     expect(projectName("***")).toBe("garden")
@@ -201,6 +280,24 @@ describe("datme deploy", () => {
     })
     expect(() => parseArgs(["deploy"])).toThrow("Missing host")
     expect(() => parseArgs(["deploy", "vercel"])).toThrow('Unknown host "vercel"')
+  })
+
+  test("--previews is for deploy, and refused for GitHub Pages, which cannot host previews", () => {
+    expect(parseArgs(["deploy", "gitlab", "--previews"])).toMatchObject({ target: "gitlab", previews: true })
+    expect(parseArgs(["deploy", "gitlab"]).previews).toBeUndefined()
+    expect(parseArgs(["build", "--previews"]).previews).toBeUndefined()
+    expect(() => parseArgs(["deploy", "github", "--previews"])).toThrow("cannot host previews")
+    expect(parseArgs(["build", "--noindex"])).toMatchObject({ command: "build", noindex: true })
+    expect(parseArgs(["build"]).noindex).toBeUndefined()
+  })
+
+  test("--previews writes the preview workflow next to the pipeline", async () => {
+    const repo = path.join(tmp, "previews")
+    fs.mkdirSync(repo, { recursive: true })
+    Bun.spawnSync(["git", "init", "-q", "-b", "main", repo])
+    await run({ command: "deploy", target: "cloudflare", vault: repo, previews: true }, {}, tmp)
+    expect(fs.readFileSync(path.join(repo, ".github/workflows/datme-preview.yml"), "utf8")).toContain("--branch=pr-${{ github.event.number }}")
+    expect(fs.existsSync(path.join(repo, ".github/workflows/datme-cloudflare.yml"))).toBe(true)
   })
 
   test("writes at the root of the repository holding the vault, and never overwrites", async () => {

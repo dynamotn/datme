@@ -32,6 +32,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | --- | --- | --- |
 | `--site <url>` | dev, build, preview | Overrides the public URL (also `$DATME_SITE_URL`), handy for preview deploys |
 | `--drafts` | dev, build, preview | Also builds drafts and scheduled notes, marked as such and kept out of search engines |
+| `--noindex` | dev, build, preview | Keeps every page out of search engines (also `DATME_NOINDEX=1`): for preview deploys |
 | `--strict` | check, build | Fails on warnings too, for CI |
 | `--fresh` | build | Ignores the build cache and starts from scratch |
 | `--verbose` | check, build | Also lists links to unpublished notes, and scheduled notes; with build, how many notes came from the cache and the size of the data readers' browsers fetch |
@@ -41,6 +42,7 @@ The vault defaults to `$DATME_VAULT`, then the current directory.
 | `--external` | check | Also checks that links to other websites still answer (404, 410 and unreachable hosts are reported) |
 | `--write` | migrate | Applies the changes instead of only listing them |
 | `--branch` | deploy | The branch to publish from (default: the current one) |
+| `--previews` | deploy | Also builds every merge or pull request as a preview (see [Preview deploys](deploying.md#preview-deploys)) |
 | `--format html` | export | One self-contained page to print as PDF, instead of EPUB |
 | `--out` | build, export | Where to write the site (default `./dist`) or the book |
 | `--lang` | export, url, related | The language of the book, URL or suggestions (default: the first one) |

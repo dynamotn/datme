@@ -24,6 +24,8 @@ export interface DeployOpts {
   tts?: boolean
   /** Whether related.semantic is on, so the pipeline installs transformers.js next to datme. */
   semantic?: boolean
+  /** Whether every merge or pull request is also built as a preview, with its drafts and out of search engines. */
+  previews?: boolean
 }
 
 /** Shell-safe argument, quoted only when needed. */
@@ -47,6 +49,9 @@ const build = (o: DeployOpts, out: string, bun = "") =>
   o.semantic
     ? `${bun}bun add --global @dynamotn/datme@${version} @huggingface/transformers@${TRANSFORMERS_VERSION} && "$(${bun}bun pm bin -g)/datme" build ${arg(o.vault)} --out ${out}`
     : `${bun}bunx @dynamotn/datme@${version} build ${arg(o.vault)} --out ${out}`
+
+/** The build of a preview at `site`: drafts included, every page out of search engines. */
+const previewBuild = (o: DeployOpts, out: string, site: string, bun = "") => `${build(o, out, bun)} --drafts --noindex --site ${site}`
 
 const githubCache = (o: DeployOpts) =>
   o.tts
@@ -196,6 +201,45 @@ const gitlabVoice = [
   .map((l) => `    - |\n        ${l}\n`)
   .join("")
 
+/**
+ * Comments the preview's address on the merge request once, with a token from the masked CI/CD variable
+ * DATME_PREVIEW_TOKEN, as the job token cannot write notes. A failed comment only warns: the preview still deploys.
+ */
+const GITLAB_COMMENT = `bun -e 'const api = process.env.CI_API_V4_URL + "/projects/" + process.env.CI_PROJECT_ID + "/merge_requests/" + process.env.CI_MERGE_REQUEST_IID + "/notes"; const headers = { "PRIVATE-TOKEN": process.env.DATME_PREVIEW_TOKEN, "Content-Type": "application/json" }; const body = "Preview at " + process.env.CI_PAGES_URL; const notes = await fetch(api + "?per_page=100", { headers }).then((r) => (r.ok ? r.json() : [])); if (!notes.some((n) => n.body === body)) { const r = await fetch(api, { method: "POST", headers, body: JSON.stringify({ body }) }); if (!r.ok) console.error("Could not comment the preview: HTTP " + r.status) }'`
+
+/** A Pages parallel deployment of every merge request, removed by GitLab when the merge request closes. */
+const gitlabPreview = (o: DeployOpts) => `
+# Builds every merge request at its own address, with drafts and out of search engines. Needs Pages parallel
+# deployments (GitLab Premium or Ultimate). With a project access token (Reporter, api scope) in the masked
+# CI/CD variable DATME_PREVIEW_TOKEN, it also comments the address on the merge request.
+pages-preview:
+  image: oven/bun:${BUN_VERSION}
+  variables:
+    ASTRO_TELEMETRY_DISABLED: "1"
+    GIT_DEPTH: 0
+    DATME_CACHE: .datme-cache
+${o.tts ? '    DATME_TTS: "off" # previews are published without audio\n' : ""}  cache:
+    key: datme
+    policy: pull # previews read the published site's cache, and never write it
+    paths:
+      - .datme-cache
+  pages:
+    path_prefix: mr-$CI_MERGE_REQUEST_IID
+    expire_in: 1 week # without a push for a week; closing the merge request removes it at once
+  environment:
+    name: preview/mr-$CI_MERGE_REQUEST_IID
+    url: $CI_PAGES_URL
+  script:
+    - ${previewBuild(o, "public", '"$CI_PAGES_URL"')}
+    - |
+        if [ -n "$DATME_PREVIEW_TOKEN" ]; then ${GITLAB_COMMENT}; fi
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+`
+
 function gitlab(o: DeployOpts): DeployFile[] {
   return [
     {
@@ -221,7 +265,7 @@ ${o.tts ? gitlabVoice : ""}    - ${build(o, "public")}
     # Add a daily pipeline schedule (Build → Pipeline schedules) so notes with a publish_date appear on their day
     # and appearance.schedule switches styles.
     - if: $CI_PIPELINE_SOURCE == "schedule"
-`,
+${o.previews ? gitlabPreview(o) : ""}`,
     },
   ]
 }
@@ -239,7 +283,15 @@ ${o.tts ? '  DATME_TTS = "off" # Netlify builds publish without audio\n' : ""}
   # Netlify's image has no Bun, so the build installs it first.
   command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ${build(o, "dist", "~/.bun/bin/").replace(/"/g, '\\"')}"
   publish = "dist"
-`,
+${
+  o.previews
+    ? `
+# Deploy previews of pull requests show drafts and stay out of search engines; Netlify comments their address itself.
+[context.deploy-preview]
+  command = "curl -fsSL https://bun.sh/install | bash -s bun-v${BUN_VERSION} && ${previewBuild(o, "dist", '"$DEPLOY_PRIME_URL"', "~/.bun/bin/").replace(/"/g, '\\"')}"
+`
+    : ""
+}`,
     },
   ]
 }
@@ -293,8 +345,63 @@ ${githubCacheSave(o)}      - uses: cloudflare/wrangler-action@v3
   ]
 }
 
+/** A Cloudflare Pages preview of every pull request, at the alias of a branch named after it. */
+const cloudflarePreview = (o: DeployOpts): DeployFile => ({
+  path: ".github/workflows/datme-preview.yml",
+  content: `# Builds every pull request as a Cloudflare Pages preview, with drafts and out of search engines, and comments
+# its address on the pull request. Uses the secrets of datme-cloudflare.yml, which pull requests from forks do
+# not get, so those have no preview. The address assumes the project's subdomain is ${o.project}.pages.dev.
+name: datme-preview
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+
+concurrency:
+  group: preview-\${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      DATME_CACHE: .datme-cache
+${o.tts ? '      DATME_TTS: "off" # previews are published without audio\n' : ""}      PREVIEW_URL: https://pr-\${{ github.event.number }}.${o.project}.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${BUN_VERSION}
+      - uses: actions/cache/restore@v4
+        with:
+          path: .datme-cache
+          key: datme-\${{ github.sha }}
+          restore-keys: datme-
+      - run: ${previewBuild(o, "dist", '"$PREVIEW_URL"')}
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${o.project} --branch=pr-\${{ github.event.number }}
+      - run: gh pr comment "$PR" --body "Preview at $PREVIEW_URL" --edit-last --create-if-none
+        env:
+          GH_TOKEN: \${{ github.token }}
+          GH_REPO: \${{ github.repository }}
+          PR: \${{ github.event.number }}
+`,
+})
+
 export function deployFiles(target: Target, opts: DeployOpts): DeployFile[] {
-  return { github, gitlab, netlify, cloudflare }[target](opts)
+  const files = { github, gitlab, netlify, cloudflare }[target](opts)
+  return opts.previews && target === "cloudflare" ? [...files, cloudflarePreview(opts)] : files
 }
 
 /** A Cloudflare Pages project name: lowercase letters, digits and dashes. */
