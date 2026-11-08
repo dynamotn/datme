@@ -4,7 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import * as childProcess from "node:child_process"
 import * as astro from "astro"
-import { parseArgs, run, pruneCache, claimCache, deploy, pipelineNeeds, PACKAGE_ROOT, CliError, type Args } from "../src/cli"
+import { parseArgs, run, dropWork, pruneCache, claimCache, deploy, pipelineNeeds, PACKAGE_ROOT, CliError, type Args } from "../src/cli"
 import { site, type SiteConfig } from "../src/site.config"
 import * as mcp from "../src/lib/mcp"
 import * as doctor from "../src/lib/doctor"
@@ -463,7 +463,7 @@ describe("run, Astro commands", () => {
   })
   afterEach(() => {
     // A preview leaves its work folder until the process exits.
-    if (build.mock.calls.length) fs.rmSync(path.dirname(stagingOf(build)), { recursive: true, force: true })
+    dropWork()
     build.mockRestore()
     dev.mockRestore()
     preview.mockRestore()

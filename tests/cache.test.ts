@@ -182,12 +182,17 @@ describe("the default cache", () => {
 })
 
 describe("staging folders", () => {
-  test("those of builds that died are swept; a running build's, links, other files and other names stay", () => {
+  const old = new Date(Date.now() - 2 * 24 * 3600_000)
+  const made = (dir: string, name: string, mtime = old) => {
+    fs.mkdirSync(path.join(dir, name), { recursive: true })
+    fs.utimesSync(path.join(dir, name), mtime, mtime)
+  }
+
+  test("old ones of builds that died are swept; a running build's, young ones, links, files and other names stay", () => {
     const dir = path.join(tmp, "staging")
     // Process 1 always runs, though as another user it may refuse our signal.
-    for (const name of ["datme-build-999999999-abc", `datme-build-${process.pid}-abc`, "datme-build-1-abc", "datme-build-x", "cache"]) {
-      fs.mkdirSync(path.join(dir, name), { recursive: true })
-    }
+    for (const name of ["datme-build-999999999-abc", `datme-build-${process.pid}-abc`, "datme-build-1-abc", "datme-build-x", "cache"]) made(dir, name)
+    made(dir, "datme-build-999999996-young", new Date())
     // A dead build's name on a link or a file is not a folder of ours.
     const elsewhere = path.join(tmp, "elsewhere")
     fs.mkdirSync(elsewhere)
@@ -195,7 +200,15 @@ describe("staging folders", () => {
     fs.writeFileSync(path.join(dir, "datme-build-999999997-file"), "")
     sweepStaging(dir)
     expect(fs.readdirSync(dir).sort()).toEqual(
-      ["cache", "datme-build-1-abc", `datme-build-${process.pid}-abc`, "datme-build-999999997-file", "datme-build-999999998-link", "datme-build-x"].sort(),
+      [
+        "cache",
+        "datme-build-1-abc",
+        `datme-build-${process.pid}-abc`,
+        "datme-build-999999996-young",
+        "datme-build-999999997-file",
+        "datme-build-999999998-link",
+        "datme-build-x",
+      ].sort(),
     )
     expect(fs.existsSync(elsewhere)).toBe(true)
     // A missing folder is nothing to sweep.
@@ -204,7 +217,7 @@ describe("staging folders", () => {
 
   test("a folder of another user stays", () => {
     const dir = path.join(tmp, "staging-owner")
-    fs.mkdirSync(path.join(dir, "datme-build-999999999-abc"), { recursive: true })
+    made(dir, "datme-build-999999999-abc")
     const uid = spyOn(process, "getuid").mockReturnValue(process.getuid!() + 1)
     try {
       sweepStaging(dir)
@@ -212,5 +225,18 @@ describe("staging folders", () => {
       uid.mockRestore()
     }
     expect(fs.existsSync(path.join(dir, "datme-build-999999999-abc"))).toBe(true)
+  })
+
+  test("an entry that vanishes or cannot be removed does not stop the sweep", () => {
+    const dir = path.join(tmp, "staging-race")
+    made(dir, "datme-build-999999999-abc")
+    const lstat = spyOn(fs, "lstatSync").mockImplementation(() => {
+      throw Object.assign(new Error("gone"), { code: "ENOENT" })
+    })
+    try {
+      expect(() => sweepStaging(dir)).not.toThrow()
+    } finally {
+      lstat.mockRestore()
+    }
   })
 })

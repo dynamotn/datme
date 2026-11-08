@@ -7,6 +7,7 @@ import sitemap from "@astrojs/sitemap"
 import vaultWatcher from "./src/lib/vault-watcher.ts"
 import { site } from "./src/site.config.ts"
 import { indexable } from "./src/lib/sitemap.ts"
+import { fsAllow } from "./src/lib/fs-allow.ts"
 
 let outDir = ""
 // Astro's caches live in the work folder the CLI sets, since the package may be read-only.
@@ -23,7 +24,7 @@ export default defineConfig({
   build: { concurrency: Math.max(1, Math.min(8, os.availableParallelism())) },
   // The graph's layout worker is a module: it loads the flat or the 3D layout only when needed.
   // Astro's root is a work folder that links to the package: ids keep the links, so every file is found under the root.
-  vite: { worker: { format: "es" }, cacheDir, resolve: { preserveSymlinks: Boolean(work) } },
+  vite: { worker: { format: "es" }, cacheDir, resolve: { preserveSymlinks: Boolean(work) }, server: work ? { fs: { allow: fsAllow(work) } } : {} },
   cacheDir,
   // A sitemap needs absolute URLs, so it is only built when site.url is set.
   integrations: [

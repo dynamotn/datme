@@ -21,12 +21,28 @@ export { PACKAGE_ROOT }
  */
 let work: string | undefined
 function workDir(): string {
-  if (!work || !fs.existsSync(work)) {
+  if (!work) {
     const made = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `datme-build-${process.pid}-`)))
     process.once("exit", () => fs.rmSync(made, { recursive: true, force: true }))
+    // A signal skips "exit". Whoever else listens (Vite's server) closes and exits on its own; without one, exit like the default would.
+    for (const [signal, code] of [
+      ["SIGINT", 130],
+      ["SIGTERM", 143],
+    ] as const) {
+      process.once(signal, () => {
+        dropWork()
+        if (process.listenerCount(signal) === 0) process.exit(code)
+      })
+    }
     work = made
   }
   return work
+}
+
+/** Remove the work folder now; the next use makes a new one. */
+export function dropWork(): void {
+  if (work) fs.rmSync(work, { recursive: true, force: true })
+  work = undefined
 }
 /** Whether a process is still running; one we may not signal is, all the same. */
 function alive(pid: number): boolean {
@@ -40,7 +56,7 @@ function alive(pid: number): boolean {
 
 /**
  * Remove the work folders of builds that died before cleaning up, so they do
- * not pile up. Only real folders of this user: the temporary directory is
+ * not pile up. Only old, real folders of this user: the temporary directory is
  * shared, and a link or another user's folder is none of ours to delete.
  */
 export function sweepStaging(dir = os.tmpdir()): void {
@@ -53,8 +69,14 @@ export function sweepStaging(dir = os.tmpdir()): void {
   for (const name of entries) {
     const pid = Number(name.match(/^datme-build-(\d+)-/)?.[1])
     if (!pid || alive(pid)) continue
-    const stat = fs.lstatSync(path.join(dir, name))
-    if (stat.isDirectory() && stat.uid === (process.getuid?.() ?? stat.uid)) fs.rmSync(path.join(dir, name), { recursive: true, force: true })
+    try {
+      const stat = fs.lstatSync(path.join(dir, name))
+      // A day of grace: the process may live in another PID namespace that shares this directory.
+      const old = Date.now() - stat.mtimeMs > 24 * 3600_000
+      if (old && stat.isDirectory() && stat.uid === (process.getuid?.() ?? stat.uid)) fs.rmSync(path.join(dir, name), { recursive: true, force: true })
+    } catch {
+      // Best effort: another sweep or a tmp cleaner got there first.
+    }
   }
 }
 
@@ -328,6 +350,8 @@ export function publishOutput(staging: string, out: string, vault: string): void
   try {
     fs.cpSync(staging, next, { recursive: true })
     fs.writeFileSync(path.join(next, MARKER), "This directory is replaced on every `datme build`.\n")
+    // mkdtemp makes it private to the user; a web server running as another user must read the site.
+    fs.chmodSync(next, 0o777 & ~process.umask())
   } catch (e) {
     fs.rmSync(next, { recursive: true, force: true })
     throw e
@@ -525,20 +549,22 @@ footer: {}
  * links to the package's sources and packages; the package itself stays
  * untouched.
  */
-function astroRoot(): { root: string; configFile: string } {
+export function astroRoot(packageRoot = PACKAGE_ROOT): { root: string; configFile: string } {
   const root = workDir()
   process.env.DATME_WORK = root
-  for (const name of ["src", "package.json", "tsconfig.json", "node_modules"]) {
-    const target = name === "node_modules" ? modulesDir() : path.join(PACKAGE_ROOT, name)
-    if (!fs.existsSync(path.join(root, name))) fs.symlinkSync(target, path.join(root, name), "junction")
+  // Directories are linked (a junction on Windows); the two small files are copied, as a junction cannot point at a file. Once per work folder.
+  if (!fs.existsSync(path.join(root, "src"))) {
+    fs.symlinkSync(path.join(packageRoot, "src"), path.join(root, "src"), "junction")
+    fs.symlinkSync(modulesDir(packageRoot), path.join(root, "node_modules"), "junction")
+    for (const name of ["package.json", "tsconfig.json"]) fs.copyFileSync(path.join(packageRoot, name), path.join(root, name))
   }
-  return { root, configFile: path.relative(root, path.join(PACKAGE_ROOT, "astro.config.mjs")) }
+  return { root, configFile: path.relative(root, path.join(packageRoot, "astro.config.mjs")) }
 }
 
 /** The node_modules folder the package resolves astro from, wherever the package manager put it. */
-function modulesDir(): string {
+function modulesDir(packageRoot: string): string {
   const at = (dir: string) => (path.basename(dir) === "node_modules" ? dir : path.join(dir, "node_modules"))
-  let dir = PACKAGE_ROOT
+  let dir = packageRoot
   while (!fs.existsSync(path.join(at(dir), "astro", "package.json")) && path.dirname(dir) !== dir) dir = path.dirname(dir)
   return at(dir)
 }
@@ -780,7 +806,7 @@ export async function run(args: Args, env: NodeJS.ProcessEnv = process.env, cwd 
   // The staging directory goes once the site is published, or the build failed; preview serves it until the process ends (the work folder goes at exit).
   sweepStaging()
   const staging = path.join(workDir(), "dist")
-  const dropStaging = () => fs.rmSync(workDir(), { recursive: true, force: true })
+  const dropStaging = dropWork
   try {
     await inStaging(() => astro.build({ ...astroRoot(), outDir: staging }))
     if (cacheDir) pruneCache(cacheDir, started)

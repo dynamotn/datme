@@ -1,10 +1,10 @@
-import { afterAll, describe, expect, test } from "bun:test"
+import { afterAll, spyOn, describe, expect, test } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { load as loadYaml } from "js-yaml"
 import { meets } from "../src/lib/doctor"
-import { parseArgs, resolveVault, publishOutput, starterConfig, run, inStaging, PACKAGE_ROOT, CliError, USAGE } from "../src/cli"
+import { parseArgs, resolveVault, publishOutput, starterConfig, run, inStaging, astroRoot, dropWork, PACKAGE_ROOT, CliError, USAGE } from "../src/cli"
 import { resolveConfig } from "../src/site.config"
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-cli-"))
@@ -94,6 +94,60 @@ describe("inStaging", () => {
   })
 })
 
+describe("signals", () => {
+  test("a signal removes the work folder, and ends the process only when nothing else handles it", async () => {
+    let dir = ""
+    await inStaging(async () => void (dir = process.cwd()))
+    const wrapper = (signal: "SIGINT" | "SIGTERM") => process.rawListeners(signal).at(-1) as () => void
+    const saved = { SIGINT: process.rawListeners("SIGINT"), SIGTERM: process.rawListeners("SIGTERM") }
+    const [interrupt, terminate] = [wrapper("SIGINT"), wrapper("SIGTERM")]
+    const exit = spyOn(process, "exit").mockImplementation((() => undefined) as never)
+    const other = () => {}
+    try {
+      process.removeAllListeners("SIGINT")
+      process.removeAllListeners("SIGTERM")
+      // Vite's server closes and exits on its own.
+      process.on("SIGINT", other)
+      interrupt()
+      expect(fs.existsSync(dir)).toBe(false)
+      expect(exit).not.toHaveBeenCalled()
+      terminate()
+      expect(exit).toHaveBeenCalledWith(143)
+    } finally {
+      exit.mockRestore()
+      process.removeAllListeners("SIGINT")
+      process.removeAllListeners("SIGTERM")
+      for (const [signal, listeners] of Object.entries(saved)) for (const l of listeners) process.on(signal, l as () => void)
+    }
+  })
+})
+
+describe("astroRoot", () => {
+  test("links the package's folders and copies its two files; removing the work folder leaves the package intact", () => {
+    const pkg = path.join(tmp, "pkg")
+    fs.mkdirSync(path.join(pkg, "src"), { recursive: true })
+    fs.mkdirSync(path.join(pkg, "node_modules/astro"), { recursive: true })
+    fs.writeFileSync(path.join(pkg, "src/a.txt"), "a")
+    fs.writeFileSync(path.join(pkg, "node_modules/astro/package.json"), "{}")
+    fs.writeFileSync(path.join(pkg, "package.json"), '{"name":"p"}')
+    fs.writeFileSync(path.join(pkg, "tsconfig.json"), "{}")
+    const { root, configFile } = astroRoot(pkg)
+    expect(configFile).toBe(path.relative(root, path.join(pkg, "astro.config.mjs")))
+    expect(fs.readFileSync(path.join(root, "src/a.txt"), "utf8")).toBe("a")
+    expect(fs.lstatSync(path.join(root, "src")).isSymbolicLink()).toBe(true)
+    expect(fs.realpathSync(path.join(root, "node_modules"))).toBe(fs.realpathSync(path.join(pkg, "node_modules")))
+    // Files are copies: a junction cannot point at one.
+    for (const name of ["package.json", "tsconfig.json"]) expect(fs.lstatSync(path.join(root, name)).isFile()).toBe(true)
+    // A second call finds the links in place.
+    expect(astroRoot(pkg).root).toBe(root)
+    dropWork()
+    expect(fs.existsSync(root)).toBe(false)
+    expect(fs.readFileSync(path.join(pkg, "src/a.txt"), "utf8")).toBe("a")
+    expect(fs.existsSync(path.join(pkg, "node_modules/astro/package.json"))).toBe(true)
+    expect(fs.existsSync(path.join(pkg, "package.json"))).toBe(true)
+  })
+})
+
 describe("publishOutput", () => {
   const staging = path.join(tmp, "staging")
   fs.mkdirSync(staging, { recursive: true })
@@ -104,6 +158,12 @@ describe("publishOutput", () => {
     publishOutput(staging, out, path.join(tmp, "v"))
     expect(fs.readFileSync(path.join(out, "index.html"), "utf8")).toBe("<p>new</p>")
     expect(fs.existsSync(path.join(out, ".datme-build"))).toBe(true)
+  })
+
+  test("the site is readable by a web server of another user, not private like a temporary folder", () => {
+    const out = path.join(tmp, "out-mode")
+    publishOutput(staging, out, path.join(tmp, "v"))
+    expect(fs.statSync(out).mode & 0o777).toBe(0o777 & ~process.umask())
   })
 
   test("replaces a previous build, dropping stale files", () => {
