@@ -3,7 +3,21 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     // .astro files are left out: Biome reads only their frontmatter, and would format half a file.
-    "includes": ["src/**", "tests/**", "bin/**", "tools/**", "examples/**", "*.mjs", "*.json", "*.jsonc", "!tests/fixtures", "!**/*.astro", "!bin/datme.js"]
+    // src/lib/lucide-icons.ts is written by tools/lucide-icons.ts, and checked against it by a test.
+    "includes": [
+      "src/**",
+      "tests/**",
+      "bin/**",
+      "tools/**",
+      "examples/**",
+      "*.mjs",
+      "*.json",
+      "*.jsonc",
+      "!tests/fixtures",
+      "!**/*.astro",
+      "!bin/datme.js",
+      "!src/lib/lucide-icons.ts"
+    ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 160 },
   "javascript": {

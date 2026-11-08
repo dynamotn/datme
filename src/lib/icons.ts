@@ -6,9 +6,9 @@
  */
 import fs from "node:fs"
 import path from "node:path"
-import { createRequire } from "node:module"
 import { site } from "../site.config"
 import { escapeAttrKeepGt } from "./html"
+import { LUCIDE, LUCIDE_OPEN } from "./lucide-icons"
 
 const DATA = ".obsidian/plugins/obsidian-icon-folder/data.json"
 const PACKS = ".obsidian/icons"
@@ -94,12 +94,7 @@ const sized = (svg: string) =>
     .trim()
 
 function lucideFile(name: string): string | undefined {
-  try {
-    const lucide = path.dirname(createRequire(import.meta.url).resolve("lucide-static/package.json"))
-    return fs.readFileSync(path.join(lucide, "icons", `${name}.svg`), "utf8")
-  } catch {
-    return undefined
-  }
+  return Object.hasOwn(LUCIDE, name) ? `${LUCIDE_OPEN} ${LUCIDE[name]} </svg>` : undefined
 }
 
 const lucides = new Map<string, string | undefined>()
