@@ -23,15 +23,18 @@ let work: string | undefined
 function workDir(): string {
   if (!work) {
     const made = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `datme-build-${process.pid}-`)))
-    process.once("exit", () => fs.rmSync(made, { recursive: true, force: true }))
-    // A signal skips "exit". Whoever else listens (Vite's server) closes and exits on its own; without one, exit like the default would.
+    // Only while it is still ours: once dropped, the name may already belong to someone else.
+    process.once("exit", () => {
+      if (work === made) dropWork()
+    })
+    // A signal skips "exit". Always exit after cleaning up: other listeners (rolldown's signal-exit) wait for us to, and Vite never handles SIGINT.
     for (const [signal, code] of [
       ["SIGINT", 130],
       ["SIGTERM", 143],
     ] as const) {
       process.once(signal, () => {
         dropWork()
-        if (process.listenerCount(signal) === 0) process.exit(code)
+        process.exit(code)
       })
     }
     work = made

@@ -95,24 +95,29 @@ describe("inStaging", () => {
 })
 
 describe("signals", () => {
-  test("a signal removes the work folder, and ends the process only when nothing else handles it", async () => {
+  test("a signal removes the work folder and ends the process, even when something else listens", async () => {
     let dir = ""
     await inStaging(async () => void (dir = process.cwd()))
-    const wrapper = (signal: "SIGINT" | "SIGTERM") => process.rawListeners(signal).at(-1) as () => void
+    const wrapper = (signal: "SIGINT" | "SIGTERM" | "exit") => process.rawListeners(signal).at(-1) as () => void
     const saved = { SIGINT: process.rawListeners("SIGINT"), SIGTERM: process.rawListeners("SIGTERM") }
-    const [interrupt, terminate] = [wrapper("SIGINT"), wrapper("SIGTERM")]
+    const [interrupt, terminate, onExit] = [wrapper("SIGINT"), wrapper("SIGTERM"), wrapper("exit")]
     const exit = spyOn(process, "exit").mockImplementation((() => undefined) as never)
     const other = () => {}
     try {
       process.removeAllListeners("SIGINT")
       process.removeAllListeners("SIGTERM")
-      // Vite's server closes and exits on its own.
+      // rolldown's signal-exit listens too, and waits for the others to exit.
       process.on("SIGINT", other)
       interrupt()
       expect(fs.existsSync(dir)).toBe(false)
-      expect(exit).not.toHaveBeenCalled()
+      expect(exit).toHaveBeenCalledWith(130)
       terminate()
       expect(exit).toHaveBeenCalledWith(143)
+      // The name is no longer ours: "exit" leaves whatever is there now alone.
+      fs.mkdirSync(dir)
+      onExit()
+      expect(fs.existsSync(dir)).toBe(true)
+      fs.rmdirSync(dir)
     } finally {
       exit.mockRestore()
       process.removeAllListeners("SIGINT")
