@@ -26,6 +26,22 @@ jobs:
       - run: bunx astro check
       - run: bun test --coverage
 
+  # The fixture garden in Chromium (tests/browser): keyboard flows, the graph, the service worker and
+  # axe with colour contrast, which the happy-dom tests cannot check.
+  browser:
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:browser
+
   # Known advisories in the locked dependencies (bun audit reads bun.lock; nothing is installed).
   # The whole report prints first; a high or critical advisory then fails the run.
   # bun audit cannot tell dev dependencies from those users install, so a dev-only one fails it too.

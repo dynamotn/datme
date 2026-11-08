@@ -31,6 +31,17 @@ test:
     reports:
       codequality: gl-code-quality.json
 
+# The fixture garden in Chromium (tests/browser): keyboard flows, the graph, the service worker and
+# axe with colour contrast, which the happy-dom tests cannot check. Chromium and the libraries it needs
+# come from the Playwright version of bun.lock.
+browser:
+  <<: *git
+  needs: [test]
+  script:
+    - bun install --frozen-lockfile
+    - bunx playwright install --with-deps chromium
+    - bun run test:browser
+
 # Known advisories in the locked dependencies (bun audit reads bun.lock; nothing is installed).
 # The whole report prints first; a high or critical advisory then fails the pipeline.
 # bun audit cannot tell dev dependencies from those users install, so a dev-only one fails it too.
