@@ -4,244 +4,28 @@ import path from "node:path"
 import { execFileSync, spawnSync } from "node:child_process"
 import { StringDecoder } from "node:string_decoder"
 import { parseYaml } from "./yaml"
-import { site, type Lang, type StyleName } from "../site.config"
-import { pickOption, CHROMES, type Chrome } from "./look"
+import { site, type Lang } from "../site.config"
+import { pickOption, CHROMES } from "./look"
 import { langPrefix, t } from "./i18n"
-import { sluggify, slugTag, slugToUrl, urlToSlug, folderDisplayName } from "./slug"
-import { preprocess, DOC, type LinkRef, type LinkProblem } from "./obsidian"
-import { parseCanvas, type CanvasData } from "./canvas"
+import { sluggify, slugTag, slugToUrl, urlToSlug } from "./slug"
+import { preprocess, DOC, assetUrl } from "./obsidian"
 import { flashcards, isDeck } from "./flashcards"
 import { isKanban, kanban } from "./kanban"
-import { fenceAfter, resolvePassword, splitLocked } from "./locked"
+import { resolvePassword, splitLocked } from "./locked"
 import { isSlides, isTheme, slideDirectives } from "./slides"
 import { keepIndent, markProsCons } from "./layout-source"
 import { cite, parseBibtex, type BibEntry } from "./citations"
-import { citationPlaces, FM_RE, linkPlaces, propertyPlace, yamlErrorPlace, type Place } from "./positions"
-import katex from "katex"
-import crypto from "node:crypto"
-import { parseDrawing, parseSelection, renderParts, renderScene, type FileView, type Scene } from "./excalidraw"
-import { assetUrl, urlPlaceholder, type DrawnDrawing } from "./obsidian"
-import { findInGarden } from "./neighbours"
-import { privateLinkText, showsName } from "./privacy"
+import { citationPlaces, FM_RE, propertyPlace, yamlErrorPlace, type Place } from "./positions"
 import { CONFIG_FILES } from "./config-files"
+import { contentLanguage, fallbackOf, filterLanguage, textLanguages } from "./vault-languages"
+import { fold, linkResolver, MD_EXT, orNone, toArray } from "./vault-links"
+import { buildDocs, drawingRenderer } from "./vault-drawings"
+import { deriveIndexes } from "./vault-indexes"
+import { LAYOUTS, type Note, type Problem, type SourceNote, type Vault } from "./vault-types"
 
-/** A published markdown file of the vault, independent of language. */
-export interface SourceNote {
-  /** Vault-relative path without the .md extension. */
-  key: string
-  file: string
-  stem: string
-  /** Vault-relative directory, "" for the vault root. */
-  dir: string
-  fm: Record<string, unknown>
-  raw: string
-  isHome: boolean
-  /** Set for notes with a `password` field; the page is published encrypted. */
-  password?: string
-}
-
-/** Page layouts a note can ask for with its `layout` property. */
-export const LAYOUTS = [
-  "cv",
-  "gallery",
-  "timeline",
-  "links",
-  "uses",
-  "now",
-  "faq",
-  "quotes",
-  "paper",
-  "decision",
-  "changelog",
-  "dialogue",
-  "highlights",
-  "glossary",
-  "trip",
-  "syllabus",
-  "poem",
-  "letter",
-  "compare",
-  "checklist",
-  "recipe-card",
-  "hub",
-  "lore",
-  "projects",
-  "books",
-  "movies",
-  "talks",
-  "recipes",
-  "places",
-  "shelf",
-  "daily",
-  "bookmarks",
-  "people",
-  "snippets",
-  "episodes",
-  "courses",
-  "wishlist",
-  "quotebook",
-  "questions",
-  "digest",
-] as const
-export type Layout = (typeof LAYOUTS)[number]
-
-/** A source note as seen in one language. */
-export interface Note {
-  key: string
-  lang: Lang
-  slug: string
-  url: string
-  /** URL the note would have without its permalink; it redirects to `url`. */
-  formerUrl?: string
-  title: string
-  aliases: string[]
-  tags: string[]
-  created?: Date
-  updated?: Date
-  banner?: string
-  bannerPos: string
-  /** Picture standing for the note in a collection: its `cover` property, else its `avatar`, else its banner. */
-  cover?: string
-  /** Sound of an episode (`audio` property): a URL, or a file of the vault (`file`, vault-relative) that is then published. */
-  audio?: { href: string; file?: string }
-  /** A course's `certificate`: a URL, or a file of the vault (`file`, vault-relative) that is then published. */
-  certificate?: { href: string; file?: string }
-  /** How the page is laid out (`layout` property): a page of its own text reshaped, or a collection of notes. */
-  layout?: Layout
-  /** Pictures of the speakers of a dialogue, by name (its `speakers` property). */
-  speakers?: Record<string, string>
-  /** A letter's signature as a picture (its `signature` property naming an image). */
-  signature?: string
-  /** The other language a poem is shown beside (its `bilingual` property): its preprocessed markdown. */
-  translation?: { lang: Lang; md: string }
-  /** Style this page is drawn in (`style` property), instead of its folder's. */
-  style?: StyleName
-  /** Navigation frame of this page (`chrome` property), instead of the usual one. */
-  chrome?: Chrome
-  cssclasses: string[]
-  description?: string
-  /** Configured stage of the note: its `stage` property, else its top-level folder. */
-  stage?: string
-  types: string[]
-  isBlog: boolean
-  isMoc: boolean
-  isHome: boolean
-  unlisted: boolean
-  /** Language the note is written in: `lang` frontmatter, else the site's default language. */
-  sourceLang: Lang
-  /** Whether this language has its own text: the source language, or a <!--lang:xx--> block holding real text. */
-  translated: boolean
-  /**
-   * Language of the blocks the page shows: `lang` when translated, else the
-   * note's fallback (`fallback_lang`, or its source language) when that has text.
-   */
-  contentLang: Lang
-  /** Single line breaks are kept (poems), from datme.yaml lineBreaks or `lineBreaks` frontmatter. */
-  hardBreaks: boolean
-  /** Encrypted with its password: no content may leak into excerpts, search or feeds. */
-  protected: boolean
-  dir: string
-  /** Markdown after language filtering and Obsidian syntax conversion. */
-  md: string
-  links: LinkRef[]
-  /** Vault-relative assets the note embeds or links. */
-  assets: string[]
-  /** A flashcard deck: its cards and clozes can be practised. */
-  deck: boolean
-  /**
-   * Parts written between <!--lock:password--> and <!--lock:*-->, preprocessed;
-   * published encrypted. A part without a password (its group is not set) is left out.
-   */
-  lockedParts: { password?: string; md: string }[]
-  /** A Marp slide deck (`marp: true`): its global directives, from the frontmatter. */
-  slides?: Record<string, unknown>
-  /** Built only because of `--drafts`: shown as a draft and kept out of search engines. */
-  draft: boolean
-  source: SourceNote
-}
-
-export interface Backlink {
-  note: Note
-  context: string
-}
-
-export interface FolderNode {
-  segment: string
-  name: string
-  dir: string
-  url: string
-  folders: FolderNode[]
-  notes: Note[]
-  /** A note named after its folder, shown as the folder's introduction. */
-  folderNote?: Note
-}
-
-/** A published Obsidian canvas or base, shown as a page of its own. */
-export interface Doc {
-  rel: string
-  kind: "canvas" | "base" | "drawing"
-  name: string
-  dir: string
-  /** Raw source: JSON for a canvas, YAML for a base. */
-  src: string
-  canvas?: CanvasData
-  /** Canvas text nodes per language, as preprocessed markdown, by node id. */
-  texts: Record<Lang, Record<string, string>>
-}
-
-/** Something wrong in the vault that a reader of the site would notice, reported by `datme check`. */
-export interface Problem extends Partial<Place> {
-  /** error: visibly broken on the site; warning: likely a mistake; info: expected in a private vault. */
-  level: "error" | "warning" | "info"
-  /** Vault-relative file the problem is in. */
-  file: string
-  message: string
-  /** The outside URL the problem is about, for dead links. */
-  url?: string
-}
-
-export interface Vault {
-  version: number
-  /** Broken links, missing files and clashes found while indexing. */
-  problems: Problem[]
-  /** Canvases and bases linked from published notes (all of them with `publish: all`). */
-  docs: Map<string, Doc>
-  /** The note rendered as the home page, if the vault has one. */
-  home?: SourceNote
-  sources: Map<string, SourceNote>
-  notes: Record<Lang, Note[]>
-  byKey: Record<Lang, Map<string, Note>>
-  backlinks: Record<Lang, Map<string, Backlink[]>>
-  tags: Record<Lang, Map<string, Note[]>>
-  trees: Record<Lang, FolderNode>
-  folders: Record<Lang, Map<string, FolderNode>>
-  /** Vault-relative paths of every asset referenced by a published note. */
-  assets: Set<string>
-  /** CSS of the vault's Marp themes, for slide decks that name one. */
-  slideThemes: string[]
-  /** Links of published notes to private ones, with the words each left on the page. */
-  privateLinks: PrivateLinkUse[]
-  resolveNote(target: string, fromDir: string): SourceNote | undefined
-  resolveAsset(target: string, fromDir: string): string | undefined
-  /** The words a link to a private note shows in a language ("" for none); undefined for any other target. */
-  privateLink(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined
-}
-
-/** A link from a published note to a private one. */
-export interface PrivateLinkUse {
-  file: string
-  target: string
-  /** The words it left on the page, in the default language; "" for none. */
-  shown: string
-}
-
-const MD_EXT = /\.md$/i
-
-/**
- * A name as the lookups of links compare it: lowercase and in composed Unicode
- * (NFC), since macOS may write file names decomposed (NFD) while links are typed composed.
- */
-const fold = (s: string) => s.normalize("NFC").toLowerCase()
+export * from "./vault-types"
+export { contentLanguage, fallbackOf, filterLanguage, textLanguages } from "./vault-languages"
+export { countNotes } from "./vault-indexes"
 
 /** Whether a vault-relative path is in an ignored folder; regardless of case, so Templates is ignored like templates. */
 export function isIgnored(rel: string): boolean {
@@ -297,17 +81,6 @@ export function parseFrontmatter(src: string): { fm: Record<string, unknown>; bo
   return { fm, body: src.slice(m[0].length), error }
 }
 
-function toArray(v: unknown): string[] {
-  if (v == null) return []
-  if (Array.isArray(v)) return v.filter((x) => x != null).map(String)
-  if (typeof v === "string")
-    return v
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-  return [String(v)]
-}
-
 function toDate(v: unknown): Date | undefined {
   if (v == null || v === "") return undefined
   const d = new Date(String(v))
@@ -338,109 +111,6 @@ export function isPublished(fm: Record<string, unknown>, mode: "explicit" | "all
 /** Language a note is written in: its `lang` frontmatter when the site has it, else the site's default. */
 export function sourceLangOf(fm: Record<string, unknown>): Lang {
   return typeof fm.lang === "string" && site.langs.includes(fm.lang) ? fm.lang : site.defaultLang
-}
-
-/** A link target with %20 and the like decoded; a lone % as in "50% rule" is taken as written. */
-function decodeTarget(target: string): string {
-  try {
-    return decodeURI(target)
-  } catch {
-    return target
-  }
-}
-
-/** A <!--lang:xx--> marker alone on its line; one quoted in a sentence or a table is text. */
-const LANG_MARKER = /^\s*<!--lang:([^\s>]+)-->$/
-
-/**
- * Languages whose <!--lang:xx--> blocks hold real text, in order of first
- * appearance. Blank lines, headings, HTML comments (even over several lines)
- * and empty list items such as `-` or `- [ ]` don't count, so a block a
- * template filled with headings is still untranslated. Same rules as the
- * lang-blocks Obsidian plugin, so the vault and the site agree.
- */
-export function textLanguages(src: string): Lang[] {
-  let fence: string | null = null
-  let inComment = false
-  let current: Lang | null = null
-  const found: Lang[] = []
-  for (let line of src.split("\n")) {
-    line = line.replace(/[\t\r ]*$/, "")
-    fence = fenceAfter(fence, line)
-    if (fence === null) {
-      const m = line.match(LANG_MARKER)
-      if (m) {
-        current = m[1] === "*" ? null : m[1]
-        continue
-      }
-    }
-    const text = line.trim()
-    if (inComment) {
-      if (text.includes("-->")) inComment = false
-      continue
-    }
-    if (fence === null && text.startsWith("<!--")) {
-      if (!text.includes("-->")) inComment = true
-      continue
-    }
-    if (current === null || found.includes(current)) continue
-    if (text === "" || /^#{1,6}(\s|$)/.test(text) || /^([-*+]|\d+[.)])(\s+\[.\])?$/.test(text)) continue
-    found.push(current)
-  }
-  return found
-}
-
-/**
- * Fallback language of a note: its `fallback_lang` frontmatter (the name
- * PolyglotMarkdown uses), else its source language. An empty value or `none`
- * turns the fallback off.
- */
-export function fallbackOf(fm: Record<string, unknown>, sourceLang: Lang): Lang | null {
-  if (!("fallback_lang" in fm)) return sourceLang
-  const v = fm.fallback_lang
-  if (typeof v !== "string") return null
-  const value = v.trim()
-  return value === "" || value.toLowerCase() === "none" ? null : value
-}
-
-/**
- * Language whose blocks a page in `lang` shows. A note without text in `lang`
- * shows its fallback language instead, when that has text, rather than only
- * its shared text; a note without language blocks shows everything anyway.
- */
-export function contentLanguage(src: string, lang: Lang, fallback: Lang | null, texts = textLanguages(src)): Lang {
-  if (texts.includes(lang) || !src.includes("<!--lang:")) return lang
-  return fallback !== null && fallback !== lang && texts.includes(fallback) ? fallback : lang
-}
-
-/** Port of the fork's MultiLanguage transformer: keeps blocks of one language. */
-export function filterLanguage(src: string, lang: Lang): string {
-  let fence: string | null = null
-  let inLang = false
-  let inThisLang = false
-  const out: string[] = []
-  for (let line of src.split("\n")) {
-    // Only the \r goes: two trailing spaces are a line break.
-    line = line.replace(/\r$/, "")
-    fence = fenceAfter(fence, line)
-    if (fence === null) {
-      const m = line.trimEnd().match(LANG_MARKER)
-      if (m) {
-        if (m[1] === "*") {
-          inLang = false
-          inThisLang = false
-        } else {
-          inLang = true
-          inThisLang = m[1] === lang
-        }
-        continue
-      }
-    }
-    // A code block of another language's block is that language's too.
-    if (inLang && !inThisLang) continue
-    out.push(line)
-  }
-  return out.join("\n")
 }
 
 /** Calls `onLine` with each line of an open file, read a chunk at a time, so its size is no limit. */
@@ -604,27 +274,6 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
   const found = { md: [] as string[], files: [] as string[], broken: [] as string[] }
   walk(site.vault, found)
 
-  // Index every asset by path and by basename, for Obsidian's shortest-path lookup.
-  const assetByPath = new Map<string, string>()
-  const assetByName = new Map<string, string[]>()
-  for (const rel of found.files) {
-    assetByPath.set(fold(rel), rel)
-    const name = fold(path.posix.basename(rel))
-    assetByName.set(name, [...(assetByName.get(name) ?? []), rel])
-  }
-
-  // Excalidraw sources, published or not: an embed is what makes a drawing public.
-  // A drawing's own `publish: false` only keeps it from being a note (with `publish: all`); `ignore` keeps it home.
-  const drawingByPath = new Map<string, string>()
-  const drawingByName = new Map<string, string[]>()
-  for (const rel of [...found.md, ...found.files].filter((f) => /\.excalidraw(\.md)?$/i.test(f))) {
-    const lower = fold(rel)
-    drawingByPath.set(lower, rel)
-    drawingByPath.set(lower.replace(/\.md$/, ""), rel)
-    const name = path.posix.basename(lower).replace(/\.md$/, "")
-    drawingByName.set(name, [...(drawingByName.get(name) ?? []), rel])
-  }
-
   const problems: Problem[] = []
   const report = (level: Problem["level"], file: string, message: string, place?: Place) => void problems.push({ level, file, message, ...place })
   // What is read once per language, such as a drawing inside another or a transcript, is reported once.
@@ -637,18 +286,10 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
   // A note's file as written, read again only to tell where its problems are.
   const sourceTexts = new Map<string, string>()
   const readSource = (abs: string) => sourceTexts.get(abs) ?? sourceTexts.set(abs, fs.readFileSync(abs, "utf8")).get(abs)!
-  const orNone = (places: Place[]) => (places.length ? places : [undefined])
   // The config's own, such as a theme pack that could not be used.
   for (const w of site.warnings) report("warning", w.file, w.message)
   // A note behind a broken symlink would otherwise vanish from the site unseen.
   for (const rel of found.broken) report("warning", rel, "broken symlink: what it points to is missing, so it is skipped")
-  // Every note of the vault, published or not, to tell a private link target from a missing one.
-  const anyNote = new Set<string>()
-  for (const rel of found.md) {
-    const key = fold(rel.replace(MD_EXT, ""))
-    anyNote.add(key)
-    anyNote.add(path.posix.basename(key))
-  }
 
   // Every bibliography of the config, merged; a later file wins for a key both define.
   const bib = new Map<string, BibEntry>()
@@ -739,160 +380,9 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
   // A symlinked home note would otherwise be published twice.
   if (home && homeTarget && homeTarget !== home.key) sources.delete(homeTarget)
 
-  const byPath = new Map<string, SourceNote>()
-  const byStem = new Map<string, SourceNote[]>()
-  const byAlias = new Map<string, SourceNote>()
-  for (const s of sources.values()) {
-    byPath.set(fold(s.key), s)
-    const stem = fold(s.stem)
-    byStem.set(stem, [...(byStem.get(stem) ?? []), s])
-  }
-  for (const s of sources.values()) {
-    for (const a of toArray(s.fm.aliases ?? s.fm.alias)) {
-      const lower = fold(a)
-      const other = byAlias.get(lower) ?? byStem.get(lower)?.find((o) => o !== s)
-      if (other && other !== s) {
-        const place = propertyPlace(readSource(s.file), [s.fm.aliases != null ? "aliases" : "alias"], a)
-        report("warning", s.key + ".md", `alias "${a}" is also the name or an alias of ${other.key}.md, so links to it are ambiguous`, place)
-      }
-      byAlias.set(lower, s)
-    }
-  }
-  if (home && homeTarget && homeTarget !== home.key) {
-    const stem = fold(path.posix.basename(homeTarget))
-    byStem.set(stem, [home, ...(byStem.get(stem) ?? [])])
-  }
-
-  // Notes of a folder link the same targets, and a reused note asks its links again: each answer is worked out once.
-  const resolved = new Map<string, SourceNote | undefined>()
-  function resolveNote(target: string, fromDir: string): SourceNote | undefined {
-    const id = `${fromDir}\0${target}`
-    if (resolved.has(id)) return resolved.get(id)
-    const hit = findNote(target, fromDir)
-    resolved.set(id, hit)
-    return hit
-  }
-
-  function findNote(target: string, fromDir: string): SourceNote | undefined {
-    const t = target.trim().replace(MD_EXT, "").replace(/^\/+/, "")
-    if (!t) return undefined
-    const lower = fold(t)
-    const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
-    const hit = byPath.get(relative) ?? byPath.get(lower)
-    if (hit) return hit
-    if (!lower.includes("/")) {
-      const cands = byStem.get(lower)
-      if (cands?.length) return [...cands].sort((a, b) => a.key.length - b.key.length)[0]
-    } else {
-      // A partial path such as folder/Note: only notes of that name can end with it.
-      const hit = byStem.get(path.posix.basename(lower))?.find((s) => fold(s.key).endsWith("/" + lower))
-      if (hit) return hit
-    }
-    return byAlias.get(lower)
-  }
-
-  function resolveDrawing(target: string, fromDir: string): string | undefined {
-    const t = fold(decodeTarget(target.trim()).replace(/^\/+/, ""))
-    const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
-    const hit = drawingByPath.get(relative) ?? drawingByPath.get(t)
-    if (hit) return hit
-    const cands = drawingByName.get(path.posix.basename(t).replace(/\.md$/, ""))
-    return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
-  }
-
-  const scenes = new Map<string, Scene>()
-  function sceneOf(rel: string): Scene {
-    let scene = scenes.get(rel)
-    if (!scene) {
-      scene = parseDrawing(fs.readFileSync(path.join(site.vault, rel), "utf8"))
-      scenes.set(rel, scene)
-    }
-    return scene
-  }
-
-  /** How deep drawings may embed drawings, so a drawing embedding itself still ends. */
-  const MAX_NESTING = 3
-
-  /**
-   * Resolvers of one drawing: its links lead to published notes (as URL
-   * placeholders, filled per language) and its embedded files show images,
-   * other drawings, notes or formulas. What it uses is gathered as it draws.
-   */
-  function drawingContext(rel: string, scene: Scene, used: { assets: string[]; links: string[] }, depth: number) {
-    const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
-    const resolveLink = (target: string): string | undefined => {
-      if (/^https?:\/\//.test(target)) return target
-      const note = resolveNote(target.replace(/#.*$/, ""), dir)
-      if (!note) {
-        linkProblem(rel, { kind: "link", target })
-        return undefined
-      }
-      used.links.push(note.key)
-      return urlPlaceholder(note.key)
-    }
-    const resolveFile = (id: string): FileView | undefined => {
-      const file = scene.files[id]
-      // Only pictures: a data URL of anything else is not followed.
-      if (file?.dataURL?.startsWith("data:image/")) return { kind: "image", href: file.dataURL }
-      const embed = file?.embed
-      if (!embed) return undefined
-      if (embed.kind === "url") return { kind: "image", href: embed.url }
-      if (embed.kind === "latex") {
-        return { kind: "math", mathml: katex.renderToString(embed.tex, { output: "mathml", displayMode: true, throwOnError: false }) }
-      }
-      const nested = /\.excalidraw(\.md)?$/i.test(embed.target) || !/\.\w+$/.test(embed.target) ? resolveDrawing(embed.target, dir) : undefined
-      if (nested && depth < MAX_NESTING) {
-        try {
-          const inner = sceneOf(nested)
-          const parts = renderParts(inner, { ...drawingContext(nested, inner, used, depth + 1), idPrefix: `ex${depth + 1}-${hash(nested)}` })
-          return { kind: "drawing", viewBox: parts.viewBox, body: parts.body }
-        } catch (e) {
-          reportOnce("warning", rel, `drawing ${nested} inside ${rel} cannot be drawn: ${(e as Error).message}`)
-          return undefined
-        }
-      }
-      const asset = resolveAsset(embed.target, dir)
-      if (asset && /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(asset)) {
-        used.assets.push(asset)
-        return { kind: "image", href: assetUrl(asset) }
-      }
-      const note = resolveNote(embed.target, dir)
-      if (note) {
-        used.links.push(note.key)
-        const title = typeof note.fm.title === "string" ? note.fm.title : note.stem
-        return { kind: "note", title, href: urlPlaceholder(note.key) }
-      }
-      // A private note embedded in a drawing shows as such, without its name.
-      return /\.\w+$/.test(embed.target) ? undefined : { kind: "note", title: "🔒" }
-    }
-    return { resolveLink, resolveFile }
-  }
-
-  const hash = (s: string) => crypto.createHash("sha1").update(s).digest("hex").slice(0, 8)
-
-  /** Draw a drawing (or the part a fragment names) once per build, whatever embeds it. */
-  const drawn = new Map<string, DrawnDrawing | undefined>()
-  function drawDrawing(target: string, fromDir: string, fragment = ""): DrawnDrawing | undefined {
-    const rel = resolveDrawing(target, fromDir)
-    if (!rel) return undefined
-    const id = `${rel}#${fragment}`
-    if (drawn.has(id)) return drawn.get(id)
-    let result: DrawnDrawing | undefined
-    try {
-      const scene = sceneOf(rel)
-      const used = { assets: [] as string[], links: [] as string[] }
-      const svg = renderScene(scene, {
-        ...drawingContext(rel, scene, used, 0),
-        select: parseSelection(fragment),
-        idPrefix: `ex-${hash(id)}`,
-      })
-      result = { svg, assets: [...new Set(used.assets)], links: [...new Set(used.links)], rel }
-    } catch (e) {
-      report("warning", rel, `drawing${fragment ? ` #${fragment}` : ""} cannot be drawn: ${(e as Error).message}`)
-    }
-    drawn.set(id, result)
-    return result
-  }
+  const links = linkResolver({ found, sources, home, homeTarget, report, readSource })
+  const { resolveNote, resolveAsset, resolveDrawing, privateLink, gardenLink, linkProblem, privateLinks } = links
+  const drawDrawing = drawingRenderer(links, report, reportOnce)
 
   /** A vault file as text, such as the transcript of a video. */
   function readText(rel: string): string | undefined {
@@ -902,74 +392,6 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
       const why = (e as NodeJS.ErrnoException).code ?? (e as Error).message
       reportOnce("warning", rel, `transcript cannot be read (${why}), so its player shows no captions`)
       return undefined
-    }
-  }
-
-  function resolveAsset(target: string, fromDir: string): string | undefined {
-    const t = decodeTarget(target.trim()).replace(/^\/+/, "")
-    const relative = fold(path.posix.normalize(path.posix.join(fromDir, t)))
-    const hit = assetByPath.get(relative) ?? assetByPath.get(fold(t))
-    if (hit) return hit
-    const cands = assetByName.get(fold(path.posix.basename(t)))
-    return cands?.length ? [...cands].sort((a, b) => a.length - b.length)[0] : undefined
-  }
-
-  /** Whether a link target names a note of the vault that is not published. */
-  function isPrivateNote(target: string, fromDir: string): boolean {
-    const t = target.trim().replace(/^\/+/, "")
-    if (!t || (/\.\w+$/.test(t) && !MD_EXT.test(t))) return false
-    const name = fold(t.replace(MD_EXT, ""))
-    return anyNote.has(name) || anyNote.has(fold(path.posix.normalize(path.posix.join(fromDir, name))))
-  }
-
-  function privateLink(target: string, fromDir: string, alias: string | undefined, lang: Lang): string | undefined {
-    if (resolveNote(target, fromDir) || !isPrivateNote(target, fromDir)) return undefined
-    return privateLinkText(site.privateLinks, target, alias, t(lang).privateNote)
-  }
-
-  /** A note of a neighbour garden; its home page while its index is unknown, e.g. offline on a first build. */
-  function gardenLink(name: string, target: string, lang: Lang) {
-    const url = site.neighbours[name]
-    if (!url) return undefined
-    const found = findInGarden(name, target, lang)
-    return found === undefined ? { home: url + "/" } : found
-  }
-
-  // The same broken link shows up once per language; report it once.
-  const seenProblems = new Set<string>()
-  const privateLinks: PrivateLinkUse[] = []
-  function linkProblem(file: string, p: LinkProblem): void {
-    const id = `${file}\0${p.kind}\0${p.target}`
-    if (seenProblems.has(id)) return
-    seenProblems.add(id)
-    const t = p.target.trim().replace(/^\/+/, "")
-    const isNote = !/\.\w+$/.test(t) || MD_EXT.test(t)
-    // Each time the note writes the link is a problem of its own; a drawing's links have no place in a note.
-    const source = sources.get(file.replace(MD_EXT, ""))
-    const places = source ? linkPlaces(readSource(source.file), p.kind, t) : []
-    const reportEach = (level: Problem["level"], message: string) => {
-      for (const place of orNone(places)) report(level, file, message, place)
-    }
-    if (p.kind === "garden") {
-      const [name, note] = [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)]
-      reportEach("warning", `link to "${note}" not found in the garden "${name}" (${site.neighbours[name]})`)
-    } else if (p.kind === "drawing") {
-      reportEach("warning", `drawing "${t}" is not in the vault, so it is not shown`)
-    } else if (isNote && isPrivateNote(t, path.posix.dirname(file))) {
-      const shown = p.shown ?? t
-      privateLinks.push({ file, target: t, shown })
-      reportEach(
-        "info",
-        !shown
-          ? `${p.kind} to unpublished note "${t}" is left out`
-          : showsName(t, shown)
-            ? `${p.kind} to unpublished note "${t}" shows its name as plain text; privateLinks: placeholder or hide keeps it off the site`
-            : `${p.kind} to unpublished note "${t}" is shown as plain text`,
-      )
-    } else if (isNote) {
-      reportEach("error", `${p.kind} to missing note "${t}"`)
-    } else {
-      reportEach("error", `${p.kind} to missing file "${t}"`)
     }
   }
 
@@ -1286,58 +708,7 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
   function noteUrl(key: string, lang: Lang): string {
     return byKey[lang]?.get(key)?.url ?? "#"
   }
-  // Canvases and bases referenced by published notes become pages; canvas text is markdown too.
-  const docs = new Map<string, Doc>()
-  for (const rel of docRefs) {
-    const src = fs.readFileSync(path.join(site.vault, rel), "utf8")
-    const dir = path.posix.dirname(rel) === "." ? "" : path.posix.dirname(rel)
-    const kind = /\.excalidraw(\.md)?$/i.test(rel) ? "drawing" : rel.toLowerCase().endsWith(".canvas") ? "canvas" : "base"
-    const name = path.posix
-      .basename(rel)
-      .replace(DOC, "")
-      .replace(/\.excalidraw(\.md)?$/i, "")
-    const doc: Doc = { rel, kind, name, dir, src, texts: {} }
-    if (kind === "drawing") {
-      // The whole drawing; its links are URL placeholders, filled per language below.
-      const drawing = drawDrawing(rel, "")
-      if (!drawing) continue
-      drawing.assets.forEach((a) => assets.add(a))
-      for (const lang of site.langs) doc.texts[lang] = { svg: drawing.svg }
-    }
-    if (kind === "canvas") {
-      try {
-        doc.canvas = parseCanvas(src)
-      } catch {
-        console.warn(`[datme] skipped ${rel}: not a valid canvas`)
-        report("error", rel, "not a valid canvas, so it is not published")
-        continue
-      }
-      for (const lang of site.langs) {
-        doc.texts[lang] = {}
-        for (const node of doc.canvas.nodes) {
-          if (node.type === "text" && node.text) {
-            const pre = preprocess(filterLanguage(node.text, lang), {
-              lang,
-              dir,
-              resolveNote,
-              resolveAsset,
-              drawDrawing,
-              drawingPage: resolveDrawing,
-              readText,
-              privateLink: (target, fromDir, alias) => privateLink(target, fromDir, alias, lang),
-              gardenLink: (name, target) => gardenLink(name, target, lang),
-            })
-            pre.assets.forEach((a) => assets.add(a))
-            doc.texts[lang][node.id] = pre.md
-          } else if (node.type === "file" && node.file && !resolveNote(node.file, "")) {
-            const asset = resolveAsset(node.file, "")
-            if (asset && !DOC.test(asset)) assets.add(asset)
-          }
-        }
-      }
-    }
-    docs.set(rel, doc)
-  }
+  const docs = buildDocs(docRefs, { links, drawDrawing, readText, assets, report })
 
   // A permalink that collides with another note's URL is ignored, so no page is lost.
   for (const lang of site.langs) {
@@ -1378,44 +749,7 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     }
   }
 
-  const backlinks = {} as Vault["backlinks"]
-  const tags = {} as Vault["tags"]
-  const trees = {} as Vault["trees"]
-  const folders = {} as Vault["folders"]
-  for (const lang of site.langs) {
-    const bl = new Map<string, Backlink[]>()
-    const tg = new Map<string, Note[]>()
-    for (const n of notes[lang]) {
-      const seen = new Set<string>()
-      // What a protected note links to is part of its secret content; an unlisted one is found only by its link.
-      for (const l of n.protected || n.unlisted ? [] : n.links) {
-        if (l.key === n.key || seen.has(l.key)) continue
-        seen.add(l.key)
-        // Added in place: copying the list for each link made a note linked from thousands cost millions of copies.
-        const list = bl.get(l.key)
-        if (list) list.push({ note: n, context: l.context })
-        else bl.set(l.key, [{ note: n, context: l.context }])
-      }
-      if (n.unlisted) continue
-      for (const tag of n.tags) {
-        const parts = tag.split("/")
-        for (let i = 1; i <= parts.length; i++) {
-          const t = parts.slice(0, i).join("/")
-          const list = tg.get(t)
-          if (list) list.push(n)
-          else tg.set(t, [n])
-        }
-      }
-    }
-    backlinks[lang] = bl
-    tags[lang] = new Map([...tg].sort(([a], [b]) => a.localeCompare(b)))
-    const { root, all } = buildTree(
-      notes[lang].filter((n) => !n.unlisted && !n.isHome),
-      lang,
-    )
-    trees[lang] = root
-    folders[lang] = all
-  }
+  const { backlinks, tags, trees, folders } = deriveIndexes(notes)
 
   if (sources.size === 0) {
     console.warn(
@@ -1454,47 +788,6 @@ export function buildVault(version: number, cache: IndexCache = newIndexCache())
     resolveAsset,
     privateLink,
   }
-}
-
-function buildTree(list: Note[], lang: Lang): { root: FolderNode; all: Map<string, FolderNode> } {
-  const mk = (dir: string): FolderNode => {
-    const segment = dir.split("/").pop() ?? ""
-    return {
-      segment,
-      name: folderDisplayName(segment),
-      dir,
-      url: slugToUrl(langPrefix(lang) + sluggify(dir)) + (dir ? "/" : ""),
-      folders: [],
-      notes: [],
-    }
-  }
-  const root = mk("")
-  const all = new Map<string, FolderNode>([["", root]])
-  const ensure = (dir: string): FolderNode => {
-    const hit = all.get(dir)
-    if (hit) return hit
-    const node = mk(dir)
-    all.set(dir, node)
-    const parent = ensure(dir.includes("/") ? dir.slice(0, dir.lastIndexOf("/")) : "")
-    parent.folders.push(node)
-    return node
-  }
-  for (const n of list) {
-    const folder = ensure(n.dir)
-    if (n.dir && n.source.stem === folder.segment) folder.folderNote = n
-    else folder.notes.push(n)
-  }
-  const collator = new Intl.Collator(lang, { numeric: true })
-  for (const f of all.values()) {
-    f.folders.sort((a, b) => collator.compare(a.segment, b.segment))
-    f.notes.sort((a, b) => collator.compare(a.title, b.title))
-  }
-  return { root, all }
-}
-
-/** Number of notes under a folder, recursively; folder notes introduce their folder and are not counted. */
-export function countNotes(f: FolderNode): number {
-  return f.notes.length + f.folders.reduce((acc, c) => acc + countNotes(c), 0)
 }
 
 let cached: Vault | undefined
