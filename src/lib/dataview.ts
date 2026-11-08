@@ -916,7 +916,7 @@ function call(fn: string, args: Value[], engine: Engine, fns: (Fn | undefined)[]
       return fn === "any" ? xs.some(truthy) : xs.every(truthy)
     }
     case "flat":
-      return Array.isArray(a) ? (a.flat(typeof b === "number" ? b : 1) as Value[]) : a
+      return Array.isArray(a) ? ((a as unknown[]).flat(typeof b === "number" ? b : 1) as Value[]) : a
     case "sort":
       return Array.isArray(a) ? [...a].sort(compare) : a
     case "reverse":
