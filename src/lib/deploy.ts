@@ -357,7 +357,8 @@ const cloudflarePreview = (o: DeployOpts): DeployFile => ({
   path: ".github/workflows/datme-preview.yml",
   content: `# Builds every pull request as a Cloudflare Pages preview, with drafts and out of search engines, and comments
 # its address on the pull request. Uses the secrets of datme-cloudflare.yml, which pull requests from forks do
-# not get, so those have no preview.
+# not get, so those have no preview. In a private repository, keep "Send secrets to workflows from fork pull
+# requests" off: with it on, a fork can remove the guard below and read the Cloudflare token.
 # ${PREVIEW_WARNING} Turn on Cloudflare Access for preview deployments in the Pages project's settings.
 # The build runs before the deploy, so it guesses its address for canonical links and social cards from the
 # project's subdomain, ${o.project}.pages.dev; set the repository variable DATME_PAGES_SUBDOMAIN when Cloudflare
@@ -409,7 +410,7 @@ ${o.tts ? '      DATME_TTS: "off" # previews are published without audio\n' : ""
           GH_TOKEN: \${{ github.token }}
           GH_REPO: \${{ github.repository }}
           PR: \${{ github.event.number }}
-          PREVIEW_URL: \${{ steps.deploy.outputs.pages-deployment-alias-url }}
+          PREVIEW_URL: \${{ steps.deploy.outputs.pages-deployment-alias-url || env.SITE_URL }}
 `,
 })
 

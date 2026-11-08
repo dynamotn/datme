@@ -284,7 +284,7 @@ describe("deployFiles", () => {
     expect(comment.run).toBe('gh pr comment "$PR" --body "Preview at $PREVIEW_URL" --edit-last --create-if-none')
     expect(comment.env?.GH_TOKEN).toBe("${{ github.token }}")
     // The comment links the address Cloudflare returns, not the guessed one.
-    expect(comment.env?.PREVIEW_URL).toBe("${{ steps.deploy.outputs.pages-deployment-alias-url }}")
+    expect(comment.env?.PREVIEW_URL).toBe("${{ steps.deploy.outputs.pages-deployment-alias-url || env.SITE_URL }}")
     expect((loadYaml(deployFiles("cloudflare", { ...opts, tts: true, previews: true })[1].content) as Workflow).jobs.preview.env.DATME_TTS).toBe("off")
   })
 

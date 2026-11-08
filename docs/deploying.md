@@ -163,8 +163,9 @@ open previews with the host's access control, as below; `deploy` says so too.
   variable, since merge request refs are never protected, so anyone who can run
   a merge request pipeline in the project can read it; never run the pipeline
   of a merge request from a fork in your project without reviewing its
-  `.gitlab-ci.yml`. The build runs without the token, which only the comment
-  step reads. Without it the job prints that it skips the comment, and a
+  `.gitlab-ci.yml`. The token is not passed to the build (which runs in the
+  same job, so this keeps it out of the build's environment, not out of reach);
+  only the comment step reads it. Without it the job prints that it skips the comment, and a
   comment that fails only prints a warning. It comments once per merge request.
 - **Netlify**: `netlify.toml` gets a `[context.deploy-preview]` build command.
   Netlify builds deploy previews of pull requests itself and comments their
@@ -183,7 +184,9 @@ open previews with the host's access control, as below; `deploy` says so too.
   the project another subdomain (`<project>-abc.pages.dev`, when the name was
   taken), set it as the repository variable `DATME_PAGES_SUBDOMAIN`. Turn on
   Cloudflare Access for preview deployments in the Pages project's settings.
-  Pull requests from forks get no secrets, and so no preview.
+  Pull requests from forks get no secrets, and so no preview. In a private
+  repository, keep "Send secrets to workflows from fork pull requests" off:
+  with it on, a fork can remove the job's guard and read the Cloudflare token.
 - **GitHub Pages** serves one site per repository and cannot host previews
   (its preview deployments are not public), so `deploy github --previews` stops
   with an error. Use Netlify or Cloudflare for previews.
