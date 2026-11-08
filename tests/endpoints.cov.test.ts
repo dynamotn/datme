@@ -16,7 +16,7 @@ import * as assets from "../src/pages/assets/[...path]"
 import * as customCss from "../src/pages/custom.css"
 import * as favicon from "../src/pages/favicon.svg"
 import * as og from "../src/pages/og/[...slug].png"
-import * as opensearch from "../src/pages/opensearch.xml"
+import * as opensearch from "../src/pages/[opensearch].xml"
 import * as robots from "../src/pages/robots.txt"
 import * as cards from "../src/pages/static/cards.[lang].json"
 import * as contentIndex from "../src/pages/static/contentIndex.[lang].json"
@@ -230,6 +230,9 @@ describe("small files", () => {
     const xml = await r.text()
     expect(xml).toContain("<ShortName>Tom &amp; &lt;Jerry></ShortName>")
     expect(xml).toContain('template="https://x.dev/garden/?q={searchTerms}"')
+    expect(opensearch.getStaticPaths()).toEqual([{ params: { opensearch: "opensearch" } }])
+    setSite({ url: undefined })
+    expect(opensearch.getStaticPaths()).toEqual([])
   })
 })
 

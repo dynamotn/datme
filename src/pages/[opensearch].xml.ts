@@ -1,11 +1,15 @@
+import type { GetStaticPaths } from "astro"
 import { site } from "~/site.config"
 import { escapeXml } from "~/lib/html"
 
 /**
  * The garden as a search engine for the browser's address bar, found through the
  * link in every page. One description, named by the first language's title: the
- * template opens the site's root, where search covers every language.
+ * template opens the site's root, where search covers every language. Only
+ * written when `site.url` is set: the template needs an address.
  */
+export const getStaticPaths = (() => (site.url ? [{ params: { opensearch: "opensearch" } }] : [])) satisfies GetStaticPaths
+
 export const GET = () => {
   const name = escapeXml(site.title[site.defaultLang])
   return new Response(
@@ -14,7 +18,7 @@ export const GET = () => {
   <ShortName>${name}</ShortName>
   <Description>${name}</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Url type="text/html" method="get" template="${escapeXml(site.url ?? "")}/?q={searchTerms}"/>
+  <Url type="text/html" method="get" template="${escapeXml(site.url!)}/?q={searchTerms}"/>
 </OpenSearchDescription>
 `,
     { headers: { "content-type": "application/opensearchdescription+xml; charset=utf-8" } },
