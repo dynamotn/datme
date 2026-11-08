@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-11-09
+
 ### Added
 
 - Admonition plugin blocks (```` ```ad-warning ````) render as callouts, so older vaults keep their notes: `title:` sets the title, `collapse: open` or `closed` makes the callout foldable, and `color:` (`#rrggbb` or `r, g, b`) colours it. The body is markdown, blocks nest with longer fences or `~~~`, and an unknown type renders as a note. `icon:` is read and ignored, since callouts have no custom icons.
