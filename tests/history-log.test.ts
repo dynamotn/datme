@@ -1,3 +1,6 @@
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import { describe, expect, test } from "bun:test"
 import { parseBlobs, parseFileLog } from "../src/lib/history"
 
@@ -56,6 +59,12 @@ describe("reading the vault's git log in one pass", () => {
   })
 })
 
+const open = (bytes: Buffer) => {
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "datme-blobs-")), "out")
+  fs.writeFileSync(file, bytes)
+  return fs.openSync(file, "r")
+}
+
 describe("reading blobs in one batch", () => {
   test("texts by object id, missing objects and other types left out", () => {
     const text = "---\npublish: true\n---\nHà Nội 🌱\n"
@@ -66,12 +75,12 @@ describe("reading blobs in one batch", () => {
       Buffer.from(`${sha("3")} tree 3\nabc\n`),
       Buffer.from(`${sha("4")} blob 0\n\n`),
     ])
-    expect(parseBlobs(out)).toEqual(
+    expect(parseBlobs(open(out))).toEqual(
       new Map([
         [sha("1"), text],
         [sha("4"), ""],
       ]),
     )
-    expect(parseBlobs(Buffer.from("truncated"))).toEqual(new Map())
+    expect(parseBlobs(open(Buffer.from("truncated")))).toEqual(new Map())
   })
 })

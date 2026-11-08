@@ -465,6 +465,23 @@ export function eachLine(fd: number, onLine: (line: string) => void, chunk = 1 <
 const GIT_FILE = ".git"
 
 /**
+ * Calls `onLine` with each line `git <args>` prints in the vault, and throws if git fails.
+ * The output goes to a file and is read back a chunk at a time: a buffer would cap how long it can be.
+ */
+export function gitLines(args: string[], onLine: (line: string) => void): void {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-git-"))
+  const fd = fs.openSync(path.join(tmp, "log"), "w+")
+  try {
+    const p = spawnSync("git", ["-C", site.vault, "-c", "core.quotepath=off", ...args], { encoding: "utf8", stdio: ["ignore", fd, "pipe"] })
+    if (p.status !== 0) throw new Error(p.error?.message || p.stderr.trim().split("\n")[0] || `exit code ${p.status}`)
+    eachLine(fd, onLine)
+  } finally {
+    fs.closeSync(fd)
+    fs.rmSync(tmp, { recursive: true, force: true })
+  }
+}
+
+/**
  * Created/updated dates from git history, keyed by vault-relative path. A vault
  * outside any repository has none, as expected; a git that fails, or a shallow
  * clone whose history is cut, is reported, since every note would get a wrong date.
@@ -480,9 +497,6 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
     // not a git repository: fall back to the filesystem
     return dates
   }
-  // The log goes to a file and is read back a chunk at a time: a buffer would cap how long a history can be.
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-git-"))
-  const fd = fs.openSync(path.join(tmp, "log"), "w+")
   try {
     if (run("rev-parse", "--is-shallow-repository") === "true") {
       report(
@@ -493,13 +507,8 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
     }
     // git names files with "/", on Windows too.
     const prefix = path.relative(top, site.vault).split(path.sep).join("/")
-    const log = spawnSync("git", ["-C", site.vault, "-c", "core.quotepath=off", "log", "--format=%x00%ct", "--name-only", "--", "*.md"], {
-      encoding: "utf8",
-      stdio: ["ignore", fd, "pipe"],
-    })
-    if (log.status !== 0) throw new Error(log.error?.message || log.stderr.trim().split("\n")[0] || `exit code ${log.status}`)
     let ts = 0
-    eachLine(fd, (line) => {
+    gitLines(["log", "--format=%x00%ct", "--name-only", "--", "*.md"], (line) => {
       if (line.startsWith("\0")) {
         ts = Number(line.slice(1)) * 1000
         return
@@ -514,9 +523,6 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
   } catch (e) {
     dates.clear()
     report("warning", GIT_FILE, `dates come from file times: git failed (${(e as Error).message})`)
-  } finally {
-    fs.closeSync(fd)
-    fs.rmSync(tmp, { recursive: true, force: true })
   }
   return dates
 }

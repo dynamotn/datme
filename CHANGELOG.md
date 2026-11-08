@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Note history (`history: true`) no longer shows empty history pages in silence when git fails. A git that fails, a shallow clone, or a version git cannot read is now a warning in `datme check` (so `--strict` fails), naming the cause and, for a shallow clone, how to fetch the whole history; a vault outside git stays quiet. The history is read without a size limit: a long history, or large old versions of notes, no longer exceed a fixed 64 MB or 1 GB buffer.
 - The RSS feeds (`index.xml` of the site, a folder or a tag) date each note by when it was published, not when it was created: an old note made public today now shows at the top of the feed instead of being buried, or left out, under its old date, and editing a note no longer matters. The date is the note's first public version in git, or its `publish_date` when that is later; outside git it stays the creation date.
 - On a `broadsheet` home, the notes at the root of the vault are filed under a "notes" label instead of an empty one linking back to the home.
 - The credits of a map (a `trip`, a `places` collection, a map page or a Leaflet block) are readable in dark mode: they sat on white, where the light links of a dark page did not read.

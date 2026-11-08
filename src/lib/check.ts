@@ -1,6 +1,7 @@
 import { site } from "../site.config"
 import type { Lang, SiteConfig, StyleName } from "../site.config"
 import { getVault, listed, type Note, type PrivateLinkUse, type Problem } from "./vault"
+import { historyProblems } from "./history"
 import { externalUrls } from "./links"
 import { docUrl } from "./obsidian"
 import { noteProperties } from "./properties"
@@ -234,6 +235,7 @@ export function checkVault(): Problem[] {
   const accentFile = site.pack?.accent ? site.pack.file : "datme.yaml"
   const problems = [
     ...vault.problems,
+    ...historyProblems(),
     ...routeProblems(),
     ...(site.check.structure ? structureProblems() : []),
     ...(site.check.layouts ? layoutProblems() : []),

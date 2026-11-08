@@ -7,9 +7,24 @@
  * was private or protected are skipped; frontmatter, comments, locked parts
  * and other languages are taken out; commit messages are never shown.
  */
-import { execFileSync } from "node:child_process"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
+import { execFileSync, spawnSync } from "node:child_process"
 import { site, type Lang } from "../site.config"
-import { contentLanguage, fallbackOf, filterLanguage, getVault, isIgnored, isPublished, parseFrontmatter, sourceLangOf, type Note } from "./vault"
+import {
+  contentLanguage,
+  fallbackOf,
+  filterLanguage,
+  getVault,
+  gitLines,
+  isIgnored,
+  isPublished,
+  parseFrontmatter,
+  sourceLangOf,
+  type Note,
+  type Problem,
+} from "./vault"
 import { publicMarkdown } from "./llms"
 
 export interface Version {
@@ -20,7 +35,12 @@ export interface Version {
 
 export type Change = { kind: "same" | "add" | "del"; text: string }
 
-const git = (args: string[]) => execFileSync("git", ["-C", site.vault, "-c", "core.quotepath=off", ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+// stderr ignored: outside a repository git would print "fatal: not a git repository".
+const git = (args: string[]) =>
+  execFileSync("git", ["-C", site.vault, ...args], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  })
 
 /**
  * What a reader saw of a version of a note in a language, or undefined if it was not public by `until`.
@@ -47,6 +67,13 @@ export interface FileCommit {
  * `git log --follow` would, so a moved note keeps the versions it had under its old name.
  */
 export function parseFileLog(log: string): Map<string, FileCommit[]> {
+  const parser = fileLogParser()
+  for (const block of log.split("\x01")) parser.add(block)
+  return parser.chains
+}
+
+/** The same, fed one commit's block at a time, so a log of any length is never held whole. */
+function fileLogParser() {
   const chains = new Map<string, FileCommit[]>()
   // The files whose history goes on at a path, older commits being seen later.
   const following = new Map<string, Set<string>>()
@@ -62,9 +89,9 @@ export function parseFileLog(log: string): Map<string, FileCommit[]> {
       chain.push(c)
     }
   }
-  for (const block of log.split("\x01")) {
+  const add = (block: string) => {
     const head = block.indexOf("\0")
-    if (head < 0) continue
+    if (head < 0) return
     const [, time] = block.slice(0, head).split(" ")
     const fields = block
       .slice(head + 1)
@@ -89,22 +116,31 @@ export function parseFileLog(log: string): Map<string, FileCommit[]> {
       if (status !== "D") record(p, { time: Number(time) * 1000, path: p, blob })
     }
   }
-  return chains
+  return { chains, add }
 }
 
-/** The texts of blobs, from one `git cat-file --batch` output; a missing object has none. */
-export function parseBlobs(out: Buffer): Map<string, string> {
+/**
+ * The texts of blobs, from a file holding one `git cat-file --batch` output; a missing object has none.
+ * Read blob by blob, so the output has no size limit.
+ */
+export function parseBlobs(fd: number): Map<string, string> {
   const blobs = new Map<string, string>()
-  let at = 0
-  while (at < out.length) {
-    const eol = out.indexOf(10, at)
+  const head = Buffer.alloc(256)
+  for (let at = 0; ; ) {
+    const n = fs.readSync(fd, head, 0, head.length, at)
+    const eol = head.subarray(0, n).indexOf(10)
     if (eol < 0) break
-    const [sha, type, size] = out.subarray(at, eol).toString("utf8").split(" ")
-    at = eol + 1
+    const [sha, type, size] = head.subarray(0, eol).toString("utf8").split(" ")
+    at += eol + 1
     if (type === "missing" || size == null) continue
-    const end = at + Number(size)
-    if (type === "blob") blobs.set(sha, out.subarray(at, end).toString("utf8"))
-    at = end + 1
+    const body = Buffer.alloc(Number(size))
+    for (let got = 0; got < body.length; ) {
+      const m = fs.readSync(fd, body, got, body.length - got, at + got)
+      if (m === 0) break
+      got += m
+    }
+    if (type === "blob") blobs.set(sha, body.toString("utf8"))
+    at += body.length + 1
   }
   return blobs
 }
@@ -116,6 +152,8 @@ interface GitHistory {
   chains: Map<string, FileCommit[]>
   /** Texts by blob, null for one git could not read. */
   blobs: Map<string, string | null>
+  /** What went wrong reading git, for `datme check`. */
+  problems: Problem[]
 }
 
 let walked: GitHistory | undefined
@@ -126,14 +164,40 @@ function gitHistory(): GitHistory {
   if (walked?.key === key) return walked
   let prefix = ""
   let chains = new Map<string, FileCommit[]>()
+  const problems: Problem[] = []
+  const warn = (message: string) => problems.push({ level: "warning", file: ".git", message })
+  let inGit = true
   try {
     // Paths as log prints them: relative to the repository, which may hold the vault in a folder.
     prefix = git(["rev-parse", "--show-prefix"]).trim()
-    chains = parseFileLog(git(["log", "-M", "--format=%x01%H %ct", "--raw", "--no-abbrev", "-z", "--", ":(top)*.md"]))
   } catch {
-    // not in git
+    // not a git repository: no history, as expected
+    inGit = false
   }
-  walked = { key, prefix, chains, blobs: new Map() }
+  if (inGit) {
+    try {
+      if (git(["rev-parse", "--is-shallow-repository"]).trim() === "true") {
+        warn("shallow clone: note histories stop at the clone; fetch the whole history (GIT_DEPTH: 0 on GitLab, fetch-depth: 0 on GitHub)")
+      }
+      const parser = fileLogParser()
+      // A block is the text from one \x01 to the next, which may begin in the middle of a line.
+      let block = ""
+      gitLines(["log", "-M", "--format=%x01%H %ct", "--raw", "--no-abbrev", "-z", "--", ":(top)*.md"], (line) => {
+        const [first, ...starts] = line.split("\x01")
+        block += first
+        for (const start of starts) {
+          parser.add(block)
+          block = start
+        }
+        block += "\n"
+      })
+      parser.add(block)
+      chains = parser.chains
+    } catch (e) {
+      warn(`note histories are empty: git failed (${(e as Error).message})`)
+    }
+  }
+  walked = { key, prefix, chains, blobs: new Map(), problems }
   // The texts of every note's publishable versions, in one read.
   const vault = getVault()
   const rels = new Set(site.langs.flatMap((lang) => vault.notes[lang].map((n) => n.key + ".md")))
@@ -142,6 +206,11 @@ function gitHistory(): GitHistory {
     [...rels].flatMap((rel) => commitsOf(walked!, rel)),
   )
   return walked
+}
+
+/** What went wrong reading the vault's git history, if anything. */
+export function historyProblems(): Problem[] {
+  return site.history ? gitHistory().problems : []
 }
 
 /** Commits of a file, oldest first, at a path that could have been published. */
@@ -153,11 +222,31 @@ function commitsOf(h: GitHistory, rel: string): FileCommit[] {
 function readBlobs(h: GitHistory, commits: FileCommit[]): void {
   const wanted = [...new Set(commits.map((c) => c.blob))].filter((b) => !h.blobs.has(b))
   if (!wanted.length) return
+  // Asked of git through files, answered the same way: the texts may add up to any size.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "datme-git-"))
   try {
-    const out = execFileSync("git", ["-C", site.vault, "cat-file", "--batch"], { input: wanted.join("\n") + "\n", maxBuffer: 1024 * 1024 * 1024 })
-    for (const [sha, text] of parseBlobs(out)) h.blobs.set(sha, text)
-  } catch {
-    // unreadable: those versions are skipped
+    fs.writeFileSync(path.join(tmp, "in"), wanted.join("\n") + "\n")
+    const input = fs.openSync(path.join(tmp, "in"), "r")
+    const output = fs.openSync(path.join(tmp, "out"), "w+")
+    try {
+      const p = spawnSync("git", ["-C", site.vault, "cat-file", "--batch"], {
+        stdio: [input, output, "pipe"],
+        encoding: "utf8",
+      })
+      if (p.status !== 0) throw new Error(p.error?.message || p.stderr.trim().split("\n")[0] || `exit code ${p.status}`)
+      for (const [sha, text] of parseBlobs(output)) h.blobs.set(sha, text)
+    } finally {
+      fs.closeSync(input)
+      fs.closeSync(output)
+    }
+  } catch (e) {
+    h.problems.push({
+      level: "warning",
+      file: ".git",
+      message: `some note versions are skipped: git cannot read them (${(e as Error).message})`,
+    })
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true })
   }
   for (const sha of wanted) if (!h.blobs.has(sha)) h.blobs.set(sha, null)
 }

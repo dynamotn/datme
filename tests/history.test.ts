@@ -51,7 +51,7 @@ describe("reading versions from git", () => {
     // A vault version of its own, so nothing was read before.
     g.__vaultVersion = 8_000_001
     const vault = getVault()
-    const spy = spyOn(childProcess, "execFileSync")
+    const spy = spyOn(childProcess, "spawnSync")
     try {
       const all = (["vi-VN", "en-US"] as const).flatMap((lang) => vault.notes[lang])
       const versions = all.map(noteVersions)
