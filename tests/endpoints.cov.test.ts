@@ -16,6 +16,7 @@ import * as assets from "../src/pages/assets/[...path]"
 import * as customCss from "../src/pages/custom.css"
 import * as favicon from "../src/pages/favicon.svg"
 import * as og from "../src/pages/og/[...slug].png"
+import * as opensearch from "../src/pages/opensearch.xml"
 import * as robots from "../src/pages/robots.txt"
 import * as cards from "../src/pages/static/cards.[lang].json"
 import * as contentIndex from "../src/pages/static/contentIndex.[lang].json"
@@ -220,6 +221,15 @@ describe("small files", () => {
     expect(await r.text()).toBe(`User-agent: *\nAllow: /\n\nSitemap: ${site.url}/sitemap-index.xml\n`)
     setSite({ url: undefined })
     expect(await robots.GET().text()).toBe("User-agent: *\nAllow: /\n")
+  })
+
+  test("opensearch.xml searches the garden from the address bar, with the title escaped", async () => {
+    setSite({ url: "https://x.dev/garden", title: { [site.defaultLang]: "Tom & <Jerry>" } as SiteConfig["title"] })
+    const r = opensearch.GET()
+    expect(type(r)).toBe("application/opensearchdescription+xml; charset=utf-8")
+    const xml = await r.text()
+    expect(xml).toContain("<ShortName>Tom &amp; &lt;Jerry></ShortName>")
+    expect(xml).toContain('template="https://x.dev/garden/?q={searchTerms}"')
   })
 })
 

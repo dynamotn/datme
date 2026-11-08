@@ -136,6 +136,15 @@ describe("keyboard", () => {
     await page.waitForURL(new URL(href, base).href)
   }, 30_000)
 
+  test("/?q= opens search with the query typed in and drops it from the address", async () => {
+    await open("/?q=Luhmann")
+    const input = page.locator("dialog[data-search-dialog] input[type=search]")
+    await input.waitFor({ state: "visible" })
+    expect(await input.inputValue()).toBe("Luhmann")
+    await page.locator("#search-results [role=option]").first().waitFor()
+    expect(new URL(page.url()).search).toBe("")
+  }, 30_000)
+
   test("Escape closes search", async () => {
     await open("/")
     await page.keyboard.press("Control+k")

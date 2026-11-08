@@ -224,7 +224,7 @@ export function openSearch() {
   else void engine(dialog.dataset.lang ?? currentLang())
 }
 
-export function setupSearch() {
+function bindSearch() {
   const dialog = document.querySelector<HTMLDialogElement>("[data-search-dialog]")
   if (!dialog || dialog.dataset.bound) return
   dialog.dataset.bound = "1"
@@ -255,4 +255,22 @@ export function setupSearch() {
   dialog.addEventListener("click", (e) => {
     if (e.target === dialog) dialog.close()
   })
+}
+
+/** A `?q=` in the address (the browser's search bar, a shared link) opens search with it typed in, then leaves the URL clean. */
+function openFromUrl() {
+  const dialog = document.querySelector<HTMLDialogElement>("[data-search-dialog]")
+  const url = new URL(location.href)
+  const q = url.searchParams.get("q")
+  if (!dialog || q === null) return
+  dialog.querySelector("input")!.value = q
+  openSearch()
+  void run(dialog, q)
+  url.searchParams.delete("q")
+  history.replaceState(history.state, "", url)
+}
+
+export function setupSearch() {
+  bindSearch()
+  openFromUrl()
 }

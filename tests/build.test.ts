@@ -452,6 +452,8 @@ describe("static build", () => {
   test("favicon and robots.txt come from the config", () => {
     expect(read("favicon.svg")).toContain(">K</text>")
     expect(read("robots.txt")).toContain("Sitemap: https://notes.dynamotn.dev/sitemap-index.xml")
+    expect(read("opensearch.xml")).toContain('template="https://notes.dynamotn.dev/?q={searchTerms}"')
+    expect(read("index.html")).toContain('<link rel="search" type="application/opensearchdescription+xml"')
   })
 
   test("note pages describe themselves as JSON-LD articles, the home page as a website", () => {

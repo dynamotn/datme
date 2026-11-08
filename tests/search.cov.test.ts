@@ -416,4 +416,18 @@ describe("searching with Pagefind", () => {
       globalThis.fetch = fetchNow
     }
   })
+
+  test("?q= in the address opens search with the query typed in as text, and leaves the URL clean", async () => {
+    dom.window.history.replaceState(null, "", "/notes/a?q=%3Cb%3Eslip%3C%2Fb%3E&x=1")
+    const { dialog, input } = make({ lang: "cov-url" })
+    expect(dialog.open).toBe(true)
+    expect(input.value).toBe("<b>slip</b>")
+    expect(dialog.querySelector("b")).toBeNull()
+    expect(dom.window.location.search).toBe("?x=1")
+  })
+
+  test("without ?q= search stays closed", () => {
+    dom.window.history.replaceState(null, "", "/notes/a")
+    expect(make({ lang: "cov-url" }).dialog.open).toBe(false)
+  })
 })
