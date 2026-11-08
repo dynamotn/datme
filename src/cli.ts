@@ -5,7 +5,7 @@ import path from "node:path"
 import { parseArgs as parseNodeArgs } from "node:util"
 import { execFileSync } from "node:child_process"
 import { TARGETS, NEXT_STEPS, deployFiles, projectName, type Target } from "./lib/deploy.ts"
-import { CONFIG_FILES } from "./lib/config-files.ts"
+import { CONFIG_FILES, SCHEMA_URL } from "./lib/config-files.ts"
 import { parseYaml } from "./lib/yaml.ts"
 import { DEAD_LINKS_FILE } from "./lib/dead-links.ts"
 import { PACKAGE_ROOT } from "./lib/package-root.ts"
@@ -436,7 +436,8 @@ export function deploy(target: Target, dir: string, branch?: string, needs = { t
 /** A commented datme.yaml to start from, named after the vault. */
 export function starterConfig(vault: string): string {
   const name = path.basename(vault)
-  return `# datme settings: https://gitlab.com/dynamo-brain/datme
+  return `# yaml-language-server: $schema=${SCHEMA_URL}
+# datme settings: https://gitlab.com/dynamo-brain/datme
 site:
   title: ${JSON.stringify(name)}
   tagline: ""

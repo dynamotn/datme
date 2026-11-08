@@ -102,6 +102,7 @@ pages:
   script:
     - bun install --frozen-lockfile
     - bun bin/datme.ts build docs --out public --strict
+    - cp schema/datme.schema.json public/
   variables:
     GIT_DEPTH: 0
     DATME_CACHE: .datme-cache

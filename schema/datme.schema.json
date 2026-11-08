@@ -1,0 +1,1820 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "site": {
+      "default": {
+        "me": []
+      },
+      "type": "object",
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "tagline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "author": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8,
+          "description": "One letter or emoji shown as the logo and favicon."
+        },
+        "me": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Profiles that link back to the site, as rel=\"me\" (verifies the site on Mastodon)."
+        },
+        "fediverse": {
+          "type": "string",
+          "pattern": "^@[^@\\s]+@[^@\\s]+$",
+          "description": "Fediverse handle credited when a note is shared on Mastodon, e.g."
+        }
+      },
+      "additionalProperties": false
+    },
+    "languages": {
+      "default": [
+        "en-US"
+      ],
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "ignore": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stages": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "object",
+            "properties": {
+              "icon": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "description": "Folder (or `stage` property value) to stage: a preset name, a label of the vault's own, or an icon and a label, either of which may be left out."
+    },
+    "publish": {
+      "default": "explicit",
+      "type": "string",
+      "enum": [
+        "explicit",
+        "all"
+      ],
+      "description": "explicit: only notes with `publish: true`; all: every note except `publish: false`."
+    },
+    "privateLinks": {
+      "default": "text",
+      "type": "string",
+      "enum": [
+        "text",
+        "placeholder",
+        "hide"
+      ],
+      "description": "What a link to a note that is not published shows: text, its words as written; placeholder, a neutral \"a private note\"; hide, nothing unless the link has an alias."
+    },
+    "home": {
+      "default": "index.md",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "note": {
+              "default": "index.md",
+              "type": "string"
+            },
+            "layout": {
+              "default": "default",
+              "type": "string",
+              "enum": [
+                "default",
+                "bento"
+              ]
+            },
+            "tiles": {
+              "default": [
+                "now",
+                "recent",
+                "random",
+                "stats",
+                "graph",
+                "stream",
+                "tags"
+              ],
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "recent",
+                  "random",
+                  "stats",
+                  "graph",
+                  "stream",
+                  "tags"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Vault-relative note rendered as the home page; `bento` keeps index.md and lays the home out as a dashboard of tiles, which the long form chooses: { note, layout: bento, tiles: [now, recent…] }."
+    },
+    "conventions": {
+      "default": {
+        "typePrefix": "type/",
+        "blogTags": [
+          "type/blog",
+          "blog"
+        ],
+        "mapTags": [
+          "type/moc",
+          "moc"
+        ],
+        "flashcardTags": [
+          "flashcards"
+        ],
+        "timelineTags": [
+          "timeline",
+          "type/event"
+        ],
+        "ratingScale": 5
+      },
+      "type": "object",
+      "properties": {
+        "typePrefix": {
+          "default": "type/",
+          "type": "string",
+          "description": "Tags starting with this prefix give a note its types, shown as chips."
+        },
+        "blogTags": {
+          "default": [
+            "type/blog",
+            "blog"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Notes with one of these tags are listed as blog posts on the home page."
+        },
+        "mapTags": {
+          "default": [
+            "type/moc",
+            "moc"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Notes with one of these tags are listed as maps of content."
+        },
+        "flashcardTags": {
+          "default": [
+            "flashcards"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Notes with one of these tags turn `Q::A` and `?` cards into flashcards."
+        },
+        "timelineTags": {
+          "default": [
+            "timeline",
+            "type/event"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Notes with one of these tags are timeline events, dated by `date` when they have no `start`."
+        },
+        "ratingScale": {
+          "default": 5,
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 10,
+          "description": "Highest `rating` a note can have: ratings are drawn as that many stars."
+        }
+      },
+      "additionalProperties": false
+    },
+    "footer": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "home",
+                    "tags",
+                    "archive",
+                    "recent",
+                    "timeline",
+                    "map",
+                    "stats",
+                    "calendar",
+                    "practice",
+                    "changes"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "note": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "label": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "note"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "label": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "label"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Columns of links in the footer: a heading to a list of entries written like `nav`. A heading to a URL is a single link instead; such links share one column without a heading."
+    },
+    "poweredBy": {
+      "default": true,
+      "type": "boolean",
+      "description": "A small \"grown with datme\" line, with its sprout, at the end of the footer."
+    },
+    "nav": {
+      "default": [
+        "home",
+        "tags"
+      ],
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "home",
+              "tags",
+              "archive",
+              "recent",
+              "timeline",
+              "map",
+              "stats",
+              "calendar",
+              "practice",
+              "changes"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "note"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "Main menu, in order: built-in pages, notes (by wikilink target) or plain URLs."
+    },
+    "sidebar": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "home",
+              "tags",
+              "archive",
+              "recent",
+              "timeline",
+              "map",
+              "stats",
+              "calendar",
+              "practice",
+              "changes"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "note"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "description": "Shortcuts at the top of the left sidebar, with the same kinds of entry as `nav`."
+    },
+    "analytics": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "google"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "provider",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "plausible"
+            },
+            "host": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "umami"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "host": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "provider",
+            "id",
+            "host"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "goatcounter"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "provider",
+            "id"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "comments": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "giscus"
+            },
+            "repo": {
+              "type": "string",
+              "pattern": "^[^/\\s]+\\/[^/\\s]+$"
+            },
+            "repoId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "category": {
+              "type": "string",
+              "minLength": 1
+            },
+            "categoryId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mapping": {
+              "default": "pathname",
+              "type": "string",
+              "enum": [
+                "pathname",
+                "url",
+                "title",
+                "og:title"
+              ]
+            },
+            "reactions": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "provider",
+            "repo",
+            "repoId",
+            "category",
+            "categoryId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "commento"
+            },
+            "host": {
+              "default": "https://cdn.commento.io",
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "history": {
+      "default": false,
+      "type": "boolean",
+      "description": "A page per note showing how it grew, from its git history. Off by default: it publishes what was later deleted. `history: false` in a note opts it out."
+    },
+    "subscribe": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "buttondown"
+            },
+            "username": {
+              "type": "string",
+              "pattern": "^[\\w-]+$"
+            }
+          },
+          "required": [
+            "provider",
+            "username"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "form"
+            },
+            "action": {
+              "type": "string",
+              "format": "uri",
+              "description": "Where the form posts, e.g. a Mailchimp, ConvertKit or listmonk URL."
+            },
+            "field": {
+              "default": "email",
+              "type": "string",
+              "description": "Name of the email field."
+            },
+            "topicField": {
+              "type": "string",
+              "description": "Name of a hidden field carrying the topic (folder:…, tag:…), if the service takes one."
+            }
+          },
+          "required": [
+            "provider",
+            "action"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "A form to get new notes by email, under notes and on folder and tag pages."
+    },
+    "properties": {
+      "default": {
+        "hide": []
+      },
+      "type": "object",
+      "properties": {
+        "hide": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Frontmatter keys left out of a note's properties block, on top of the built-in ones."
+        },
+        "show": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "When set, the only frontmatter keys a properties block may show; any other key stays home."
+        }
+      },
+      "additionalProperties": false
+    },
+    "types": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "icon"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Note types (the part after conventions.typePrefix): an icon and an optional label."
+    },
+    "webmentions": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The webmention.io account; defaults to the host of site.url."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Receive webmentions through webmention.io and show them under each note."
+    },
+    "lineBreaks": {
+      "default": {
+        "all": false,
+        "types": [],
+        "folders": []
+      },
+      "type": "object",
+      "properties": {
+        "all": {
+          "default": false,
+          "type": "boolean"
+        },
+        "types": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Note types (from tags like type/composition) that keep their line breaks."
+        },
+        "folders": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Keep single line breaks, as Obsidian does by default; for poems and lyrics."
+    },
+    "theme": {
+      "type": "object",
+      "properties": {
+        "scheme": {
+          "default": "auto",
+          "type": "string",
+          "enum": [
+            "auto",
+            "light",
+            "dark"
+          ],
+          "description": "Colour scheme before the reader picks one with the toggle; auto follows their system."
+        },
+        "accent": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\([\\d\\s.,%/+-]+\\)|[a-zA-Z]+)$"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\([\\d\\s.,%/+-]+\\)|[a-zA-Z]+)$"
+                },
+                "dark": {
+                  "type": "string",
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\([\\d\\s.,%/+-]+\\)|[a-zA-Z]+)$"
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Accent colour of links and highlights; one value, or one per colour scheme."
+        },
+        "fonts": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "heading": {
+              "type": "string",
+              "pattern": "^[\\p{L}\\p{N} _-]+$"
+            },
+            "body": {
+              "type": "string",
+              "pattern": "^[\\p{L}\\p{N} _-]+$"
+            },
+            "code": {
+              "type": "string",
+              "pattern": "^[\\p{L}\\p{N} _-]+$"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Font families for headings and UI, reading text and code: from Google Fonts, unless a theme pack ships them."
+        },
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string"
+                },
+                "dark": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Shiki themes of code blocks."
+        },
+        "comments": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^([\\w-]+|https:\\/\\/\\S+)$"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "pattern": "^([\\w-]+|https:\\/\\/\\S+)$"
+                },
+                "dark": {
+                  "type": "string",
+                  "pattern": "^([\\w-]+|https:\\/\\/\\S+)$"
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "giscus themes of the comments."
+        },
+        "mermaid": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "default",
+                "neutral",
+                "dark",
+                "forest",
+                "base"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "neutral",
+                    "dark",
+                    "forest",
+                    "base"
+                  ]
+                },
+                "dark": {
+                  "type": "string",
+                  "enum": [
+                    "default",
+                    "neutral",
+                    "dark",
+                    "forest",
+                    "base"
+                  ]
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Mermaid themes of ```mermaid diagrams."
+        },
+        "d2": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "dark": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "D2 theme ids of ```d2 diagrams, unless a diagram picks its own."
+        },
+        "preset": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A theme pack the values above override: a folder of the vault, or a datme-theme-* package."
+        },
+        "css": {
+          "default": "datme.css",
+          "type": "string",
+          "description": "A stylesheet in the vault, loaded after datme's own."
+        }
+      },
+      "additionalProperties": false
+    },
+    "related": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "default": 5,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "How many related notes to suggest under each note; 0 turns them off."
+        },
+        "mentions": {
+          "default": true,
+          "type": "boolean",
+          "description": "List notes that name this one without linking to it."
+        },
+        "semantic": {
+          "default": false,
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "default": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+                  "type": "string"
+                },
+                "threshold": {
+                  "default": 0.55,
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Cosine similarity from which two notes count as related, 0 to 1."
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "Also suggest notes similar in meaning, from embeddings computed on this machine at build time (needs"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tts": {
+      "type": "object",
+      "properties": {
+        "models": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "const": "vieneu"
+          },
+          "description": "Language (or its base, as vi for vi-VN) to the model that speaks it."
+        },
+        "folders": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Vault folders whose notes get audio."
+        },
+        "frontmatter": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "description": "Frontmatter values that give a note audio."
+        }
+      },
+      "required": [
+        "models"
+      ],
+      "additionalProperties": false,
+      "description": "Read notes aloud in the author's voice at build time, one model per language."
+    },
+    "topics": {
+      "default": true,
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 40
+        }
+      ],
+      "description": "Group notes into topics from the embeddings of related.semantic, for the graph and /stats: true picks how many from the number of notes, a number sets it, false turns topics off."
+    },
+    "stackedPages": {
+      "default": true,
+      "type": "boolean",
+      "description": "Offer the stacked-notes mode, where links open side by side."
+    },
+    "graph": {
+      "default": {
+        "depth": 1,
+        "view": "2d"
+      },
+      "type": "object",
+      "properties": {
+        "depth": {
+          "default": 1,
+          "anyOf": [
+            {
+              "type": "number",
+              "const": 1
+            },
+            {
+              "type": "number",
+              "const": 2
+            }
+          ],
+          "description": "Links the local graph of a note follows: 1 for its own links, 2 for theirs too; readers can switch."
+        },
+        "view": {
+          "default": "2d",
+          "type": "string",
+          "enum": [
+            "2d",
+            "3d"
+          ],
+          "description": "How the global graph opens: flat, or laid out in space and turned by dragging; readers can switch."
+        }
+      },
+      "additionalProperties": false
+    },
+    "images": {
+      "default": {
+        "optimize": true,
+        "widths": [
+          480,
+          960,
+          1600
+        ],
+        "quality": 80,
+        "placeholders": true,
+        "keepMetadata": false
+      },
+      "type": "object",
+      "properties": {
+        "optimize": {
+          "default": true,
+          "type": "boolean",
+          "description": "Resize raster images into WebP copies and let browsers pick the smallest that fits."
+        },
+        "widths": {
+          "default": [
+            480,
+            960,
+            1600
+          ],
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 64,
+            "maximum": 4096
+          },
+          "description": "Widths of the resized copies, in pixels; only those below the original are made."
+        },
+        "quality": {
+          "default": 80,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "placeholders": {
+          "default": true,
+          "type": "boolean",
+          "description": "Show a tiny blurred copy of each image while it loads."
+        },
+        "keepMetadata": {
+          "default": false,
+          "type": "boolean",
+          "description": "Publish original images with their EXIF, XMP and IPTC (camera, time, GPS position) instead of without."
+        }
+      },
+      "additionalProperties": false
+    },
+    "search": {
+      "default": {
+        "engine": "minisearch",
+        "meaning": false
+      },
+      "type": "object",
+      "properties": {
+        "engine": {
+          "default": "minisearch",
+          "type": "string",
+          "enum": [
+            "minisearch",
+            "pagefind"
+          ]
+        },
+        "meaning": {
+          "default": false,
+          "type": "boolean",
+          "description": "Offer readers to search by meaning too: their browser downloads the model of related.semantic (about 120 MB, once) and blends closeness in meaning with the words."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Search engine of the site: minisearch loads every note's text at once, which suits most gardens; pagefind indexes the built pages and loads only what a query needs, for large ones."
+    },
+    "linkPreviews": {
+      "default": true,
+      "type": "boolean",
+      "description": "Turn a paragraph that is only a URL into a card with the page's title and image."
+    },
+    "check": {
+      "default": {
+        "structure": true,
+        "layouts": true,
+        "passwords": true
+      },
+      "type": "object",
+      "properties": {
+        "structure": {
+          "default": true,
+          "type": "boolean",
+          "description": "Notices about the shape of the garden: orphan notes, dead ends and hubs."
+        },
+        "layouts": {
+          "default": true,
+          "type": "boolean",
+          "description": "Notices suggesting a layout for notes and folders whose text or properties look like one."
+        },
+        "passwords": {
+          "default": true,
+          "type": "boolean",
+          "description": "Warnings for passwords that are easy to guess, or written in notes of a vault kept in git."
+        }
+      },
+      "additionalProperties": false
+    },
+    "archiveDeadLinks": {
+      "default": true,
+      "type": "boolean",
+      "description": "Point links that `datme check --external` found dead at the Internet Archive's copy."
+    },
+    "glossary": {
+      "default": true,
+      "type": "boolean",
+      "description": "Link the first mention of a term (a note tagged type/term) to its note."
+    },
+    "map": {
+      "default": {
+        "tiles": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+      },
+      "type": "object",
+      "properties": {
+        "tiles": {
+          "default": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+          "type": "string"
+        },
+        "darkTiles": {
+          "type": "string",
+          "description": "Tiles drawn for the dark theme; without them the light tiles are inverted."
+        },
+        "attribution": {
+          "default": "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Tiles of the map page, for notes with a `location`."
+    },
+    "bibliography": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ],
+      "description": "BibTeX files, relative to the vault, that [@key] citations are looked up in."
+    },
+    "outdated": {
+      "type": "object",
+      "properties": {
+        "after": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "after"
+      ],
+      "additionalProperties": false,
+      "description": "Tell readers when a note has not been updated for this many years; `outdated: false` in a note opts it out. Home and daily notes never get it."
+    },
+    "stats": {
+      "default": {
+        "hide": []
+      },
+      "type": "object",
+      "properties": {
+        "hide": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "density",
+              "structure",
+              "freshness",
+              "hubs",
+              "topics"
+            ]
+          },
+          "description": "Garden health indicators left off /stats, for authors who prefer not to publish them."
+        }
+      },
+      "additionalProperties": false
+    },
+    "offline": {
+      "default": true,
+      "type": "boolean",
+      "description": "Make the site installable and keep the pages a reader opened available offline."
+    },
+    "ogImages": {
+      "default": true,
+      "type": "boolean",
+      "description": "Generate social preview images for the home page and for notes without a banner."
+    },
+    "neighbours": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[\\w-]+$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Other datme gardens, by a short name: `[[name:Note]]` links to a note of one of them."
+    },
+    "activitypub": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "bridgy"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string",
+              "pattern": "^[\\w.-]+$"
+            }
+          },
+          "required": [
+            "username"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "Let the fediverse find the garden: `bridgy` hands it to Bridgy Fed, which people can follow; `{ username }` publishes only a static actor and outbox, found but not followable. Needs site.url."
+    },
+    "oembed": {
+      "default": true,
+      "type": "boolean",
+      "description": "Let other sites embed a card of each public note, by oEmbed; needs site.url."
+    },
+    "llms": {
+      "default": true,
+      "type": "boolean",
+      "description": "Publish /llms.txt and a markdown copy of every public note, for readers and tools that want text."
+    },
+    "askAi": {
+      "default": [
+        "chatgpt",
+        "claude"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "chatgpt",
+          "claude"
+        ]
+      },
+      "description": "Chat assistants a note's markdown menu offers to open it in; needs llms and site.url."
+    },
+    "headers": {
+      "default": {
+        "csp": false
+      },
+      "anyOf": [
+        {
+          "type": "boolean",
+          "const": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "csp": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Write a _headers file (Netlify, Cloudflare Pages) with safe defaults and caching; `false` skips it. `csp: true` adds a Content-Security-Policy built from the features in use."
+    },
+    "redirects": {
+      "default": true,
+      "type": "boolean",
+      "description": "Write a _redirects file (Netlify, Cloudflare Pages) with 301s for aliases and old URLs."
+    },
+    "cname": {
+      "default": false,
+      "type": "boolean",
+      "description": "Write a CNAME file with the host of site.url, for GitHub/GitLab Pages custom domains."
+    },
+    "encryption": {
+      "default": {
+        "iterations": 600000
+      },
+      "type": "object",
+      "properties": {
+        "iterations": {
+          "default": 600000,
+          "type": "integer",
+          "minimum": 100000,
+          "maximum": 9007199254740991,
+          "description": "PBKDF2 rounds for notes with a `password`; higher is slower to unlock and to brute-force."
+        }
+      },
+      "additionalProperties": false
+    },
+    "appearance": {
+      "default": {
+        "style": "notebook",
+        "classic": [],
+        "folders": {},
+        "tags": {},
+        "stages": {},
+        "languages": {},
+        "schedule": [],
+        "stream": [],
+        "seasons": false,
+        "readerSwitch": false
+      },
+      "type": "object",
+      "properties": {
+        "style": {
+          "default": "notebook",
+          "type": "string",
+          "enum": [
+            "notebook",
+            "classic",
+            "garden",
+            "resume",
+            "darkroom",
+            "terminal",
+            "blueprint",
+            "wiki",
+            "broadsheet",
+            "herbarium",
+            "manuscript",
+            "lacquer",
+            "zine",
+            "atlas",
+            "catalog",
+            "eink",
+            "paddy"
+          ],
+          "description": "notebook: index cards on dotted paper; classic: the quiet serif blog look; garden: tiles sized by maturity, recently tended first; herbarium: notes as pressed specimens; manuscript: a book page with notes in its margin; lacquer: vermilion, black and gold leaf; zine: a cut-and-paste photocopied zine; atlas: an old atlas, each top folder a region; catalog: a library card catalogue with call numbers; eink: an e-reader's grey page, turned page by page if the reader likes; paddy: the garden as terraced rice fields."
+        },
+        "classic": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Folders whose notes use the other style, e.g. long-form writing."
+        },
+        "folders": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "notebook",
+              "classic",
+              "garden",
+              "resume",
+              "darkroom",
+              "terminal",
+              "blueprint",
+              "wiki",
+              "broadsheet",
+              "herbarium",
+              "manuscript",
+              "lacquer",
+              "zine",
+              "atlas",
+              "catalog",
+              "eink",
+              "paddy"
+            ]
+          },
+          "description": "A style per folder, subfolders included, e.g. { Writing: classic }."
+        },
+        "tags": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "notebook",
+              "classic",
+              "garden",
+              "resume",
+              "darkroom",
+              "terminal",
+              "blueprint",
+              "wiki",
+              "broadsheet",
+              "herbarium",
+              "manuscript",
+              "lacquer",
+              "zine",
+              "atlas",
+              "catalog",
+              "eink",
+              "paddy"
+            ]
+          },
+          "description": "A style per tag, nested tags included, e.g. { poem: classic }; a note's first matching tag wins."
+        },
+        "stages": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "notebook",
+              "classic",
+              "garden",
+              "resume",
+              "darkroom",
+              "terminal",
+              "blueprint",
+              "wiki",
+              "broadsheet",
+              "herbarium",
+              "manuscript",
+              "lacquer",
+              "zine",
+              "atlas",
+              "catalog",
+              "eink",
+              "paddy"
+            ]
+          },
+          "description": "A style per growth stage, a key of `stages`, e.g. { 01_Fleeting: notebook }; after tags, before folders."
+        },
+        "languages": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "notebook",
+              "classic",
+              "garden",
+              "resume",
+              "darkroom",
+              "terminal",
+              "blueprint",
+              "wiki",
+              "broadsheet",
+              "herbarium",
+              "manuscript",
+              "lacquer",
+              "zine",
+              "atlas",
+              "catalog",
+              "eink",
+              "paddy"
+            ]
+          },
+          "description": "A site-wide style per language (or its base, as vi for vi-VN), used instead of `style` on its pages."
+        },
+        "schedule": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "style": {
+                "type": "string",
+                "enum": [
+                  "notebook",
+                  "classic",
+                  "garden",
+                  "resume",
+                  "darkroom",
+                  "terminal",
+                  "blueprint",
+                  "wiki",
+                  "broadsheet",
+                  "herbarium",
+                  "manuscript",
+                  "lacquer",
+                  "zine",
+                  "atlas",
+                  "catalog",
+                  "eink",
+                  "paddy"
+                ]
+              },
+              "from": {
+                "type": "string",
+                "pattern": "^\\d\\d-\\d\\d$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^\\d\\d-\\d\\d$"
+              }
+            },
+            "required": [
+              "style",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Site-wide styles for days of the year, from and to included (a range may wrap the year): the first entry covering the day of the build replaces `style` and `languages`."
+        },
+        "stream": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Folders of short notes whose page shows each note in full, newest first, like a feed."
+        },
+        "seasons": {
+          "default": false,
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "hemisphere": {
+                  "default": "north",
+                  "type": "string",
+                  "enum": [
+                    "north",
+                    "south"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "description": "The garden style's colours follow the season of the build, and of the reader's day once the page opens: true for the northern hemisphere, or { hemisphere: south }."
+        },
+        "readerSwitch": {
+          "default": false,
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "notebook",
+                  "classic",
+                  "garden",
+                  "resume",
+                  "darkroom",
+                  "terminal",
+                  "blueprint",
+                  "wiki",
+                  "broadsheet",
+                  "herbarium",
+                  "manuscript",
+                  "lacquer",
+                  "zine",
+                  "atlas",
+                  "catalog",
+                  "eink",
+                  "paddy"
+                ]
+              }
+            }
+          ],
+          "description": "Styles readers can pick from the View menu instead of the page's own; true for every site-wide style."
+        }
+      },
+      "additionalProperties": false
+    },
+    "strings": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "description": "Per-language overrides of UI strings, e.g. { en-US: { blog: Posts } }."
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://dynamo-brain.gitlab.io/datme/datme.schema.json",
+  "title": "datme.yaml"
+}

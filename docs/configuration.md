@@ -6,6 +6,20 @@ title: "Configuration: datme.yaml"
 The settings live in `datme.yaml` at the root of the vault, so they travel with
 the notes. Every key is optional. `datme init` writes a commented starter file.
 
+`datme init` starts the file with a `# yaml-language-server: $schema=…` line.
+It points VS Code (with the YAML extension), Zed, Neovim and JetBrains editors
+at the [JSON Schema](https://dynamo-brain.gitlab.io/datme/datme.schema.json)
+of the file, which completes keys, shows what each one does and flags mistakes
+as you type. Add the same line to the top of an existing `datme.yaml`:
+
+```yaml
+# yaml-language-server: $schema=https://dynamo-brain.gitlab.io/datme/datme.schema.json
+```
+
+The schema also ships in the package, as `schema/datme.schema.json`. It knows
+the built-in styles only, so a style a theme pack adds is flagged by the editor
+(not by the build).
+
 An invalid file stops the build and names the path of every problem, for
 example `languages: Too small: expected array to have >=1 items`.
 

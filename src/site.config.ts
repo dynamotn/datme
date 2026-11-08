@@ -164,7 +164,7 @@ const themeFields = {
 } satisfies Record<(typeof PACK_THEME_KEYS)[number], z.ZodType>
 
 /** The schema of datme.yaml; styles are the built-in ones and those of the theme pack. */
-const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) =>
+export const makeSchema = (styles: readonly [StyleName, ...StyleName[]]) =>
   z
     .object({
       site: z

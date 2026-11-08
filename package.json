@@ -28,6 +28,7 @@
   "files": [
     "bin",
     "src",
+    "schema",
     "astro.config.mjs",
     "tsconfig.json",
     "LICENSE",
