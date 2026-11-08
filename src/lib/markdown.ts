@@ -610,8 +610,16 @@ const rehypeTransclude: Plugin<[{ lang: Lang; stack: string[] }], HastRoot> =
         (async () => {
           let children: ElementContent[] = []
           if (target && !stack.includes(key) && stack.length < 4) {
-            const r = await renderNote(target, [...stack, key])
+            // A note with a content warning is cut from its own text, then put behind the same notice.
+            const r = await (target.warning ? renderFull(target, [...stack, key]) : renderNote(target, [...stack, key]))
             children = extractFragment(fromHtml(r.html, { fragment: true }), fragment)
+            if (target.warning) {
+              const gate = fromHtml(warned("", target.warning, target.url, target.lang), { fragment: true })
+              visit(gate, "element", (el: Element) => {
+                if ((el.properties.className as string[] | undefined)?.includes("cw-body")) el.children = children
+              })
+              children = gate.children as ElementContent[]
+            }
             scopeIds(children, prefix, target.url)
           }
           const href = target ? target.url + anchorOf(fragment) : "#"

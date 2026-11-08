@@ -84,6 +84,13 @@ describe("content warnings", () => {
     expect(beforeWarning(warned("<p>x</p>", "w", "/u", "en-US"))).not.toContain("<p>x</p>")
   })
 
+  test("an embedded section of a warned note comes behind the same notice", async () => {
+    const note = getVault().byKey["vi-VN"].get("07_Project/Warned")!
+    expect(note.warning).toBe("violence")
+    const html = await renderMarkdown('<span class="transclude-ph" data-key="07_Project/Warned" data-fragment=""></span>', "vi-VN", "embedder")
+    expect(html).toMatch(/<div class="transclude"[^>]*>[\s\S]*<details class="cw" data-cw="[^"]+">[\s\S]*<div class="cw-body"[^>]*>[\s\S]*hard scene/)
+  })
+
   test("the property is read from cw or contentWarning, and is not listed among the properties", () => {
     expect(noteProperties({ ...base, source: { ...base.source, fm: { cw: "x", contentWarning: "y", author: "me" } } }).map(([k]) => k)).toEqual(["author"])
   })

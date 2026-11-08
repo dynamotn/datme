@@ -214,7 +214,10 @@ export interface QuoteGroup {
 export async function quotebookOf(note: Note, spec: Spec, notes: Note[]): Promise<QuoteGroup[]> {
   const quotes = (
     await Promise.all(
-      notes.map(async (n) => quotesOf((await renderNote(n)).html).map((q) => ({ text: q.text, who: q.who, note: n, href: passageUrl(n, q.text, q.id) }))),
+      // A note with a content warning gives no quotes: they would be its text out of its gate.
+      notes
+        .filter((n) => !n.warning)
+        .map(async (n) => quotesOf((await renderNote(n)).html).map((q) => ({ text: q.text, who: q.who, note: n, href: passageUrl(n, q.text, q.id) }))),
     )
   ).flat()
   if (spec.group === "none") return quotes.length ? [{ key: "", label: "", quotes }] : []
