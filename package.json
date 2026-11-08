@@ -48,6 +48,7 @@
     "lint": "biome ci",
     "format": "biome format --write",
     "test": "bun test --coverage",
+    "test:browser": "bun test ./tests/browser/garden.browser.ts",
     "screenshots": "bun tools/screenshots.ts",
     "matrix": "bun tools/matrix.ts"
   },

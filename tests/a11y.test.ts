@@ -5,7 +5,7 @@ import path from "node:path"
 import { Window } from "happy-dom"
 
 // Builds the fixture vault and runs axe on each kind of page. Contrast needs a
-// real layout engine, so Lighthouse checks it in CI instead.
+// real layout engine, so tests/browser and Lighthouse check it instead.
 const root = path.resolve(import.meta.dir, "..")
 let out = ""
 const axeSource = fs.readFileSync(path.join(root, "node_modules/axe-core/axe.min.js"), "utf8")
