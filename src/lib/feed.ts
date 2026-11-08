@@ -2,7 +2,8 @@ import fs from "node:fs"
 import path from "node:path"
 import rss from "@astrojs/rss"
 import { site, type Lang } from "~/site.config"
-import { listed, byRecent, getVault, type Note } from "./vault"
+import { listed, getVault, scheduledFor, type Note } from "./vault"
+import { noteVersions } from "./history"
 import { renderNote } from "./markdown"
 import { langPrefix } from "./i18n"
 import { sluggify } from "./slug"
@@ -30,8 +31,22 @@ function notesOf(lang: Lang, scope: FeedScope): Note[] {
   return all
 }
 
+/**
+ * When readers first saw a note: its first public version in git, or its
+ * `publish_date` when that came later; without git, when it was created.
+ * An old note published today is new to readers, and an edit is not.
+ */
+export function publishedAt(n: Note): Date | undefined {
+  const first = noteVersions(n)[0]?.date ?? n.created
+  const at = scheduledFor(n.source.fm)
+  return at && (!first || at > first) ? at : first
+}
+
 export async function feed(lang: Lang, scope: FeedScope = { kind: "site" }): Promise<Response> {
-  const notes = byRecent(notesOf(lang, scope), "created").slice(0, 40)
+  const notes = notesOf(lang, scope)
+    .map((n) => ({ n, date: publishedAt(n) }))
+    .sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0))
+    .slice(0, 40)
   const name = scope.kind === "folder" ? getVault().folders[lang].get(scope.dir)?.name : scope.kind === "tag" ? `#${scope.tag}` : undefined
   return rss({
     title: name ? `${name} · ${site.title[lang]}` : site.title[lang],
@@ -40,12 +55,12 @@ export async function feed(lang: Lang, scope: FeedScope = { kind: "site" }): Pro
     site: site.url ?? "http://localhost:4321",
     customData: `<language>${lang}</language>`,
     items: await Promise.all(
-      notes.map(async (n) => {
+      notes.map(async ({ n, date }) => {
         const r = await renderNote(n)
         return {
           title: r.h1 ?? n.title,
           link: n.url,
-          pubDate: n.created,
+          pubDate: date,
           description: r.description,
           categories: n.tags,
         }

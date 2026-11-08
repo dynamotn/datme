@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The RSS feeds (`index.xml` of the site, a folder or a tag) date each note by when it was published, not when it was created: an old note made public today now shows at the top of the feed instead of being buried, or left out, under its old date, and editing a note no longer matters. The date is the note's first public version in git, or its `publish_date` when that is later; outside git it stays the creation date.
 - On a `broadsheet` home, the notes at the root of the vault are filed under a "notes" label instead of an empty one linking back to the home.
 - The credits of a map (a `trip`, a `places` collection, a map page or a Leaflet block) are readable in dark mode: they sat on white, where the light links of a dark page did not read.
 - Text in the accent on its pale tint (links between notes, the stack of a `projects` card, the current page in the menus) reads at WCAG AA in the `notebook` style in dark mode, `herbarium` in light mode and `lacquer` in dark mode.

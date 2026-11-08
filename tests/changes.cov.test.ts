@@ -7,6 +7,7 @@ import { getVault, type Note } from "../src/lib/vault"
 import { gardenChanges, hasChanges, noteChanges, TRIVIAL_WORDS, wordsChanged } from "../src/lib/changes"
 import { hasHistory, historyUrl, noteVersions } from "../src/lib/history"
 import { digestOf } from "../src/lib/collection-views"
+import { publishedAt } from "../src/lib/feed"
 
 // A small vault of its own, in git, so the history is known exactly.
 const tmpRoot = os.tmpdir()
@@ -46,6 +47,7 @@ beforeAll(() => {
     "Beds/Bed.md": fm() + "A raised bed.",
     "Once.md": fm() + "Only ever one version.",
     "Phoenix.md": fm() + "First life.",
+    "Old.md": "---\ncreated: 2020-01-01\n---\nWritten long ago, kept private.",
   })
   // A typo fix: not worth announcing.
   commit("2026-05-05T10:00:00Z", { "Garden.md": fm("tags: [plants]\n") + "Roses need sunlight.", "Phoenix.md": null })
@@ -53,6 +55,7 @@ beforeAll(() => {
     "Garden.md": fm("tags: [plants]\n") + "Roses need sunlight.\n\nTulips want a cold winter first.",
     "Beds/Bed.md": fm() + "A raised bed.\n\n## [[Compost|Rich soil]] and ![[photo.png]] and [a link](https://x.y) `code` here\n\n```\nfenced\n```",
     "Phoenix.md": fm() + "Second life, risen again.",
+    "Old.md": fm("created: 2020-01-01\n") + "Written long ago, kept private.",
   })
   commit("2026-05-20T10:00:00Z", { "Beds/Bed.md": fm() + "A raised bed.\n\n" + long })
   site.vault = vault
@@ -153,6 +156,22 @@ describe("the garden's changes", () => {
     expect(gardenChanges("vi-VN", { kind: "folder", dir: "Bed" })).toEqual([])
     expect(new Set(gardenChanges("vi-VN", { kind: "tag", tag: "plants" }).map((c) => c.note.key))).toEqual(new Set(["Garden"]))
     expect(gardenChanges("vi-VN", { kind: "tag", tag: "plant" })).toEqual([])
+  })
+})
+
+describe("the date of a note in the feed", () => {
+  test("when it was published, not when it was created or last edited", () => {
+    const old = note("Old")
+    expect(old.created?.toISOString()).toBe("2020-01-01T00:00:00.000Z")
+    expect(publishedAt(old)?.toISOString()).toBe("2026-05-12T10:00:00.000Z")
+    // Garden was edited on the 12th, yet readers met it on the 4th.
+    expect(publishedAt(note("Garden"))?.toISOString()).toBe("2026-05-04T10:00:00.000Z")
+  })
+
+  test("a publish_date later than the commit dates it", () => {
+    const n = note("Once")
+    const later = { ...n, source: { ...n.source, fm: { ...n.source.fm, publish_date: "2026-06-01" } } } as Note
+    expect(publishedAt(later)?.toISOString()).toBe("2026-06-01T00:00:00.000Z")
   })
 })
 
