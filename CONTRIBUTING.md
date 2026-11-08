@@ -19,9 +19,24 @@ deliberate gets a `// biome-ignore <rule>: <reason>` comment on the line above.
 blame.ignoreRevsFile .git-blame-ignore-revs` keeps the formatting commit out of
 `git blame`.
 
-With `--coverage` the run fails unless every line and function of `src/` and
-`bin/` runs in some test (`coverageThreshold` in `bunfig.toml`). Run single
-files without it: on its own, a file covers only part of the code.
+With `--coverage` the run fails unless every line and function of the
+TypeScript and JavaScript modules of `src/` and `bin/` runs in some test
+(`coverageThreshold` in `bunfig.toml`). Bun counts only the files a test
+loads, so `tests/modules.test.ts` follows the imports of every test and fails
+naming each module of `src/` that none of them loads. The `.astro` components and pages are outside
+coverage; the build tests and the browser suite run them. Run single files
+without `--coverage`: on its own, a file covers only part of the code.
+
+The browser suite (`tests/browser/`) builds the fixture garden, serves it and
+drives Playwright's Chromium: reading a note, search with Ctrl K, the graph,
+a protected note, the theme toggle, the service worker, and axe with colour
+contrast on each kind of page, in light and dark. It is not part of
+`bun test`; CI runs it after the tests. Locally:
+
+```bash
+bunx playwright install chromium   # once, and after Playwright is updated
+bun run test:browser
+```
 
 A change to `package.json` (`files`, dependencies, `engines`) or to how the
 CLI starts should also pass `bun tools/pack-check.ts`: it packs datme,
