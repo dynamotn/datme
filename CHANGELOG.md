@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Flashcards come due by the day, as in other spaced-repetition tools: a card put off a day at 21:00 is due the next morning, from midnight in the reader's own time zone, instead of at 21:00 the next day. Progress saved before keeps its due times until the card is answered again.
 - Builds format dates and language names with one formatter per language instead of a new one for each date shown, which took about a tenth of a build from the cache.
 - The neighbourhood file of each note's local graph is cut from the links around the note instead of from every link of the garden, so a large garden no longer spends time growing with the square of its size there: about 5 times faster at 10,000 notes, with the same files.
 - Unlinked mentions of a note are looked for only in the notes holding the rarest word of its name, instead of going through every note of the garden for every note.

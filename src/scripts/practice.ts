@@ -6,7 +6,6 @@
 
 /** Days until a card in each box is due again; box 1 is due right away. */
 export const INTERVALS = [0, 1, 3, 7, 14]
-const DAY = 86_400_000
 
 export interface CardState {
   box: number
@@ -14,10 +13,13 @@ export interface CardState {
   due: number
 }
 
-/** The new state of a card after an answer. */
+/** The new state of a card after an answer: due from the start of the day its box waits for, in the reader's zone, so a card put off at night is there the next morning. */
 export function grade(state: CardState | undefined, remembered: boolean, now: number): CardState {
   const box = remembered ? Math.min((state?.box ?? 0) + 1, INTERVALS.length) : 1
-  return { box, due: now + INTERVALS[box - 1] * DAY }
+  const due = new Date(now)
+  due.setHours(0, 0, 0, 0)
+  due.setDate(due.getDate() + INTERVALS[box - 1])
+  return { box, due: due.getTime() }
 }
 
 /** Cards in the order to practise them: due ones first, the most overdue first, then new ones. */

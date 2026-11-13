@@ -7,13 +7,28 @@ const DAY = 86_400_000
 
 describe("Leitner boxes", () => {
   test("a remembered card moves up a box and waits longer; a forgotten one starts over", () => {
-    const now = 1_000_000
+    const now = Date.UTC(2026, 0, 5, 21)
+    const today = Date.UTC(2026, 0, 5)
     const first = grade(undefined, true, now)
-    expect(first).toEqual({ box: 1, due: now })
+    expect(first).toEqual({ box: 1, due: today })
     const second = grade(first, true, now)
-    expect(second).toEqual({ box: 2, due: now + INTERVALS[1] * DAY })
+    expect(second).toEqual({ box: 2, due: today + INTERVALS[1] * DAY })
     expect(grade({ box: 5, due: 0 }, true, now).box).toBe(5)
-    expect(grade({ box: 4, due: 0 }, false, now)).toEqual({ box: 1, due: now })
+    expect(grade({ box: 4, due: 0 }, false, now)).toEqual({ box: 1, due: today })
+  })
+
+  test("cards are due by the day: one put off a day at 21:00 is due the next morning, in the reader's own zone", () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "Asia/Ho_Chi_Minh"
+      const evening = new Date(2026, 0, 5, 21).getTime()
+      const card = grade({ box: 1, due: 0 }, true, evening)
+      expect(card.due).toBe(new Date(2026, 0, 6).getTime())
+      expect(queue(["a"], { a: card }, new Date(2026, 0, 6, 8).getTime())).toEqual(["a"])
+      expect(queue(["a"], { a: card }, new Date(2026, 0, 5, 23).getTime())).toEqual([])
+    } finally {
+      process.env.TZ = tz ?? "UTC"
+    }
   })
 
   test("due cards come first, most overdue first, then new ones; future ones wait", () => {

@@ -40,7 +40,7 @@ describe("scheduling", () => {
     expect(practice.grade(undefined, true, 0)).toEqual({ box: 1, due: 0 })
     expect(practice.grade({ box: 2, due: 0 }, true, 0)).toEqual({ box: 3, due: 3 * DAY })
     expect(practice.grade({ box: 5, due: 0 }, true, 0)).toEqual({ box: 5, due: 14 * DAY })
-    expect(practice.grade({ box: 4, due: 0 }, false, 10)).toEqual({ box: 1, due: 10 })
+    expect(practice.grade({ box: 4, due: 0 }, false, 10)).toEqual({ box: 1, due: 0 })
   })
 
   test("due cards come first, most overdue first, then new ones; cards not yet due wait", () => {
