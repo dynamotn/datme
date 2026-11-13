@@ -98,10 +98,25 @@ const pathKey = (path: string) => {
   return path.replace(/\/+$/, "") || "/"
 }
 
+/** Stored highlights as this version reads them, or undefined for JSON of another shape. */
+function pageOf(raw: string): PageHighlights | undefined {
+  const page: unknown = JSON.parse(raw)
+  if (!page || typeof page !== "object" || typeof (page as PageHighlights).title !== "string" || !Array.isArray((page as PageHighlights).items))
+    return undefined
+  const { title, items } = page as PageHighlights
+  const text = (v: unknown) => (typeof v === "string" ? v : "")
+  return {
+    title,
+    items: items
+      .filter((h) => h && typeof h.id === "string" && typeof h.text === "string")
+      .map((h) => ({ ...h, prefix: text(h.prefix), suffix: text(h.suffix), note: text(h.note) })),
+  }
+}
+
 export function loadPage(path: string): PageHighlights | undefined {
   try {
     const raw = localStorage.getItem(KEY + pathKey(path))
-    return raw ? JSON.parse(raw) : undefined
+    return raw ? pageOf(raw) : undefined
   } catch {
     return undefined
   }
@@ -124,7 +139,8 @@ export function allPages(): { path: string; page: PageHighlights }[] {
       const k = localStorage.key(i)
       if (!k?.startsWith(KEY)) continue
       try {
-        out.push({ path: k.slice(KEY.length), page: JSON.parse(localStorage.getItem(k)!) })
+        const page = pageOf(localStorage.getItem(k)!)
+        if (page) out.push({ path: k.slice(KEY.length), page })
       } catch {
         // a broken entry is skipped
       }

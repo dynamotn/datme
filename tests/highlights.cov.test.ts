@@ -166,11 +166,30 @@ describe("reader highlights in the browser", () => {
     expect(document.querySelector("dialog p")!.textContent).toBe("")
   })
 
+  test("a page's stored highlights of another shape read as none, and the page still sets up", () => {
+    note()
+    for (const raw of [
+      "null",
+      '"text"',
+      JSON.stringify({ title: "T", items: {} }),
+      JSON.stringify({ title: "T", items: [{ id: "a" }] }),
+      JSON.stringify({ title: "T", items: [{ id: "b", text: "note" }] }),
+    ]) {
+      localStorage.setItem(KEY + HERE, raw)
+      expect(() => hl.setupHighlights()).not.toThrow()
+    }
+    localStorage.removeItem(KEY + HERE)
+  })
+
   test("the list shows every page by title, the reader's words, and what is lost here", () => {
     note()
     store(HERE, { title: "The note", items: [hl1({ note: "mine" }), hl1({ id: "gone", text: "vanished", at: 0 })] })
     store("/en-US/aardvark", { title: "Aardvark", items: [hl1({ id: "x", text: "far away" })] })
     localStorage.setItem(KEY + "/broken", "{nope")
+    // JSON of another shape, as an older version or another script may have left: skipped too.
+    localStorage.setItem(KEY + "/null", "null")
+    localStorage.setItem(KEY + "/untitled", JSON.stringify({ items: [] }))
+    localStorage.setItem(KEY + "/no-list", JSON.stringify({ title: "No list", items: 3 }))
     localStorage.setItem("unrelated", "1")
     Object.assign(document.body.dataset, { highlights: "Highlights", highlightLost: "lost", close: "Shut" })
     hl.openHighlights()
