@@ -12,6 +12,7 @@ import { renderNote } from "./markdown"
 import { beforeWarning } from "./spoilers"
 import { noteChanges } from "./changes"
 import { t } from "./i18n"
+import { dayKey } from "./calendar"
 import { field, formatPrice, noteDay, plain, priceOf, quotesOf, textOf, type Spec } from "./note-layouts"
 
 /** A list property: a YAML list, or names joined by commas. */
@@ -235,9 +236,9 @@ export async function quotebookOf(note: Note, spec: Spec, notes: Note[]): Promis
 
 // ---------- digest ----------
 
-/** The ISO week of a day (UTC): its year, its number, and its Monday and Sunday as YYYY-MM-DD. */
+/** The ISO week of a day, the local one of a moment as the calendar shows it: its year, its number, and its Monday and Sunday as YYYY-MM-DD. */
 export function isoWeek(d: Date): { id: string; year: number; week: number; start: string; end: string } {
-  const day = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+  const day = new Date(dayKey(d))
   const monday = new Date(day)
   monday.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7))
   // The week belongs to the year of its Thursday.

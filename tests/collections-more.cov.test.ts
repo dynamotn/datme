@@ -230,6 +230,15 @@ describe("a digest", () => {
     expect(isoWeek(new Date("2024-01-01T12:00:00Z"))).toEqual({ id: "2024-W01", year: 2024, week: 1, start: "2024-01-01", end: "2024-01-07" })
     expect(isoWeek(new Date("2021-01-03T00:00:00Z"))).toEqual({ id: "2020-W53", year: 2020, week: 53, start: "2020-12-28", end: "2021-01-03" })
     expect(isoWeek(new Date("2024-12-30T00:00:00Z")).id).toBe("2025-W01")
+    // A moment is in the week of its local day, as the activity calendar shows it; a date-only value in its written one.
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "America/New_York"
+      expect(isoWeek(new Date("2024-01-08T02:00:00Z")).id).toBe("2024-W01")
+      expect(isoWeek(new Date("2024-01-08")).id).toBe("2024-W02")
+    } finally {
+      process.env.TZ = tz ?? "UTC"
+    }
   })
 
   test("the notes planted and tended each week, newest week first, `limit` weeks", () => {
