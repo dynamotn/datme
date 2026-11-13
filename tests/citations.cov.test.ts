@@ -65,6 +65,8 @@ describe("formatting edge cases", () => {
     expect(cite("[@k; @gone; @gone]", bib, "Refs").missing).toEqual(["gone"])
     expect(cite("[@k; not one]", bib, "Refs").md).toBe("[@k; not one]")
     expect(cite("[@k]: https://x", bib, "Refs").md).toBe("[@k]: https://x")
+    // A wikilink or embed of a note named with @ is a link, not a citation.
+    expect(cite("See [[@k]] and ![[@k]], or [[@k|him]]", bib, "Refs")).toMatchObject({ md: "See [[@k]] and ![[@k]], or [[@k|him]]", missing: [] })
     expect(cite("~~~\n[@k]\n~~~\n[@k]", bib, "Refs").md).toStartWith(
       '~~~\n[@k]\n~~~\n<cite class="citations">(<a href="#ref-k" class="citation">A 2000</a>)</cite>',
     )
