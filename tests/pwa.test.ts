@@ -104,6 +104,17 @@ describe("service worker", () => {
     expect([...stores.get("datme-pages")!.keys()]).toEqual(["https://garden.test/notes/a", "https://garden.test/notes/b", "https://garden.test/notes/new"])
   })
 
+  test("keeps the vault's pictures and files with the build assets, at most MAX_ASSETS of them", async () => {
+    const { stores, get } = worker()
+    for (let i = 0; i < MAX_ASSETS + 5; i++) await get(`/assets/photo${i}.png`)
+    await get("/static/search.json")
+    const assets = stores.get("datme-assets")!
+    expect(assets.size).toBe(MAX_ASSETS)
+    expect(assets.has("https://garden.test/assets/photo0.png")).toBe(false)
+    // The indexes stay with the build they belong to.
+    expect([...stores.get("datme-core-v1")!.keys()]).toEqual(["https://garden.test/static/search.json"])
+  })
+
   test("keeps at most MAX_ASSETS build assets, dropping the oldest", async () => {
     const { stores, get } = worker()
     for (let i = 0; i < MAX_ASSETS + 25; i++) await get(`/_astro/chunk${i}.js`)

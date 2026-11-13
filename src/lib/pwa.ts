@@ -146,11 +146,11 @@ async function asset(request) {
   return response
 }
 
-async function fresh(request) {
-  const cache = await caches.open(CORE)
+async function fresh(request, name) {
+  const cache = await caches.open(name)
   const network = fetch(request)
     .then((response) => {
-      if (response.ok) cache.put(request, response.clone())
+      if (response.ok) cache.put(request, response.clone()).then(() => name === ASSETS && trim(ASSETS, MAX_ASSETS))
       return response
     })
     .catch(() => undefined)
@@ -165,8 +165,11 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname === "${withBase("/sw.js")}") return
   if (url.pathname.startsWith("${withBase("/_astro/")}")) {
     event.respondWith(asset(request))
-  } else if (url.pathname.startsWith("${withBase("/static/")}") || url.pathname.startsWith("${withBase("/assets/")}")) {
-    event.respondWith(fresh(request))
+  } else if (url.pathname.startsWith("${withBase("/static/")}")) {
+    event.respondWith(fresh(request, CORE))
+  } else if (url.pathname.startsWith("${withBase("/assets/")}")) {
+    // The vault's pictures and files: as many as a reader looks at, so kept with the build assets, which are trimmed.
+    event.respondWith(fresh(request, ASSETS))
   } else if (request.mode === "navigate" || (request.headers.get("accept") ?? "").includes("text/html") || !/\\.\\w+$/.test(url.pathname)) {
     // Client-side navigations fetch the next page, with no Accept header of their own, rather than navigating.
     event.respondWith(page(request))
