@@ -171,6 +171,7 @@ export async function computeRelated(lang: Lang) {
   const related: ByNote<Related[]> = { get: rank }
 
   const byKey = new Map(notes.map((n) => [n.key, n]))
+  const order = new Map(notes.map((n, i) => [n.key, i]))
   // The texts and the word index are made once, on the first note whose mentions are asked for.
   let texts: Map<string, string> | undefined
   // The notes holding each word: a whole-word mention needs every word of the name, so the
@@ -201,9 +202,10 @@ export async function computeRelated(lang: Lang) {
     )
     const candidates = rarest.every(Boolean) ? new Set(rarest.flatMap((s) => [...s])) : undefined
     const found: Mention[] = []
-    for (const source of notes) {
+    // Only the notes holding the rarest word of a name, in vault order: not every note for every note.
+    const sources = candidates ? [...candidates].sort((a, b) => order.get(a)! - order.get(b)!).map((k) => byKey.get(k)!) : notes
+    for (const source of sources) {
       if (source === target || source.protected || out.get(source.key)!.has(target.key)) continue
-      if (candidates && !candidates.has(source.key)) continue
       const text = texts.get(source.key)!
       const m = re.exec(text)
       if (!m) continue
