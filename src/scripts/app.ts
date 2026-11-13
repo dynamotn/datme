@@ -101,7 +101,7 @@ document.addEventListener("click", (e) => {
 })
 
 document.addEventListener("keydown", (e) => {
-  const typing = (e.target as HTMLElement).closest("input, textarea, [contenteditable]")
+  const typing = (e.target as HTMLElement).closest("input, textarea, select, [contenteditable]")
   const mod = e.metaKey || e.ctrlKey
   if (e.key === "Escape") document.querySelectorAll<HTMLDetailsElement>("details[data-menu][open]").forEach((d) => (d.open = false))
   // Minimal pages have no search or graph dialog, so the browser's own shortcut stays.

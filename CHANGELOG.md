@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A vault opened through a symbolic link (macOS `/tmp`, a vault linked into a synced folder) gets its note dates from git again, instead of the file times without a word.
 - An empty frontmatter (`---` right after `---`, as Obsidian leaves it once every property is removed) is read as no properties, instead of showing as two lines at the top of the note.
 - With pages turned (the e-ink look), the arrow keys of a tab list, a slide deck being presented, or a focused audio or video player no longer turn the page as well.
+- The one-key shortcuts (`r` for a random note, `j`, `k`, `n`, `p`) no longer fire while a drop-down list has focus, where the key picks an option.
 
 ### Security
 

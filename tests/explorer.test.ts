@@ -448,7 +448,7 @@ describe("the page script", () => {
       <dialog data-graph-dialog><canvas data-lang="cov-app"></canvas></dialog>
       <nav class="explorer"><ul><li><a href="/en-US/0">0</a></li><li><a href="/en-US/a">a</a></li><li><a href="/en-US/b">b</a></li></ul></nav>
       <nav data-trail><a data-trail-prev href="/en-US/prev">prev</a><a data-trail-next href="/en-US/next">next</a></nav>
-      <input id="field"><div contenteditable id="editable"></div>`
+      <input id="field"><select id="choice"></select><div contenteditable id="editable"></div>`
     let followed: string[] = []
     const setup = () => {
       document.body.innerHTML = page
@@ -506,9 +506,11 @@ describe("the page script", () => {
       expect(navigated).toHaveLength(3)
     })
 
-    test("single keys do nothing while typing, with a modifier, or with a dialog open", () => {
+    test("single keys do nothing while typing, with a modifier, or with a dialog open", async () => {
       setup()
       key("j", {}, document.getElementById("field")!)
+      key("r", {}, document.getElementById("choice")!)
+      await settle(50)
       key("/", {}, document.getElementById("editable")!)
       key("j", { alt: true })
       key("j", { ctrl: true })
