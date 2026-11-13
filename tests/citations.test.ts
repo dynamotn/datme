@@ -22,6 +22,11 @@ describe("BibTeX", () => {
     expect(toBibtex({ key: "k", type: "misc", fields: { title: "a\\b" } })).toContain("{a\\textbackslash{}b}")
   })
 
+  test("a URL or DOI keeps its double hyphens; other fields get an en dash", () => {
+    const [e] = parseBibtex("@misc{k, url = {https://ex.org/a--b}, doi = {10.1/x--y}, pages = {10--20}}")
+    expect(e.fields).toEqual({ url: "https://ex.org/a--b", doi: "10.1/x--y", pages: "10–20" })
+  })
+
   test("LaTeX accents and escapes become plain text", () => {
     expect(latexText('S{\\"o}nke M\\"uller \\& {\\\'E}mile')).toBe("Sönke Müller & Émile")
   })

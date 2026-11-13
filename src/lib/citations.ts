@@ -26,13 +26,13 @@ const ACCENTS: Record<string, Record<string, string>> = {
 }
 const SYMBOLS: Record<string, string> = { ss: "ß", o: "ø", O: "Ø", ae: "æ", AE: "Æ", aa: "å", AA: "Å", l: "ł", L: "Ł", i: "ı" }
 
-/** Plain text of a BibTeX value: accents decoded, braces and escapes dropped. */
-export function latexText(v: string): string {
+/** Plain text of a BibTeX value: accents decoded, braces and escapes dropped; `--` an en dash unless `dashes` is off. */
+export function latexText(v: string, dashes = true): string {
   return v
     .replace(/\\([`'^"~cv])\s*\{?\\?([a-zA-Z])\}?/g, (_, acc: string, ch: string) => ACCENTS[acc]?.[ch] ?? ch)
     .replace(/\\(ss|ae|AE|aa|AA|o|O|l|L|i)\b\s*/g, (_, s: string) => SYMBOLS[s])
     .replace(/\\([&%$#_{}])/g, "$1")
-    .replace(/--/g, "–")
+    .replace(/--/g, dashes ? "–" : "--")
     .replace(/[{}]/g, "")
     .replace(/\s+/g, " ")
     .trim()
@@ -109,7 +109,9 @@ export function parseBibtex(src: string): BibEntry[] {
       skipSpace()
       if (src[i] !== "=") break
       i++
-      fields[name.toLowerCase()] = latexText(value())
+      const field = name.toLowerCase()
+      // An address keeps its double hyphens.
+      fields[field] = latexText(value(), field !== "url" && field !== "doi")
     }
     entries.push({ key, type, fields })
   }
