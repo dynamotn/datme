@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - In a Base, `.year()` of a date written without a time (`2024-01-01`) gives the year as written on a build machine west of UTC, instead of the year before.
+- In Dataview queries, `file.cday` and `file.mday` are the day a note was created or changed, without the time, as in Obsidian, so `WHERE file.cday = date(today)` finds the notes of today.
 
 ### Security
 

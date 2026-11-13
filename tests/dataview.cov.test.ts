@@ -74,6 +74,14 @@ describe("functions", () => {
     expect(ev("string(file.ctime)")).toBe("2020-01-01T00:00:00.000Z")
   })
 
+  test("file.cday and file.mday are the days of ctime and mtime, without the time", () => {
+    const timed = page("Notes/Timed", { created: new Date("2020-01-01T15:30:00Z"), updated: new Date("2020-02-03T08:00:00Z") })
+    const on = { pages: [timed], resolve: () => undefined, current: timed }
+    expect(evaluateInline('file.cday = date("2020-01-01")', on)).toBe(true)
+    expect(evaluateInline('file.mday = date("2020-02-03")', on)).toBe(true)
+    expect(evaluateInline("string(file.ctime)", on)).toBe("2020-01-01T15:30:00.000Z")
+  })
+
   test("round, min, max and sum", () => {
     expect(ev("round(2.567, 1)")).toBe(2.6)
     expect(ev("round(2.567)")).toBe(3)

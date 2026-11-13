@@ -540,9 +540,9 @@ function buildRow(page: Page, engine: Engine): Row {
     tags: page.tags.flatMap((t) => t.split("/").map((_, i, a) => "#" + a.slice(0, i + 1).join("/"))),
     etags: page.explicitTags.map((t) => "#" + t),
     ctime: page.created ?? null,
-    cday: page.created ?? null,
+    cday: page.created ? stripTime(page.created) : null,
     mtime: page.updated ?? null,
-    mday: page.updated ?? null,
+    mday: page.updated ? stripTime(page.updated) : null,
     outlinks: byKey(page.outlinks),
     inlinks: byKey(page.inlinks),
   }
@@ -608,6 +608,12 @@ function shift(d: Date, by: Duration, sign: number): Date {
 
 /** A date whose UTC fields are its calendar fields: as written for a date-only value, else local. */
 const wall = (d: Date) => (isDateOnly(d) ? d : new Date(d.getTime() - d.getTimezoneOffset() * 60_000))
+
+/** The day of a date, as a date-only value. */
+function stripTime(d: Date): Date {
+  const x = wall(d)
+  return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()))
+}
 
 /** A date in a Luxon format, such as "yyyy-MM-dd" or "EEEE d MMMM", with 'quoted' text kept. */
 function dateformat(d: Date, format: string): string {
@@ -877,11 +883,8 @@ function call(fn: string, args: Value[], engine: Engine, fns: (Fn | undefined)[]
       return isDur(a) ? a : parseDur(str(a))
     case "dateformat":
       return a instanceof Date ? dateformat(a, str(b)) : null
-    case "striptime": {
-      if (!(a instanceof Date)) return null
-      const x = wall(a)
-      return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()))
-    }
+    case "striptime":
+      return a instanceof Date ? stripTime(a) : null
     case "localtime":
       // shortcut: dates are already read in the build machine's zone; a stored zone would need converting here.
       return a instanceof Date ? a : null
