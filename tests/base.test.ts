@@ -107,7 +107,8 @@ describe("files of a site under a path", () => {
       expect(sw).toContain('const PRECACHE = ["/garden/","/garden/en-US"]')
       expect(sw).toContain('url.pathname === "/garden/sw.js"')
       expect(sw).toContain('url.pathname.startsWith("/garden/_astro/")')
-      expect(sw).toContain('url.pathname.startsWith("/garden/static/") || url.pathname.startsWith("/garden/assets/")')
+      expect(sw).toContain('url.pathname.startsWith("/garden/static/")')
+      expect(sw).toContain('url.pathname.startsWith("/garden/assets/")')
       expect(sw).toContain('<a href=\\"/garden/\\">')
       // Its caches are its own: another garden of the host keeps its pages when this one updates.
       expect(sw).toContain('const CORE = "datme/garden/core-" + VERSION')
