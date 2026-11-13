@@ -22,6 +22,18 @@ describe("BibTeX", () => {
     expect(toBibtex({ key: "k", type: "misc", fields: { title: "a\\b" } })).toContain("{a\\textbackslash{}b}")
   })
 
+  test("a name in braces is one name, an organisation's, whatever words it holds", () => {
+    const [e] = parseBibtex("@report{k, author = {{Food and Agriculture Organization} and Jane Doe}, title = {T}}")
+    const [org, jane] = people(e.fields.author)
+    expect(org.family.replace(/\u00a0/g, " ")).toBe("Food and Agriculture Organization")
+    expect(org.given).toBe("")
+    expect(jane).toEqual({ family: "Doe", given: "Jane" })
+    expect(shortAuthors(e).replace(/\u00a0/g, " ")).toBe("Food and Agriculture Organization & Doe")
+    // Braces inside a name, as around an accent, do not make it one.
+    expect(people(parseBibtex('@misc{k, author = {S{\\"o}nke Ahrens}}')[0].fields.author)).toEqual([{ family: "Ahrens", given: "Sönke" }])
+    expect(people(parseBibtex("@misc{k, author = {{Ö}zil {Mesut}}}")[0].fields.author)).toEqual([{ family: "Mesut", given: "Özil" }])
+  })
+
   test("a URL or DOI keeps its double hyphens; other fields get an en dash", () => {
     const [e] = parseBibtex("@misc{k, url = {https://ex.org/a--b}, doi = {10.1/x--y}, pages = {10--20}}")
     expect(e.fields).toEqual({ url: "https://ex.org/a--b", doi: "10.1/x--y", pages: "10–20" })

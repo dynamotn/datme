@@ -38,6 +38,41 @@ export function latexText(v: string, dashes = true): string {
     .trim()
 }
 
+/** The `and` between names, outside braces: `{Food and Agriculture Organization}` is one name. */
+function splitNames(v: string): string[] {
+  const names: string[] = []
+  let depth = 0
+  let from = 0
+  for (let i = 0; i < v.length; i++) {
+    if (v[i] === "{") depth++
+    else if (v[i] === "}") depth--
+    else if (depth === 0) {
+      const and = v.slice(i).match(/^\s+and\s+/)
+      if (and) names.push(v.slice(from, i)), (i += and[0].length - 1), (from = i + 1)
+    }
+  }
+  return [...names, v.slice(from)]
+}
+
+/** Whether braces wrap the whole of `v`, not just a part such as an accent. */
+function wrapped(v: string): boolean {
+  if (!v.startsWith("{") || !v.endsWith("}")) return false
+  let depth = 0
+  for (let i = 0; i < v.length - 1; i++) {
+    depth += v[i] === "{" ? 1 : v[i] === "}" ? -1 : 0
+    if (depth === 0) return false
+  }
+  return true
+}
+
+/** A list of names as plain text; a name in braces keeps its spaces unbreakable, so people() reads it as one. */
+function nameList(v: string): string {
+  return splitNames(v.trim())
+    .map((n) => n.trim())
+    .map((n) => (wrapped(n) ? latexText(n.slice(1, -1)).replace(/ /g, "\u00a0") : latexText(n)))
+    .join(" and ")
+}
+
 /** Entries of a BibTeX file; comments, preambles and malformed entries are skipped. */
 export function parseBibtex(src: string): BibEntry[] {
   const entries: BibEntry[] = []
@@ -111,7 +146,7 @@ export function parseBibtex(src: string): BibEntry[] {
       i++
       const field = name.toLowerCase()
       // An address keeps its double hyphens.
-      fields[field] = latexText(value(), field !== "url" && field !== "doi")
+      fields[field] = field === "author" || field === "editor" ? nameList(value()) : latexText(value(), field !== "url" && field !== "doi")
     }
     entries.push({ key, type, fields })
   }
@@ -143,8 +178,9 @@ interface Person {
 /** BibTeX names: "Family, Given" or "Given Family", joined by "and". */
 export function people(v: string | undefined): Person[] {
   if (!v) return []
+  // Only ordinary spaces part names and words: an organisation's are unbreakable.
   return v
-    .split(/\s+and\s+/)
+    .split(/[ \t\r\n]+and[ \t\r\n]+/)
     .map((n) => n.trim())
     .filter(Boolean)
     .map((n) => {
@@ -152,7 +188,7 @@ export function people(v: string | undefined): Person[] {
         const [family, given = ""] = n.split(",", 2).map((s) => s.trim())
         return { family, given }
       }
-      const parts = n.split(/\s+/)
+      const parts = n.split(/[ \t\r\n]+/)
       return { family: parts.pop()!, given: parts.join(" ") }
     })
 }
