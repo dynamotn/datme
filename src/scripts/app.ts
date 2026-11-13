@@ -316,6 +316,11 @@ document.addEventListener("astro:before-swap", () => {
 
 // ---- protected notes and locked parts: set up what unlocking reveals ----
 function revealed() {
+  setupPractice()
+  setupClozes()
+  setupHighlights()
+  setupSyllabus()
+  setupChecklist()
   setupSpoilers()
   setupMedia()
   setupCode()

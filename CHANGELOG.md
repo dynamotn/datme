@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A link whose preview failed to load, while offline say, shows its preview once the page can be fetched again, instead of never until a reload; previews keep only the 30 pages seen last in memory.
 - Daily notes named with a two-digit year (a `YY-MM-DD` format in the Daily notes settings) are found and shown in the journal, read as moment.js reads them: `99` is 1999, `26` is 2026.
 - A digest puts a change in the week of the day the activity calendar shows it on, the build machine's local day: a change late on a Sunday west of UTC no longer lands in the next week's digest.
+- Unlocking a protected note sets up what it holds, as for any other note: a deck gets its practice bar, clozes reveal on a click, checklist and syllabus ticks are restored and saved, and the reader's highlights are painted.
 
 ### Security
 

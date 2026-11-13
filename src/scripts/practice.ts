@@ -228,10 +228,11 @@ export function setupPractice(): void {
   const bar = document.querySelector<HTMLElement>("[data-practice]")
   const prose = bar?.closest("article")?.querySelector(".prose")
   if (!bar || !prose || bar.dataset.bound) return
-  bar.dataset.bound = "1"
   const s = bar.dataset
   const cards = collect(prose)
+  // A protected deck has none until it is unlocked, when this runs again.
   if (!cards.length) return
+  bar.dataset.bound = "1"
   const start = button(s.start!.replace("{n}", String(cards.length)), "practice-start")
   bar.append(start)
   bar.hidden = false

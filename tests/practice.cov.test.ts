@@ -226,6 +226,10 @@ describe("a practice session", () => {
     dom.document.body.innerHTML = `<article><div data-practice data-start="{n}" hidden></div><div class="prose"><p>Plain</p></div></article>`
     practice.setupPractice()
     expect(dom.document.querySelector<HTMLElement>("[data-practice]")!.hidden).toBe(true)
+    // A protected deck has no cards until it is unlocked; then its bar shows.
+    dom.document.querySelector(".prose")!.innerHTML = `<details class="flashcard"><summary>One</summary><div class="flashcard-answer">1</div></details>`
+    practice.setupPractice()
+    expect(dom.document.querySelector<HTMLElement>("[data-practice]")!.hidden).toBe(false)
   })
 })
 
