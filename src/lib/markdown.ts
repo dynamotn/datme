@@ -799,7 +799,8 @@ function renderFull(note: Note, stack: string[]): Promise<Rendered> {
     const diskKey = deps
       ? [
           note.lang,
-          variant,
+          // An embed cuts the notes already above it, so its HTML holds only along the same chain.
+          variant === "page" ? variant : stack.join("\0"),
           String(note.hardBreaks),
           note.md,
           glossarySignature(note.lang),
