@@ -20,9 +20,27 @@ describe("dependencies of a rendered note", () => {
     expect(parts.some((p) => p.startsWith("embed:03_Atomic/Zettelkasten:"))).toBe(true)
   })
 
+  test("an embed is keyed by the embedded note's warning and slides, which are not in its markdown", () => {
+    const key = "07_Project/Warned"
+    const warned = note(key)
+    const embedder = as(`<span class="transclude-ph" data-key="${key}" data-fragment=""></span>`)
+    const keyed = (over: Partial<Note>) => {
+      vault.byKey[lang].set(key, { ...warned, ...over })
+      try {
+        return dependencies(embedder)
+      } finally {
+        vault.byKey[lang].set(key, warned)
+      }
+    }
+    expect(keyed({ warning: "other" })).not.toEqual(keyed({}))
+    expect(keyed({ warning: undefined })).not.toEqual(keyed({}))
+    expect(keyed({ slides: {} })).not.toEqual(keyed({}))
+    expect(keyed({ protected: true, warning: "other" })).not.toEqual(keyed({ protected: true }))
+  })
+
   test("an embed cycle ends", () => {
     const self = as('<span class="transclude-ph" data-key="03_Atomic/Zettelkasten" data-fragment=""></span>')
-    expect(dependencies(self)).toEqual([expect.stringMatching(/^embed:03_Atomic\/Zettelkasten:.*:false$/)])
+    expect(dependencies(self)).toEqual([expect.stringMatching(/^embed:03_Atomic\/Zettelkasten:.*:false:$/)])
   })
 
   test("a note embedding one with locked parts is not cached, so a changed part or password reaches it", () => {

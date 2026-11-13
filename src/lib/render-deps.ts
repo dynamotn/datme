@@ -127,14 +127,16 @@ export function dependencies(note: Note, depth = 0, seen = new Set<string>()): s
     }
     // A protected note embeds as its title only; a cycle or the depth limit stops rendering there.
     if (target.protected || seen.has(key) || depth >= 3) {
-      parts.push(`embed:${key}:${target.title}:${target.url}:${target.protected}`)
+      parts.push(`embed:${key}:${target.title}:${target.url}:${target.protected}:${target.warning ?? ""}`)
       continue
     }
     // Its locked parts are sealed into this page, and their text and passwords are not in its markdown.
     if (target.lockedParts.length) return undefined
     const inner = dependencies(target, depth + 1, new Set(seen))
     if (!inner) return undefined
-    parts.push(`embed:${key}:${target.title}:${target.url}:${target.hardBreaks}:${sha(target.md)}`, ...target.assets.map((a) => `${a}@${stamp(a)}`), ...inner)
+    // Its warning gates the embed and its slides change how it renders, yet neither is in its markdown.
+    const shown = `${target.hardBreaks}:${target.warning ?? ""}:${JSON.stringify(target.slides ?? null)}`
+    parts.push(`embed:${key}:${target.title}:${target.url}:${shown}:${sha(target.md)}`, ...target.assets.map((a) => `${a}@${stamp(a)}`), ...inner)
   }
   return parts
 }

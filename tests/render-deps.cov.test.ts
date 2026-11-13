@@ -33,6 +33,6 @@ describe("dependencies through embeds", () => {
     expect(dependencies({ ...note("03_Atomic/Zettelkasten"), md: embed("Nowhere/Missing") })).toEqual(["embed:Nowhere/Missing:missing"])
     const deep = dependencies({ ...note("03_Atomic/Zettelkasten"), md: embed("06_Reference/Niklas Luhmann") }, 3)!
     expect(deep).toHaveLength(1)
-    expect(deep[0]).toMatch(/^embed:06_Reference\/Niklas Luhmann:.*:false$/)
+    expect(deep[0]).toMatch(/^embed:06_Reference\/Niklas Luhmann:.*:false:$/)
   })
 })
