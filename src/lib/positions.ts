@@ -14,8 +14,8 @@ export interface Place {
   endColumn?: number
 }
 
-/** Frontmatter at the start of a note, its YAML in group 1. */
-export const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/
+/** Frontmatter at the start of a note, its YAML in group 1: empty when the closing --- follows at once. */
+export const FM_RE = /^---\r?\n([\s\S]*?)(?:\r?\n|(?<=\n))---\r?\n?/
 
 /** An editor does not count a byte order mark. */
 const unmarked = (src: string) => src.replace(/^﻿/, "")

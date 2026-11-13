@@ -377,6 +377,9 @@ describe("frontmatter edge cases", () => {
 
   test("an empty or comment-only frontmatter is no frontmatter, not invalid YAML", () => {
     expect(parseFrontmatter("---\n\n---\nBody.\n")).toEqual({ fm: {}, body: "Body.\n", error: undefined })
+    // Obsidian leaves this once every property is removed.
+    expect(parseFrontmatter("---\n---\nBody.\n")).toEqual({ fm: {}, body: "Body.\n", error: undefined })
+    expect(parseFrontmatter("---\r\n---\r\nBody.\n")).toEqual({ fm: {}, body: "Body.\n", error: undefined })
     expect(parseFrontmatter("---\n# todo\n---\nBody.\n")).toEqual({ fm: {}, body: "Body.\n", error: undefined })
   })
 
