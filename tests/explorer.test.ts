@@ -552,6 +552,12 @@ describe("the page script", () => {
       expect(copied[1]).toContain("plain text")
       await settle(1450)
       expect(btn.textContent).toBe("Copy code")
+      // A second click while it says so still comes back to the label.
+      btn.click()
+      await settle()
+      btn.click()
+      await settle(1450)
+      expect(btn.textContent).toBe("Copy code")
       delete document.body.dataset.copy
       // Without a label, "Copy".
       document.body.innerHTML = `<div class="prose"><pre><code>y</code></pre></div>`

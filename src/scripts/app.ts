@@ -216,9 +216,8 @@ function setupCode() {
     btn.addEventListener("click", async () => {
       // biome-ignore lint/performance/useDomNodeTextContent: the code as shown, without what a highlighter hides
       await navigator.clipboard.writeText(pre.querySelector("code")?.innerText ?? pre.innerText)
-      const label = btn.textContent
       btn.textContent = document.body.dataset.copied ?? "Copied"
-      setTimeout(() => (btn.textContent = label), 1400)
+      setTimeout(() => (btn.textContent = document.body.dataset.copy ?? "Copy"), 1400)
     })
     // The button sits next to the <pre>, not inside it: a long line scrolls the block
     // sideways, and anything inside would scroll out of view with it.
