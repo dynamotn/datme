@@ -25,13 +25,13 @@ describe("generated walks", () => {
 
   test("a walk survives a round trip through the address", () => {
     const urls = ["/03_Atomic/Zettelkasten", "/Tiếng Việt/Ghi chú,1"]
-    expect(decodeWalk(encodeWalk(urls))).toEqual(urls)
+    expect(decodeWalk(encodeWalk(urls), "https://garden.example")).toEqual(urls)
     expect(encodeWalk(urls)).not.toContain("/")
   })
 
   test("a shared walk keeps only paths on this site", () => {
-    const urls = ["/a", "javascript:alert(1)", "//evil.example/x", "/\\evil.example", "https://evil.example/", "/b"]
-    expect(decodeWalk(encodeWalk(urls))).toEqual(["/a", "/b"])
+    const urls = ["/a", "javascript:alert(1)", "//evil.example/x", "/\\evil.example", "https://evil.example/", "//site/x", "/b"]
+    expect(decodeWalk(encodeWalk(urls), "https://garden.example")).toEqual(["/a", "/b"])
   })
 
   test("notes are found by title or alias, without minding case or accents", () => {
