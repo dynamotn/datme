@@ -2,6 +2,7 @@
  * Obsidian Bases (.base files): YAML views over notes with JavaScript-like
  * filter and formula expressions. Evaluated over published notes only.
  */
+import { yearOf } from "./calendar"
 import { parseYaml } from "./yaml"
 import { compare, memo, pageOf, type Engine, type Link, type Page, type Value } from "./dataview"
 
@@ -461,7 +462,7 @@ function method(name: string, self: Value, args: Value[], ctx: Ctx): Value {
     case "join":
       return Array.isArray(self) ? self.map(str).join(a == null ? ", " : str(a)) : str(self)
     case "year":
-      return self instanceof Date ? self.getFullYear() : null
+      return self instanceof Date ? yearOf(self) : null
     case "round":
       return typeof self === "number" ? Number(self.toFixed(typeof a === "number" ? Math.min(100, Math.max(0, Math.trunc(a) || 0)) : 0)) : null
   }

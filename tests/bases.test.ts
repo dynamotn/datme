@@ -120,6 +120,17 @@ views:
     }
   })
 
+  test("year() of a date-only value is its written year in any time zone", () => {
+    const tz = process.env.TZ
+    try {
+      process.env.TZ = "America/New_York"
+      const newYear = page("Notes/NewYear", { fields: { read: "2024-01-01" } })
+      expect(property("read.year()", newYear, engine, {})).toBe(2024)
+    } finally {
+      process.env.TZ = tz ?? "UTC"
+    }
+  })
+
   test("errors explain what is wrong", () => {
     expect(() => parseExpr('file.hasTag("x"')).toThrow(BaseError)
     expect(() => property("nope()", pages[0], engine, {})).toThrow("unknown function nope()")

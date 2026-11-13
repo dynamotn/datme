@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- In a Base, `.year()` of a date written without a time (`2024-01-01`) gives the year as written on a build machine west of UTC, instead of the year before.
+
 ## [4.0.0] - 2026-11-09
 
 ### Added
