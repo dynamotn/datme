@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { inflateRawSync } from "node:zlib"
 import { fromHtml } from "hast-util-from-html"
 import { getVault } from "../src/lib/vault"
-import { bookNotes, exportEpub, exportHtml } from "../src/lib/export"
+import { bookNotes, exportEpub, exportHtml, pathKey } from "../src/lib/export"
 import { toXhtml } from "../src/lib/xhtml"
 import { crc32, zip } from "../src/lib/zip"
 
@@ -95,6 +95,13 @@ describe("export", () => {
     // A link leaving the book points at the published site.
     expect(html).toContain('href="https://notes.dynamotn.dev/03_Atomic/Zettelkasten"')
     expect(html).not.toContain("Protected content")
+  })
+
+  test("a link finds its chapter whether its path is percent-encoded or not, with or without a trailing slash", () => {
+    // Note URLs are percent-encoded: /Ghi chú/Các ý is /Ghi%20ch%C3%BA/C%C3%A1c%20%C3%BD.
+    const url = "/Ghi%20ch%C3%BA/C%C3%A1c%20%C3%BD"
+    for (const href of [url, `${url}/`, "/Ghi chú/Các ý", "/Ghi chú/Các ý/"]) expect(pathKey(href)).toBe(pathKey(url))
+    expect(pathKey("/100%")).toBe("/100%")
   })
 
   test("an unknown folder is explained", async () => {

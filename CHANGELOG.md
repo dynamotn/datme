@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Highlights stored in the browser in another shape (left by an older version, say) are skipped instead of stopping the rest of the page from setting up: charts, maps, checklists, spoilers and comments.
 - A deck whose stored progress is in another shape starts afresh instead of failing to practise for good.
 - A link or embed of a note whose name starts with `@` (`[[@someone]]`, a common way to name notes about people) stays a link instead of turning into a missing citation.
+- In an EPUB or HTML export, links between notes with letters beyond ASCII in their names (`Ghi chú/Các ý`) point at the chapter in the book, instead of the published site or nowhere.
 
 ### Security
 

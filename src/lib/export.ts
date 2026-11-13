@@ -105,14 +105,25 @@ async function collect(dir: string, lang: Lang): Promise<Book> {
  * Point links between chapters at each other, other site links at the
  * published site, and images at the copies shipped with the book.
  */
+/** A page path as one key, however it is spelled: note URLs are percent-encoded, links in HTML may not be. */
+export function pathKey(url: string): string {
+  let path = url
+  try {
+    path = decodeURIComponent(url)
+  } catch {
+    // a lone % is kept as it is
+  }
+  return path.replace(/\/$/, "")
+}
+
 function rewrite(tree: Root, book: Book, target: (c: Chapter, hash: string) => string, image: (rel: string) => string | undefined) {
-  const byUrl = new Map(book.chapters.map((c) => [c.note.url, c]))
+  const byUrl = new Map(book.chapters.map((c) => [pathKey(c.note.url), c]))
   visit(tree, "element", (el: Element) => {
     if (el.tagName === "a" && typeof el.properties.href === "string") {
       const href = el.properties.href
       if (!href.startsWith("/")) return
       const [p, hash = ""] = href.split("#")
-      const chapter = byUrl.get(decodeURI(p).replace(/\/$/, ""))
+      const chapter = byUrl.get(pathKey(p))
       if (chapter) el.properties.href = target(chapter, hash)
       else if (site.url) el.properties.href = absUrl(href)
     }
