@@ -602,7 +602,11 @@ export function durationText(d: Duration): string {
 /** A date moved by a duration, months first, as Luxon does. */
 function shift(d: Date, by: Duration, sign: number): Date {
   const out = new Date(d)
+  const day = out.getUTCDate()
+  out.setUTCDate(1)
   out.setUTCMonth(out.getUTCMonth() + sign * by.months)
+  // Jan 31 plus a month is the last day of February, not March 2 or 3.
+  out.setUTCDate(Math.min(day, new Date(Date.UTC(out.getUTCFullYear(), out.getUTCMonth() + 1, 0)).getUTCDate()))
   return new Date(out.getTime() + sign * by.ms)
 }
 
