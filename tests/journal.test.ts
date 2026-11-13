@@ -8,6 +8,11 @@ import { getVault } from "../src/lib/vault"
 describe("daily note names", () => {
   test("moment.js formats, with folders, names and literal text", () => {
     expect(dateMatcher("YYYY-MM-DD")("2026-10-07")).toBe("2026-10-07")
+    // Two-digit years as moment reads them: 69 and later are of the 1900s.
+    expect(dateMatcher("YY-MM-DD")("26-10-07")).toBe("2026-10-07")
+    expect(dateMatcher("YY-MM-DD")("68-01-02")).toBe("2068-01-02")
+    expect(dateMatcher("YY-MM-DD")("99-01-02")).toBe("1999-01-02")
+    expect(dateMatcher("YY-MM-DD")("2026-10-07")).toBeUndefined()
     expect(dateMatcher("YYYY/MM/YYYY-MM-DD")("2026/10/2026-10-07")).toBe("2026-10-07")
     expect(dateMatcher("DD.MM.YYYY")("07.10.2026")).toBe("2026-10-07")
     expect(dateMatcher("YYYY-MM-DD dddd")("2026-10-07 Wednesday")).toBe("2026-10-07")

@@ -46,11 +46,12 @@ const MONTHS = ["january", "february", "march", "april", "may", "june", "july", 
  * `[text]` is literal.
  */
 export function dateMatcher(format: string): (stem: string) => string | undefined {
-  const groups: ("Y" | "M" | "D" | "MMM" | "MMMM")[] = []
+  const groups: ("Y" | "YY" | "M" | "D" | "MMM" | "MMMM")[] = []
   let re = ""
-  for (const tok of format.match(/\[[^\]]*\]|YYYY|MMMM|MMM|MM|M|DDDD|DD|Do|D|dddd|ddd|dd|d|ww|w|WW|W|gggg|GGGG|.+?/g) ?? []) {
+  for (const tok of format.match(/\[[^\]]*\]|YYYY|YY|MMMM|MMM|MM|M|DDDD|DD|Do|D|dddd|ddd|dd|d|ww|w|WW|W|gggg|GGGG|.+?/g) ?? []) {
     if (tok.startsWith("[")) re += escapeRe(tok.slice(1, -1))
     else if (tok === "YYYY" || tok === "gggg" || tok === "GGGG") re += tok === "YYYY" ? (groups.push("Y"), "(\\d{4})") : "\\d{4}"
+    else if (tok === "YY") re += (groups.push("YY"), "(\\d{2})")
     else if (tok === "MMMM") re += (groups.push("MMMM"), "([A-Za-z]+)")
     else if (tok === "MMM") re += (groups.push("MMM"), "([A-Za-z]{3})")
     else if (tok === "MM") re += (groups.push("M"), "(\\d{2})")
@@ -72,6 +73,8 @@ export function dateMatcher(format: string): (stem: string) => string | undefine
     groups.forEach((g, i) => {
       const v = m[i + 1]
       if (g === "Y") y = Number(v)
+      // moment reads 69 to 99 as the 1900s, the rest as the 2000s.
+      else if (g === "YY") y = Number(v) + (Number(v) > 68 ? 1900 : 2000)
       else if (g === "M") mo = Number(v)
       else if (g === "D") d = Number(v)
       else mo = MONTHS.findIndex((name) => (g === "MMM" ? name.slice(0, 3) : name) === v.toLowerCase()) + 1
