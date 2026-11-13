@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The one-key shortcuts (`r` for a random note, `j`, `k`, `n`, `p`) no longer fire while a drop-down list has focus, where the key picks an option.
 - A code block's copy button clicked twice in a row comes back to "Copy" instead of saying "Copied" until the page is reloaded.
 - In the search dialog, the Enter that ends a word typed with an input method (Vietnamese, Chinese, Japanese…) finishes the word instead of opening the selected result.
+- With GoatCounter blocked by the reader's browser, the page stops waiting for it after six seconds, instead of checking for it every 300 ms for as long as the page is open, once more for each page visited.
 
 ### Security
 

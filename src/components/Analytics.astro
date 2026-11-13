@@ -35,9 +35,13 @@ const domain = site.url ? new URL(site.url).host : undefined
     <>
       <script is:inline data-goatcounter={`https://${a.id}.goatcounter.com/count`} data-goatcounter-settings='{"no_onload": true}' async src="https://gc.zgo.at/count.js" />
       <script is:inline>
-        document.addEventListener("astro:page-load", function count() {
-          if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: location.pathname })
-          else setTimeout(count, 300)
+        document.addEventListener("astro:page-load", function () {
+          // A blocked counter never loads: stop trying after a few seconds, not once per page for ever.
+          var tries = 0
+          ;(function count() {
+            if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: location.pathname })
+            else if (++tries < 20) setTimeout(count, 300)
+          })()
         })
       </script>
     </>
