@@ -40,6 +40,8 @@ const column = (url: string, body: string) => () =>
 served.set("/notes/b", column("/notes/b", "B"))
 served.set("/notes/c", column("/notes/c", "C"))
 served.set("/notes/d", column("/notes/d", "D"))
+served.set("/notes/slow", () => Bun.sleep(30).then(column("/notes/slow", "Slow")))
+served.set("/notes/slow-gone", () => Bun.sleep(30).then(() => new Response("missing", { status: 404 })))
 served.set("/notes/empty", () => Promise.resolve(new Response("<p>no column here</p>")))
 served.set("/notes/down", () => Promise.reject(new Error("offline")))
 
@@ -174,5 +176,21 @@ describe("stacked notes", () => {
       Object.defineProperty(globalThis, "location", { value: realLocation, configurable: true, writable: true })
     }
     expect(urls(row)).toEqual(["/notes/a"])
+  })
+})
+
+describe("stacked notes, clicked fast", () => {
+  test("of two links clicked in a column before either loads, only the last one opens", async () => {
+    const row = page()
+    const a = row.firstElementChild!
+    const href = dom.window.location.href
+    await Promise.all([stack.openColumn(row, a, "/notes/slow", () => {}), stack.openColumn(row, a, "/notes/c", () => {})])
+    expect(urls(row)).toEqual(["/notes/a", "/notes/c"])
+    // A page that would have opened in full is left alone too, once another link was clicked.
+    await Promise.all([stack.openColumn(row, a, "/notes/slow-gone", () => {}), stack.openColumn(row, a, "/notes/b", () => {})])
+    expect(urls(row)).toEqual(["/notes/a", "/notes/b"])
+    expect(dom.window.location.href.split("?")[0]).toBe(href.split("?")[0])
+    await Promise.all([stack.openColumn(row, a, "/notes/d", () => {}), stack.openColumn(row, a, "/notes/d", () => {})])
+    expect(urls(row)).toEqual(["/notes/a", "/notes/d"])
   })
 })

@@ -41,6 +41,9 @@ function syncUrl(row: Element) {
   root.classList.toggle("stacking", columns(row).length > 1)
 }
 
+/** The latest link followed from each column: a slower page clicked before it must not open after it. */
+const latest = new WeakMap<Element, string>()
+
 /** Open `url` right after `from`, closing whatever was to its right. */
 export async function openColumn(row: Element, from: Element, target: string, hooks: () => void) {
   // ?stack= comes from the URL: never fetch, import or navigate to another origin or a javascript: URL.
@@ -50,8 +53,12 @@ export async function openColumn(row: Element, from: Element, target: string, ho
   const existing = cols.find((c) => c.dataset.url === url)
   if (existing) return existing.scrollIntoView({ behavior: "smooth", inline: "nearest" })
   cols.slice(cols.indexOf(from as HTMLElement) + 1).forEach((c) => c.remove())
+  latest.set(from, url)
   const fetched = await fetchColumn(url)
+  if (latest.get(from) !== url || !from.isConnected) return
   if (!fetched) return void (location.href = url)
+  // The same link clicked twice loads once, and opens once.
+  if (columns(row).some((c) => c.dataset.url === url)) return
   const col = document.importNode(fetched, true) as HTMLElement
   // Ids must stay unique on the page; the column keeps its own anchors as data.
   col.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"))
