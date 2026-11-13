@@ -54,7 +54,7 @@ export function parseCanvas(src: string): CanvasData {
     }))
   const ids = new Set(nodes.map((n) => n.id))
   // A side Obsidian never writes, from a canvas edited by hand, is dropped: the edge then picks one.
-  const side = (s: unknown) => (s === "top" || s === "right" || s === "bottom" || s === "left" ? s : undefined)
+  const side = (s: unknown): Side | undefined => (s === "top" || s === "right" || s === "bottom" || s === "left" ? s : undefined)
   const edges = (data.edges ?? [])
     .filter((e) => e && ids.has(e.fromNode) && ids.has(e.toNode))
     .map((e) => ({ ...e, fromSide: side(e.fromSide), toSide: side(e.toSide) }))
