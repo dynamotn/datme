@@ -7,6 +7,7 @@ import { freshness } from "./outdated"
 import { hasVisited, readFootprints } from "./footprints"
 import { neighbourhood, parseDepth, type Depth } from "./graph-hops"
 import { bounds, project, tilt, type Camera } from "./graph-3d"
+import { readItem, writeItem } from "./storage"
 
 interface GNode extends SimulationNodeDatum {
   i: number
@@ -446,23 +447,6 @@ export async function mountGraph(canvas: HTMLCanvasElement, mode: "local" | "glo
 const DEPTH_KEY = "graphDepth"
 const SPACE_KEY = "graphView"
 
-function recall(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    // storage blocked: use the site's default
-    return null
-  }
-}
-
-function remember(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    // private mode: the choice lasts for this page only
-  }
-}
-
 /** Run `show` once the canvas comes near the view: a graph's index is fetched and laid out only then, never while hidden. */
 function whenSeen(canvas: HTMLCanvasElement, show: () => void) {
   const watch = new IntersectionObserver(
@@ -495,11 +479,11 @@ export function mountLocalGraph(canvas: HTMLCanvasElement) {
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
       const depth = parseDepth(b.dataset.graphDepth, 1)
-      remember(DEPTH_KEY, String(depth))
+      writeItem(DEPTH_KEY, String(depth))
       void show(depth)
     }),
   )
-  whenSeen(canvas, () => void show(parseDepth(recall(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1))))
+  whenSeen(canvas, () => void show(parseDepth(readItem(DEPTH_KEY), parseDepth(canvas.dataset.depth, 1))))
 }
 
 /** The links between some notes only (`data-urls`), such as the people a collection lists. */
@@ -536,7 +520,7 @@ async function drawGlobal(dialog: HTMLDialogElement) {
   canvas.dataset.colorBy = color?.value ?? ""
   canvas.dataset.freshLabels = color?.dataset.freshLabels ?? "{}"
   canvas.dataset.visitedLabel = color?.dataset.visitedLabel ?? ""
-  const space = (recall(SPACE_KEY) ?? dialog.dataset.view) === "3d"
+  const space = (readItem(SPACE_KEY) ?? dialog.dataset.view) === "3d"
   dialog.querySelector("[data-graph-3d]")?.setAttribute("aria-pressed", String(space))
   const stop = await mountGraph(canvas, "global", readFilters(dialog), { space })
   // Filters changed or the dialog closed while the graph was loading.
@@ -575,7 +559,7 @@ export function openGraph() {
     dialog.querySelectorAll("select[data-filter], select[data-graph-color]").forEach((sel) => sel.addEventListener("change", () => drawGlobal(dialog)))
     dialog.querySelector("[data-graph-3d]")?.addEventListener("click", (e) => {
       const on = (e.currentTarget as HTMLElement).getAttribute("aria-pressed") === "true"
-      remember(SPACE_KEY, on ? "2d" : "3d")
+      writeItem(SPACE_KEY, on ? "2d" : "3d")
       void drawGlobal(dialog)
     })
     dialog.addEventListener("close", () => {

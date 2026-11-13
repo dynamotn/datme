@@ -7,6 +7,7 @@
  * The View menu's toggle keeps the choice in the reader's browser, and the
  * <head> script of Base.astro applies it before the first paint.
  */
+import { readItem, writeItem } from "./storage"
 
 export const PAGED_KEY = "paged"
 
@@ -37,24 +38,6 @@ export function tapTurn(x: number, left: number, width: number, rtl = false): -1
   if (at < 0.2) return rtl ? 1 : -1
   if (at > 0.8) return rtl ? -1 : 1
   return 0
-}
-
-function stored(): boolean {
-  try {
-    return localStorage.getItem(PAGED_KEY) === "1"
-  } catch {
-    // storage blocked: the page scrolls
-    return false
-  }
-}
-
-function store(on: boolean) {
-  try {
-    if (on) localStorage.setItem(PAGED_KEY, "1")
-    else localStorage.removeItem(PAGED_KEY)
-  } catch {
-    // private mode: the choice lasts for this page only
-  }
 }
 
 const root = document.documentElement
@@ -120,7 +103,7 @@ function onClick(e: MouseEvent) {
   const toggle = target.closest?.("[data-paged-toggle]")
   if (toggle) {
     const on = root.classList.toggle("paged")
-    store(on)
+    writeItem(PAGED_KEY, on ? "1" : null)
     page = 0
     refresh()
     return
@@ -152,7 +135,7 @@ function onFocus(e: FocusEvent) {
 export function setupPaged(): void {
   page = 0
   observer?.disconnect()
-  root.classList.toggle("paged", stored())
+  root.classList.toggle("paged", readItem(PAGED_KEY) === "1")
   refresh()
   // The reader switch can change the page's style, and the toggle its class.
   observer = new MutationObserver(refresh)

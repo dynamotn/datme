@@ -3,26 +3,9 @@
  * their browser. The <head> script of Base.astro applies it before the first paint and repeats
  * applyLook, which it cannot import; this module offers the choice and applies a new one.
  */
+import { readItem, writeItem } from "./storage"
 
 export const LOOK_KEY = "look"
-
-function stored(): string | null {
-  try {
-    return localStorage.getItem(LOOK_KEY)
-  } catch {
-    // storage blocked: the page's own style
-    return null
-  }
-}
-
-function store(choice: string) {
-  try {
-    if (choice) localStorage.setItem(LOOK_KEY, choice)
-    else localStorage.removeItem(LOOK_KEY)
-  } catch {
-    // private mode: the choice lasts for this page only
-  }
-}
 
 /**
  * Draws the page of `doc` in the style `choice`, or in its own when there is no choice or the
@@ -60,14 +43,14 @@ export function setupLookSwitch(): void {
   if (!group || group.dataset.bound) return
   group.dataset.bound = "1"
   const inputs = [...group.querySelectorAll<HTMLInputElement>("input[data-look-pick]")]
-  const choice = stored() ?? ""
+  const choice = readItem(LOOK_KEY) ?? ""
   // A style no longer offered leaves the page's own checked.
   const current = inputs.some((i) => i.value === choice) ? choice : ""
   inputs.forEach((i) => (i.checked = i.value === current))
   group.addEventListener("change", (e) => {
     const input = e.target as HTMLInputElement
     if (!input.matches("[data-look-pick]")) return
-    store(input.value)
+    writeItem(LOOK_KEY, input.value || null)
     applyLook(document, input.value || null)
   })
 }

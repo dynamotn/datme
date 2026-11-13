@@ -30,23 +30,9 @@ import { setupFootprints } from "./footprints"
 import { setupHighlights } from "./highlights"
 import { setupSyllabus } from "./syllabus"
 import { setupChecklist } from "./checklist"
+import { readItem, writeItem } from "./storage"
 
 const root = document.documentElement
-
-function store(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    // private mode: the setting just won't persist
-  }
-}
-function read(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
 
 // ---- global shortcuts and header buttons (bound once; header nodes are swapped, so delegate) ----
 document.addEventListener("click", (e) => {
@@ -68,7 +54,7 @@ document.addEventListener("click", (e) => {
   } else if (target.closest("[data-theme-toggle]")) {
     const next = root.dataset.theme === "dark" ? "light" : "dark"
     root.dataset.theme = next
-    store("theme", next)
+    writeItem("theme", next)
     document.dispatchEvent(new Event("themechange"))
     // giscus lives in an iframe and only hears about theme changes by message.
     const giscus = document.querySelector<HTMLElement>(".comments .giscus")
@@ -79,11 +65,11 @@ document.addEventListener("click", (e) => {
   } else if (target.closest("[data-sidebar-toggle]")) {
     const side = (target.closest("[data-sidebar-toggle]") as HTMLElement).dataset.sidebarToggle!
     root.classList.toggle(`hide-${side}`)
-    store("sidebars", ["left", "right"].filter((x) => root.classList.contains(`hide-${x}`)).join(","))
+    writeItem("sidebars", ["left", "right"].filter((x) => root.classList.contains(`hide-${x}`)).join(","))
     syncToggles()
   } else if (target.closest("[data-stack-toggle]")) {
     const on = root.classList.toggle("stack-mode")
-    store("stack", on ? "1" : "0")
+    writeItem("stack", on ? "1" : "0")
     if (!on) {
       document.querySelectorAll("[data-stack-row] > [data-stack-col]:not(:first-child)").forEach((c) => c.remove())
       root.classList.remove("stacking")
@@ -94,7 +80,7 @@ document.addEventListener("click", (e) => {
     syncToggles()
   } else if (target.closest("[data-reader-toggle]")) {
     const on = root.classList.toggle("reader")
-    store("reader", on ? "1" : "0")
+    writeItem("reader", on ? "1" : "0")
     syncToggles()
   } else if (target.closest("[data-nav-toggle]")) root.classList.toggle("nav-open")
   else if (root.classList.contains("nav-open") && !target.closest("[data-sidebar]")) root.classList.remove("nav-open")
@@ -133,7 +119,7 @@ const OPEN_KEY = "explorer-open"
 /** The folders left open, read defensively: storage is anyone's to edit. */
 function openFolders(): Set<string> {
   try {
-    const list: unknown = JSON.parse(read(OPEN_KEY) ?? "[]")
+    const list: unknown = JSON.parse(readItem(OPEN_KEY) ?? "[]")
     return new Set(Array.isArray(list) ? list.filter((d) => typeof d === "string") : [])
   } catch {
     return new Set()
@@ -151,7 +137,7 @@ function setupExplorer() {
         const set = openFolders()
         if (d.open) set.add(d.dataset.dir!)
         else set.delete(d.dataset.dir!)
-        store(OPEN_KEY, JSON.stringify([...set]))
+        writeItem(OPEN_KEY, JSON.stringify([...set]))
       })
     })
   }
