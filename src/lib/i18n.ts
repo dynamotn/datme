@@ -54,7 +54,15 @@ export function langDir(lang: Lang): "rtl" | "ltr" {
   return RTL.has(lang.split("-")[0].toLowerCase()) ? "rtl" : "ltr"
 }
 
+const metas = new Map<Lang, { short: string; name: string; html: string }>()
+
 export function langMeta(lang: Lang): { short: string; name: string; html: string } {
+  let meta = metas.get(lang)
+  if (!meta) metas.set(lang, (meta = readMeta(lang)))
+  return meta
+}
+
+function readMeta(lang: Lang): { short: string; name: string; html: string } {
   let name = lang
   try {
     name = new Intl.DisplayNames([lang], { type: "language" }).of(lang.split("-")[0]) ?? lang
@@ -69,8 +77,17 @@ export function langPrefix(lang: Lang): string {
   return lang === site.defaultLang ? "" : `${lang}/`
 }
 
+/** Formatters by language and zone: toLocaleDateString builds one on every call, which a build makes thousands of. */
+const formatters = new Map<string, Intl.DateTimeFormat>()
+
 export function formatDate(d: Date | undefined, lang: Lang): string {
   if (!d) return ""
+  if (Number.isNaN(d.getTime())) return "Invalid Date"
   // A date-only value is UTC midnight: shown in local time, west of UTC it would fall on the day before.
-  return d.toLocaleDateString(lang, { year: "numeric", month: "short", day: "numeric", timeZone: isDateOnly(d) ? "UTC" : undefined })
+  const timeZone = isDateOnly(d) ? "UTC" : undefined
+  // The local zone is read when a formatter is made, so it is part of the key: TZ can change while running.
+  const key = `${lang}|${timeZone ?? process.env.TZ ?? ""}`
+  let format = formatters.get(key)
+  if (!format) formatters.set(key, (format = new Intl.DateTimeFormat(lang, { year: "numeric", month: "short", day: "numeric", timeZone })))
+  return format.format(d)
 }

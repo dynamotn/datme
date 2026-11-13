@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Builds format dates and language names with one formatter per language instead of a new one for each date shown, which took about a tenth of a build from the cache.
+
 ### Fixed
 
 - In a Base, `.year()` of a date written without a time (`2024-01-01`) gives the year as written on a build machine west of UTC, instead of the year before.

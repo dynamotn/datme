@@ -69,6 +69,20 @@ describe("i18n", () => {
     const d = new Date("2024-05-14T12:00:00Z")
     expect(formatDate(d, "en-US")).toBe("May 14, 2024")
     expect(formatDate(undefined, "vi-VN")).toBe("")
+    expect(formatDate(new Date("not a date"), "en-US")).toBe("Invalid Date")
+  })
+
+  test("a moment is shown in the zone the build runs in, also after it changes", () => {
+    const tz = process.env.TZ
+    const late = new Date("2024-01-06T02:00:00Z")
+    try {
+      process.env.TZ = "UTC"
+      expect(formatDate(late, "en-US")).toBe("Jan 6, 2024")
+      process.env.TZ = "America/New_York"
+      expect(formatDate(late, "en-US")).toBe("Jan 5, 2024")
+    } finally {
+      process.env.TZ = tz ?? "UTC"
+    }
   })
 
   test("a date-only value shows the day it names in any time zone", () => {
