@@ -89,9 +89,9 @@ describe("pan and zoom of a canvas page", () => {
     pointer("pointermove", 130, 95)
     expect(captured).toEqual([7])
     expect(transform()).toBe("translate(30px, 45px) scale(0.5)")
-    const click = pointer("click", 130, 95, link)
-    expect(click.defaultPrevented).toBe(true)
+    // Browsers end a drag with pointerup, then the click it makes.
     pointer("pointerup", 130, 95)
+    expect(pointer("click", 130, 95, link).defaultPrevented).toBe(true)
     expect(pointer("click", 130, 95, link).defaultPrevented).toBe(false)
   })
 

@@ -20,7 +20,10 @@ export function setupCanvas() {
     apply()
   }
   let drag: { x: number; y: number; moved: boolean } | undefined
+  // A drag ends on pointerup, before the click it makes: that click is told apart by this.
+  let dragged = false
   viewport.addEventListener("pointerdown", (e) => {
+    dragged = false
     if ((e.target as HTMLElement).closest(".canvas-controls")) return
     drag = { x: e.clientX, y: e.clientY, moved: false }
   })
@@ -37,12 +40,18 @@ export function setupCanvas() {
     drag.y = e.clientY
     apply()
   })
-  viewport.addEventListener("pointerup", () => (drag = undefined))
+  const end = () => {
+    dragged = !!drag?.moved
+    drag = undefined
+  }
+  viewport.addEventListener("pointerup", end)
+  viewport.addEventListener("pointercancel", end)
   // A drag must not also follow the link it started on.
   viewport.addEventListener(
     "click",
     (e) => {
-      if (drag?.moved) e.preventDefault()
+      if (dragged) e.preventDefault()
+      dragged = false
     },
     true,
   )
