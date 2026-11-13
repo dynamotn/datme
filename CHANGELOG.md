@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A build from an empty cache draws its social cards in worker threads, one per core left over and at most 8, instead of laying each out in turn on the build's own thread: about a quarter faster on a 300-note garden (16.0 s to 11.8–12.3 s on a 16-core machine), with the same images, for about 0.4 GiB more memory at the peak. Workers start only as cards wait for them, so a build that draws a couple of icons starts a couple. Where a worker cannot start, cards are drawn on the build's thread as before.
 - Flashcards come due by the day, as in other spaced-repetition tools: a card put off a day at 21:00 is due the next morning, from midnight in the reader's own time zone, instead of at 21:00 the next day. Progress saved before keeps its due times until the card is answered again.
 - Builds format dates and language names with one formatter per language instead of a new one for each date shown, which took about a tenth of a build from the cache.
 - The neighbourhood file of each note's local graph is cut from the links around the note instead of from every link of the garden, so a large garden no longer spends time growing with the square of its size there: about 5 times faster at 10,000 notes, with the same files.

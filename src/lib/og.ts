@@ -1,9 +1,12 @@
+import crypto from "node:crypto"
 import fs from "node:fs"
-import { createRequire } from "node:module"
-import satori from "satori"
-import { renderAsync } from "@resvg/resvg-js"
+import os from "node:os"
+import path from "node:path"
+import { Worker } from "node:worker_threads"
 import type { Style } from "../site.config"
 import { contrastRatio, luminance, onAccent, parseColor } from "./contrast"
+import { rasterize, SUBSETS } from "./og-worker"
+import { PACKAGE_ROOT } from "./package-root"
 
 export interface OgCard {
   title: string
@@ -101,33 +104,18 @@ export function cardSpec(style: Style, accent?: string): CardSpec {
   return { design, accent: tint, onAccent: onAccent(tint)! }
 }
 
-const require = createRequire(import.meta.url)
 /** The code drawing the cards, so cached cards are redrawn when it changes. */
 export const OG_SOURCE = import.meta.url
 
-type Weight = 400 | 700 | 800
-let fonts: { name: string; data: Buffer; weight: Weight; style: "normal" }[] | undefined
+/** The worker drawing them, found in the package: a build bundles og.ts, never this file. */
+const WORKER = path.join(PACKAGE_ROOT, "src/lib/og-worker.ts")
+/** Its code, as a part of the cache key of cards: a bundled OG_SOURCE does not change with it. */
+export const OG_WORKER = crypto.createHash("sha256").update(fs.readFileSync(WORKER)).digest("hex")
 
-const SUBSETS = ["latin", "latin-ext", "vietnamese"]
 // Satori only falls back between differently named fonts, so each subset gets its own name.
 const family = (name: string) => SUBSETS.map((s) => `${name}-${s}`).join(", ")
 const SANS = family("Bricolage")
 const MONO = family("Mono")
-
-/** Static woff files: Satori cannot read woff2 or variable fonts. */
-function loadFonts() {
-  if (fonts) return fonts
-  const file = (pkg: string, subset: string, weight: Weight) =>
-    fs.readFileSync(require.resolve(`@fontsource/${pkg}/files/${pkg}-${subset}-${weight}-normal.woff`))
-  fonts = []
-  for (const subset of SUBSETS) {
-    for (const weight of [400, 800] as const) {
-      fonts.push({ name: `Bricolage-${subset}`, data: file("bricolage-grotesque", subset, weight), weight, style: "normal" })
-    }
-    fonts.push({ name: `Mono-${subset}`, data: file("space-mono", subset, 700), weight: 700, style: "normal" })
-  }
-  return fonts
-}
 
 /** Satori has no emoji font; drop pictographs instead of drawing empty boxes. */
 export const stripEmoji = (s: string) =>
@@ -766,12 +754,68 @@ export async function renderOg(card: OgCard, spec: CardSpec = cardSpec("notebook
   return toPng(DRAW[spec.design](textOf(card), spec), 1200, 630)
 }
 
+/** Workers drawing cards: the cores left over, at most 8. With 0, cards are drawn on this thread. */
+let size = Math.max(0, Math.min(8, os.availableParallelism() - 1))
+let file = WORKER
+interface Pooled {
+  worker: Worker
+  busy: number
+}
+let pool: Pooled[] = []
+const waiting = new Map<number, { resolve: (png: Buffer) => void; reject: (e: Error) => void }>()
+let jobs = 0
+
+/** For tests: how many workers, and which file they run. Workers already started are stopped. */
+export function setOgWorkers(n: number, from = WORKER): void {
+  for (const p of pool) void p.worker.terminate()
+  pool = []
+  size = n
+  file = from
+}
+
+/** Once a worker fails, none is used again: the cards it held and those after it are drawn on this thread. */
+function fail(error: Error) {
+  setOgWorkers(0, file)
+  for (const [id, job] of waiting) waiting.delete(id), job.reject(error)
+}
+
+function spawn(): Pooled {
+  const p: Pooled = { worker: new Worker(file), busy: 0 }
+  p.worker.on("message", (m: { id: number; png?: Uint8Array; error?: string }) => {
+    const job = waiting.get(m.id)!
+    waiting.delete(m.id)
+    if (--p.busy === 0) p.worker.unref()
+    if (m.png) job.resolve(Buffer.from(m.png))
+    else job.reject(new Error(m.error))
+  })
+  p.worker.on("error", fail)
+  // Idle workers must not keep the build running once it is done; after the listeners, which would ref them again.
+  p.worker.unref()
+  pool.push(p)
+  return p
+}
+
+function inWorker(tree: Node, width: number, height: number): Promise<Buffer> {
+  // A worker more only when every one is busy: a build drawing two icons starts two, not the whole pool.
+  const idle = pool.find((w) => w.busy === 0)
+  const p = idle ?? (pool.length < size ? spawn() : pool.reduce((a, b) => (b.busy < a.busy ? b : a)))
+  if (p.busy++ === 0) p.worker.ref()
+  const id = ++jobs
+  return new Promise((resolve, reject) => {
+    waiting.set(id, { resolve, reject })
+    p.worker.postMessage({ id, tree, width, height })
+  })
+}
+
 async function toPng(tree: Node, width: number, height: number): Promise<Buffer> {
-  const svg = await satori(tree as unknown as Parameters<typeof satori>[0], { width, height, fonts: loadFonts() })
-  // Satori already turned text into paths; scanning system fonts would dominate the render time.
-  // Rendered off the main thread, so pages built concurrently rasterize their cards in parallel.
-  const png = await renderAsync(svg, { fitTo: { mode: "width", value: width }, font: { loadSystemFonts: false } })
-  return png.asPng()
+  if (size > 0) {
+    try {
+      return await inWorker(tree, width, height)
+    } catch {
+      // A worker that cannot start or failed: draw it here, which also throws for a tree that cannot be drawn.
+    }
+  }
+  return rasterize(tree, width, height)
 }
 
 /**

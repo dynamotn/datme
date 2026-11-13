@@ -2,7 +2,7 @@ import type { APIRoute, GetStaticPaths } from "astro"
 import { site, type Lang } from "~/site.config"
 import { getVault, type Note } from "~/lib/vault"
 import { renderNote } from "~/lib/markdown"
-import { cardSpec, renderOg, OG_SOURCE, type OgCard } from "~/lib/og"
+import { cardSpec, renderOg, OG_SOURCE, OG_WORKER, type OgCard } from "~/lib/og"
 import { baseStyle, lookOf } from "~/lib/look"
 import { callNumber } from "~/lib/catalog"
 import { readCache, writeCache } from "~/lib/render-cache"
@@ -49,7 +49,7 @@ export const GET: APIRoute<Props> = async ({ props: { lang, note } }) => {
     }
   }
   // Drawing a card is the slowest step of a build; an unchanged card in an unchanged style is reused.
-  const key = [JSON.stringify(card), JSON.stringify(spec)]
+  const key = [JSON.stringify(card), JSON.stringify(spec), OG_WORKER]
   let png = readCache("og", OG_SOURCE, key)
   if (!png) {
     png = await renderOg(card, spec)
