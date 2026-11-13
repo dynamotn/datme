@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pages saved for offline reading keep their styles and scripts after the garden is deployed again: the service worker no longer drops the build files they load with each new build, and still keeps at most 300 of them.
 - Pages opened by following links within the garden are saved for offline reading too, not only those loaded in full; only HTML responses are saved as pages.
 - The pictures and files of notes a reader opened no longer fill the browser's storage without limit until the next deploy: the service worker keeps them with the build files, at most 300 in all, dropping the oldest first.
+- A link whose preview failed to load, while offline say, shows its preview once the page can be fetched again, instead of never until a reload; previews keep only the 30 pages seen last in memory.
 
 ### Security
 

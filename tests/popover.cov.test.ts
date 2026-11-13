@@ -126,6 +126,20 @@ describe("previews of notes of this garden", () => {
     }
   })
 
+  test("a page that failed to load is asked for again on the next hover, as a reader back online expects", async () => {
+    let online = false
+    pages.set("/notes/flaky", () => (online ? note("Flaky", "<p>back</p>")() : Promise.reject(new Error("offline"))))
+    const [link] = page(`<a class="internal" href="/notes/flaky">Flaky</a>`)
+    enter(link)
+    await settle(320)
+    expect(popover()).toBeNull()
+    leave(link)
+    online = true
+    enter(link)
+    await until(() => popover() !== null)
+    expect(popover()!.textContent).toContain("back")
+  })
+
   test("links to the page itself, anchors, links in previews and links bound before are left alone", async () => {
     const links = page(`<a class="internal" href="/notes/here/">Here</a><a class="internal anchor" href="/notes/x">#</a>
       <div class="popover"><a class="internal" href="/notes/y">In a preview</a></div>`)

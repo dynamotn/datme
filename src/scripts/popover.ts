@@ -2,6 +2,8 @@ import { samePath } from "./data"
 import { attachDecks } from "./slides"
 
 const pages = new Map<string, Promise<Document | null>>()
+/** Pages kept for previews: each is a whole parsed document, so a long visit keeps only the latest. */
+const MAX_PAGES = 30
 
 function fetchPage(url: string) {
   let hit = pages.get(url)
@@ -10,7 +12,10 @@ function fetchPage(url: string) {
       .then((r) => (r.ok ? r.text() : null))
       .then((html) => (html ? new DOMParser().parseFromString(html, "text/html") : null))
       .catch(() => null)
+      // A page that failed, offline say, is asked for again next time.
+      .then((doc) => (doc || pages.delete(url), doc))
     pages.set(url, hit)
+    if (pages.size > MAX_PAGES) pages.delete(pages.keys().next().value!)
   }
   return hit
 }
