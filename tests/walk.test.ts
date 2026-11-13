@@ -29,6 +29,11 @@ describe("generated walks", () => {
     expect(encodeWalk(urls)).not.toContain("/")
   })
 
+  test("a shared walk keeps only paths on this site", () => {
+    const urls = ["/a", "javascript:alert(1)", "//evil.example/x", "/\\evil.example", "https://evil.example/", "/b"]
+    expect(decodeWalk(encodeWalk(urls))).toEqual(["/a", "/b"])
+  })
+
   test("notes are found by title or alias, without minding case or accents", () => {
     const n = (t: string, a: string[] = []) => ({ u: "/" + t, t, a, g: [], p: "", y: [], s: null, f: "", d: "", c: "" })
     const index = { notes: [n("Niklas Luhmann"), n("Việt Nam"), n("Slip box", ["Zettelkasten"]), n("Lu")], links: [] }

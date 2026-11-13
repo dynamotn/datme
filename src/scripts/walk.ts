@@ -35,7 +35,13 @@ export function shortestPath(links: [number, number][], count: number, from: num
 
 /** A walk in a URL parameter: its stops' paths, each percent-encoded, joined by commas. */
 export const encodeWalk = (urls: string[]) => urls.map(encodeURIComponent).join(",")
-export const decodeWalk = (param: string) => param.split(",").filter(Boolean).map(decodeURIComponent)
+/** The stops of a shared walk, keeping only paths on this site: the link is anyone's to write. */
+export const decodeWalk = (param: string) =>
+  param
+    .split(",")
+    .filter(Boolean)
+    .map(decodeURIComponent)
+    .filter((u) => u.startsWith("/") && new URL(u, "http://site").origin === "http://site")
 
 /** Text for matching: lower case, without accents, so "luhmann" finds "Lühmann" and "viet" finds "Việt". */
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").toLowerCase()

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - A protected note that also has a content warning (`cw`) no longer publishes its text when another note embeds it (`![[Secret]]`): the embed stays sealed, as it does for any protected note, and the text no longer reaches the build cache.
+- A shared walk link (`?walk=…`) keeps only stops on the garden itself, so a crafted link can no longer put a `javascript:` or another site's address behind the walk's Next and Previous links.
 
 ## [4.0.0] - 2026-11-09
 
