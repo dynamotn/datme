@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Builds format dates and language names with one formatter per language instead of a new one for each date shown, which took about a tenth of a build from the cache.
+- The neighbourhood file of each note's local graph is cut from the links around the note instead of from every link of the garden, so a large garden no longer spends time growing with the square of its size there: about 5 times faster at 10,000 notes, with the same files.
 
 ### Fixed
 

@@ -109,6 +109,25 @@ describe("neighbourhood files", () => {
     }
   }, 60_000)
 
+  test("reading only nearby links gives each file exactly as a walk over every link does, in the same order", () => {
+    let seed = 7
+    const rnd = (n: number) => Math.floor((seed = (seed * 16807) % 2147483647) / (2147483647 / n))
+    const notes = Array.from({ length: 300 }, (_, i) => ({ u: `/n${i}`, t: `N${i}` }))
+    // Loops and repeated links included, as a vault may have.
+    const links = Array.from({ length: 900 }, (): [number, number] => [rnd(300), rnd(300)])
+    const index = { notes, links } as unknown as Parameters<typeof hoodOf>[0]
+    for (let at = 0; at < notes.length; at += 7) {
+      const keep = [...neighbourhood(links, at, HOOD_DEPTH).keys()]
+      const local = new Map(keep.map((i, j) => [i, j]))
+      const deg = keep.map((i) => links.reduce((n, [a, b]) => n + (a === i ? 1 : 0) + (b === i ? 1 : 0), 0))
+      expect(hoodOf(index, at)).toEqual({
+        notes: keep.map((i) => notes[i]),
+        links: links.filter(([a, b]) => local.has(a) && local.has(b)).map(([a, b]) => [local.get(a)!, local.get(b)!]),
+        deg,
+      })
+    }
+  })
+
   test("a note no file knows answers 404", async () => {
     const r = await call({ lang: "vi-VN", id: "nope" }, { url: "/no/such/page" })
     expect(r.status).toBe(404)
