@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A digest puts a change in the week of the day the activity calendar shows it on, the build machine's local day: a change late on a Sunday west of UTC no longer lands in the next week's digest.
 - Unlocking a protected note sets up what it holds, as for any other note: a deck gets its practice bar, clozes reveal on a click, checklist and syllabus ticks are restored and saved, and the reader's highlights are painted.
 - Dragging a canvas by one of its links no longer opens that link when the drag ends, in browsers that send the click to the link.
+- While a slide deck is presented, the one-key shortcuts (`n`, `p`, `j`, `k`, `r`) no longer leave it for another note.
 
 ### Security
 

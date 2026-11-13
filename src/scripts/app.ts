@@ -97,7 +97,7 @@ document.addEventListener("keydown", (e) => {
   else if (mod && e.key.toLowerCase() === "g" && hasGraph) e.preventDefault(), openGraph()
   else if (!typing && e.key === "/" && hasSearch) e.preventDefault(), openSearch()
   // Single-key shortcuts only without modifiers, so browser shortcuts keep working.
-  else if (!typing && !mod && !e.altKey && !document.querySelector("dialog[open]")) {
+  else if (!typing && !mod && !e.altKey && !document.querySelector("dialog[open], .presenting")) {
     if (e.key === "j") step(1)
     else if (e.key === "k") step(-1)
     else if (e.key === "r") void openRandom()

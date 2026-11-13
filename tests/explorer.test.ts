@@ -517,6 +517,11 @@ describe("the page script", () => {
       document.querySelector<HTMLDialogElement>("[data-search-dialog]")!.showModal()
       key("j")
       closeAll()
+      // A deck being presented takes its own keys.
+      document.body.insertAdjacentHTML("beforeend", '<div class="marp presenting"></div>')
+      key("n")
+      key("j")
+      document.querySelector(".presenting")!.remove()
       expect(navigated).toEqual([])
       expect(document.querySelector<HTMLDialogElement>("[data-search-dialog]")!.open).toBe(false)
     })
