@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In a Base, `.year()` of a date written without a time (`2024-01-01`) gives the year as written on a build machine west of UTC, instead of the year before.
 - In Dataview queries, `file.cday` and `file.mday` are the day a note was created or changed, without the time, as in Obsidian, so `WHERE file.cday = date(today)` finds the notes of today.
 - In Dataview queries, adding months or years to a date stops at the end of a shorter month, as in Obsidian: `date(2024-01-31) + dur(1 month)` is February 29, not March 2.
+- In Dataview queries, `contains()` and `icontains()` over a list also match part of a text in it, as in Obsidian: `contains(authors, "Tolk")` finds `Tolkien`. `econtains()` still matches whole elements only.
 
 ### Security
 

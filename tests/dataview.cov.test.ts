@@ -34,6 +34,10 @@ describe("functions", () => {
   test("contains over lists, text, links and objects", () => {
     expect(ev('contains(names, "Paul")')).toBe(true)
     expect(ev('contains(names, "Alia")')).toBe(false)
+    expect(ev('contains(names, "Pa")')).toBe(true)
+    expect(ev('econtains(names, "Pa")')).toBe(false)
+    expect(ev('econtains(names, "Paul")')).toBe(true)
+    expect(ev('icontains(names, "le")')).toBe(true)
     expect(ev('contains(Genre, "Sci")')).toBe(true)
     expect(ev("contains([[Emma]], [[Emma]])")).toBe(true)
     expect(ev('contains(meta, "a")')).toBe(true)

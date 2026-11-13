@@ -816,15 +816,16 @@ function call(fn: string, args: Value[], engine: Engine, fns: (Fn | undefined)[]
   }
   switch (fn) {
     case "contains":
-    // Lists already match whole elements, which is all econtains adds.
+      // Each element of a list is searched as contains would, so text in a list matches in part; econtains matches whole elements.
+      return Array.isArray(a) ? a.some((x) => call("contains", [x, b], engine) === true) : call("econtains", [a, b], engine)
     case "econtains":
-      if (Array.isArray(a)) return a.some((x) => equals(x, b) || (typeof x === "string" && typeof b === "string" && x === b))
+      if (Array.isArray(a)) return a.some((x) => equals(x, b))
       if (typeof a === "string") return a.includes(str(b))
       if (isLink(a) && isLink(b)) return equals(a, b)
       if (a && typeof a === "object" && !(a instanceof Date)) return str(b) in (a as object)
       return false
     case "icontains":
-      if (Array.isArray(a)) return a.some((x) => str(x).toLowerCase() === str(b).toLowerCase())
+      if (Array.isArray(a)) return a.some((x) => call("icontains", [x, b], engine) === true)
       return str(a).toLowerCase().includes(str(b).toLowerCase())
     case "startswith":
       return str(a).startsWith(str(b))
