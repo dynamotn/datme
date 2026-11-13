@@ -14,6 +14,20 @@ describe("canvas format", () => {
     expect(c.edges).toEqual([])
   })
 
+  test("an edge side other than the four is dropped, so the edge picks one itself", () => {
+    const c = parseCanvas(
+      JSON.stringify({
+        nodes: [
+          { id: "a", type: "text", x: 0, y: 0, width: 10, height: 10 },
+          { id: "b", type: "text", x: 100, y: 0, width: 10, height: 10 },
+        ],
+        edges: [{ id: "e", fromNode: "a", toNode: "b", fromSide: "center", toSide: "left" }],
+      }),
+    )
+    expect(c.edges[0]).toMatchObject({ fromSide: undefined, toSide: "left" })
+    expect(() => edgePath(c.nodes[0], c.nodes[1], c.edges[0])).not.toThrow()
+  })
+
   test("link cards lead to web and mail addresses only, never a script", () => {
     for (const url of ["https://example.com/a", "HTTP://x.example", "mailto:me@example.com", "notes.example.org/x"]) expect(linkHref(url)).toBe(url)
     for (const url of ["javascript:alert(1)", " JavaScript:alert(1)", "java\tscript:alert(1)", "\x01javascript:x", "data:text/html,<script>", "vbscript:x"]) {

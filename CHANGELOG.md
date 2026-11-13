@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In an EPUB or HTML export, links between notes with letters beyond ASCII in their names (`Ghi chú/Các ý`) point at the chapter in the book, instead of the published site or nowhere.
 - A `url` or `doi` in the bibliography keeps its double hyphens (`a--b`), so its link works; other fields still turn `--` into an en dash.
 - A bibliography author in braces, as BibTeX writes an organisation (`{Food and Agriculture Organization}`), is one author in citations and references instead of two.
+- A canvas edited by hand whose edge names a side Obsidian never writes (`"fromSide": "center"`) builds, with the edge picking its side itself, instead of stopping the build with a TypeError.
 
 ### Security
 
