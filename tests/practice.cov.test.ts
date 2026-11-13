@@ -126,6 +126,15 @@ describe("progress in the browser", () => {
     expect(() => withStorage(blocked, () => practice.saveDeck("/a", {}))).not.toThrow()
     dom.window.localStorage.setItem("datme:cards:/bad", "{nope")
     expect(practice.loadDeck("/bad")).toEqual({})
+    // JSON of another shape starts afresh too, whichever spelling of the path holds it.
+    for (const raw of ["null", "[1]", '"x"']) {
+      dom.window.localStorage.setItem("datme:cards:/odd", raw)
+      expect(practice.loadDeck("/odd")).toEqual({})
+      dom.window.localStorage.clear()
+      dom.window.localStorage.setItem("datme:cards:/odd/", raw)
+      expect(practice.loadDeck("/odd")).toEqual({})
+    }
+    dom.window.localStorage.clear()
   })
 })
 

@@ -101,15 +101,21 @@ export function deckPath(path: string): string {
 }
 
 /** The progress of a deck. Progress stored under another spelling of its path moves to this one. */
+/** Stored progress as this version reads it: an object of cards, else none. */
+function statesOf(raw: string): Record<string, CardState> {
+  const states: unknown = JSON.parse(raw)
+  return states && typeof states === "object" && !Array.isArray(states) ? (states as Record<string, CardState>) : {}
+}
+
 export function loadDeck(path: string): Record<string, CardState> {
   const key = KEY + deckPath(path)
   try {
     const found = localStorage.getItem(key)
-    if (found) return JSON.parse(found)
+    if (found) return statesOf(found)
     for (let i = 0; i < localStorage.length; i++) {
       const other = localStorage.key(i)
       if (!other?.startsWith(KEY) || other === key || deckPath(other.slice(KEY.length)) !== deckPath(path)) continue
-      const states = JSON.parse(localStorage.getItem(other) ?? "{}")
+      const states = statesOf(localStorage.getItem(other) ?? "{}")
       localStorage.setItem(key, JSON.stringify(states))
       localStorage.removeItem(other)
       return states

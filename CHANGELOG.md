@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sheet music and mind maps are drawn once, also when an unlocked part or a stacked column asks for them while their library is still loading.
 - Escape closes the reading preferences panel ("Aa") and puts the focus back on its button, as it does for the other menus.
 - Highlights stored in the browser in another shape (left by an older version, say) are skipped instead of stopping the rest of the page from setting up: charts, maps, checklists, spoilers and comments.
+- A deck whose stored progress is in another shape starts afresh instead of failing to practise for good.
 
 ### Security
 
