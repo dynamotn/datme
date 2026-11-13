@@ -200,10 +200,11 @@ describe("queries", () => {
 
   test("SORT accepts ASC, ASCENDING and DESCENDING; equal keys keep their order", () => {
     const names = (q: string) => run(q).rows.map((r) => (r[0] as { title: string }).title)
-    // Descending reverses the whole order, so pages without the value come first.
-    expect(names("LIST SORT rating DESCENDING")).toEqual(["Loose", "Dune", "Emma"])
-    expect(names("LIST SORT rating ASCENDING")).toEqual(["Emma", "Dune", "Loose"])
-    expect(names("LIST SORT rating ASC")).toEqual(["Emma", "Dune", "Loose"])
+    // A missing value is the lowest, as in Obsidian: first going up, last going down.
+    expect(names("LIST SORT rating DESCENDING")).toEqual(["Dune", "Emma", "Loose"])
+    expect(names("LIST SORT rating ASCENDING")).toEqual(["Loose", "Emma", "Dune"])
+    expect(names("LIST SORT rating ASC")).toEqual(["Loose", "Emma", "Dune"])
+    expect(ev("sort(list(3, null, 1))")).toEqual([null, 1, 3])
     expect(names("LIST WHERE rating SORT file.folder")).toEqual(["Dune", "Emma"])
   })
 

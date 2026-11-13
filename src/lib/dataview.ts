@@ -692,6 +692,12 @@ export function compare(a: Value, b: Value): number {
   return String(x).localeCompare(String(y), undefined, { numeric: true })
 }
 
+/** The order of SORT, sort() and groups, as Dataview's: a missing value is the lowest, so first going up. */
+function order(a: Value, b: Value): number {
+  if (a == null || b == null) return (a == null ? 0 : 1) - (b == null ? 0 : 1)
+  return compare(a, b)
+}
+
 const truthy = (v: Value) => !(v == null || v === false || v === "" || v === 0 || (Array.isArray(v) && v.length === 0))
 
 function text(v: Value): string {
@@ -925,7 +931,7 @@ function call(fn: string, args: Value[], engine: Engine, fns: (Fn | undefined)[]
     case "flat":
       return Array.isArray(a) ? ((a as unknown[]).flat(typeof b === "number" ? b : 1) as Value[]) : a
     case "sort":
-      return Array.isArray(a) ? [...a].sort(compare) : a
+      return Array.isArray(a) ? [...a].sort(order) : a
     case "reverse":
       return Array.isArray(a) ? [...a].reverse() : a
     case "unique":
@@ -1051,7 +1057,7 @@ export function runQuery(q: Query, engine: Engine): Result {
         g.rows.push(r)
         groups.set(id, g)
       }
-      rows = [...groups.values()].sort((a, b) => compare(a.key, b.key)).map((g) => ({ key: g.key, [step.as]: g.key, rows: g.rows as Value }))
+      rows = [...groups.values()].sort((a, b) => order(a.key, b.key)).map((g) => ({ key: g.key, [step.as]: g.key, rows: g.rows as Value }))
       group = step.as
     } else if (step.k === "flatten") {
       rows = rows.flatMap((r) => {
@@ -1062,7 +1068,7 @@ export function runQuery(q: Query, engine: Engine): Result {
       const keyed = rows.map((r) => ({ r, keys: step.keys.map((k) => evaluate(k.e, r, engine)) }))
       keyed.sort((x, y) => {
         for (let i = 0; i < step.keys.length; i++) {
-          const d = compare(x.keys[i], y.keys[i])
+          const d = order(x.keys[i], y.keys[i])
           if (d) return step.keys[i].desc ? -d : d
         }
         return 0
