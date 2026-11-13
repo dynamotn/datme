@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `url` or `doi` in the bibliography keeps its double hyphens (`a--b`), so its link works; other fields still turn `--` into an en dash.
 - A bibliography author in braces, as BibTeX writes an organisation (`{Food and Agriculture Organization}`), is one author in citations and references instead of two.
 - A canvas edited by hand whose edge names a side Obsidian never writes (`"fromSide": "center"`) builds, with the edge picking its side itself, instead of stopping the build with a TypeError.
+- In an HTML export, each chapter keeps its own footnotes and headings: a footnote link or a link to a heading no longer jumps to the first chapter that has one of the same name.
 
 ### Security
 

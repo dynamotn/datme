@@ -141,16 +141,29 @@ function rewrite(tree: Root, book: Book, target: (c: Chapter, hash: string) => s
 
 const anchor = (c: Chapter) => c.file.replace(/\.xhtml$/, "")
 
+/** Ids of a chapter, and the links and labels pointing at them, prefixed: every chapter has its footnote 1 and its "Introduction". */
+function scopeAnchors(tree: Root, prefix: string) {
+  const scoped = (v: unknown) => (Array.isArray(v) ? v.map((id) => `${prefix}-${id}`) : v)
+  visit(tree, "element", (el: Element) => {
+    const p = el.properties
+    if (typeof p.id === "string") p.id = `${prefix}-${p.id}`
+    if (typeof p.href === "string" && p.href.startsWith("#") && p.href.length > 1) p.href = `#${prefix}-${p.href.slice(1)}`
+    p.ariaDescribedBy = scoped(p.ariaDescribedBy) as typeof p.ariaDescribedBy
+    p.ariaLabelledBy = scoped(p.ariaLabelledBy) as typeof p.ariaLabelledBy
+  })
+}
+
 /** One self-contained page: images inlined, so it prints or archives on its own. */
 export async function exportHtml(dir: string, lang: Lang = site.defaultLang): Promise<string> {
   const book = await collect(dir, lang)
   const body = book.chapters
     .map((c) => {
       const tree = fromHtml(c.html, { fragment: true })
+      scopeAnchors(tree, anchor(c))
       rewrite(
         tree,
         book,
-        (to, hash) => `#${hash || anchor(to)}`,
+        (to, hash) => `#${hash ? `${anchor(to)}-${hash}` : anchor(to)}`,
         (rel) => {
           const file = path.join(site.vault, rel)
           const type = MEDIA_TYPES[path.extname(rel).toLowerCase()]
