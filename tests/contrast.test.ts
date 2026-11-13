@@ -22,6 +22,7 @@ describe("colour parsing", () => {
     expect(parseColor("rgb(100% 0% 50%)")).toEqual([255, 0, 127.5])
     expect(parseColor("hsl(0, 100%, 50%)")!.map(Math.round)).toEqual([255, 0, 0])
     expect(parseColor("hsl(120 100% 25%)")!.map(Math.round)).toEqual([0, 128, 0])
+    expect(parseColor("hsl(120deg 100% 25%)")!.map(Math.round)).toEqual([0, 128, 0])
   })
 
   test("oklch() and oklab() come back to sRGB", () => {

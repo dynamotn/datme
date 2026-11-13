@@ -47,7 +47,8 @@ export const SHAPED_STYLES: readonly Style[] = ["broadsheet", "wiki", "herbarium
 export const localized = z.union([z.string(), z.record(z.string(), z.string())])
 
 // Values that end up inside a <style> element must not be able to close a rule.
-const cssColor = z.string().regex(/^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([\d\s.,%/+-]+\)|[a-zA-Z]+)$/, "expected a CSS colour")
+// Inside the brackets only numbers and "deg" for a hue, so a colour cannot break out of the CSS it goes into.
+const cssColor = z.string().regex(/^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\((?:[\d\s.,%/+-]|deg)+\)|[a-zA-Z]+)$/, "expected a CSS colour")
 const fontFamily = z.string().regex(/^[\p{L}\p{N} _-]+$/u, "expected a font family name")
 
 /** A theme per colour scheme, or one for both: embedded tools follow the site's scheme. */

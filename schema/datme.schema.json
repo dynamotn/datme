@@ -879,18 +879,18 @@
           "anyOf": [
             {
               "type": "string",
-              "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\([\\d\\s.,%/+-]+\\)|[a-zA-Z]+)$"
+              "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\((?:[\\d\\s.,%/+-]|deg)+\\)|[a-zA-Z]+)$"
             },
             {
               "type": "object",
               "properties": {
                 "light": {
                   "type": "string",
-                  "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\([\\d\\s.,%/+-]+\\)|[a-zA-Z]+)$"
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\((?:[\\d\\s.,%/+-]|deg)+\\)|[a-zA-Z]+)$"
                 },
                 "dark": {
                   "type": "string",
-                  "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\([\\d\\s.,%/+-]+\\)|[a-zA-Z]+)$"
+                  "pattern": "^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\((?:[\\d\\s.,%/+-]|deg)+\\)|[a-zA-Z]+)$"
                 }
               },
               "required": [

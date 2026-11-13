@@ -462,6 +462,9 @@ describe("theme", () => {
     expect(() => resolveConfig({ theme: { accent: "red;}body{display:none" } }, "/v")).toThrow("expected a CSS colour")
     expect(() => resolveConfig({ theme: { fonts: { body: "x}<style>" } } }, "/v")).toThrow("expected a font family name")
     expect(resolveConfig({ theme: { accent: "oklch(0.6 0.2 260)" } }, "/v").theme.accent).toBe("oklch(0.6 0.2 260)")
+    // A hue in degrees is CSS too; other words inside the brackets are not.
+    expect(resolveConfig({ theme: { accent: "hsl(120deg 50% 40%)" } }, "/v").theme.accent).toBe("hsl(120deg 50% 40%)")
+    expect(() => resolveConfig({ theme: { accent: "hsl(url(x) 1 2)" } }, "/v")).toThrow("expected a CSS colour")
   })
 })
 
