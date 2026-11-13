@@ -70,6 +70,13 @@ describe("dates from git", () => {
     expect(gitProblems(vault)).toEqual([])
   })
 
+  test("a vault opened through a symbolic link still gets its dates from git", () => {
+    const link = path.join(tmp, "linked")
+    fs.symlinkSync(repo("full"), link)
+    const plant = useVault(path.join(link, "garden")).byKey["en-US"].get("Plant")!
+    expect([iso(plant.created), iso(plant.updated)]).toEqual(["2026-01-02T10:00:00.000Z", "2026-03-04T10:00:00.000Z"])
+  })
+
   test("a vault outside any repository takes the file times, and that is no problem", () => {
     const dir = path.join(tmp, "plain")
     fs.mkdirSync(dir)

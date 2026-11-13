@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In Dataview queries, `contains()` and `icontains()` over a list also match part of a text in it, as in Obsidian: `contains(authors, "Tolk")` finds `Tolkien`. `econtains()` still matches whole elements only.
 - A build from the cache renders again a note that embeds another once that one gets or loses a content warning (`cw`) or slide settings, so the embed shows behind the warning instead of in the open.
 - A build from the cache no longer shows a cut-short embed in a new note: a note embedded in a cycle of embeds (A embeds B, B embeds A) was reused as rendered inside the cycle, without the part the cycle had cut, wherever else it was embedded.
+- A vault opened through a symbolic link (macOS `/tmp`, a vault linked into a synced folder) gets its note dates from git again, instead of the file times without a word.
 
 ### Security
 

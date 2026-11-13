@@ -159,9 +159,10 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
   const dates = new Map<string, { created: Date; updated: Date }>()
   // stderr ignored: outside a repository git would print "fatal: not a git repository".
   const run = (...args: string[]) => execFileSync("git", ["-C", site.vault, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
-  let top: string
+  let prefix: string
   try {
-    top = run("rev-parse", "--show-toplevel")
+    // git names files with "/", on Windows too, and resolves symbolic links the vault's own path may go through.
+    prefix = run("rev-parse", "--show-prefix").replace(/\/$/, "")
   } catch {
     // not a git repository: fall back to the filesystem
     return dates
@@ -174,8 +175,6 @@ function gitDates(report: (level: Problem["level"], file: string, message: strin
         "shallow clone: notes older than the clone get its date; fetch the whole history (GIT_DEPTH: 0 on GitLab, fetch-depth: 0 on GitHub)",
       )
     }
-    // git names files with "/", on Windows too.
-    const prefix = path.relative(top, site.vault).split(path.sep).join("/")
     let ts = 0
     gitLines(["log", "--format=%x00%ct", "--name-only", "--", "*.md"], (line) => {
       if (line.startsWith("\0")) {
