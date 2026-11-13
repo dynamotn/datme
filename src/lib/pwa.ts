@@ -118,7 +118,7 @@ async function page(request) {
   const key = url.href.replace(/\\/$/, "") || url.href
   try {
     const response = await fetch(request)
-    if (response.ok && response.type === "basic") {
+    if (response.ok && response.type === "basic" && (response.headers.get("content-type") ?? "").startsWith("text/html")) {
       const cache = await caches.open(PAGES)
       await cache.delete(key)
       await cache.put(key, response.clone())
@@ -163,13 +163,13 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
   if (url.pathname === "${withBase("/sw.js")}") return
-  // Client-side navigations fetch the next page as HTML rather than navigating.
-  if (request.mode === "navigate" || (request.headers.get("accept") ?? "").includes("text/html")) {
-    event.respondWith(page(request))
-  } else if (url.pathname.startsWith("${withBase("/_astro/")}")) {
+  if (url.pathname.startsWith("${withBase("/_astro/")}")) {
     event.respondWith(asset(request))
   } else if (url.pathname.startsWith("${withBase("/static/")}") || url.pathname.startsWith("${withBase("/assets/")}")) {
     event.respondWith(fresh(request))
+  } else if (request.mode === "navigate" || (request.headers.get("accept") ?? "").includes("text/html") || !/.w+$/.test(url.pathname)) {
+    // Client-side navigations fetch the next page, with no Accept header of their own, rather than navigating.
+    event.respondWith(page(request))
   }
 })
 `

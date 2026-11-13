@@ -88,6 +88,21 @@ describe("service worker", () => {
     return { stores, get }
   }
 
+  test("saves the pages read by following links, which the router fetches without asking for HTML", async () => {
+    const html = new Headers({ "content-type": "text/html; charset=utf-8" })
+    const { stores, get } = worker((url) => ({
+      ok: true,
+      type: "basic",
+      headers: url.endsWith(".xml") ? new Headers({ "content-type": "application/xml" }) : html,
+    }))
+    await get("/notes/a", { mode: "navigate" })
+    await get("/notes/b/", { accept: "*/*" })
+    // Not a page: a file of another kind, and a response that is not HTML.
+    await get("/feed.xml", { accept: "*/*" })
+    await get("/index.xml", { mode: "navigate" })
+    expect([...stores.get("datme-pages")!.keys()]).toEqual(["https://garden.test/notes/a", "https://garden.test/notes/b"])
+  })
+
   test("keeps at most MAX_ASSETS build assets, dropping the oldest", async () => {
     const { stores, get } = worker()
     for (let i = 0; i < MAX_ASSETS + 25; i++) await get(`/_astro/chunk${i}.js`)
