@@ -25,3 +25,6 @@ export const escapeHtml = escaper(/[&<>"']/g)
 
 /** A double-quoted attribute value, only what ends or garbles it: & ". */
 export const escapeAttrMinimal = escaper(/[&"]/g)
+
+/** Text matched as it is in a regular expression. */
+export const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")

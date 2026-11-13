@@ -4,6 +4,7 @@ import { site, type Lang } from "../site.config"
 import { getVault, parseFrontmatter, type Note } from "./vault"
 import { relatedNotes } from "./related"
 import { slugTag } from "./slug"
+import { escapeRe } from "./html"
 
 /**
  * Suggestions for the note being written, for `datme related` and the Obsidian
@@ -17,8 +18,6 @@ export interface Suggestions {
   /** The first unlinked mention of each published note, by its offset in the file. */
   mentions: { file: string; title: string; text: string; offset: number; line: number }[]
 }
-
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 /** The text with everything that is not prose blanked out, offsets kept: code, links, tags, comments, HTML. */
 export function prose(src: string): string {

@@ -1,6 +1,7 @@
 import { site, type Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
 import { cosine, embed } from "./embeddings"
+import { escapeRe } from "./html"
 
 export interface Related {
   note: Note
@@ -31,8 +32,6 @@ function plain(md: string): string {
     .replace(/\s+/g, " ")
     .trim()
 }
-
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 /**
  * Whole words of a text, folded as a case-insensitive regex compares letters:

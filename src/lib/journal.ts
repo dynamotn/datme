@@ -8,6 +8,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { site, type Lang } from "../site.config"
 import { listed, vaultMemo, type Note } from "./vault"
+import { escapeRe } from "./html"
 
 export interface DailyFormat {
   /** Folder of daily notes, "" for anywhere in the vault. */
@@ -81,8 +82,6 @@ export function dateMatcher(format: string): (stem: string) => string | undefine
     return date.toISOString().slice(0, 10)
   }
 }
-
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 export interface Day {
   /** YYYY-MM-DD */

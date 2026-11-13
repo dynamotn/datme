@@ -6,6 +6,7 @@
  */
 import { blankCode, type LinkProblem } from "./obsidian"
 import { parseYaml } from "./yaml"
+import { escapeRe } from "./html"
 
 export interface Place {
   line: number
@@ -38,7 +39,6 @@ const prose = (src: string) => {
   const fm = src.match(FM_RE)?.[0] ?? ""
   return blankCode(blank(fm) + src.slice(fm.length))
 }
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 const norm = (t: string) => t.trim().replace(/^\/+/, "")
 
 const WIKILINK = /(!?)\[\[([^[\]\n]+?)\]\]/g
