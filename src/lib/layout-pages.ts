@@ -9,7 +9,8 @@ import { allSeries } from "./series"
 import { glossary } from "./glossary"
 import { formatReference, people, toBibtex, type BibEntry } from "./citations"
 import { absUrl } from "./base"
-import { normalize, plain, field, dateOf, whenOf, replaceDivs, unescapeHtml, type Ref } from "./layout-collections"
+import { normalize, plain, field, dateOf, whenOf, replaceDivs, type Ref } from "./layout-collections"
+import { unescapeHtml } from "./html"
 import { linksOf, recipeFacts } from "./layout-shelves"
 
 // ---------- layouts of a note's own text ----------

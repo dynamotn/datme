@@ -1,6 +1,7 @@
 import type { Lang } from "../site.config"
 import { getVault, listed, type Layout, type Note } from "./vault"
 import { slugTag } from "./slug"
+import { unescapeHtml } from "./html"
 import { t, type StringKey } from "./i18n"
 import { currentPage, engineFor } from "./dataview-render"
 import { parseBase, runView, type BaseFile } from "./bases"
@@ -347,13 +348,6 @@ export interface BaseRef {
 }
 
 const BASE_REF = /<span class="base-ph" data-rel="([^"]*)" data-view="([^"]*)"><\/span>|^```base[^\n]*\n([\s\S]*?)^```/gm
-export const unescapeHtml = (s: string) =>
-  s
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-
 export function basesOf(note: Note): BaseRef[] {
   const out: BaseRef[] = []
   for (const m of note.md.matchAll(BASE_REF)) {

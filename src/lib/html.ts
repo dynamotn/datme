@@ -28,3 +28,11 @@ export const escapeAttrMinimal = escaper(/[&"]/g)
 
 /** Text matched as it is in a regular expression. */
 export const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+/** Text out of HTML written by the escapers above: the entities they write, back to characters. */
+export const unescapeHtml = (s: string) =>
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")

@@ -1,5 +1,6 @@
 import type { Lang } from "../site.config"
 import { getVault, type Note } from "./vault"
+import { unescapeHtml } from "./html"
 
 /**
  * Guided trails: a note with `trail: true` lists a path through the garden,
@@ -43,13 +44,6 @@ const LIST_ITEM = /^(?:\d+[.)]|[-*+])\s+(.*)$/
 /** A link to a note, as the converter writes it: the first thing of the item. */
 const LEAD_LINK = /^(?:\*\*|__|\*|_)?<a [^>]*?class="internal" data-key="([^"]+)"[^>]*>[\s\S]*?<\/a>(?:\*\*|__|\*|_)?/
 
-const decode = (s: string) =>
-  s
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-
 /**
  * The steps of a trail, read from its converted markdown: each top-level list
  * item that starts with a link to a published note of the same language.
@@ -59,7 +53,7 @@ export function trailSteps(md: string, byKey: Map<string, Note>): TrailStep[] {
   for (const line of md.split("\n")) {
     const item = line.match(LIST_ITEM)
     const link = item?.[1].match(LEAD_LINK)
-    const note = link && byKey.get(decode(link[1]))
+    const note = link && byKey.get(unescapeHtml(link[1]))
     if (!item || !link || !note) continue
     const says = item[1]
       .slice(link[0].length)
@@ -67,7 +61,7 @@ export function trailSteps(md: string, byKey: Map<string, Note>): TrailStep[] {
       .replace(/[*_`=]+/g, "")
       .replace(/^\s*(?:[—–:-]|\|)\s*/, "")
       .trim()
-    steps.push({ note, says: decode(says) })
+    steps.push({ note, says: unescapeHtml(says) })
   }
   return steps
 }

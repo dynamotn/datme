@@ -1,6 +1,7 @@
 import { fromHtml } from "hast-util-from-html"
 import { find, html as htmlSchema } from "property-information"
 import type { ElementContent, Properties, RootContent } from "hast"
+import { escapeHtml as escapeAttr, escapeText } from "./html"
 
 /**
  * Templates of theme packs: logic-less HTML for a few slots of a page, with `{{field}}`
@@ -93,9 +94,6 @@ export function safeUrl(value: string): boolean {
 export function safeStyle(css: string): boolean {
   return !/url\s*\(|image-set|expression|javascript|behavior|binding|@import|["'\\<]|\/\*/i.test(css)
 }
-
-const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-const escapeAttr = (s: string) => escapeText(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;")
 
 /** A tag as warnings show it. */
 const tagOf = (name: string) => `<${name}>`
