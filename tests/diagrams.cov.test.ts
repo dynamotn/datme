@@ -26,8 +26,8 @@ afterAll(() => dom.restore())
 describe("sheet music", () => {
   test("each abc block is typeset after its source, once, with its label", async () => {
     dom.document.body.innerHTML = `<div class="prose"><pre class="abc" aria-label="A tune">X:1\nK:C\nCDEF|</pre><pre class="abc">X:2</pre></div><pre class="abc">outside</pre>`
-    await diagrams.renderAbc()
-    await diagrams.renderAbc()
+    // Two calls at once, as a page load and an unlocked part may make while the library loads.
+    await Promise.all([diagrams.renderAbc(), diagrams.renderAbc()])
     expect(scores.map((s) => s.src)).toEqual(["X:1\nK:C\nCDEF|", "X:2"])
     const outs = [...dom.document.querySelectorAll(".abc-score")]
     expect(outs.map((o) => o.getAttribute("aria-label"))).toEqual(["A tune", "Sheet music"])
@@ -61,8 +61,8 @@ describe("mind maps", () => {
     dom.document.body.innerHTML = `<div class="prose">
       <figure class="markmap" data-markmap='${JSON.stringify(outline)}'><svg></svg></figure>
       <figure class="markmap" data-markmap="{}"></figure></div>`
-    await diagrams.renderMarkmaps()
-    await diagrams.renderMarkmaps()
+    // Two calls at once, as a page load and an unlocked part may make while the library loads.
+    await Promise.all([diagrams.renderMarkmaps(), diagrams.renderMarkmaps()])
     expect(maps).toHaveLength(1)
     expect(maps[0].data).toEqual(outline)
     expect(maps[0].opts).toEqual({ autoFit: true, duration: 300, fitRatio: 0.92 })

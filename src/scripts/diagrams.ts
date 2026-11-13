@@ -8,6 +8,8 @@
 export async function renderAbc(root: ParentNode = document) {
   const blocks = [...root.querySelectorAll<HTMLElement>(".prose pre.abc:not([data-drawn])")]
   if (!blocks.length) return
+  // Taken before the library loads, so a second call meanwhile does not draw them again.
+  for (const pre of blocks) pre.dataset.drawn = ""
   const { default: abcjs } = await import("abcjs")
   for (const pre of blocks) {
     const src = pre.textContent ?? ""
@@ -16,7 +18,6 @@ export async function renderAbc(root: ParentNode = document) {
     out.setAttribute("role", "img")
     out.setAttribute("aria-label", pre.getAttribute("aria-label") ?? "Sheet music")
     // The source stays for copying and paper; the score is drawn after it and shown instead.
-    pre.dataset.drawn = ""
     pre.after(out)
     abcjs.renderAbc(out, src, { responsive: "resize", foregroundColor: "currentColor", add_classes: true })
   }
@@ -31,13 +32,13 @@ const maps = new Map<SVGSVGElement, { destroy(): void }>()
 
 /** ```markmap blocks: the outline built at build time, drawn as an interactive mind map. */
 export async function renderMarkmaps(root: ParentNode = document) {
-  const figs = [...root.querySelectorAll<HTMLElement>(".prose figure.markmap:not([data-drawn])")]
+  const figs = [...root.querySelectorAll<HTMLElement>(".prose figure.markmap:not([data-drawn])")].filter((fig) => fig.querySelector("svg"))
   if (!figs.length) return
+  // Taken before the library loads, so a second call meanwhile does not draw them again.
+  for (const fig of figs) fig.dataset.drawn = ""
   const { Markmap } = await import("markmap-view")
   for (const fig of figs) {
-    const svg = fig.querySelector("svg")
-    if (!svg) continue
-    fig.dataset.drawn = ""
+    const svg = fig.querySelector("svg")!
     const data = JSON.parse(fig.dataset.markmap!) as MarkmapNode
     const mm = Markmap.create(svg, { autoFit: true, duration: 300, fitRatio: 0.92 }, data)
     maps.set(svg, mm)
