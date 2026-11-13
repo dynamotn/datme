@@ -108,6 +108,12 @@ describe("paged reading on a page", () => {
     key("PageUp")
     dialog.removeAttribute("open")
     expect(count.textContent).toBe("Trang 3 / 4")
+    // Keys a tab list or a deck being presented takes for itself turn nothing either.
+    note.insertAdjacentHTML("beforeend", '<div data-tabs><button role="tab">One</button></div><div class="marp presenting"></div>')
+    key("ArrowLeft", {}, note.querySelector("[role=tab]")!)
+    key("ArrowLeft")
+    note.querySelector(".presenting")!.remove()
+    expect(count.textContent).toBe("Trang 3 / 4")
   })
 
   test("the buttons and a tap on either edge turn it; a tap in the middle, on a link or over a selection does not", () => {

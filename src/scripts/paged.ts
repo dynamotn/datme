@@ -106,8 +106,9 @@ export function turn(by: number): boolean {
 
 function onKey(e: KeyboardEvent) {
   const note = pagedNote()
-  if (!note || document.querySelector("dialog[open]")) return
-  if ((e.target as Element).closest?.("input, textarea, select, [contenteditable]")) return
+  // An open dialog, a deck being presented or a tab list takes the arrows for itself.
+  if (!note || e.defaultPrevented || document.querySelector("dialog[open], .presenting")) return
+  if ((e.target as Element).closest?.("input, textarea, select, [contenteditable], [role=tab], audio, video")) return
   const by = keyTurn(e, rtlOf(note))
   if (!by) return
   e.preventDefault()
