@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With pages turned (the e-ink look), the arrow keys of a tab list, a slide deck being presented, or a focused audio or video player no longer turn the page as well.
 - The one-key shortcuts (`r` for a random note, `j`, `k`, `n`, `p`) no longer fire while a drop-down list has focus, where the key picks an option.
 - A code block's copy button clicked twice in a row comes back to "Copy" instead of saying "Copied" until the page is reloaded.
+- In the search dialog, the Enter that ends a word typed with an input method (Vietnamese, Chinese, Japanese…) finishes the word instead of opening the selected result.
 
 ### Security
 

@@ -261,6 +261,8 @@ function bindSearch() {
     timer = window.setTimeout(() => run(dialog, input.value), 60)
   })
   input.addEventListener("keydown", (e) => {
+    // An input method's keys, such as the Enter that ends a word, are its own.
+    if (e.isComposing) return
     if (e.key === "ArrowDown") e.preventDefault(), select(list, selected + 1)
     else if (e.key === "ArrowUp") e.preventDefault(), select(list, selected - 1)
     else if (e.key === "Enter") {

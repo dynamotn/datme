@@ -109,8 +109,8 @@ const type = (input: HTMLInputElement, q: string) => {
   input.value = q
   input.dispatchEvent(new dom.window.Event("input"))
 }
-const key = (el: Element, k: string) => {
-  const e = new dom.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })
+const key = (el: Element, k: string, init: KeyboardEventInit = {}) => {
+  const e = new dom.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true, ...init })
   el.dispatchEvent(e)
   return e
 }
@@ -148,6 +148,9 @@ describe("searching with the built-in index", () => {
     expect(list.querySelectorAll("a")[1].getAttribute("aria-selected")).toBe("true")
     expect(key(input, "Tab").defaultPrevented).toBe(false)
     navigated.length = 0
+    // Enter that ends a word of an input method (Vietnamese, Japanese…) is the method's, not a pick.
+    expect(key(input, "Enter", { isComposing: true }).defaultPrevented).toBe(false)
+    expect(navigated).toEqual([])
     expect(key(input, "Enter").defaultPrevented).toBe(true)
     expect(navigated).toEqual(["/notes/a"])
     expect(dialog.open).toBe(false)
