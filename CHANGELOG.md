@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In the search dialog, the Enter that ends a word typed with an input method (Vietnamese, Chinese, Japanese…) finishes the word instead of opening the selected result.
 - With GoatCounter blocked by the reader's browser, the page stops waiting for it after six seconds, instead of checking for it every 300 ms for as long as the page is open, once more for each page visited.
 - In stacked notes, two links clicked in a column before the first one loads open only the second, as a reader expects, instead of both in the wrong order; the same link clicked twice opens once.
+- Pages saved for offline reading keep their styles and scripts after the garden is deployed again: the service worker no longer drops the build files they load with each new build, and still keeps at most 300 of them.
 
 ### Security
 

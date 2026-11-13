@@ -36,9 +36,11 @@ describe("service worker", () => {
     expect(sw).toContain('url.pathname.startsWith("/static/")')
   })
 
-  test("caches are versioned per build, except the pages read offline", () => {
+  test("caches are versioned per build, except the pages read offline and the build assets they load", () => {
     expect(sw).toContain('const VERSION = "v1"')
     expect(sw).toContain('const PAGES = "datme-pages"')
+    // Hashed names never change content: a page saved before a deploy still finds its scripts and styles.
+    expect(sw).toContain('const ASSETS = "datme-assets"')
     expect(sw).toContain("Bạn đang ngoại tuyến")
   })
 
@@ -89,7 +91,7 @@ describe("service worker", () => {
   test("keeps at most MAX_ASSETS build assets, dropping the oldest", async () => {
     const { stores, get } = worker()
     for (let i = 0; i < MAX_ASSETS + 25; i++) await get(`/_astro/chunk${i}.js`)
-    const assets = stores.get("datme-assets-v1")!
+    const assets = stores.get("datme-assets")!
     expect(assets.size).toBe(MAX_ASSETS)
     expect(assets.has("https://garden.test/_astro/chunk0.js")).toBe(false)
     expect(assets.has(`https://garden.test/_astro/chunk${MAX_ASSETS + 24}.js`)).toBe(true)

@@ -69,7 +69,8 @@ export const MAX_ASSETS = 300
  * The service worker. Pages are network-first, so readers always get the
  * latest version online and the pages they already read offline; hashed
  * build assets are cache-first. A new build gets a new version, which drops
- * the caches of the previous one, except the pages.
+ * the caches of the previous one, except the pages and the hashed build assets
+ * they load, which never change under the same name.
  */
 export function serviceWorker(version: string): string {
   // Not the search index: every install would download every note's text. Indexes are cached once fetched.
@@ -79,7 +80,7 @@ export function serviceWorker(version: string): string {
   return `// datme service worker, build ${version}
 const VERSION = ${JSON.stringify(version)}
 const CORE = "${ns}core-" + VERSION
-const ASSETS = "${ns}assets-" + VERSION
+const ASSETS = "${ns}assets"
 const PAGES = "${ns}pages"
 const PRECACHE = ${JSON.stringify(precache)}
 const OFFLINE = ${JSON.stringify(offlinePage())}
