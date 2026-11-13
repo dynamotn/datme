@@ -14,3 +14,7 @@ process.env.XDG_CACHE_HOME = path.join(os.tmpdir(), "datme-test-cache")
 // The password of the @testers group of the fixture vault, as a CI secret would hold it; @nobody stays unset.
 process.env.DATME_LOCK_TESTERS = "tester-password"
 delete process.env.DATME_LOCK_NOBODY
+
+// Git in tests reads no user or system config: a global setting such as commit signing must not fail them.
+process.env.GIT_CONFIG_GLOBAL = "/dev/null"
+process.env.GIT_CONFIG_NOSYSTEM = "1"
