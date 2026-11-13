@@ -97,10 +97,11 @@ describe("service worker", () => {
     }))
     await get("/notes/a", { mode: "navigate" })
     await get("/notes/b/", { accept: "*/*" })
+    await get("/notes/new", { accept: "*/*" })
     // Not a page: a file of another kind, and a response that is not HTML.
     await get("/feed.xml", { accept: "*/*" })
     await get("/index.xml", { mode: "navigate" })
-    expect([...stores.get("datme-pages")!.keys()]).toEqual(["https://garden.test/notes/a", "https://garden.test/notes/b"])
+    expect([...stores.get("datme-pages")!.keys()]).toEqual(["https://garden.test/notes/a", "https://garden.test/notes/b", "https://garden.test/notes/new"])
   })
 
   test("keeps at most MAX_ASSETS build assets, dropping the oldest", async () => {

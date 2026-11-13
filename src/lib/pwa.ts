@@ -167,7 +167,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(asset(request))
   } else if (url.pathname.startsWith("${withBase("/static/")}") || url.pathname.startsWith("${withBase("/assets/")}")) {
     event.respondWith(fresh(request))
-  } else if (request.mode === "navigate" || (request.headers.get("accept") ?? "").includes("text/html") || !/.w+$/.test(url.pathname)) {
+  } else if (request.mode === "navigate" || (request.headers.get("accept") ?? "").includes("text/html") || !/\\.\\w+$/.test(url.pathname)) {
     // Client-side navigations fetch the next page, with no Accept header of their own, rather than navigating.
     event.respondWith(page(request))
   }
