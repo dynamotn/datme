@@ -81,6 +81,15 @@ export function setupPrefs(): void {
     panel.hidden = !panel.hidden
     toggle.setAttribute("aria-expanded", String(!panel.hidden))
   })
+  // Escape, from the button or anywhere in the panel, closes it and gives the focus back to the button.
+  const onEscape = (e: KeyboardEvent) => {
+    if (e.key !== "Escape" || panel.hidden) return
+    panel.hidden = true
+    toggle.setAttribute("aria-expanded", "false")
+    toggle.focus()
+  }
+  toggle.addEventListener("keydown", onEscape)
+  panel.addEventListener("keydown", onEscape)
   panel.addEventListener("click", (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-pref-size]")
     if (!b) return

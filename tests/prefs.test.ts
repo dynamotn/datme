@@ -127,6 +127,17 @@ describe("the preferences menu, control by control", () => {
     toggle.click()
     expect(panel.hidden).toBe(true)
     expect(toggle.getAttribute("aria-expanded")).toBe("false")
+    // Escape closes it and gives the focus back to its button; other keys and a closed panel are left alone.
+    toggle.click()
+    const press = (key: string) => panel.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }))
+    press("a")
+    expect(panel.hidden).toBe(false)
+    press("Escape")
+    expect(panel.hidden).toBe(true)
+    expect(toggle.getAttribute("aria-expanded")).toBe("false")
+    expect(document.activeElement).toBe(toggle)
+    press("Escape")
+    expect(panel.hidden).toBe(true)
   })
 
   test("size buttons step the text size and remember it", () => {
