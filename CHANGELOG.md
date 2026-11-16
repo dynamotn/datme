@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-11-16
+
 ### Changed
 
 - A build from an empty cache draws its social cards in worker threads, one per core left over and at most 8, instead of laying each out in turn on the build's own thread: about a quarter faster on a 300-note garden (16.0 s to 11.8–12.3 s on a 16-core machine), with the same images, for about 0.4 GiB more memory at the peak. Workers start only as cards wait for them, so a build that draws a couple of icons starts a couple. Where a worker cannot start, cards are drawn on the build's thread as before.
