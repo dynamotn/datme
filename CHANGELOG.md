@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- On a page shorter than its sidebars, the side panels (explorer, table of contents, graph) no longer run down over the footer and overlap it. The footer now sits below the page grid instead of inside it, so the panels stop where the footer begins.
+
 ## [4.1.0] - 2026-11-16
 
 ### Changed

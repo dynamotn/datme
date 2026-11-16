@@ -467,8 +467,9 @@ const packBand = drawSlot("footer-band", look, lang, { author: site.author, year
           </aside>
         )
       }
-      {/* After the rail, which a narrow screen stacks under the note: the footer stays last. */}
-      <footer class="site-footer">
+    </div>
+    {/* Outside the shell: a sticky sidebar is bounded by its grid, so inside it ran down over the footer. */}
+    <footer class="site-footer">
         {
           !minimal && (
             <div class="footer-top">
@@ -531,7 +532,6 @@ const packBand = drawSlot("footer-band", look, lang, { author: site.author, year
           }
         </div>
       </footer>
-    </div>
 
     {
       !minimal && (
